@@ -81,8 +81,13 @@ h1 em,h2 em,.plp__title em{
 
 .charge-dot{width:7px;height:7px;border-radius:50%;background:var(--mint-m);display:inline-block;box-shadow:0 0 0 4px var(--mint)}
 
-[data-reveal]{opacity:0;transform:translateY(36px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
-[data-reveal].is-in{opacity:1;transform:none}
+/* !important here is deliberate: [data-reveal] is a cross-cutting utility
+   applied to many different component roots (.product-card, .standard__item,
+   etc.) that each define their own `transition` shorthand later in this
+   file at equal specificity — without !important those silently clobber
+   this rule's transition entirely and the reveal never animates. */
+[data-reveal]{opacity:0!important;transform:translateY(36px)!important;transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)!important}
+[data-reveal].is-in{opacity:1!important;transform:none!important}
 
 /* media inside a revealed block gets a slow scale-down alongside the fade, so images feel like they're settling into place */
 [data-reveal] img{transition:transform 1s var(--ease)}
@@ -90,7 +95,7 @@ h1 em,h2 em,.plp__title em{
 
 /* staggered cascade for grouped reveal items (trust badges, product lineup) */
 .standard__grid [data-reveal],
-.lineup__grid > [data-reveal]{transition-delay:calc(var(--reveal-i, 0) * 100ms)}
+.lineup__grid > [data-reveal]{transition-delay:calc(var(--reveal-i, 0) * 100ms)!important}
 .lineup__grid > [data-reveal]:nth-child(1){--reveal-i:0}
 .lineup__grid > [data-reveal]:nth-child(2){--reveal-i:1}
 .lineup__grid > [data-reveal]:nth-child(3){--reveal-i:2}
@@ -99,13 +104,13 @@ h1 em,h2 em,.plp__title em{
 .lineup__grid > [data-reveal]:nth-child(6){--reveal-i:5}
 
 /* hero headline/subhead/CTAs unfold in sequence right after the hero itself appears */
-.apple-hero__eyebrow,.apple-hero__subhead,.apple-hero__ctas{opacity:0;transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
-.apple-hero__head.is-in .apple-hero__eyebrow{transition-delay:0ms}
-.apple-hero__head.is-in .apple-hero__subhead{transition-delay:140ms}
-.apple-hero__head.is-in .apple-hero__ctas{transition-delay:280ms}
+.apple-hero__eyebrow,.apple-hero__subhead,.apple-hero__ctas{opacity:0!important;transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)!important}
+.apple-hero__head.is-in .apple-hero__eyebrow{transition-delay:0ms!important}
+.apple-hero__head.is-in .apple-hero__subhead{transition-delay:140ms!important}
+.apple-hero__head.is-in .apple-hero__ctas{transition-delay:280ms!important}
 .apple-hero__head.is-in .apple-hero__eyebrow,
 .apple-hero__head.is-in .apple-hero__subhead,
-.apple-hero__head.is-in .apple-hero__ctas{opacity:1;transform:none}
+.apple-hero__head.is-in .apple-hero__ctas{opacity:1!important;transform:none!important}
 
 /* ---------- buttons: ink pills, lavender on hover ---------- */
 .btn{
@@ -432,7 +437,7 @@ h1 em,h2 em,.plp__title em{
 
 /* ---------- motion safety ---------- */
 @media (prefers-reduced-motion:reduce){
-  [data-reveal]{opacity:1;transform:none;transition:none}
+  [data-reveal]{opacity:1!important;transform:none!important;transition:none!important}
   .announcement__track,.hero__aurora i{animation:none!important}
   html{scroll-behavior:auto}
   *{transition-duration:.01ms!important}
