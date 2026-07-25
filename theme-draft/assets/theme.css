@@ -31,7 +31,7 @@
   --w-content:1200px; --w-wide:1400px; --w-text:660px;
   --r-s:14px; --r-m:24px; --r-l:clamp(24px,3vw,36px); --r-xl:clamp(28px,3.8vw,48px);
   --ease:cubic-bezier(.22,.61,.21,1);
-  --dur:.5s;
+  --dur:.8s;
 }
 
 *,*::before,*::after{box-sizing:border-box}
@@ -81,11 +81,31 @@ h1 em,h2 em,.plp__title em{
 
 .charge-dot{width:7px;height:7px;border-radius:50%;background:var(--mint-m);display:inline-block;box-shadow:0 0 0 4px var(--mint)}
 
-[data-reveal]{opacity:0;transform:translateY(14px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
+[data-reveal]{opacity:0;transform:translateY(36px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
 [data-reveal].is-in{opacity:1;transform:none}
 
-/* staggered cascade for grouped reveal items (e.g. the trust-badge row) */
-.standard__grid [data-reveal]{transition-delay:calc(var(--reveal-i, 0) * 90ms)}
+/* media inside a revealed block gets a slow scale-down alongside the fade, so images feel like they're settling into place */
+[data-reveal] img{transition:transform 1s var(--ease)}
+[data-reveal]:not(.is-in) img{transform:scale(1.06)}
+
+/* staggered cascade for grouped reveal items (trust badges, product lineup) */
+.standard__grid [data-reveal],
+.lineup__grid > [data-reveal]{transition-delay:calc(var(--reveal-i, 0) * 100ms)}
+.lineup__grid > [data-reveal]:nth-child(1){--reveal-i:0}
+.lineup__grid > [data-reveal]:nth-child(2){--reveal-i:1}
+.lineup__grid > [data-reveal]:nth-child(3){--reveal-i:2}
+.lineup__grid > [data-reveal]:nth-child(4){--reveal-i:3}
+.lineup__grid > [data-reveal]:nth-child(5){--reveal-i:4}
+.lineup__grid > [data-reveal]:nth-child(6){--reveal-i:5}
+
+/* hero headline/subhead/CTAs unfold in sequence right after the hero itself appears */
+.apple-hero__eyebrow,.apple-hero__subhead,.apple-hero__ctas{opacity:0;transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
+.apple-hero__head.is-in .apple-hero__eyebrow{transition-delay:0ms}
+.apple-hero__head.is-in .apple-hero__subhead{transition-delay:140ms}
+.apple-hero__head.is-in .apple-hero__ctas{transition-delay:280ms}
+.apple-hero__head.is-in .apple-hero__eyebrow,
+.apple-hero__head.is-in .apple-hero__subhead,
+.apple-hero__head.is-in .apple-hero__ctas{opacity:1;transform:none}
 
 /* ---------- buttons: ink pills, lavender on hover ---------- */
 .btn{
