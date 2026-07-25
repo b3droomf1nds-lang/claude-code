@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Shopify__graphql_query",
+      "mcp__2684565f-60ab-4692-b4ea-f6f7844f0fbb__graphql_query",
+      "mcp__Shopify__graphql_schema",
+      "mcp__Shopify__search_docs_chunks"
+    ]
+  }
+}
