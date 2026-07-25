@@ -21,21 +21,14 @@
       .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
 
   /* ---------- reveal on scroll + charge lines ---------- */
-  if (window.Shopify && Shopify.designMode) {
-    /* Theme editor (Customize) preview: show everything immediately so
-       merchants aren't left staring at invisible sections while editing.
-       Scroll animations only play on the real Preview tab / live site. */
-    $$('[data-reveal]').forEach((el) => el.classList.add('is-in'));
-  } else {
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        if (!e.isIntersecting) return;
-        e.target.classList.add('is-in');
-        io.unobserve(e.target);
-      });
-    }, { threshold: 0.12 });
-    $$('[data-reveal]').forEach((el) => io.observe(el));
-  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      e.target.classList.add('is-in');
+      io.unobserve(e.target);
+    });
+  }, { threshold: 0.12 });
+  $$('[data-reveal]').forEach((el) => io.observe(el));
 
   /* ---------- header / mobile nav ---------- */
   const menuBtn = $('[data-menu-toggle]');
