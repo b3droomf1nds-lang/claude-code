@@ -3,6 +3,7 @@
    No dependencies. Modules: util, reveal, header, gallery,
    variants, add-to-cart, calculator, collection filters,
    cart drawer (+ shipping protection).
+   rev: scroll-reveal cascade + design-mode fix
    ============================================================ */
 (function () {
   'use strict';
