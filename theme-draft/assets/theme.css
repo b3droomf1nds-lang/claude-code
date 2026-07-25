@@ -121,7 +121,7 @@ h1 em,h2 em,.plp__title em{
 }
 .btn:hover{transform:translateY(-1px) scale(1.015)}
 .btn:active{transform:scale(.985)}
-.btn--accent{background:var(--ink);color:var(--base)}
+.btn--accent{background:red;color:var(--base)}
 .btn--accent:hover{background:var(--lilac);color:var(--ink);box-shadow:0 10px 26px rgba(185,169,242,.35)}
 .btn--ink{background:var(--ink);color:var(--base)}
 .btn--ink:hover{background:#000}
