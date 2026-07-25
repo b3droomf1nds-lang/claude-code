@@ -1,0 +1,40 @@
+<section class="cart-page wrap">
+  <span class="t-eyebrow">{{ 'cart.title' | t }}</span>
+  <h1 class="t-xl" style="margin-bottom:32px">{{ 'cart.heading' | t }}</h1>
+
+  {%- if cart.item_count == 0 -%}
+    <p class="t-muted" style="margin-bottom:24px">{{ 'cart.empty' | t }}</p>
+    <a class="btn btn--ink" href="{{ routes.all_products_collection_url }}">{{ 'cart.continue' | t }}</a>
+  {%- else -%}
+    <form action="{{ routes.cart_url }}" method="post">
+      {%- for item in cart.items -%}
+        <div class="cart-line">
+          <a class="cart-line__img" href="{{ item.url }}">
+            {%- if item.image -%}<img src="{{ item.image | image_url: width: 160 }}" alt="{{ item.title | escape }}">{%- endif -%}
+          </a>
+          <div class="cart-line__body">
+            <div class="cart-line__title">{{ item.product.title }}</div>
+            {%- if item.variant.title != 'Default Title' -%}<div class="cart-line__variant">{{ item.variant.title }}</div>{%- endif -%}
+            <div class="cart-line__row">
+              <input type="number" name="updates[]" value="{{ item.quantity }}" min="0" aria-label="{{ 'cart.quantity' | t }}"
+                     style="width:64px;border:1px solid var(--ink-12);border-radius:999px;padding:6px 12px">
+              <span class="cart-line__price">{{ item.final_line_price | money }}</span>
+            </div>
+          </div>
+        </div>
+      {%- endfor -%}
+      <div class="drawer__subtotal" style="margin-top:24px">
+        <span>{{ 'cart.subtotal' | t }}</span><span>{{ cart.total_price | money }}</span>
+      </div>
+      <p class="drawer__hint">{{ 'cart.taxes_note' | t }}</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px">
+        <button type="submit" name="update" class="btn btn--ghost">{{ 'cart.update' | t }}</button>
+        <button type="submit" name="checkout" class="btn btn--accent">{{ 'cart.checkout' | t }}</button>
+      </div>
+    </form>
+  {%- endif -%}
+</section>
+
+{% schema %}
+{ "name": "Cart page", "settings": [] }
+{% endschema %}

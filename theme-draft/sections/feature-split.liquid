@@ -1,0 +1,206 @@
+{%- comment -%}
+  Full-bleed banner layout — modeled on Apple's product-highlight banners:
+  an edge-to-edge rectangle stretching the full width of the screen, split
+  in half (text anchored bottom-left on one side, a large product image
+  filling the other side). Below the banner sits the same centered pill CTA
+  (with the "+" icon) used on the Core Pro spotlight section. Keeps the same
+  sticky Explore/Buy bar pattern too.
+{%- endcomment -%}
+<style>
+  .fsplit2{ background:var(--base); color:var(--ink); padding:calc(clamp(64px,9vw,120px) + 90px) 0 clamp(72px,10vw,130px); }
+  .fsplit2 .wrap--wide{ max-width:1800px; }
+
+  .fsplit2__banner{
+    width:100%;
+    display:flex;
+    align-items:stretch;
+    min-height:clamp(420px,46vw,640px);
+    background:var(--base);
+  }
+  .fsplit2__banner-text{
+    flex:1 1 45%; min-width:260px;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    padding:clamp(28px,4vw,64px);
+    background:var(--base);
+  }
+  .fsplit2__banner-heading{
+    font-family:var(--sans);
+    font-size:clamp(1.4rem,2.2vw,2rem);
+    font-weight:600; letter-spacing:-0.01em; line-height:1.28;
+    color:var(--ink);
+    margin:0;
+  }
+  .fsplit2__banner-media{
+    flex:1 1 55%;
+    position:relative;
+    overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--base);
+  }
+  .fsplit2__banner-media img{
+    max-width:100%; max-height:100%;
+    width:auto; height:auto;
+    object-fit:contain;
+    display:block;
+  }
+
+  .fsplit2__cta-row{ text-align:center; margin-top:clamp(32px,4.5vw,52px); }
+  .fsplit2__cta-backdrop{
+    display:inline-block; position:relative;
+  }
+  .fsplit2__cta-backdrop::before{ display:none; }
+  .fsplit2__cta-backdrop .fdark__cta{
+    position:relative !important; z-index:2;
+    background:#000000 !important;
+    border:1px solid #808080 !important;
+    box-shadow:none !important;
+  }
+
+  @media (max-width:900px){
+    .fsplit2__banner{ flex-direction:column; min-height:0; }
+    .fsplit2__banner-text{ order:2; padding-bottom:clamp(28px,6vw,40px); }
+    .fsplit2__banner-media{ order:1; aspect-ratio:4/3; }
+  }
+  .fsplit2__stickybar{
+    position:fixed; top:14px; left:14px; right:14px; z-index:120;
+    margin:0 auto; max-width:1400px;
+    background:rgba(250,250,248,.66);
+    backdrop-filter:blur(18px) saturate(1.4); -webkit-backdrop-filter:blur(18px) saturate(1.4);
+    border:1px solid rgba(19,19,22,.1);
+    border-radius:20px;
+    box-shadow:0 12px 30px rgba(19,19,22,.1);
+    transform:translateY(-140%);
+    transition:transform .4s cubic-bezier(.4,0,.2,1);
+  }
+  .fsplit2__stickybar.is-visible{ transform:translateY(0); }
+  .fsplit2__stickybar-inner{
+    padding:12px 16px 12px 22px;
+    display:flex; align-items:center; justify-content:space-between; gap:20px;
+  }
+  .fsplit2__stickybar-title{
+    font-family:var(--sans); font-weight:600;
+    font-size:.98rem; letter-spacing:-0.01em; color:var(--ink);
+    white-space:nowrap;
+  }
+  .fsplit2__stickybar-actions{ display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+  .fsplit2__stickybar-explore,
+  .fsplit2__stickybar-buy{
+    font-family:var(--sans);
+    display:inline-flex; align-items:center; justify-content:center;
+    border-radius:999px; font-size:.86rem; font-weight:500;
+    padding:8px 20px; white-space:nowrap; line-height:1; box-sizing:border-box;
+  }
+  .fsplit2__stickybar-explore{
+    background:transparent; color:var(--ink);
+    border:1px solid rgba(19,19,22,.22);
+  }
+  .fsplit2__stickybar-explore:hover{ background:rgba(19,19,22,.06); }
+  .fsplit2__stickybar-buy{
+    background:var(--ink); color:var(--base); border:1px solid transparent;
+    font-weight:600;
+  }
+  .fsplit2__stickybar-buy:hover{ filter:brightness(1.15); }
+  @media (max-width:640px){
+    .fsplit2__stickybar{ top:10px; left:10px; right:10px; border-radius:16px; }
+    .fsplit2__stickybar-inner{ padding:10px 12px 10px 16px; }
+    .fsplit2__stickybar-title{ font-size:.86rem; }
+    .fsplit2__stickybar-explore,.fsplit2__stickybar-buy{ padding:6px 12px; font-size:.78rem; }
+  }
+</style>
+
+{%- assign _p = section.settings.product -%}
+{%- unless _p.handle -%}{%- assign _p = all_products[_p] -%}{%- endunless -%}
+{%- assign img = section.settings.image | default: _p.featured_image -%}
+
+<div class="fsplit2__stickybar" id="fsplit2-stickybar-{{ section.id }}">
+  <div class="fsplit2__stickybar-inner">
+    <span class="fsplit2__stickybar-title">{{ section.settings.bar_title | default: _p.title }}</span>
+    <div class="fsplit2__stickybar-actions">
+      <a href="#fsplit2-{{ section.id }}" class="fsplit2__stickybar-explore" data-fsplit2-explore="{{ section.id }}">Explore</a>
+      {%- if _p -%}
+        <a href="{{ _p.url }}" class="fsplit2__stickybar-buy">Buy</a>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+<section class="section fsplit2" id="fsplit2-{{ section.id }}">
+  <div data-reveal>
+    <div class="fsplit2__banner">
+      <div class="fsplit2__banner-text">
+        <h2 class="fsplit2__banner-heading">
+          {{ section.settings.heading_line1 }}
+          {%- if section.settings.heading_line2 != blank -%}
+            <br>{{ section.settings.heading_line2 }}
+          {%- endif -%}
+        </h2>
+      </div>
+      <div class="fsplit2__banner-media">
+        {%- if img -%}
+          <img src="{{ img | image_url: width: 1600 }}"
+               srcset="{{ img | image_url: width: 900 }} 900w, {{ img | image_url: width: 1600 }} 1600w, {{ img | image_url: width: 2200 }} 2200w"
+               sizes="(min-width:900px) 55vw, 100vw"
+               alt="{{ img.alt | default: _p.title | escape }}" loading="lazy">
+        {%- endif -%}
+      </div>
+    </div>
+
+    {%- if _p -%}
+      <div class="wrap wrap--wide fsplit2__cta-row">
+        <span class="fsplit2__cta-backdrop">
+          <a class="btn fdark__cta" href="{{ _p.url }}" style="background:#000000 !important; border:1px solid #808080 !important; box-shadow:none !important;">
+            {{ section.settings.cta | default: 'Shop now' }}
+            <span class="fdark__cta-plus" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5V19M5 12H19" stroke="#0a0a0c" stroke-width="3.6" stroke-linecap="round"/>
+              </svg>
+            </span>
+          </a>
+        </span>
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+<script>
+(function(){
+  var root = document.getElementById('fsplit2-{{ section.id }}');
+  var bar = document.getElementById('fsplit2-stickybar-{{ section.id }}');
+  if(!root || !bar) return;
+
+  if('IntersectionObserver' in window){
+    var bottomMargin = Math.round(window.innerHeight * 0.7) + 300;
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        bar.classList.toggle('is-visible', entry.isIntersecting);
+      });
+    }, { rootMargin: '-72px 0px -' + bottomMargin + 'px 0px', threshold: 0 });
+    io.observe(root);
+  }
+
+  var exploreLink = bar.querySelector('[data-fsplit2-explore]');
+  if(exploreLink){
+    exploreLink.addEventListener('click', function(e){
+      e.preventDefault();
+      var barHeight = bar.offsetHeight;
+      var y = root.getBoundingClientRect().top + window.pageYOffset - barHeight - 16;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    });
+  }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Feature split",
+  "settings": [
+    { "type": "product", "id": "product", "label": "Product" },
+    { "type": "image_picker", "id": "image", "label": "Image (fills the right half)" },
+    { "type": "text", "id": "bar_title", "label": "Sticky bar title" },
+    { "type": "text", "id": "heading_line1", "label": "Heading (line 1)", "default": "Super thin. Strikingly light." },
+    { "type": "text", "id": "heading_line2", "label": "Heading (line 2)", "default": "Shockingly strong." },
+    { "type": "text", "id": "cta", "label": "CTA label", "default": "Shop Core" }
+  ],
+  "presets": [{ "name": "Feature split" }]
+}
+{% endschema %}

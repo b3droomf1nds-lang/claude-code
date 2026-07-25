@@ -1,0 +1,469 @@
+{%- comment -%}
+  Default variant selection. Shopify's own default (used when the URL
+  has no ?variant= param) is simply the product's first variant in
+  variant order, which for some products (e.g. Core Pro) happens to be
+  the lowest capacity. When there's a "capacity" option and the URL
+  isn't pinning a specific variant, default to the highest-capacity
+  option instead (keeping whatever the default color/other options
+  would have been).
+{%- endcomment -%}
+{%- assign capacity_idx = -1 -%}
+{%- for option in product.options_with_values -%}
+  {%- assign oname_dc = option.name | downcase -%}
+  {%- if oname_dc contains 'capacity' -%}
+    {%- assign capacity_idx = forloop.index0 -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- assign explicit_variant = product.selected_variant -%}
+{%- if explicit_variant -%}
+  {%- assign current_variant = explicit_variant -%}
+{%- elsif capacity_idx > -1 -%}
+  {%- assign base_variant = product.selected_or_first_available_variant -%}
+  {%- assign best_variant = base_variant -%}
+  {%- assign best_capacity = -1 -%}
+  {%- for v in product.variants -%}
+    {%- assign matches_other_options = true -%}
+    {%- for i in (0..2) -%}
+      {%- if i != capacity_idx -%}
+        {%- assign base_val = base_variant.options[i] -%}
+        {%- assign v_val = v.options[i] -%}
+        {%- if base_val != blank and v_val != base_val -%}
+          {%- assign matches_other_options = false -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if matches_other_options -%}
+      {%- assign cap_str = v.options[capacity_idx] | downcase | remove: ',' | remove: ' ' | remove: 'mah' -%}
+      {%- assign cap_num = cap_str | plus: 0 -%}
+      {%- if cap_num > best_capacity -%}
+        {%- assign best_capacity = cap_num -%}
+        {%- assign best_variant = v -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- assign current_variant = best_variant -%}
+{%- else -%}
+  {%- assign current_variant = product.selected_or_first_available_variant -%}
+{%- endif -%}
+
+{%- assign lt = product.title | downcase -%}
+
+{%- comment -%} Displayed title: drops the "5K & 10K" capacity suffix —
+  capacity is already chosen as a variant option right below, so the
+  product page heading and sticky bar don't need to repeat it. {%- endcomment -%}
+{%- assign display_title = product.title | replace: ' 5K & 10K', '' | replace: ' 5k & 10k', '' | strip -%}
+
+{%- comment -%} Does this product show the capacity calculator at all? {%- endcomment -%}
+{%- assign calc_handles = 'voltical-core-5k-10k,voltical-core-pro-5k-10k,voltical-puck-5k-10k,voltical-watch-case,voltical-usb-c-charge-data-cable-new,voltical-watch-charge-cable' | split: ',' -%}
+{%- assign has_calc = false -%}
+{%- if calc_handles contains product.handle -%}
+  {%- assign has_calc = true -%}
+{%- endif -%}
+
+{%- comment -%} Eyebrow: product type, else inferred category {%- endcomment -%}
+{%- if product.type != blank -%}
+  {%- assign eyebrow = product.type -%}
+{%- elsif lt contains 'usb-c' -%}
+  {%- assign eyebrow = 'Cables' -%}
+{%- elsif lt contains 'watch charge cable' -%}
+  {%- assign eyebrow = 'Apple Watch' -%}
+{%- elsif lt contains 'watch case' -%}
+  {%- assign eyebrow = 'Apple Watch' -%}
+{%- elsif lt contains 'puck' -%}
+  {%- assign eyebrow = 'Wireless charging' -%}
+{%- else -%}
+  {%- assign eyebrow = 'Magnetic power' -%}
+{%- endif -%}
+
+{%- comment -%} Tagline: metafield override, else per-product default {%- endcomment -%}
+{%- assign tagline = product.metafields.custom.tagline.value -%}
+{%- if tagline == blank -%}
+  {%- case product.handle -%}
+    {%- when 'voltical-core-5k-10k' -%}
+      {%- assign tagline = 'The everyday magnetic battery. Snaps on, charges through the case, disappears into the bag.' -%}
+    {%- when 'voltical-core-pro-5k-10k' -%}
+      {%- assign tagline = 'The flagship. A metal shell, a live charge readout, and two-way fast charge.' -%}
+    {%- when 'voltical-puck-5k-10k' -%}
+      {%- assign tagline = 'A foldable charging stand for phone and watch. Desk by day, flat in the pocket by night.' -%}
+    {%- when 'voltical-watch-case' -%}
+      {%- assign tagline = 'A battery case for your Apple Watch. Top up anywhere — no cable, no plug.' -%}
+    {%- when 'voltical-watch-charge-cable' -%}
+      {%- assign tagline = 'The braided fast-charge cable for Apple Watch, in aluminium.' -%}
+    {%- else -%}
+      {%- if lt contains 'usb-c' -%}
+        {%- assign tagline = 'One dependable USB-C cable — charge and data, no drama.' -%}
+      {%- endif -%}
+  {%- endcase -%}
+{%- endif -%}
+
+{{ 'voltical-pdp-bold.css' | asset_url | stylesheet_tag }}
+
+{%- comment -%} Bold buy-box data: stat tiles + benefit checks per product {%- endcomment -%}
+{%- assign stat_src = '' -%}
+{%- assign check_src = '' -%}
+{%- case product.handle -%}
+  {%- when 'voltical-core-5k-10k' -%}
+    {%- assign stat_src = '10,000 mAh|Max capacity;15 W|Magnetic charge;20 W|Wired USB-C' -%}
+    {%- assign check_src = 'Snaps on through MagSafe cases;Charges through the case;8.5 mm thin — pocket flat' -%}
+  {%- when 'voltical-core-pro-5k-10k' -%}
+    {%- assign stat_src = '10,000 mAh|Max capacity;Live %|Charge display;20 W|Two-way fast' -%}
+    {%- assign check_src = 'Live readout — never guess again;Metal shell, flagship feel;Fast in, fast out' -%}
+  {%- when 'voltical-puck-5k-10k' -%}
+    {%- assign stat_src = '15 W|Magnetic charge;2-in-1|Phone + watch;Folds|Flat for travel' -%}
+    {%- assign check_src = 'One plug charges phone + watch;Desk stand or lies flat;Folds to pocket size' -%}
+  {%- when 'voltical-watch-case' -%}
+    {%- assign stat_src = '≈1×|Full recharge;2.5 W|Watch magnetic;LED|Charge status' -%}
+    {%- assign check_src = 'Charges with no cable or plug;Magnetic ring self-aligns;10-layer safety protection' -%}
+  {%- when 'voltical-watch-charge-cable' -%}
+    {%- assign stat_src = '1.2 h|0→80% Series 8;20 W|Adapter fast charge;Alu|Braided build' -%}
+    {%- assign check_src = 'Fast charge Ultra / 9 / 8 / 7;Cool-running, battery-safe;Genuine Apple Watch only' -%}
+  {%- else -%}
+    {%- if lt contains 'usb-c' -%}
+      {%- assign stat_src = '2-in-1|Charge + data;1 / 2 m|Two lengths;USB-C|Both ends' -%}
+      {%- assign check_src = 'Fast charging + data in one;Works with Core & Core Pro;Built to be kept' -%}
+    {%- endif -%}
+{%- endcase -%}
+
+<section class="section pdp--bold">
+  <div class="wrap wrap--wide">
+
+    <div class="product__grid">
+
+      {%- comment -%} ---------- Gallery ---------- {%- endcomment -%}
+      <div class="gallery" data-gallery data-reveal>
+        {%- assign first_img = current_variant.featured_image | default: product.featured_image -%}
+        <div class="gallery__main" data-gallery-main role="button" tabindex="0" aria-label="{{ 'products.view_image' | t }}">
+          {%- if first_img -%}
+            <img src="{{ first_img | image_url: width: 1600 }}"
+                 srcset="{{ first_img | image_url: width: 1200 }} 1200w, {{ first_img | image_url: width: 1600 }} 1600w, {{ first_img | image_url: width: 2200 }} 2200w, {{ first_img | image_url: width: 3000 }} 3000w"
+                 sizes="(min-width:900px) 50vw, 94vw"
+                 alt="{{ first_img.alt | default: product.title | escape }}" width="1200" height="1200">
+          {%- endif -%}
+        </div>
+        <div class="gallery__thumbs">
+          {%- for media in product.media -%}
+            {%- if media.media_type == 'image' -%}
+              <button type="button"
+                class="gallery__thumb{% if forloop.first %} is-active{% endif %}"
+                data-gallery-thumb
+                data-full="{{ media | image_url: width: 3200 }}"
+                aria-label="{{ 'products.view_image' | t }} {{ forloop.index }}">
+                <img src="{{ media | image_url: width: 200 }}" alt="{{ media.alt | escape }}" loading="lazy" width="100" height="100">
+              </button>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+
+        <div class="lightbox" data-lightbox hidden>
+          <button class="lightbox__btn lightbox__close" data-lb-close type="button" aria-label="{{ 'general.close' | t }}">&times;</button>
+          <button class="lightbox__btn lightbox__prev" data-lb-prev type="button" aria-label="{{ 'general.previous' | t }}">&larr;</button>
+          <img data-lb-img src="" alt="{{ product.title | escape }}">
+          <button class="lightbox__btn lightbox__next" data-lb-next type="button" aria-label="{{ 'general.next' | t }}">&rarr;</button>
+          <div class="lightbox__dots" data-lb-dots></div>
+        </div>
+      </div>
+
+      {%- comment -%} ---------- Buy column ---------- {%- endcomment -%}
+      <div class="pinfo" data-reveal>
+        <span class="pinfo__eyebrow t-eyebrow">{{ eyebrow }}</span>
+        <h1>{{ display_title }}</h1>
+        {%- if tagline != blank -%}
+          <p class="pinfo__tagline">{{ tagline }}</p>
+        {%- endif -%}
+        <p class="pinfo__price price-row">
+          <span class="price-row__main" data-price>{{ current_variant.price | money }}</span>
+          {%- if current_variant.compare_at_price > current_variant.price -%}
+            <s class="price-row__was">{{ current_variant.compare_at_price | money }}</s>
+            {%- assign _save = current_variant.compare_at_price | minus: current_variant.price | times: 100 | divided_by: current_variant.compare_at_price -%}
+            <span class="price-row__badge">Save {{ _save }}%</span>
+          {%- endif -%}
+        </p>
+
+        {%- if stat_src != blank -%}
+          <div class="pstats">
+            {%- assign stat_items = stat_src | split: ';' -%}
+            {%- for s in stat_items -%}
+              {%- assign parts = s | split: '|' -%}
+              <div class="pstats__tile"><span class="t-mono">{{ parts[0] }}</span><small>{{ parts[1] }}</small></div>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
+        {%- if check_src != blank -%}
+          <ul class="pchecks">
+            {%- assign check_items = check_src | split: ';' -%}
+            {%- for c in check_items -%}
+              <li>{{ c | strip }}</li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+
+        <form data-product-form action="{{ routes.cart_add_url }}" method="post" enctype="multipart/form-data" novalidate>
+          <input type="hidden" name="id" value="{{ current_variant.id }}">
+
+          {%- if product.has_only_default_variant -%}
+            <fieldset class="opt" hidden style="display:none">
+              <div class="opt__values">
+                <input type="radio" name="opt-{{ section.id }}-default" id="opt-{{ section.id }}-default" value="Default Title" checked>
+                <label class="opt__pill" for="opt-{{ section.id }}-default">Default</label>
+              </div>
+            </fieldset>
+          {%- else -%}
+            {%- for option in product.options_with_values -%}
+              {%- assign oname = option.name | downcase -%}
+              {%- assign is_color = false -%}
+              {%- if oname contains 'color' or oname contains 'colour' -%}{%- assign is_color = true -%}{%- endif -%}
+              {%- assign current_opt_value = current_variant.options[forloop.index0] -%}
+              <fieldset class="opt">
+                <div class="opt__label">{{ option.name }} &middot; <output>{{ current_opt_value }}</output></div>
+                <div class="opt__values">
+                  {%- for value in option.values -%}
+                    {%- assign input_id = 'opt-' | append: section.id | append: '-' | append: forloop.parentloop.index | append: '-' | append: forloop.index -%}
+                    <input type="radio"
+                      name="opt-{{ section.id }}-{{ option.name | handleize }}"
+                      id="{{ input_id }}"
+                      value="{{ value | escape }}"
+                      {% if current_opt_value == value %}checked{% endif %}>
+                    <label class="opt__pill{% if is_color %} opt__pill--swatch{% endif %}" for="{{ input_id }}">
+                      {%- if is_color -%}
+                        {%- assign cd = value | downcase -%}
+                        <i class="swatch" aria-hidden="true" style="background:
+                          {%- if cd contains 'black' or cd contains 'midnight' -%}#2b2b2e
+                          {%- elsif cd contains 'white' or cd contains 'starlight' -%}#efeae0
+                          {%- elsif cd contains 'gold' -%}#CBB88E
+                          {%- elsif cd contains 'silver' -%}#d6d6db
+                          {%- elsif cd contains 'blue' -%}#9db8d9
+                          {%- elsif cd contains 'purple' -%}#b9a8e0
+                          {%- elsif cd contains 'brown' -%}#8a6a52
+                          {%- else -%}#c9c4bb{%- endif -%}"></i>
+                      {%- endif -%}
+                      {{ value }}
+                    </label>
+                  {%- endfor -%}
+                </div>
+              </fieldset>
+            {%- endfor -%}
+          {%- endif -%}
+
+          {% render 'cross-sell', section: section, product: product %}
+
+          {%- comment -%} This is the ONLY Add to cart button on the page —
+            no separate cloned/fixed copy. A small script further down
+            pins THIS SAME button in place (position:fixed, same spot)
+            once it scrolls up to the header, and releases it again on
+            scroll-down — see the "Add to cart catches..." script and
+            .pdp--bold .atc.is-pinned in voltical-pdp-bold.css. {%- endcomment -%}
+          <div class="atc">
+            <button type="submit" class="atc__btn" data-atc {% unless current_variant.available %}disabled{% endunless %}>
+              <span class="atc__fill" aria-hidden="true"></span>
+              <span class="atc__inner">
+                <span data-atc-label>{% if current_variant.available %}{{ 'products.add_to_cart' | t }}{% else %}{{ 'products.sold_out' | t }}{% endif %}</span>
+                <span class="atc__price t-mono" data-price-btn>{{ current_variant.price | money }}</span>
+              </span>
+            </button>
+          </div>
+
+          <p class="ship-note" data-ship-note {% unless current_variant.available %}hidden{% endunless %}>
+            <i class="charge-dot" aria-hidden="true"></i>{{ 'products.ship_note' | t }}
+          </p>
+        </form>
+
+        {%- if has_calc -%}
+          <div class="pdp-calc-inline" id="pdp-calc" data-reveal>
+            {% render 'capacity-calculator', product: product %}
+          </div>
+        {%- endif -%}
+
+        {% render 'trust-badges', section: section %}
+
+        {%- if product.description != blank -%}
+          <div class="pinfo__desc" style="margin-top:32px">
+            <span class="t-eyebrow" style="display:block;margin-bottom:10px">{{ 'products.description' | t }}</span>
+            <div class="t-body">{{ product.description }}</div>
+          </div>
+        {%- endif -%}
+
+        {% render 'product-specs', product: product %}
+      </div>
+
+    </div>
+  </div>
+
+  {%- comment -%} ---------- Sticky jump-to-calculator button ---------- {%- endcomment -%}
+  {%- if has_calc -%}
+    <button type="button" class="pdp-jump-calc" data-jump-calc hidden>
+      <span>How far will it take you?</span>
+      <span class="pdp-jump-calc__arrow" aria-hidden="true">&darr;</span>
+    </button>
+  {%- endif -%}
+
+  <script type="application/json" data-product-json>{{ product | json }}</script>
+
+  <script>
+    /* Keep the price inside the add-to-cart button in sync with the
+       main price (which theme.js updates on variant change). */
+    (function () {
+      var main = document.querySelector('.pinfo__price [data-price]');
+      var btnPrice = document.querySelector('[data-price-btn]');
+      if (!main || !btnPrice) return;
+      var sync = function () { btnPrice.textContent = main.textContent; };
+      new MutationObserver(sync).observe(main, { childList: true, characterData: true, subtree: true });
+      sync();
+    })();
+
+    /* Add to cart catches at the top of the screen once it scrolls up
+       past the header, then releases again once scrolled back down to
+       its normal spot. This toggles the SAME button between normal
+       flow and position:fixed (see .pdp--bold .atc.is-pinned in
+       voltical-pdp-bold.css) — there is no second/cloned button
+       anywhere. A placeholder the same size is shown only while
+       pinned, so removing the button from flow (position:fixed) does
+       not cause the page below it to jump upward. */
+    document.addEventListener('DOMContentLoaded', function () {
+      var atc = document.querySelector('.pdp--bold .atc');
+      if (!atc) return;
+
+      /* The sentinel is what the IntersectionObserver watches to decide
+         pin/unpin — it MUST go before the placeholder (not between the
+         placeholder and the button). The placeholder's height changes
+         the moment we pin/unpin (0 while unpinned, the button's height
+         while pinned); if the sentinel sat below it, that height change
+         would shove the sentinel up/down by ~64px every time we
+         pinned, which could flip it back across the trigger line and
+         cause pin() -> unpin() -> pin() to fire back-to-back forever
+         (visible as constant flashing). Putting the sentinel ahead of
+         the placeholder means its position never depends on the
+         placeholder's own state. */
+      var sentinel = document.createElement('div');
+      sentinel.setAttribute('aria-hidden', 'true');
+      sentinel.style.height = '1px';
+      atc.parentNode.insertBefore(sentinel, atc);
+
+      var placeholder = document.createElement('div');
+      placeholder.className = 'atc-placeholder';
+      atc.parentNode.insertBefore(placeholder, atc);
+
+      var pinned = false;
+      function pin() {
+        if (pinned) return;
+        pinned = true;
+        var rect = atc.getBoundingClientRect();
+        placeholder.style.width = rect.width + 'px';
+        placeholder.style.height = rect.height + 'px';
+        placeholder.style.display = 'block';
+        atc.style.left = rect.left + 'px';
+        atc.style.width = rect.width + 'px';
+        atc.classList.add('is-pinned');
+      }
+      function unpin() {
+        if (!pinned) return;
+        pinned = false;
+        atc.classList.remove('is-pinned');
+        atc.style.left = '';
+        atc.style.width = '';
+        placeholder.style.display = 'none';
+      }
+
+      new IntersectionObserver(function (entries) {
+        var e = entries[0];
+        if (e.boundingClientRect.top < 0) pin(); else unpin();
+      }, { threshold: [0] }).observe(sentinel);
+
+      window.addEventListener('resize', function () {
+        if (!pinned) return;
+        unpin();
+        pin();
+      });
+    });
+
+    /* Sticky "jump to calculator" pill: click scrolls smoothly down to
+       the calculator (now inline in the buy column, just below the
+       "in stock" line) — shown only while the calculator itself is
+       scrolled out of view, so it doesn't sit on top of it. */
+    document.addEventListener('DOMContentLoaded', function () {
+      var jumpBtn = document.querySelector('[data-jump-calc]');
+      var calcEl = document.getElementById('pdp-calc');
+      if (!jumpBtn || !calcEl) return;
+
+      jumpBtn.addEventListener('click', function () {
+        calcEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+
+      new IntersectionObserver(function (entries) {
+        var e = entries[0];
+        jumpBtn.hidden = e.isIntersecting;
+      }, { threshold: 0 }).observe(calcEl);
+    });
+
+    /* Arriving from the usage-calculator page (product cards link with
+       ?jump=calc): land straight on the calculator section instead of
+       the top of the product page, with a smooth scroll rather than an
+       instant jump. Using a query param (not a #hash) means the browser
+       never does its own instant anchor-jump first. The Add to cart
+       button pins itself in place via the JS pin/unpin script above
+       once it's scrolled near the header — nothing extra needed here
+       to keep it on screen. */
+    document.addEventListener('DOMContentLoaded', function () {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('jump') !== 'calc') return;
+      var calcEl = document.getElementById('pdp-calc');
+      if (!calcEl) return;
+      window.requestAnimationFrame(function () {
+        calcEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+
+      /* Coming in specifically from the calculator (not a normal visit
+         to the product page): put the device <select> into the same
+         "just clicked it" state a shopper gets from clicking it
+         themselves — focused, and its native options list opened where
+         the browser allows it. Only fires for the ?jump=calc path, and
+         only after the scroll above has settled. */
+      var deviceSelect = calcEl.querySelector('[data-calc-device]');
+      if (!deviceSelect) return;
+      setTimeout(function () {
+        deviceSelect.focus({ preventScroll: true });
+        if (typeof deviceSelect.showPicker === 'function') {
+          try { deviceSelect.showPicker(); } catch (err) { /* needs a user gesture in some browsers — focus still applies */ }
+        }
+      }, 500);
+    });
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": {{ product.title | json }},
+    "url": {{ request.origin | append: product.url | json }},
+    {% if product.featured_image %}"image": {{ product.featured_image | image_url: width: 1200 | prepend: 'https:' | json }},{% endif %}
+    "description": {{ product.description | strip_html | truncate: 500 | json }},
+    "brand": { "@type": "Brand", "name": "Voltical" },
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": {{ cart.currency.iso_code | json }},
+      "lowPrice": {{ product.price_min | divided_by: 100.0 | json }},
+      "highPrice": {{ product.price_max | divided_by: 100.0 | json }},
+      "availability": "{% if product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"
+    }
+  }
+  </script>
+</section>
+
+{% schema %}
+{
+  "name": "Product page",
+  "settings": [
+    { "type": "header", "content": "Trust row" },
+    { "type": "text", "id": "trust_1_value", "label": "Item 1 value", "default": "12-mo" },
+    { "type": "text", "id": "trust_1_label", "label": "Item 1 label", "default": "Warranty" },
+    { "type": "text", "id": "trust_2_value", "label": "Item 2 value", "default": "30-day" },
+    { "type": "text", "id": "trust_2_label", "label": "Item 2 label", "default": "Returns" },
+    { "type": "text", "id": "trust_3_value", "label": "Item 3 value", "default": "24 h" },
+    { "type": "text", "id": "trust_3_label", "label": "Item 3 label", "default": "Dispatch" },
+    { "type": "header", "content": "Complete-the-setup add-on" },
+    { "type": "product", "id": "xsell_usbc", "label": "Add-on for power banks (USB-C cable)" },
+    { "type": "product", "id": "xsell_watch", "label": "Add-on for the Watch case (Watch cable)" }
+  ]
+}
+{% endschema %}

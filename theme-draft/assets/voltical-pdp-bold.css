@@ -1,0 +1,276 @@
+/* ============================================================
+   VOLTICAL — voltical-pdp-bold.css
+   "Bold" buy-box styling for the product page, scoped under
+   .pdp--bold so nothing else in the theme is affected.
+   Uses the theme's own tokens (theme.css :root).
+   ============================================================ */
+
+/* ---------- paler pastel palette (product pages only) ---------- */
+:root {
+  --mint: #F1F8F5;
+  --sky: #EDF6FB;
+  --lilac: #F1EFFB;
+  --pink: #FCF0F5;
+  --mint-m: #DFF0E8;
+  --sky-m: #D9EAF7;
+  --lilac-m: #DFD8F8;
+  --pink-m: #F9DCE8;
+  --tile: #F7FAFA;
+}
+
+/* Pastels used as TEXT need to stay readable on the paler
+   backgrounds — re-ink them. */
+.calc__fig .t-mono b,
+.calc__fig b {
+  color: var(--ink, #131316);
+  font-weight: 700;
+}
+.addon__eyebrow {
+  color: var(--focus, #8F7FDC);
+}
+
+/* ---------- stat tiles ---------- */
+.pdp--bold .pstats {
+  display: grid;
+  /* minmax(0,1fr) lets tiles shrink below their text's min width —
+     without it, values like "10,000 mAh" force the page wider than
+     the phone screen and cause sideways scrolling. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 6px 0 18px;
+}
+.pdp--bold .pstats__tile {
+  background: var(--tile, #F4F8F8);
+  border: 1px solid var(--ink-06, rgba(19,19,22,.05));
+  border-radius: var(--r-s, 14px);
+  padding: 15px 10px 13px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.pdp--bold .pstats__tile .t-mono {
+  font-size: clamp(13px, 3.6vw, 19px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.pdp--bold .pstats__tile small {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-60, rgba(19,19,22,.58));
+  font-weight: 500;
+}
+
+/* ---------- checkmark benefits ---------- */
+.pdp--bold .pchecks {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.pdp--bold .pchecks li {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: -0.005em;
+}
+.pdp--bold .pchecks li::before {
+  content: "✓";
+  flex: 0 0 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent, #B9A9F2);
+  color: var(--ink, #131316);
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ---------- bold price row ---------- */
+.pdp--bold .price-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.pdp--bold .price-row__main {
+  font-size: clamp(26px, 2.6vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.pdp--bold .price-row__was {
+  color: var(--ink-30, rgba(19,19,22,.3));
+  font-size: 1.05rem;
+}
+.pdp--bold .price-row__badge {
+  background: var(--ink, #131316);
+  color: var(--base, #FAFAF8);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ---------- bolder option pills ---------- */
+.pdp--bold .opt__pill {
+  font-weight: 600;
+  border: 1.5px solid var(--ink-12, rgba(19,19,22,.1));
+}
+
+/* ---------- bold add-to-cart ---------- */
+.pdp--bold .atc__btn {
+  background: var(--ink, #131316);
+  color: var(--base, #FAFAF8);
+  border: none;
+  border-radius: 18px;
+  padding: 19px 26px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(19, 19, 22, 0.16);
+  transition: transform 0.25s var(--ease, ease), box-shadow 0.25s var(--ease, ease);
+}
+.pdp--bold .atc__btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 34px rgba(19, 19, 22, 0.22);
+}
+.pdp--bold .atc__btn:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.pdp--bold .atc__inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+.pdp--bold .atc__price {
+  opacity: 0.8;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.pdp--bold .atc__btn.is-added .atc__price {
+  opacity: 0;
+}
+
+/* ---------- Add to cart catches at the top while scrolling ----------
+   theme.css already makes the WHOLE .pinfo buy column sticky at
+   width >=900px (title, price, options — all of it as one rigid
+   block, top:98px). That's a different, pre-existing feature, and it
+   conflicts with sticking just the button on its own — turning it off
+   here (scoped to the product page only — .pinfo isn't used anywhere
+   else) so only the Add to cart button catches.
+
+   The button itself is pinned via JS (see main-product.liquid), not
+   plain CSS position:sticky — layering an independent position:sticky
+   element on this page turned out to be unreliable in testing
+   (Chrome silently failed to stick it at all). A small
+   IntersectionObserver toggles this ".is-pinned" class on the SAME
+   button (no clone, no separate element) once it reaches the top of
+   the viewport, switching it from normal flow to position:fixed at
+   the exact spot it already occupied; a placeholder holds its layout
+   space open so nothing jumps.
+
+   Pins flush to top:0 rather than leaving room for the site header —
+   this theme's header (.site-header, position:sticky in theme.css)
+   does not actually stay on screen while scrolling on this store (a
+   separate, pre-existing issue, confirmed on the homepage too, not
+   something introduced here), so reserving space under it would just
+   leave a floating gap above the button. */
+.pdp--bold .pinfo {
+  position: static;
+}
+.pdp--bold .atc.is-pinned {
+  position: fixed;
+  top: 0;
+  z-index: 30;
+  background: var(--base, #FAFAF8);
+  padding: 8px 0;
+}
+.pdp--bold .atc-placeholder {
+  display: none;
+}
+
+/* ---------- calculator, inline in the buy column just below the
+   "in stock" line ---------- */
+.pdp--bold .pdp-calc-inline {
+  margin: var(--s4, 24px) 0 0;
+}
+.pdp--bold .pdp-calc-inline .calc {
+  margin: 0;
+}
+
+/* ---------- sticky "jump to calculator" pill ---------- */
+.pdp-jump-calc {
+  position: fixed;
+  right: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  z-index: 84;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--sky, #EDF6FB);
+  color: var(--ink, #131316);
+  border: 1px solid rgba(19, 19, 22, .32);
+  border-radius: 999px;
+  padding: 12px 18px;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: none;
+  transition: transform 0.25s var(--ease, ease), opacity 0.25s ease;
+}
+.pdp-jump-calc:hover {
+  transform: translateY(-1px);
+}
+.pdp-jump-calc__arrow {
+  display: inline-flex;
+  font-size: 1rem;
+}
+@media (max-width: 600px) {
+  .pdp-jump-calc {
+    left: 16px;
+    right: 16px;
+    justify-content: center;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ---------- centre the thumbnail row when it doesn't fill the
+   gallery's width (e.g. products with only 2-3 photos) ---------- */
+.pdp--bold .gallery__thumbs {
+  justify-content: center;
+}
+
+/* ---------- main photo frame: portrait 2:3 instead of the theme's
+   default square (1:1) ---------- */
+.pdp--bold .gallery__main {
+  aspect-ratio: 2 / 3;
+}
+
+/* ---------- shrink the big top gap under the nav ----------
+   .section (theme.css) adds clamp(80px,11vw,150px) of padding on
+   BOTH top and bottom — that spacing is meant to separate stacked
+   homepage sections from each other, but on the product page it's
+   the very first thing under the sticky header. Cut the top down to
+   a small fixed 15px breathing gap; leave the bottom padding alone
+   so spacing above the footer/next section is unchanged. */
+.pdp--bold {
+  padding-top: 15px;
+}

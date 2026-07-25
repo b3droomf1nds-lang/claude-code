@@ -1,0 +1,72 @@
+<style>
+  .site-nav a[aria-current="page"]{ background: var(--ink-12); color: var(--ink); }
+  .site-header__logo{ font-family: Inter, var(--font-body-family, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif) !important; letter-spacing:0 !important; text-transform:none !important; font-weight:700 !important; }
+  .site-nav__ucalc{ display:inline-flex; align-items:center; }
+  .site-nav__ucalc-badge{
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:4px 8px;margin-left:6px;
+    color:#fff;background:#696660;border-radius:999px;
+    font-size:9px;font-weight:700;line-height:1;
+    letter-spacing:-.02em;text-transform:lowercase;
+  }
+  .site-header__actions{ display:flex; align-items:center; }
+  .site-header__actions > a,
+  .site-header__actions > .cart-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+    margin:0;
+    border:0;
+    background:none;
+    line-height:0;
+    height:24px;
+  }
+</style>
+<header class="site-header">
+  <div class="wrap wrap--wide site-header__inner">
+    <button class="menu-toggle" data-menu-toggle aria-expanded="false" aria-label="{{ 'general.menu' | t }}">
+      <span></span><span></span><span></span>
+    </button>
+
+    <a href="{{ routes.root_url }}" class="site-header__logo" aria-label="{{ shop.name }}">
+      {{ shop.name | downcase | capitalize }}
+    </a>
+
+    <nav class="site-nav" aria-label="{{ 'general.menu' | t }}">
+      {%- for link in section.settings.menu.links -%}
+        <a href="{{ link.url }}" {% if link.current %}aria-current="page"{% endif %}>{{ link.title }}</a>
+        {%- if link.title == 'Catalog' -%}
+          <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator<span class="site-nav__ucalc-badge">new</span></a>
+        {%- endif -%}
+      {%- endfor -%}
+    </nav>
+
+    <div class="site-header__actions">
+      <a href="{{ routes.search_url }}" aria-label="{{ 'general.search' | t }}">{% render 'icon', icon: 'search' %}</a>
+      <button class="cart-btn" data-cart-open aria-label="{{ 'cart.title' | t }}">
+        {% render 'icon', icon: 'bag' %}
+        <span class="cart-btn__count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
+      </button>
+    </div>
+  </div>
+
+  <nav class="mobile-nav" data-mobile-nav hidden aria-label="{{ 'general.menu' | t }}">
+    {%- for link in section.settings.menu.links -%}
+      <a href="{{ link.url }}">{{ link.title }}</a>
+      {%- if link.title == 'Catalog' -%}
+        <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator<span class="site-nav__ucalc-badge">new</span></a>
+      {%- endif -%}
+    {%- endfor -%}
+  </nav>
+</header>
+
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+    { "type": "image_picker", "id": "logo", "label": "Logo (falls back to store name)" },
+    { "type": "link_list", "id": "menu", "label": "Menu", "default": "main-menu" }
+  ]
+}
+{% endschema %}

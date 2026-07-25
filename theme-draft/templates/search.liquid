@@ -1,0 +1,19 @@
+<div class="wrap wrap--wide" style="padding:48px 20px 96px">
+  <span class="t-eyebrow">{{ 'general.search' | t }}</span>
+  <h1 class="t-lg" style="margin-bottom:24px">{% if search.performed %}{{ 'general.results_for' | t }} &ldquo;{{ search.terms }}&rdquo;{% else %}{{ 'general.search' | t }}{% endif %}</h1>
+  <form action="{{ routes.search_url }}" method="get" role="search" style="max-width:420px;margin-bottom:48px">
+    <div class="newsletter" style="border-color:var(--ink-30)">
+      <input type="search" name="q" value="{{ search.terms | escape }}" placeholder="{{ 'general.search_placeholder' | t }}" style="color:var(--ink)">
+      <button type="submit" style="color:var(--accent-deep)">{{ 'general.search' | t }}</button>
+    </div>
+  </form>
+  {% if search.performed %}
+    {% paginate search.results by 24 %}
+    <div class="plp__grid" style="padding-top:0">
+      {% for item in search.results %}
+        {% if item.object_type == 'product' %}{% render 'product-card', product: item %}{% endif %}
+      {% endfor %}
+    </div>
+    {% endpaginate %}
+  {% endif %}
+</div>

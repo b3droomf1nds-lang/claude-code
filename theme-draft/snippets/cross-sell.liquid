@@ -1,0 +1,40 @@
+{%- comment -%}
+  "Complete your setup" add-on toggle, rendered inside the product form
+  just above add-to-cart. When toggled on, theme.js adds the matching
+  cable together with the main product in a single /cart/add.js call.
+  Pairing: Watch Case → Watch charge cable; power banks / Puck → USB-C
+  cable; cables themselves get no toggle. Products set in section settings.
+  Note: with JS disabled the form still adds the main product; the
+  add-on toggle is JS-enhanced only.
+{%- endcomment -%}
+{%- assign lt = product.title | downcase -%}
+{%- if lt contains 'watch case' -%}
+  {%- assign _ref = section.settings.xsell_watch -%}
+{%- elsif lt contains 'cable' -%}
+  {%- assign _ref = nil -%}
+{%- else -%}
+  {%- assign _ref = section.settings.xsell_usbc -%}
+{%- endif -%}
+{%- if _ref.handle -%}{%- assign pair = _ref -%}{%- elsif _ref -%}{%- assign pair = all_products[_ref] -%}{%- else -%}{%- assign pair = nil -%}{%- endif -%}
+
+{%- if pair and pair.available and pair.handle != product.handle -%}
+<div class="addon" data-addon data-addon-variant="{{ pair.selected_or_first_available_variant.id }}">
+  <a class="addon__img" href="{{ pair.url }}" tabindex="-1" aria-hidden="true">
+    {%- if pair.featured_image -%}
+      <img src="{{ pair.featured_image | image_url: width: 120 }}" alt="" loading="lazy">
+    {%- endif -%}
+  </a>
+  <div class="addon__body">
+    <span class="addon__eyebrow">{{ 'products.xsell_eyebrow' | t }}</span>
+    <div class="addon__title">
+      <a href="{{ pair.url }}">{{ pair.title }}</a>
+      <span class="addon__price">+ {{ pair.selected_or_first_available_variant.price | money }}</span>
+    </div>
+    <p class="addon__desc">{{ 'products.xsell_desc' | t }}</p>
+  </div>
+  <label class="switch">
+    <input type="checkbox" aria-label="{{ 'products.xsell_eyebrow' | t }}: {{ pair.title }}">
+    <i></i>
+  </label>
+</div>
+{%- endif -%}
