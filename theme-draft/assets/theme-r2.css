@@ -86,7 +86,7 @@ h1 em,h2 em,.plp__title em{
    etc.) that each define their own `transition` shorthand later in this
    file at equal specificity — without !important those silently clobber
    this rule's transition entirely and the reveal never animates. */
-[data-reveal]{opacity:0!important;transform:translateY(36px)!important;transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)!important}
+[data-reveal]{opacity:0!important;transform:translateY(36px)!important;transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)!important;overflow-anchor:none!important}
 [data-reveal].is-in{opacity:1!important;transform:none!important}
 
 /* media inside a revealed block gets a slow scale-down alongside the fade, so images feel like they're settling into place */
