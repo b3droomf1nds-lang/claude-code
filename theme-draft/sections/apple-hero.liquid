@@ -62,8 +62,12 @@
     .apple-hero__subhead{ transform:translateY(42px); margin-bottom:26px; max-width:310px; line-height:1.35; }
     /* transform is claimed by the reveal-in animation (theme-r2.css forces
        transform:none!important on .is-in) — it only affects the entrance
-       slide, not the resting position, so permanent offsets go on margin. */
-    .apple-hero__ctas{ margin-top:45px; }
+       slide, not the resting position, so permanent offsets go here.
+       padding, not margin: margin-top here was collapsing with the
+       subhead's own margin-bottom:38px (adjacent sibling margins collapse
+       to the larger value, not the sum), which is why smaller nudges never
+       visibly moved anything. */
+    .apple-hero__ctas{ padding-top:40px; }
     .apple-hero__ctas .btn{ padding:13px 26px; font-size:.689rem; gap:7px; }
     /* pushed down with padding (not a flex-item margin) and clipped by the
        section's own overflow:hidden above, so the image can never render
