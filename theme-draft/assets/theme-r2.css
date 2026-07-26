@@ -612,6 +612,7 @@ h1 em,h2 em,.plp__title em{
   height:100%;
   object-fit:contain;
 }
+.product-card__word--inline{ display:none; }
 .product-card__word{
   position:absolute;
   z-index:3;
@@ -692,10 +693,22 @@ h1 em,h2 em,.plp__title em{
 
 @media (max-width:720px){
   .product-card{aspect-ratio:.74;border-radius:32px}
-  .product-card__word{font-size:clamp(3.25rem,14vw,5rem)}
+  .product-card__word--top{display:none}
   .product-card__media,.product-card__media--framed{padding:78px 16px 122px}
   .product-card__body{padding:24px;column-gap:14px}
   .product-card__title,.product-card__price{font-size:1rem}
+  .product-card__meta{display:none}
+  .product-card__word--inline{
+    display:block;
+    position:static;
+    grid-column:1;
+    grid-row:2;
+    font-family:'Voltical Relay',var(--sans);
+    font-size:clamp(1.6rem,7vw,2.3rem);
+    line-height:1;
+    letter-spacing:-.02em;
+    color:var(--product-copy);
+  }
 }
 
 

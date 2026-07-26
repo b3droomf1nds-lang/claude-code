@@ -57,7 +57,7 @@
   data-connector="{{ connector | downcase }}"
   data-price="{{ product.price_min }}"
   data-reveal>
-  <a href="{{ product.url }}" class="product-card__word">{{ card_word }}</a>
+  <a href="{{ product.url }}" class="product-card__word product-card__word--top">{{ card_word }}</a>
   <a href="{{ product.url }}" class="product-card__media product-card__media--framed">
     {%- if flag_handle and product.handle == flag_handle -%}
       <span class="product-card__flag">{{ 'products.flagship' | t }}</span>
@@ -71,6 +71,7 @@
   </a>
   <div class="product-card__body">
     <a href="{{ product.url }}" class="product-card__title">{{ display_title }}</a>
+    <a href="{{ product.url }}" class="product-card__word product-card__word--inline">{{ card_word }}</a>
     <span class="product-card__meta">
       {%- if capacities != '' -%}{{ capacities | strip | split: '|' | join: ' / ' }} mAh{%- elsif connector == 'usb-c' -%}USB-C · charge + data{%- elsif connector == 'watch' -%}Apple Watch{%- endif -%}
     </span>
