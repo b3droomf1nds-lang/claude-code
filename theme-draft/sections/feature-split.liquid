@@ -14,7 +14,7 @@
     width:100%;
     display:flex;
     align-items:stretch;
-    height:clamp(90px,14vw,180px);
+    min-height:clamp(0px,38vw,140px);
     background:#FFFFFF;
     border-radius:clamp(28px,3vw,44px);
     corner-shape:squircle;
@@ -24,12 +24,12 @@
   .fsplit2__banner-text{
     flex:1 1 45%; min-width:260px;
     display:flex; flex-direction:column; justify-content:center;
-    padding:clamp(16px,2vw,28px);
+    padding:clamp(8px,1vw,14px);
     background:#FFFFFF;
   }
   .fsplit2__banner-heading{
     font-family:var(--sans);
-    font-size:clamp(.95rem,1.4vw,1.3rem);
+    font-size:clamp(.85rem,1.2vw,1.15rem);
     font-weight:600; letter-spacing:-0.01em; line-height:1.28;
     color:var(--ink);
     margin:0;
@@ -40,7 +40,7 @@
     overflow:hidden;
     display:flex; align-items:center; justify-content:center;
     background:#FFFFFF;
-    padding:clamp(12px,1.5vw,20px);
+    padding:clamp(6px,0.8vw,10px);
   }
   .fsplit2__banner-media img{
     max-width:100%; max-height:100%;
@@ -62,7 +62,7 @@
   }
 
   @media (max-width:900px){
-    .fsplit2__banner{ flex-direction:column; height:auto; min-height:0; border-radius:28px; }
+    .fsplit2__banner{ flex-direction:column; min-height:0; border-radius:28px; }
     .fsplit2__banner-text{ order:2; padding:28px 22px; justify-content:flex-start; }
     .fsplit2__banner-media{ order:1; aspect-ratio:4/3; padding:20px; }
   }
