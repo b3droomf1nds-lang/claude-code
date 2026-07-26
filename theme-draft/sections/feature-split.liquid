@@ -14,7 +14,7 @@
     width:100%;
     display:flex;
     align-items:stretch;
-    min-height:clamp(0px,38vw,140px);
+    height:clamp(90px,14vw,180px);
     background:#FFFFFF;
     border-radius:clamp(28px,3vw,44px);
     corner-shape:squircle;
@@ -29,7 +29,7 @@
   }
   .fsplit2__banner-heading{
     font-family:var(--sans);
-    font-size:clamp(1.4rem,2.2vw,2rem);
+    font-size:clamp(.95rem,1.4vw,1.3rem);
     font-weight:600; letter-spacing:-0.01em; line-height:1.28;
     color:var(--ink);
     margin:0;
@@ -62,7 +62,7 @@
   }
 
   @media (max-width:900px){
-    .fsplit2__banner{ flex-direction:column; min-height:0; border-radius:28px; }
+    .fsplit2__banner{ flex-direction:column; height:auto; min-height:0; border-radius:28px; }
     .fsplit2__banner-text{ order:2; padding:28px 22px; justify-content:flex-start; }
     .fsplit2__banner-media{ order:1; aspect-ratio:4/3; padding:20px; }
   }
