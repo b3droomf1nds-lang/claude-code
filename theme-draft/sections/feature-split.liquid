@@ -49,17 +49,6 @@
     display:block;
   }
 
-  .fsplit2__cta-row{ text-align:center; margin-top:clamp(32px,4.5vw,52px); }
-  .fsplit2__cta-backdrop{
-    display:inline-block; position:relative;
-  }
-  .fsplit2__cta-backdrop::before{ display:none; }
-  .fsplit2__cta-backdrop .fdark__cta{
-    position:relative !important; z-index:2;
-    background:#000000 !important;
-    border:1px solid #808080 !important;
-    box-shadow:none !important;
-  }
 
   @media (max-width:900px){
     .fsplit2__banner{ flex-direction:column; min-height:0; border-radius:28px; }
@@ -112,26 +101,6 @@
     .fsplit2__stickybar-explore,.fsplit2__stickybar-buy{ padding:6px 12px; font-size:.78rem; }
   }
 
-  /* Floating CTA pill: fixed to the bottom of the viewport, only shown
-     while the section is on screen (same IntersectionObserver that drives
-     the top stickybar). Lives outside the section/[data-reveal] tree so a
-     pre-reveal transform on the section can't hijack its fixed
-     positioning. */
-  .fsplit2__ctafloat{
-    position:fixed; left:0; right:0; bottom:24px; z-index:110;
-    display:flex; justify-content:center;
-    pointer-events:none;
-    opacity:0; transform:translateY(24px);
-    transition:opacity .35s cubic-bezier(.4,0,.2,1), transform .35s cubic-bezier(.4,0,.2,1);
-  }
-  .fsplit2__ctafloat.is-visible{ opacity:1; transform:none; pointer-events:auto; }
-  .fsplit2__ctafloat .fdark__cta{
-    position:relative !important; z-index:2;
-    background:#000000 !important;
-    border:1px solid #808080 !important;
-    box-shadow:0 12px 30px rgba(19,19,22,.35) !important;
-  }
-  @media (max-width:640px){ .fsplit2__ctafloat{ bottom:16px; } }
 </style>
 
 {%- assign _p = section.settings.product -%}
@@ -150,20 +119,8 @@
   </div>
 </div>
 
-{%- if _p -%}
-  <div class="fsplit2__ctafloat" id="fsplit2-ctafloat-{{ section.id }}">
-    <a class="btn fdark__cta" href="{{ _p.url }}">
-      {{ section.settings.cta | default: 'Shop now' }}
-      <span class="fdark__cta-plus" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 5V19M5 12H19" stroke="#0a0a0c" stroke-width="3.6" stroke-linecap="round"/>
-        </svg>
-      </span>
-    </a>
-  </div>
-{%- endif -%}
-
-<section class="section fsplit2" id="fsplit2-{{ section.id }}">
+<section class="section fsplit2" id="fsplit2-{{ section.id }}"
+  {%- if _p %} data-ctapill data-cta-url="{{ _p.url }}" data-cta-label="{{ section.settings.cta | default: 'Shop now' }}" data-cta-surface="light"{% endif %}>
   <div class="wrap wrap--wide" data-reveal>
     <div class="fsplit2__banner">
       <div class="fsplit2__banner-text">
@@ -191,7 +148,6 @@
 (function(){
   var root = document.getElementById('fsplit2-{{ section.id }}');
   var bar = document.getElementById('fsplit2-stickybar-{{ section.id }}');
-  var ctaFloat = document.getElementById('fsplit2-ctafloat-{{ section.id }}');
   if(!root || !bar) return;
 
   if('IntersectionObserver' in window){
@@ -202,15 +158,6 @@
       });
     }, { rootMargin: '-72px 0px -' + bottomMargin + 'px 0px', threshold: 0 });
     io.observe(root);
-
-    if(ctaFloat){
-      var ctaIo = new IntersectionObserver(function(entries){
-        entries.forEach(function(entry){
-          ctaFloat.classList.toggle('is-visible', entry.isIntersecting);
-        });
-      }, { threshold: 0 });
-      ctaIo.observe(root);
-    }
   }
 
   var exploreLink = bar.querySelector('[data-fsplit2-explore]');

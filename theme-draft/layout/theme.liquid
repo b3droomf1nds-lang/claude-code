@@ -54,6 +54,61 @@
        ships / warranty / returns / support). Remove this rule to bring
        them back — flexbox will re-open the gap for them automatically. */
     .standard__item h3 svg{ display:none !important; }
+
+    /* ---------- shared floating CTA pill (liquid glass) ----------
+       One element, shared across every [data-ctapill] section (currently
+       Core and Core Pro). A scroll-driven controller (below) relabels and
+       re-links it in place as you move between sections, instead of
+       cross-fading two separate pills — that's what caused the "flies
+       through" glitch at the Core -> Core Pro handoff. */
+    .vt-ctapill{
+      position:fixed; left:0; right:0; bottom:24px; z-index:110;
+      display:flex; justify-content:center;
+      pointer-events:none;
+      opacity:0; transform:translateY(16px) scale(.97);
+      transition:opacity .4s cubic-bezier(.4,0,.2,1), transform .4s cubic-bezier(.4,0,.2,1);
+    }
+    .vt-ctapill.is-visible{ opacity:1; transform:none; pointer-events:auto; }
+    .vt-ctapill__inner{
+      position:relative;
+      display:inline-flex; align-items:center;
+      padding:0 68px 0 26px;
+      height:52px; border-radius:34px; corner-shape:round;
+      font-family:'Inter',var(--sans); font-weight:700; font-size:1.02rem;
+      color:#fff; text-decoration:none;
+      background:rgba(255,255,255,.16);
+      backdrop-filter:blur(24px) saturate(180%);
+      -webkit-backdrop-filter:blur(24px) saturate(180%);
+      border:1px solid rgba(255,255,255,.4);
+      box-shadow:
+        0 10px 34px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.55),
+        inset 0 -1px 0 rgba(255,255,255,.08);
+      transition:background .4s, border-color .4s, color .4s, transform .25s, box-shadow .25s;
+      white-space:nowrap;
+    }
+    .vt-ctapill__inner:hover{ transform:translateY(-2px) scale(1.02); box-shadow:0 14px 40px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.6); }
+    .vt-ctapill__inner:active{ transform:scale(.97); }
+    .vt-ctapill__plus{
+      position:absolute; right:4px; top:6px;
+      width:40px; height:40px; border-radius:20px; corner-shape:round;
+      background:rgba(255,255,255,.92);
+      display:inline-flex; align-items:center; justify-content:center;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.8), 0 1px 2px rgba(0,0,0,.15);
+    }
+    .vt-ctapill__plus svg{ width:22px; height:22px; display:block; }
+    /* On a light-surface section (Core's white bubble) swap to a dark
+       glass tint so the pill still reads against pale backgrounds. */
+    .vt-ctapill[data-surface="light"] .vt-ctapill__inner{
+      background:rgba(20,20,22,.5);
+      border-color:rgba(255,255,255,.16);
+    }
+    @media (max-width:640px){
+      .vt-ctapill{ bottom:16px; }
+      .vt-ctapill__inner{ height:48px; padding:0 62px 0 22px; font-size:.92rem; }
+      .vt-ctapill__plus{ width:36px; height:36px; top:6px; }
+      .vt-ctapill__plus svg{ width:20px; height:20px; }
+    }
   </style>
 
   <script>
@@ -93,5 +148,56 @@
 
   {% render 'cart-drawer' %}
   <div class="page-scrim" data-scrim hidden></div>
+
+  <div class="vt-ctapill" id="vt-ctapill">
+    <a class="vt-ctapill__inner" id="vt-ctapill-link" href="#">
+      <span id="vt-ctapill-label"></span>
+      <span class="vt-ctapill__plus" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 5V19M5 12H19" stroke="#0a0a0c" stroke-width="3.6" stroke-linecap="round"/>
+        </svg>
+      </span>
+    </a>
+  </div>
+  <script>
+  (function(){
+    var pill = document.getElementById('vt-ctapill');
+    var link = document.getElementById('vt-ctapill-link');
+    var label = document.getElementById('vt-ctapill-label');
+    if(!pill || !link || !label) return;
+    var targets = Array.prototype.slice.call(document.querySelectorAll('[data-ctapill]'));
+    if(!targets.length) return;
+
+    function update(){
+      var vh = window.innerHeight;
+      var best = null, bestDist = Infinity;
+      targets.forEach(function(el){
+        var r = el.getBoundingClientRect();
+        if(r.bottom <= 0 || r.top >= vh) return;
+        var center = r.top + r.height / 2;
+        var dist = Math.abs(center - vh / 2);
+        if(dist < bestDist){ bestDist = dist; best = el; }
+      });
+      if(best){
+        link.href = best.getAttribute('data-cta-url');
+        label.textContent = best.getAttribute('data-cta-label');
+        pill.setAttribute('data-surface', best.getAttribute('data-cta-surface') || 'dark');
+        pill.classList.add('is-visible');
+      } else {
+        pill.classList.remove('is-visible');
+      }
+    }
+
+    var ticking = false;
+    function onScroll(){
+      if(ticking) return;
+      ticking = true;
+      requestAnimationFrame(function(){ update(); ticking = false; });
+    }
+    window.addEventListener('scroll', onScroll, { passive:true });
+    window.addEventListener('resize', update);
+    update();
+  })();
+  </script>
 </body>
 </html>
