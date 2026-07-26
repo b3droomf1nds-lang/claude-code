@@ -11,6 +11,7 @@
     text-align:center;
     background:var(--base);
     z-index:0;
+    overflow:hidden;
   }
   .apple-hero__head{padding:clamp(72px,10vw,116px) 0 clamp(28px,4vw,48px);flex-shrink:0}
   .apple-hero__eyebrow{
@@ -61,10 +62,11 @@
     .apple-hero__subhead{ transform:translateY(42px); margin-bottom:26px; max-width:310px; line-height:1.35; }
     .apple-hero__ctas{ transform:translateY(40px); }
     .apple-hero__ctas .btn{ padding:9px 18px; font-size:.475rem; gap:5px; }
-    /* overflow stays hidden so the image is always fully clipped inside this
-       box — that's what guarantees the grid below can never visually cover
-       any part of it, no matter how close the two sections sit. */
-    .apple-hero__media{ align-items:flex-start; padding-top:28px; margin-top:100px; overflow:hidden; }
+    /* pushed down with padding (not a flex-item margin) and clipped by the
+       section's own overflow:hidden above, so the image can never render
+       outside the hero's box no matter how the page scrolls — the grid
+       below has 0 margin-top, so the two boxes can't geometrically meet. */
+    .apple-hero__media{ align-items:flex-start; padding-top:128px; overflow:hidden; }
     .apple-hero__media img{ transform:scale(2.02) translateY(8px); }
   }
   .apple-hero__media img{
