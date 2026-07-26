@@ -264,7 +264,7 @@ h1 em,h2 em,.plp__title em{
 
 /* ---------- product page ---------- */
 .product{padding:clamp(32px,5vw,64px) 0 clamp(88px,11vw,144px)}
-.product__grid{display:grid;gap:var(--s5)}
+.product__grid{display:grid;gap:var(--s5);grid-template-columns:minmax(0,1fr)}
 .gallery__main{border-radius:var(--r-xl);overflow:hidden;background:var(--tile);aspect-ratio:1;position:relative;cursor:zoom-in}
 .gallery__main img{width:100%;height:100%;object-fit:cover;transition:transform .45s var(--ease)}
 .gallery__thumbs{display:flex;gap:10px;margin-top:14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
