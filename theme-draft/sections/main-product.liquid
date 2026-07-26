@@ -180,25 +180,6 @@
           {%- endif -%}
         </p>
 
-        {%- if stat_src != blank -%}
-          <div class="pstats">
-            {%- assign stat_items = stat_src | split: ';' -%}
-            {%- for s in stat_items -%}
-              {%- assign parts = s | split: '|' -%}
-              <div class="pstats__tile"><span class="t-mono">{{ parts[0] }}</span><small>{{ parts[1] }}</small></div>
-            {%- endfor -%}
-          </div>
-        {%- endif -%}
-
-        {%- if check_src != blank -%}
-          <ul class="pchecks">
-            {%- assign check_items = check_src | split: ';' -%}
-            {%- for c in check_items -%}
-              <li>{{ c | strip }}</li>
-            {%- endfor -%}
-          </ul>
-        {%- endif -%}
-
         <form data-product-form action="{{ routes.cart_add_url }}" method="post" enctype="multipart/form-data" novalidate>
           <input type="hidden" name="id" value="{{ current_variant.id }}">
 
@@ -213,11 +194,15 @@
             {%- for option in product.options_with_values -%}
               {%- assign oname = option.name | downcase -%}
               {%- assign is_color = false -%}
+              {%- assign is_capacity = false -%}
               {%- if oname contains 'color' or oname contains 'colour' -%}{%- assign is_color = true -%}{%- endif -%}
+              {%- if oname contains 'capacit' or oname contains 'mah' -%}{%- assign is_capacity = true -%}{%- endif -%}
+              {%- assign is_boxed = false -%}
+              {%- if is_color or is_capacity -%}{%- assign is_boxed = true -%}{%- endif -%}
               {%- assign current_opt_value = current_variant.options[forloop.index0] -%}
-              <fieldset class="opt">
+              <fieldset class="opt{% if is_boxed %} opt--boxed{% endif %}">
                 <div class="opt__label">{{ option.name }} &middot; <output>{{ current_opt_value }}</output></div>
-                <div class="opt__values">
+                <div class="opt__values{% if is_boxed %} opt__values--boxed{% endif %}">
                   {%- for value in option.values -%}
                     {%- assign input_id = 'opt-' | append: section.id | append: '-' | append: forloop.parentloop.index | append: '-' | append: forloop.index -%}
                     <input type="radio"
@@ -225,7 +210,7 @@
                       id="{{ input_id }}"
                       value="{{ value | escape }}"
                       {% if current_opt_value == value %}checked{% endif %}>
-                    <label class="opt__pill{% if is_color %} opt__pill--swatch{% endif %}" for="{{ input_id }}">
+                    <label class="opt__pill{% if is_color %} opt__pill--swatch{% endif %}{% if is_boxed %} opt__pill--box{% endif %}" for="{{ input_id }}">
                       {%- if is_color -%}
                         {%- assign cd = value | downcase -%}
                         <i class="swatch" aria-hidden="true" style="background:
@@ -268,6 +253,25 @@
             <i class="charge-dot" aria-hidden="true"></i>{{ 'products.ship_note' | t }}
           </p>
         </form>
+
+        {%- if stat_src != blank -%}
+          <div class="pstats">
+            {%- assign stat_items = stat_src | split: ';' -%}
+            {%- for s in stat_items -%}
+              {%- assign parts = s | split: '|' -%}
+              <div class="pstats__tile"><span class="t-mono">{{ parts[0] }}</span><small>{{ parts[1] }}</small></div>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
+        {%- if check_src != blank -%}
+          <ul class="pchecks">
+            {%- assign check_items = check_src | split: ';' -%}
+            {%- for c in check_items -%}
+              <li>{{ c | strip }}</li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
 
         {%- if has_calc -%}
           <div class="pdp-calc-inline" id="pdp-calc" data-reveal>
