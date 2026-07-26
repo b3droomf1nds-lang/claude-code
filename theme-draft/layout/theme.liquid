@@ -2,7 +2,7 @@
 <html lang="{{ request.locale.iso_code }}">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#FCFDFE">
   <title>
     {{ page_title }}{% if current_tags %} &ndash; {{ current_tags | join: ', ' }}{% endif %}{% if current_page != 1 %} &ndash; {{ 'general.page' | t }} {{ current_page }}{% endif %}{% unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless %}
@@ -20,6 +20,13 @@
     /* Guard: never allow sideways scrolling on any page — an
        overflowing element gets clipped instead of widening the page. */
     html, body { overflow-x: hidden; overflow-x: clip; }
+
+    /* With viewport-fit=cover, the page now extends its own background
+       under the status bar/notch safe area instead of leaving that strip
+       to the browser's own default scrim — push visible header content
+       below it so nothing sits behind the notch itself. */
+    html{ background:var(--base,#FCFDFE); }
+    body{ padding-top: env(safe-area-inset-top); }
 
     /* Site-wide overrides: Inter as the body font, Apple-style off-white
        canvas, white/light footer, white newsletter "Join" button. */
