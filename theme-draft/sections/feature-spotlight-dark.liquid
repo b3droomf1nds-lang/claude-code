@@ -150,6 +150,24 @@
     .fdark__stickybar-title{ font-size:.86rem; }
     .fdark__stickybar-explore,.fdark__stickybar-buy{ padding:6px 12px; font-size:.78rem; }
   }
+
+  /* Floating CTA pill: mirrors the in-page "Calculate usage" pill, but
+     fixed to the bottom of the viewport and only shown while the section
+     itself is on screen (same IntersectionObserver that drives the top
+     stickybar) — stays put as you scroll through the section, gone once
+     you scroll past it. Lives outside the section/[data-reveal] tree so a
+     pre-reveal transform on the section can't hijack its fixed
+     positioning. */
+  .fdark__ctafloat{
+    position:fixed; left:0; right:0; bottom:24px; z-index:110;
+    display:flex; justify-content:center;
+    pointer-events:none;
+    opacity:0; transform:translateY(24px);
+    transition:opacity .35s cubic-bezier(.4,0,.2,1), transform .35s cubic-bezier(.4,0,.2,1);
+  }
+  .fdark__ctafloat.is-visible{ opacity:1; transform:none; pointer-events:auto; }
+  .fdark__ctafloat .fdark__cta{ position:relative !important; box-shadow:0 12px 30px rgba(0,0,0,.35); }
+  @media (max-width:640px){ .fdark__ctafloat{ bottom:16px; } }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -171,6 +189,19 @@
     </div>
   </div>
 </div>
+
+{%- if _p -%}
+  <div class="fdark__ctafloat" id="fdark-ctafloat-{{ section.id }}">
+    <a class="btn fdark__cta" href="{{ _p.url }}">
+      {{ section.settings.cta | default: 'Calculate usage' }}
+      <span class="fdark__cta-plus" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 5V19M5 12H19" stroke="#0a0a0c" stroke-width="3.6" stroke-linecap="round"/>
+        </svg>
+      </span>
+    </a>
+  </div>
+{%- endif -%}
 
 <section class="section fdark" id="fdark-{{ section.id }}">
   <div class="wrap wrap--wide fdark__inner" data-reveal>
@@ -209,16 +240,6 @@
 
     <div class="fdark__copy">{{ section.settings.copy }}</div>
 
-    {%- if _p -%}
-      <a class="btn fdark__cta" href="{{ _p.url }}">
-        {{ section.settings.cta | default: 'Calculate usage' }}
-        <span class="fdark__cta-plus" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 5V19M5 12H19" stroke="#0a0a0c" stroke-width="3.6" stroke-linecap="round"/>
-          </svg>
-        </span>
-      </a>
-    {%- endif -%}
   </div>
 </section>
 
@@ -226,6 +247,7 @@
 (function(){
   var root = document.getElementById('fdark-{{ section.id }}');
   var bar = document.getElementById('fdark-stickybar-{{ section.id }}');
+  var ctaFloat = document.getElementById('fdark-ctafloat-{{ section.id }}');
   if(!root || !bar) return;
 
   if('IntersectionObserver' in window){
@@ -236,6 +258,15 @@
       });
     }, { rootMargin: '-72px 0px -' + bottomMargin + 'px 0px', threshold: 0 });
     io.observe(root);
+
+    if(ctaFloat){
+      var ctaIo = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          ctaFloat.classList.toggle('is-visible', entry.isIntersecting);
+        });
+      }, { threshold: 0 });
+      ctaIo.observe(root);
+    }
   }
 
   var exploreLink = bar.querySelector('[data-fdark-explore]');
