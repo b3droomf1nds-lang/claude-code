@@ -698,7 +698,7 @@ h1 em,h2 em,.plp__title em{
   .product-card__title,.product-card__price{font-size:1rem}
   .product-card__meta{display:none}
   .product-card__word--inline{display:none}
-  .product-card__title{ grid-row:2; }
+  .product-card__title{display:none}
 }
 
 
