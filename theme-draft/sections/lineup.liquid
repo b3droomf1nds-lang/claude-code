@@ -8,6 +8,10 @@
        shrinking the hero section itself (see apple-hero.liquid), so this
        stays at 0 and the two sections are structurally unable to overlap. */
     .lineup{ margin-top:0; }
+    /* Kill the reveal slide/fade on the first grid row too — any
+       transform-driven motion this close to the hero is one more thing
+       that could visually cross into it during scroll. */
+    .lineup__grid > [data-reveal]{ opacity:1!important; transform:none!important; transition:none!important; }
   }
   .lineup .lineup__head{ margin-bottom:8px; }
   .lineup .product-card__word{
