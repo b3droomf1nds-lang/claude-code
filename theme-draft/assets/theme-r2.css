@@ -281,8 +281,7 @@ h1 em,h2 em,.plp__title em{
 .pinfo__tagline{color:var(--ink-60);margin:0 0 var(--s4);line-height:1.65;font-size:1.02rem}
 
 .opt{margin-bottom:var(--s3);border:0;padding:0}
-.opt__label{font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-60);margin-bottom:10px;display:flex;justify-content:space-between;width:100%}
-.opt__label output{color:var(--ink);text-transform:none;letter-spacing:0}
+.opt__label{font-size:.78rem;font-weight:600;letter-spacing:0;text-transform:capitalize;color:var(--ink-60);margin-bottom:10px;display:flex;justify-content:space-between;width:100%}
 .opt__values{display:flex;flex-wrap:wrap;gap:10px}
 .opt input[type="radio"]{position:absolute;opacity:0;pointer-events:none}
 .opt__pill{

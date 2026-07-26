@@ -166,11 +166,7 @@
 
       {%- comment -%} ---------- Buy column ---------- {%- endcomment -%}
       <div class="pinfo" data-reveal>
-        <span class="pinfo__eyebrow t-eyebrow">{{ eyebrow }}</span>
         <h1>{{ display_title }}</h1>
-        {%- if tagline != blank -%}
-          <p class="pinfo__tagline">{{ tagline }}</p>
-        {%- endif -%}
         <p class="pinfo__price price-row">
           <span class="price-row__main" data-price>{{ current_variant.price | money }}</span>
           {%- if current_variant.compare_at_price > current_variant.price -%}
@@ -201,7 +197,7 @@
               {%- if is_color or is_capacity -%}{%- assign is_boxed = true -%}{%- endif -%}
               {%- assign current_opt_value = current_variant.options[forloop.index0] -%}
               <fieldset class="opt{% if is_boxed %} opt--boxed{% endif %}">
-                <div class="opt__label">{{ option.name }} &middot; <output>{{ current_opt_value }}</output></div>
+                <div class="opt__label">{{ option.name }}</div>
                 <div class="opt__values{% if is_boxed %} opt__values--boxed{% endif %}">
                   {%- for value in option.values -%}
                     {%- assign input_id = 'opt-' | append: section.id | append: '-' | append: forloop.parentloop.index | append: '-' | append: forloop.index -%}
