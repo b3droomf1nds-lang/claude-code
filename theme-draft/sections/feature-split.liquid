@@ -130,7 +130,7 @@
 </div>
 
 <section class="section fsplit2" id="fsplit2-{{ section.id }}">
-  <div data-reveal>
+  <div class="wrap wrap--wide" data-reveal>
     <div class="fsplit2__banner">
       <div class="fsplit2__banner-text">
         <h2 class="fsplit2__banner-heading">
@@ -151,7 +151,7 @@
     </div>
 
     {%- if _p -%}
-      <div class="wrap wrap--wide fsplit2__cta-row">
+      <div class="fsplit2__cta-row">
         <span class="fsplit2__cta-backdrop">
           <a class="btn fdark__cta" href="{{ _p.url }}" style="background:#000000 !important; border:1px solid #808080 !important; box-shadow:none !important;">
             {{ section.settings.cta | default: 'Shop now' }}
