@@ -2,6 +2,11 @@
 {%- if _flag.handle -%}{%- assign _flag = _flag.handle -%}{%- endif -%}
 <style>
   .lineup{ padding-top: clamp(18px,2.2vw,32px); margin-top:-60px; position:relative; z-index:1; background:var(--base); }
+  @media (max-width:640px){
+    /* the hero banner now sits lower on mobile, so the grid's negative
+       overlap margin would otherwise cut across the image; drop it. */
+    .lineup{ margin-top:0; }
+  }
   .lineup .lineup__head{ margin-bottom:8px; }
   .lineup .product-card__word{
     font-family:'Voltical Relay',var(--sans) !important;
