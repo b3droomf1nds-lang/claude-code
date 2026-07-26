@@ -83,7 +83,7 @@
       box-shadow:
         0 10px 34px rgba(0,0,0,.2),
         inset 0 1px 0 rgba(255,255,255,.35);
-      transition:border-color .4s, color .4s, transform .25s, box-shadow .25s;
+      transition:border-color .15s, color .15s, transform .25s, box-shadow .25s;
       white-space:nowrap;
     }
     .vt-ctapill__inner:hover{ transform:translateY(-2px) scale(1.02); box-shadow:0 14px 40px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.4); }
@@ -173,14 +173,25 @@
 
     function update(){
       var vh = window.innerHeight;
-      var best = null, bestDist = Infinity;
+      var pillY = vh - (pill.offsetHeight || 50) / 2 - 24;
+      var best = null;
       targets.forEach(function(el){
         var r = el.getBoundingClientRect();
-        if(r.bottom <= 0 || r.top >= vh) return;
-        var center = r.top + r.height / 2;
-        var dist = Math.abs(center - vh / 2);
-        if(dist < bestDist){ bestDist = dist; best = el; }
+        if(r.top <= pillY && r.bottom >= pillY) best = el;
       });
+      if(!best){
+        // pill's own position isn't over any tracked section (e.g. the
+        // section is still scrolling in below it) — fall back to whichever
+        // is nearest viewport-center, just so it doesn't sit hidden.
+        var bestDist = Infinity;
+        targets.forEach(function(el){
+          var r = el.getBoundingClientRect();
+          if(r.bottom <= 0 || r.top >= vh) return;
+          var center = r.top + r.height / 2;
+          var dist = Math.abs(center - vh / 2);
+          if(dist < bestDist){ bestDist = dist; best = el; }
+        });
+      }
       if(best){
         link.href = best.getAttribute('data-cta-url');
         label.textContent = best.getAttribute('data-cta-label');
