@@ -3,9 +3,11 @@
 <style>
   .lineup{ padding-top: clamp(18px,2.2vw,32px); margin-top:-60px; position:relative; z-index:1; background:var(--base); }
   @media (max-width:640px){
-    /* the hero banner now sits lower on mobile, so the grid's negative
-       overlap margin would otherwise cut across the image; drop it. */
-    .lineup{ margin-top:-100px; }
+    /* Never use a negative margin here — that's what let the grid draw over
+       the hero image before. The gap to the hero above is closed by
+       shrinking the hero section itself (see apple-hero.liquid), so this
+       stays at 0 and the two sections are structurally unable to overlap. */
+    .lineup{ margin-top:0; }
   }
   .lineup .lineup__head{ margin-bottom:8px; }
   .lineup .product-card__word{

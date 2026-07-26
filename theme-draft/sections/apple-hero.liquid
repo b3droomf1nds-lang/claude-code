@@ -55,13 +55,16 @@
     transform:scale(1.229);
   }
   @media (max-width:640px){
-    .apple-hero{ height:calc(66.67dvh + 270px); }
+    .apple-hero{ height:calc(66.67dvh + 120px); }
     .apple-hero__head{ padding-top:94px; padding-bottom:18px; }
     .apple-hero__eyebrow{ transform:translateY(34px); }
     .apple-hero__subhead{ transform:translateY(42px); margin-bottom:26px; max-width:310px; line-height:1.35; }
     .apple-hero__ctas{ transform:translateY(40px); }
     .apple-hero__ctas .btn{ padding:9px 18px; font-size:.475rem; gap:5px; }
-    .apple-hero__media{ align-items:flex-start; padding-top:28px; margin-top:100px; overflow:visible; }
+    /* overflow stays hidden so the image is always fully clipped inside this
+       box — that's what guarantees the grid below can never visually cover
+       any part of it, no matter how close the two sections sit. */
+    .apple-hero__media{ align-items:flex-start; padding-top:28px; margin-top:100px; overflow:hidden; }
     .apple-hero__media img{ transform:scale(2.02) translateY(8px); }
   }
   .apple-hero__media img{
