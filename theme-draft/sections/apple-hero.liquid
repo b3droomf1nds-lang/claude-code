@@ -69,7 +69,12 @@
        section's own overflow:hidden above, so the image can never render
        outside the hero's box no matter how the page scrolls — the grid
        below has 0 margin-top, so the two boxes can't geometrically meet. */
-    .apple-hero__media{ align-items:flex-start; padding-top:23px; overflow:hidden; }
+    /* anchor to the BOTTOM of the flex box, not the top — the box is taller
+       than the image (it fills whatever fixed vh space is left over), so
+       top-anchoring left a large blank strip below the image, right above
+       the grid. Bottom-anchoring puts any leftover slack above the image
+       instead, where it's invisible against the head's own spacing. */
+    .apple-hero__media{ align-items:flex-end; padding-bottom:6px; overflow:hidden; }
     .apple-hero__media img{ transform:scale(2.02) translateY(8px); }
   }
   .apple-hero__media img{
