@@ -1,27 +1,31 @@
 {%- comment -%}
-  Full-bleed banner layout — modeled on Apple's product-highlight banners:
-  an edge-to-edge rectangle stretching the full width of the screen, split
-  in half (text anchored bottom-left on one side, a large product image
-  filling the other side). Below the banner sits the same centered pill CTA
-  (with the "+" icon) used on the Core Pro spotlight section. Keeps the same
-  sticky Explore/Buy bar pattern too.
+  Light "bubble" banner — modeled on Apple's finish/material banners: a
+  white rounded card raised slightly off the page's own background (soft
+  shadow, tinted backdrop), text vertically centered on the left, a large
+  product image filling the right half. Below the card sits the same
+  centered pill CTA (with the "+" icon) used on the Core Pro spotlight
+  section. Keeps the same sticky Explore/Buy bar pattern too.
 {%- endcomment -%}
 <style>
-  .fsplit2{ background:var(--base); color:var(--ink); padding:calc(clamp(64px,9vw,120px) + 90px) 0 clamp(72px,10vw,130px); }
-  .fsplit2 .wrap--wide{ max-width:1800px; }
+  .fsplit2{ background:var(--ink-04,rgba(19,19,22,.045)); color:var(--ink); padding:calc(clamp(64px,9vw,120px) + 90px) 0 clamp(72px,10vw,130px); }
+  .fsplit2 .wrap--wide{ max-width:1400px; }
 
   .fsplit2__banner{
     width:100%;
     display:flex;
     align-items:stretch;
-    min-height:clamp(420px,46vw,640px);
-    background:var(--base);
+    min-height:clamp(360px,38vw,540px);
+    background:#FFFFFF;
+    border-radius:clamp(28px,3vw,44px);
+    corner-shape:squircle;
+    box-shadow:0 1px 2px rgba(19,19,22,.04),0 24px 60px -24px rgba(19,19,22,.14);
+    overflow:hidden;
   }
   .fsplit2__banner-text{
     flex:1 1 45%; min-width:260px;
-    display:flex; flex-direction:column; justify-content:flex-end;
-    padding:clamp(28px,4vw,64px);
-    background:var(--base);
+    display:flex; flex-direction:column; justify-content:center;
+    padding:clamp(32px,4.5vw,72px);
+    background:#FFFFFF;
   }
   .fsplit2__banner-heading{
     font-family:var(--sans);
@@ -35,7 +39,8 @@
     position:relative;
     overflow:hidden;
     display:flex; align-items:center; justify-content:center;
-    background:var(--base);
+    background:#FFFFFF;
+    padding:clamp(24px,3vw,48px);
   }
   .fsplit2__banner-media img{
     max-width:100%; max-height:100%;
@@ -57,9 +62,9 @@
   }
 
   @media (max-width:900px){
-    .fsplit2__banner{ flex-direction:column; min-height:0; }
-    .fsplit2__banner-text{ order:2; padding-bottom:clamp(28px,6vw,40px); }
-    .fsplit2__banner-media{ order:1; aspect-ratio:4/3; }
+    .fsplit2__banner{ flex-direction:column; min-height:0; border-radius:28px; }
+    .fsplit2__banner-text{ order:2; padding:28px 22px; justify-content:flex-start; }
+    .fsplit2__banner-media{ order:1; aspect-ratio:4/3; padding:20px; }
   }
   .fsplit2__stickybar{
     position:fixed; top:14px; left:14px; right:14px; z-index:120;
