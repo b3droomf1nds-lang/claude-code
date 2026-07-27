@@ -196,7 +196,7 @@
               {%- assign is_boxed = false -%}
               {%- if is_color or is_capacity -%}{%- assign is_boxed = true -%}{%- endif -%}
               {%- assign current_opt_value = current_variant.options[forloop.index0] -%}
-              <fieldset class="opt{% if is_boxed %} opt--boxed{% endif %}">
+              <fieldset class="opt{% if is_boxed %} opt--boxed{% endif %}{% if forloop.index > 1 %} opt--locked{% endif %}" data-opt-index="{{ forloop.index }}">
                 <div class="opt__label">{{ option.name }}</div>
                 <div class="opt__values{% if is_boxed %} opt__values--boxed{% endif %}">
                   {%- for value in option.values -%}
@@ -205,7 +205,8 @@
                       name="opt-{{ section.id }}-{{ option.name | handleize }}"
                       id="{{ input_id }}"
                       value="{{ value | escape }}"
-                      {% if current_opt_value == value %}checked{% endif %}>
+                      {% if current_opt_value == value %}checked{% endif %}
+                      {% if forloop.parentloop.index > 1 %}disabled{% endif %}>
                     <label class="opt__pill{% if is_color %} opt__pill--swatch{% endif %}{% if is_boxed %} opt__pill--box{% endif %}" for="{{ input_id }}">
                       {%- if is_color -%}
                         {%- assign cd = value | downcase -%}
@@ -301,6 +302,25 @@
   <script type="application/json" data-product-json>{{ product | json }}</script>
 
   <script>
+    /* Second option (e.g. Power capacity) stays greyed-out and
+       unselectable until the shopper actively clicks a pill in the
+       first option (e.g. Color) — even re-clicking the pre-selected
+       default counts, since the click event fires regardless of
+       whether the radio's checked state actually changes. */
+    (function () {
+      var first = document.querySelector('.opt[data-opt-index="1"]');
+      var second = document.querySelector('.opt[data-opt-index="2"]');
+      if (!first || !second) return;
+
+      first.addEventListener('click', function (e) {
+        if (!e.target.closest('.opt__pill')) return;
+        second.classList.remove('opt--locked');
+        second.querySelectorAll('input[type="radio"]').forEach(function (input) {
+          input.disabled = false;
+        });
+      });
+    })();
+
     /* Keep the price inside the add-to-cart button in sync with the
        main price (which theme.js updates on variant change). */
     (function () {
