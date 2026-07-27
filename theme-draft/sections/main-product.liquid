@@ -381,7 +381,23 @@
          bar goes away immediately regardless of position — scrolling
          down is a "never mind" signal, so it always drops straight back
          to the regular button rather than continuing to chase the
-         catch-up point. */
+         catch-up point.
+
+         One exception: right at the bottom of the page, the browser's
+         own elastic overscroll bounces the view back up a few px on its
+         own — nothing to do with the user actually scrolling up — and
+         that rebound must NOT start a pin (this is the main scenario
+         the sticky bar exists for, so it can't just be disabled near
+         the bottom; the bounce itself has to be told apart from a real
+         upward scroll). A real upward scroll keeps moving up tick after
+         tick; the bounce-settle is a one-off blip that stops almost
+         immediately. So a fresh pin only starts once the cumulative
+         upward movement (reset the moment the direction flips back to
+         down) passes a small threshold — enough to filter the bounce's
+         single-tick rebound without adding any noticeable delay to a
+         genuine upward scroll. */
+      var PIN_START_THRESHOLD = 24;
+      var upDistance = 0;
       var lastY = window.scrollY;
       var ticking = false;
       function update() {
@@ -393,11 +409,15 @@
         var belowSpot = restingBottom < pinnedBottomLine;
         var outOfView = restingBottom <= 0;
         if (scrollingDown) {
+          upDistance = 0;
           unpin();
-        } else if (pinned) {
-          if (!belowSpot) unpin();
-        } else if (outOfView) {
-          pin();
+        } else {
+          upDistance += lastY - y;
+          if (pinned) {
+            if (!belowSpot) unpin();
+          } else if (outOfView && upDistance >= PIN_START_THRESHOLD) {
+            pin();
+          }
         }
         lastY = y;
         ticking = false;
