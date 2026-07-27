@@ -27,6 +27,7 @@
 }
 .addon__eyebrow {
   color: var(--sky-m, #A8CDEE);
+  text-transform: none;
 }
 
 /* ---------- stat tiles ---------- */
