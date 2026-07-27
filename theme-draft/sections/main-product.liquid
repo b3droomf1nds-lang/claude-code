@@ -361,17 +361,18 @@
         atc.style.width = '';
       }
 
-      /* Only ever pinned while actively SCROLLING UP, and only until the
-         button's natural spot has scrolled up enough that its resting
-         bottom edge reaches the same line the pinned bar's bottom edge
-         sits on. The real button must NOT pop into view (unpin) any
-         earlier than that — even once it's technically started to
-         enter the viewport from the top, it stays hidden behind the
-         sticky bar until it's scrolled down to exactly where the sticky
-         one lives, at which point they swap with no gap and no jump.
-         While scrolling down it never pins — it just isn't there, only
-         reappearing normally when you scroll back up through its actual
-         place in the buy column. */
+      /* Only ever STARTS pinning while actively SCROLLING UP, and only
+         until the button's natural spot has scrolled up enough that its
+         resting bottom edge reaches the same line the pinned bar's
+         bottom edge sits on — at which point they swap with no gap and
+         no jump. Direction only gates the START of a pin: a fresh
+         downward scroll never begins one. But once pinned, reversing
+         to scroll down while still short of that line must NOT let the
+         real button switch on early — you're still "over" its spot on
+         screen, just not all the way down to where the sticky bar
+         lives yet, so it stays hidden behind the sticky bar until the
+         resting bottom edge actually reaches that line, regardless of
+         which direction got it there. */
       var lastY = window.scrollY;
       var ticking = false;
       function update() {
@@ -381,7 +382,11 @@
         var restingBottom = restingTop + naturalHeight;
         var pinnedBottomLine = window.innerHeight - marginBottom;
         var belowSpot = restingBottom < pinnedBottomLine;
-        if (!scrollingDown && belowSpot) pin(); else unpin();
+        if (belowSpot) {
+          if (!scrollingDown) pin();
+        } else {
+          unpin();
+        }
         lastY = y;
         ticking = false;
       }
