@@ -305,9 +305,9 @@ h1 em,h2 em,.plp__title em{
 }
 .opt__pill--box:hover{background:var(--panel,#fff);border-color:var(--ink-30,rgba(19,19,22,.3));transform:none}
 .opt input:checked + .opt__pill--box{
-  background:rgba(127,114,217,.06);color:var(--ink);
-  border-color:var(--lilac-m,#7F72D9);
-  box-shadow:0 0 0 1px var(--lilac-m,#7F72D9);
+  background:rgba(114,160,217,.06);color:var(--ink);
+  border-color:#72A0D9;
+  box-shadow:0 0 0 1px #72A0D9;
 }
 .opt__pill--box.opt__pill--swatch .swatch{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(19,19,22,.1)}
 
