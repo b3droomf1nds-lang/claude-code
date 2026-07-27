@@ -389,21 +389,24 @@
          rebound must NOT start a pin (this is the main scenario the
          sticky bar exists for, so it can't just be disabled near the
          bottom; the bounce itself has to be told apart from a real
-         upward scroll). A real upward scroll is a continuous streak
-         that keeps going; a bounce is a one-off rebound that covers its
-         distance and settles back within a couple hundred ms. So a
-         fresh pin only starts once the CURRENT continuous upward streak
-         (distance accumulated since the direction last flipped back to
-         down, wall-clock time since that same moment) clears both a
-         minimum distance AND a minimum duration — tied to how long
-         upward movement has actually been happening, not to how
-         recently the scroll position was near the bottom, since by the
-         time enough distance has accumulated to check, the position
-         itself may already have drifted well clear of the bottom. */
-      var PIN_START_DISTANCE = 60;
-      var PIN_START_DURATION_MS = 350;
+         upward scroll). A time- or distance-based delay on EVERY pin
+         start was the wrong tool here — it made the button noticeably
+         slow to appear even for a real, deliberate upward scroll. The
+         actual bounce has a specific, detectable fingerprint that a
+         real scroll never produces: for the split second of the rubber-
+         band stretch itself, scrollY briefly reports a value OUTSIDE
+         the valid [0, max] range (mobile Safari/Chrome-on-iOS do this
+         even though the visual "position" never really leaves the
+         page). Catching that moment directly — instead of guessing from
+         motion alone — means a genuine upward scroll pins the instant
+         it crosses the distance threshold below, with no added delay,
+         while a real bounce (which always passes through that
+         out-of-range state) gets a short cooldown right when it
+         happens. */
+      var PIN_START_DISTANCE = 20;
+      var OVERSCROLL_COOLDOWN_MS = 700;
       var upDistance = 0;
-      var upStreakStart = 0;
+      var lastOverscrollTime = 0;
       var lastY = window.scrollY;
       var ticking = false;
       function update() {
@@ -414,19 +417,17 @@
         var pinnedBottomLine = window.innerHeight - marginBottom;
         var belowSpot = restingBottom < pinnedBottomLine;
         var outOfView = restingBottom <= 0;
+        var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        if (y < 0 || y > maxScroll) lastOverscrollTime = Date.now();
+        var inOverscrollCooldown = Date.now() - lastOverscrollTime < OVERSCROLL_COOLDOWN_MS;
         if (scrollingDown) {
           upDistance = 0;
           unpin();
         } else {
-          if (upDistance === 0) upStreakStart = Date.now();
           upDistance += lastY - y;
           if (pinned) {
             if (!belowSpot) unpin();
-          } else if (
-            outOfView &&
-            upDistance >= PIN_START_DISTANCE &&
-            Date.now() - upStreakStart >= PIN_START_DURATION_MS
-          ) {
+          } else if (outOfView && !inOverscrollCooldown && upDistance >= PIN_START_DISTANCE) {
             pin();
           }
         }
