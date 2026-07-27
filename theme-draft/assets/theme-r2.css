@@ -563,6 +563,10 @@ h1 em,h2 em,.plp__title em{
 .lightbox__dots{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);display:flex;gap:10px}
 .lightbox__dots i{width:8px;height:8px;border-radius:50%;background:var(--ink-30);transition:background .2s;cursor:pointer}
 .lightbox__dots i.is-on{background:var(--ink)}
+@media (max-width:640px){
+  /* swipe replaces tap-to-navigate on mobile — see theme-r3.js */
+  .lightbox__prev,.lightbox__next{display:none}
+}
 
 /* spec sheet */
 .specs{margin:var(--s4) 0 0}

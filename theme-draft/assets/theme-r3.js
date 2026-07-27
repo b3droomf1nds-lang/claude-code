@@ -63,6 +63,35 @@
     };
     thumbs.forEach((t) => t.addEventListener('click', () => setMain(t)));
 
+    // Swipe left/right on the main image to step through photos — the
+    // dots below only show which photo is active, they're too small a
+    // target to be the only way to move between images on mobile.
+    const visibleThumbs = () => thumbs.filter((t) => !t.hasAttribute('data-color-hidden'));
+    const stepMain = (dir) => {
+      const visible = visibleThumbs();
+      const activeIdx = visible.indexOf($('.gallery__thumb.is-active', gallery));
+      if (activeIdx === -1 || visible.length < 2) return;
+      setMain(visible[(activeIdx + dir + visible.length) % visible.length]);
+    };
+    (function () {
+      let startX = 0, startY = 0, tracking = false;
+      const threshold = 40;
+      mainWrap.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        tracking = true;
+      }, { passive: true });
+      mainWrap.addEventListener('touchend', (e) => {
+        if (!tracking) return;
+        tracking = false;
+        const dx = e.changedTouches[0].clientX - startX;
+        const dy = e.changedTouches[0].clientY - startY;
+        if (Math.abs(dx) < threshold || Math.abs(dx) < Math.abs(dy)) return;
+        stepMain(dx < 0 ? 1 : -1);
+      }, { passive: true });
+    })();
+
     // Preload every full-size gallery image in the background right after
     // load, so by the time someone clicks a thumbnail the browser already
     // has it cached and the swap is instant instead of waiting on a
@@ -83,7 +112,6 @@
       const lbDots = $('[data-lb-dots]', lb);
       let lbList = [], lbIdx = 0;
 
-      const visibleThumbs = () => thumbs.filter((t) => !t.hasAttribute('data-color-hidden'));
       const lbRender = () => {
         lbImg.src = lbList[lbIdx].dataset.full;
         lbDots.innerHTML = lbList.map((_, i) =>
@@ -98,6 +126,28 @@
       };
       const lbClose = () => { lb.hidden = true; document.body.style.overflow = ''; };
       const lbStep = (d) => { lbIdx = (lbIdx + d + lbList.length) % lbList.length; lbRender(); };
+
+      // Swipe left/right inside the lightbox too — the prev/next arrows
+      // are hidden on mobile (see theme-r2.css), so swipe is the only
+      // way to move between photos there.
+      (function () {
+        let startX = 0, startY = 0, tracking = false;
+        const threshold = 40;
+        lbImg.addEventListener('touchstart', (e) => {
+          if (e.touches.length !== 1) return;
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+          tracking = true;
+        }, { passive: true });
+        lbImg.addEventListener('touchend', (e) => {
+          if (!tracking) return;
+          tracking = false;
+          const dx = e.changedTouches[0].clientX - startX;
+          const dy = e.changedTouches[0].clientY - startY;
+          if (Math.abs(dx) < threshold || Math.abs(dx) < Math.abs(dy)) return;
+          lbStep(dx < 0 ? 1 : -1);
+        }, { passive: true });
+      })();
 
       mainWrap.addEventListener('click', () => {
         const active = $('.gallery__thumb.is-active', gallery);
