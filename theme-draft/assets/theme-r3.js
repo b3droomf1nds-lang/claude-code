@@ -216,25 +216,81 @@
       const lbClose = () => { lb.hidden = true; document.body.style.overflow = ''; };
       const lbStep = (d) => { lbIdx = (lbIdx + d + lbList.length) % lbList.length; lbRender(); };
 
-      // Swipe left/right inside the lightbox too — the prev/next arrows
-      // are hidden on mobile (see theme-r2.css), so swipe is the only
-      // way to move between photos there.
+      // Swipe left/right inside the lightbox too, same iPhone-Photos
+      // live-drag feel as the main gallery — the prev/next arrows are
+      // hidden on mobile (see theme-r2.css), so swipe is the only way
+      // to move between photos there.
       (function () {
-        let startX = 0, startY = 0, tracking = false;
-        const threshold = 40;
+        let startX = 0, startY = 0, dragging = false, axisLocked = null, containerW = 0;
+        let peek = null; // { img }
+        const commitFraction = 0.28;
+        const settleMs = 220;
+
+        const removePeek = () => { if (peek) { peek.remove(); peek = null; } };
+
+        const addPeek = (dir) => {
+          const nextIdx = (lbIdx + dir + lbList.length) % lbList.length;
+          const img = document.createElement('img');
+          img.src = lbList[nextIdx].dataset.full;
+          img.alt = '';
+          img.setAttribute('aria-hidden', 'true');
+          img.style.cssText = 'position:absolute;top:50%;left:50%;max-width:min(88vw,1200px);' +
+            'max-height:84vh;object-fit:contain;pointer-events:none;' +
+            'transform:translate(-50%,-50%) translateX(' + (dir * containerW) + 'px)';
+          lb.appendChild(img);
+          return img;
+        };
+
         lbImg.addEventListener('touchstart', (e) => {
           if (e.touches.length !== 1) return;
           startX = e.touches[0].clientX;
           startY = e.touches[0].clientY;
-          tracking = true;
+          dragging = true;
+          axisLocked = null;
+          containerW = lb.clientWidth || window.innerWidth;
+          lbImg.style.transition = 'none';
         }, { passive: true });
+
+        lbImg.addEventListener('touchmove', (e) => {
+          if (!dragging) return;
+          const dx = e.touches[0].clientX - startX;
+          const dy = e.touches[0].clientY - startY;
+          if (axisLocked === null) axisLocked = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+          if (axisLocked !== 'x') return;
+          e.preventDefault();
+          const dir = dx < 0 ? 1 : -1;
+          if (!peek) peek = addPeek(dir);
+          lbImg.style.transform = 'translateX(' + dx + 'px)';
+          peek.style.transform = 'translate(-50%,-50%) translateX(' + (dir * containerW + dx) + 'px)';
+        }, { passive: false });
+
         lbImg.addEventListener('touchend', (e) => {
-          if (!tracking) return;
-          tracking = false;
+          if (!dragging) return;
+          dragging = false;
+          if (axisLocked !== 'x') { removePeek(); lbImg.style.transition = ''; lbImg.style.transform = ''; return; }
           const dx = e.changedTouches[0].clientX - startX;
-          const dy = e.changedTouches[0].clientY - startY;
-          if (Math.abs(dx) < threshold || Math.abs(dx) < Math.abs(dy)) return;
-          lbStep(dx < 0 ? 1 : -1);
+          const dir = dx < 0 ? 1 : -1;
+          const commit = peek && Math.abs(dx) > containerW * commitFraction;
+          const ease = 'transform ' + settleMs + 'ms cubic-bezier(.22,.61,.36,1)';
+
+          lbImg.style.transition = ease;
+          if (peek) peek.style.transition = ease;
+
+          if (commit) {
+            lbImg.style.transform = 'translateX(' + (dir * -containerW) + 'px)';
+            peek.style.transform = 'translate(-50%,-50%) translateX(0)';
+            setTimeout(() => {
+              lbIdx = (lbIdx + dir + lbList.length) % lbList.length;
+              lbImg.style.transition = 'none';
+              lbRender();
+              lbImg.style.transform = '';
+              removePeek();
+            }, settleMs);
+          } else {
+            lbImg.style.transform = 'translateX(0)';
+            if (peek) peek.style.transform = 'translate(-50%,-50%) translateX(' + (dir * containerW) + 'px)';
+            setTimeout(removePeek, settleMs);
+          }
         }, { passive: true });
       })();
 

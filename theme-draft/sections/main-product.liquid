@@ -230,20 +230,15 @@
           {% render 'cross-sell', section: section, product: product %}
 
           {%- comment -%} This is the ONLY Add to cart button on the page —
-            no separate cloned/fixed copy. On mobile a script further down
-            moves this SAME div to the end of <body> so its position:fixed
-            (see .pdp--bold .atc in voltical-pdp-bold.css) is relative to
-            the viewport rather than to an ancestor further up the buy
-            column — several of those (e.g. .pinfo) use the [data-reveal]
-            scroll-in animation, which applies a CSS transform while
-            revealing, and ANY ancestor with a transform turns
-            position:fixed into "fixed to that ancestor" instead of the
-            viewport. The button still submits the form via the
-            form="pdp-form-..." attribute below even once it's no longer
-            a descendant of the <form> element. The same script also
-            slides it away on scroll-down / back in on scroll-up (see the
-            "Add to cart sits fixed..." script). {%- endcomment -%}
-          <div class="atc" data-atc-bar>
+            no separate cloned/fixed copy. A small script further down
+            pins THIS SAME button to the bottom of the screen (position:
+            fixed) once it scrolls out of its normal spot in the buy
+            column, and releases it again once scrolled back up to that
+            spot — see the "Add to cart isn't visible..." script and
+            .pdp--bold .atc.is-pinned in voltical-pdp-bold.css. It keeps
+            the form="pdp-form-..." attribute below so it still submits
+            correctly even while pinned. {%- endcomment -%}
+          <div class="atc">
             <button type="submit" form="pdp-form-{{ section.id }}" class="atc__btn" data-atc {% unless current_variant.available %}disabled{% endunless %}>
               <span class="atc__fill" aria-hidden="true"></span>
               <span class="atc__inner">
@@ -312,47 +307,78 @@
       sync();
     })();
 
-    /* Add to cart sits fixed at the bottom of the screen on mobile (see
-       .pdp--bold .atc in voltical-pdp-bold.css — same single button,
-       no clone). It stays visible until the shopper scrolls down, then
-       slides out of the way; scrolling back up brings it right back,
-       same as a native app's bottom bar. Always shown near the very
-       top of the page regardless of direction. */
+    /* Add to cart isn't visible at all while it's still in its normal
+       spot in the buy column. Once you scroll down far enough that its
+       normal spot scrolls out of view, it catches at the bottom of the
+       screen and stays there — scroll back up to where it naturally
+       sits and it releases again. This toggles the SAME button between
+       normal flow and position:fixed (see .pdp--bold .atc.is-pinned in
+       voltical-pdp-bold.css) — there is no second/cloned button
+       anywhere. A placeholder the same size is shown only while
+       pinned, so removing the button from flow (position:fixed) does
+       not cause the page below it to jump upward. */
     document.addEventListener('DOMContentLoaded', function () {
-      var atc = document.querySelector('[data-atc-bar]');
+      var atc = document.querySelector('.pdp--bold .atc');
       if (!atc) return;
 
-      /* Move it out from under [data-reveal] ancestors so position:fixed
-         is relative to the viewport, not to whichever of them happens to
-         have an active scroll-reveal transform (see the comment on this
-         div in the Liquid template). Only matters on mobile — desktop
-         keeps it in normal flow inside the buy column. */
-      if (window.matchMedia('(max-width: 899px)').matches) {
-        document.body.appendChild(atc);
+      /* The sentinel is what the IntersectionObserver watches to decide
+         pin/unpin — it MUST go before the placeholder (not between the
+         placeholder and the button). The placeholder's height changes
+         the moment we pin/unpin (0 while unpinned, the button's height
+         while pinned); if the sentinel sat below it, that height change
+         would shove the sentinel up/down by ~64px every time we
+         pinned, which could flip it back across the trigger line and
+         cause pin() -> unpin() -> pin() to fire back-to-back forever
+         (visible as constant flashing). Putting the sentinel ahead of
+         the placeholder means its position never depends on the
+         placeholder's own state. */
+      var sentinel = document.createElement('div');
+      sentinel.setAttribute('aria-hidden', 'true');
+      sentinel.style.height = '1px';
+      atc.parentNode.insertBefore(sentinel, atc);
+
+      var placeholder = document.createElement('div');
+      placeholder.className = 'atc-placeholder';
+      atc.parentNode.insertBefore(placeholder, atc);
+
+      var pinned = false;
+      function pin() {
+        if (pinned) return;
+        pinned = true;
+        var rect = atc.getBoundingClientRect();
+        placeholder.style.width = rect.width + 'px';
+        placeholder.style.height = rect.height + 'px';
+        placeholder.style.display = 'block';
+        atc.style.left = rect.left + 'px';
+        atc.style.width = rect.width + 'px';
+        atc.classList.add('is-pinned');
+      }
+      function unpin() {
+        if (!pinned) return;
+        pinned = false;
+        atc.classList.remove('is-pinned');
+        atc.style.left = '';
+        atc.style.width = '';
+        placeholder.style.display = 'none';
       }
 
-      var lastY = window.scrollY;
-      var ticking = false;
+      /* Pins once the button's natural spot in the buy column has
+         scrolled past (above) the top of the viewport — i.e. you've
+         scrolled down further than where it lives, so without this it
+         would simply be gone. Releases again once you scroll back up
+         to where it lives and its natural spot re-enters view. It's
+         pinned to the BOTTOM of the screen (not the top) purely as a
+         style choice — the trigger condition is the same either way. */
+      new IntersectionObserver(function (entries) {
+        var e = entries[0];
+        if (e.boundingClientRect.top < 0) pin(); else unpin();
+      }, { threshold: [0] }).observe(sentinel);
 
-      function update() {
-        var y = window.scrollY;
-        var delta = y - lastY;
-        if (y <= 24) {
-          atc.classList.remove('is-hidden');
-        } else if (delta > 6) {
-          atc.classList.add('is-hidden');
-        } else if (delta < -6) {
-          atc.classList.remove('is-hidden');
-        }
-        lastY = y;
-        ticking = false;
-      }
-
-      window.addEventListener('scroll', function () {
-        if (ticking) return;
-        ticking = true;
-        window.requestAnimationFrame(update);
-      }, { passive: true });
+      window.addEventListener('resize', function () {
+        if (!pinned) return;
+        unpin();
+        pin();
+      });
     });
 
     /* Arriving from the usage-calculator page (product cards link with
