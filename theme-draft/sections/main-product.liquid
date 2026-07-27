@@ -331,6 +331,22 @@
       sentinel.style.height = '1px';
       atc.parentNode.insertBefore(sentinel, atc);
 
+      /* Cache the button's own natural (unpinned) height and margins up
+         front, before it's ever pinned — the pinned state adds its own
+         wrapper padding for the bottom bar's background, which makes
+         .atc taller than it is sitting normally in the buy column. Using
+         that pinned height to decide when to unpin would land the real
+         button's bottom edge in the wrong place. What has to match is
+         BOTTOM edges: the pinned bar's bottom sits at
+         `viewport bottom - marginBottom`; unpin the instant the button's
+         natural (in-flow) bottom edge would reach that same line, so the
+         real button appears with its bottom exactly where the fixed
+         one's was, no jump. */
+      var atcStyle = getComputedStyle(atc);
+      var naturalHeight = atc.getBoundingClientRect().height;
+      var marginTop = parseFloat(atcStyle.marginTop) || 0;
+      var marginBottom = parseFloat(atcStyle.marginBottom) || 0;
+
       var pinned = false;
       function pin() {
         if (pinned) return;
@@ -348,20 +364,24 @@
         atc.style.width = '';
       }
 
-      /* Only ever pinned while actively SCROLLING UP, and only once the
-         button's natural spot in the buy column has scrolled above the
-         top of the viewport (i.e. you're below where it lives). While
-         scrolling down it never pins — even once you've scrolled past
-         its spot, it just isn't there, only reappearing normally when
-         you scroll back up and pass through its actual place in the
-         buy column. Scrolling up further while still below that spot
-         keeps it pinned; scrolling up past the spot releases it. */
+      /* Only ever pinned while actively SCROLLING UP, and only until the
+         button's natural spot has scrolled up enough that its resting
+         bottom edge reaches the same line the pinned bar's bottom edge
+         sits on — NOT merely until it passes the top of the viewport.
+         Unpin right there so the real button appears with its bottom
+         exactly where the fixed one's just was: no gap, no jump. While
+         scrolling down it never pins — it just isn't there, only
+         reappearing normally when you scroll back up through its actual
+         place in the buy column. */
       var lastY = window.scrollY;
       var ticking = false;
       function update() {
         var y = window.scrollY;
         var scrollingDown = y > lastY;
-        var belowSpot = sentinel.getBoundingClientRect().top < 0;
+        var restingTop = sentinel.getBoundingClientRect().bottom + marginTop;
+        var restingBottom = restingTop + naturalHeight;
+        var pinnedBottomLine = window.innerHeight - marginBottom;
+        var belowSpot = restingBottom < pinnedBottomLine;
         if (!scrollingDown && belowSpot) pin(); else unpin();
         lastY = y;
         ticking = false;
