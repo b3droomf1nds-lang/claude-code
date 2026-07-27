@@ -327,13 +327,13 @@ h1 em,h2 em,.plp__title em{
 
 .addon{
   border-radius:var(--r-m);padding:var(--s2) var(--s3);margin:0 0 var(--s2);
-  display:flex;gap:14px;align-items:center;background:var(--sky);
+  display:flex;gap:14px;align-items:center;background:var(--lilac);
 }
 .addon__img{width:56px;height:56px;border-radius:var(--r-s);overflow:hidden;background:#fff;flex:0 0 auto}
 .addon__img img{width:100%;height:100%;object-fit:cover}
 .addon__icon{color:var(--ink);flex:0 0 auto}
 .addon__body{flex:1;min-width:0}
-.addon__eyebrow{font-size:.62rem;letter-spacing:.16em;text-transform:none;color:#7FA6DC;font-weight:700;display:block;margin-bottom:2px}
+.addon__eyebrow{font-size:.62rem;letter-spacing:.16em;text-transform:none;color:var(--lilac-m);font-weight:700;display:block;margin-bottom:2px}
 .addon__title{font-weight:600;font-size:.9rem;display:flex;justify-content:space-between;gap:10px}
 .addon__title a{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .addon__price{font-family:var(--mono);font-size:.78rem;color:var(--ink-60);white-space:nowrap;flex:0 0 auto}
