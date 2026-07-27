@@ -26,7 +26,7 @@
   font-weight: 700;
 }
 .addon__eyebrow {
-  color: var(--focus, #8F7FDC);
+  color: var(--sky-m, #A8CDEE);
 }
 
 /* ---------- stat tiles ---------- */
