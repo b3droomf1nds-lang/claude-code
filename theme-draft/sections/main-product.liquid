@@ -307,16 +307,16 @@
       sync();
     })();
 
-    /* Add to cart isn't visible at all while it's still in its normal
-       spot in the buy column. Once you scroll down far enough that its
-       normal spot scrolls out of view, it catches at the bottom of the
-       screen and stays there — scroll back up to where it naturally
-       sits and it releases again. This toggles the SAME button between
-       normal flow and position:fixed (see .pdp--bold .atc.is-pinned in
-       voltical-pdp-bold.css) — there is no second/cloned button
-       anywhere. A placeholder the same size is shown only while
-       pinned, so removing the button from flow (position:fixed) does
-       not cause the page below it to jump upward. */
+    /* Add to cart only ever catches at the bottom of the screen while
+       actively scrolling UP and below its normal spot in the buy
+       column — scrolling down never shows it, it only ever appears
+       there normally, in its actual place in the buy column. This
+       toggles the SAME button between normal flow and position:fixed
+       (see .pdp--bold .atc.is-pinned in voltical-pdp-bold.css) —
+       there is no second/cloned button anywhere. A placeholder the
+       same size is shown only while pinned, so removing the button
+       from flow (position:fixed) does not cause the page below it to
+       jump upward. */
     document.addEventListener('DOMContentLoaded', function () {
       var atc = document.querySelector('.pdp--bold .atc');
       if (!atc) return;
@@ -362,17 +362,29 @@
         placeholder.style.display = 'none';
       }
 
-      /* Pins once the button's natural spot in the buy column has
-         scrolled past (above) the top of the viewport — i.e. you've
-         scrolled down further than where it lives, so without this it
-         would simply be gone. Releases again once you scroll back up
-         to where it lives and its natural spot re-enters view. It's
-         pinned to the BOTTOM of the screen (not the top) purely as a
-         style choice — the trigger condition is the same either way. */
-      new IntersectionObserver(function (entries) {
-        var e = entries[0];
-        if (e.boundingClientRect.top < 0) pin(); else unpin();
-      }, { threshold: [0] }).observe(sentinel);
+      /* Only ever pinned while actively SCROLLING UP, and only once the
+         button's natural spot in the buy column has scrolled above the
+         top of the viewport (i.e. you're below where it lives). While
+         scrolling down it never pins — even once you've scrolled past
+         its spot, it just isn't there, only reappearing normally when
+         you scroll back up and pass through its actual place in the
+         buy column. Scrolling up further while still below that spot
+         keeps it pinned; scrolling up past the spot releases it. */
+      var lastY = window.scrollY;
+      var ticking = false;
+      function update() {
+        var y = window.scrollY;
+        var scrollingDown = y > lastY;
+        var belowSpot = sentinel.getBoundingClientRect().top < 0;
+        if (!scrollingDown && belowSpot) pin(); else unpin();
+        lastY = y;
+        ticking = false;
+      }
+      window.addEventListener('scroll', function () {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(update);
+      }, { passive: true });
 
       window.addEventListener('resize', function () {
         if (!pinned) return;
