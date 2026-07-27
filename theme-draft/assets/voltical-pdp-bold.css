@@ -194,9 +194,11 @@
    IntersectionObserver toggles this ".is-pinned" class on the SAME
    button (no clone, no separate element) once its normal spot in the
    buy column scrolls out of view, switching it from normal flow to
-   position:fixed at the bottom of the screen; a placeholder holds its
-   layout space open so nothing jumps. Scrolling back up to where the
-   button naturally sits releases it again. */
+   position:fixed at the bottom of the screen. Nothing holds its
+   layout space open while pinned — that gap in the buy column closes
+   up on purpose, shortening the page for as long as it's pinned.
+   Scrolling back up to where the button naturally sits releases it
+   again, and the gap reopens. */
 .pdp--bold .pinfo {
   position: static;
 }
@@ -206,9 +208,6 @@
   z-index: 40;
   background: var(--base, #FAFAF8);
   padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
-}
-.pdp--bold .atc-placeholder {
-  display: none;
 }
 
 /* ---------- calculator, inline in the buy column just below the

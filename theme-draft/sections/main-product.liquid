@@ -313,42 +313,29 @@
        there normally, in its actual place in the buy column. This
        toggles the SAME button between normal flow and position:fixed
        (see .pdp--bold .atc.is-pinned in voltical-pdp-bold.css) —
-       there is no second/cloned button anywhere. A placeholder the
-       same size is shown only while pinned, so removing the button
-       from flow (position:fixed) does not cause the page below it to
-       jump upward. */
+       there is no second/cloned button anywhere. No placeholder is
+       left behind in its normal spot while pinned — that space just
+       closes up, so the rest of the buy column shifts up to fill the
+       gap and the page gets shorter for as long as it's pinned. */
     document.addEventListener('DOMContentLoaded', function () {
       var atc = document.querySelector('.pdp--bold .atc');
       if (!atc) return;
 
-      /* The sentinel is what the IntersectionObserver watches to decide
-         pin/unpin — it MUST go before the placeholder (not between the
-         placeholder and the button). The placeholder's height changes
-         the moment we pin/unpin (0 while unpinned, the button's height
-         while pinned); if the sentinel sat below it, that height change
-         would shove the sentinel up/down by ~64px every time we
-         pinned, which could flip it back across the trigger line and
-         cause pin() -> unpin() -> pin() to fire back-to-back forever
-         (visible as constant flashing). Putting the sentinel ahead of
-         the placeholder means its position never depends on the
-         placeholder's own state. */
+      /* The sentinel marks where the button's normal spot is, so
+         scrolling can tell whether we're above or below it — it has to
+         sit right where the button itself would otherwise be, so
+         insert it in the button's place BEFORE the button leaves flow
+         the first time it pins. */
       var sentinel = document.createElement('div');
       sentinel.setAttribute('aria-hidden', 'true');
       sentinel.style.height = '1px';
       atc.parentNode.insertBefore(sentinel, atc);
-
-      var placeholder = document.createElement('div');
-      placeholder.className = 'atc-placeholder';
-      atc.parentNode.insertBefore(placeholder, atc);
 
       var pinned = false;
       function pin() {
         if (pinned) return;
         pinned = true;
         var rect = atc.getBoundingClientRect();
-        placeholder.style.width = rect.width + 'px';
-        placeholder.style.height = rect.height + 'px';
-        placeholder.style.display = 'block';
         atc.style.left = rect.left + 'px';
         atc.style.width = rect.width + 'px';
         atc.classList.add('is-pinned');
@@ -359,7 +346,6 @@
         atc.classList.remove('is-pinned');
         atc.style.left = '';
         atc.style.width = '';
-        placeholder.style.display = 'none';
       }
 
       /* Only ever pinned while actively SCROLLING UP, and only once the
