@@ -399,11 +399,20 @@
          upward movement has actually been happening, not to how
          recently the scroll position was near the bottom, since by the
          time enough distance has accumulated to check, the position
-         itself may already have drifted well clear of the bottom. */
-      var PIN_START_DISTANCE = 60;
-      var PIN_START_DURATION_MS = 350;
+         itself may already have drifted well clear of the bottom.
+
+         On top of that, some browsers report scrollY briefly OUTSIDE
+         the valid [0, max] range during the actual overscroll stretch
+         itself (before the snap-back) — a direct, unambiguous "a bounce
+         is happening right now" signal wherever it's available. Any
+         time that's seen, a cooldown blocks fresh pins for a bit after,
+         on top of the distance+duration streak check above. */
+      var PIN_START_DISTANCE = 100;
+      var PIN_START_DURATION_MS = 500;
+      var OVERSCROLL_COOLDOWN_MS = 800;
       var upDistance = 0;
       var upStreakStart = 0;
+      var lastOverscrollTime = 0;
       var lastY = window.scrollY;
       var ticking = false;
       function update() {
@@ -414,6 +423,9 @@
         var pinnedBottomLine = window.innerHeight - marginBottom;
         var belowSpot = restingBottom < pinnedBottomLine;
         var outOfView = restingBottom <= 0;
+        var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        if (y < 0 || y > maxScroll) lastOverscrollTime = Date.now();
+        var inOverscrollCooldown = Date.now() - lastOverscrollTime < OVERSCROLL_COOLDOWN_MS;
         if (scrollingDown) {
           upDistance = 0;
           unpin();
@@ -424,6 +436,7 @@
             if (!belowSpot) unpin();
           } else if (
             outOfView &&
+            !inOverscrollCooldown &&
             upDistance >= PIN_START_DISTANCE &&
             Date.now() - upStreakStart >= PIN_START_DURATION_MS
           ) {
