@@ -22,8 +22,26 @@
     line-height:0;
     height:24px;
   }
+
+  /* ---------- product page: no header bar, just two floating
+     transparent icons in the top corners ---------- */
+  @media (max-width:899px){
+    .site-header--floating{ background:transparent; box-shadow:none; }
+    .site-header--floating .site-header__inner{
+      height:0; min-height:0; padding:0; overflow:visible;
+    }
+    .site-header--floating .site-header__logo,
+    .site-header--floating .site-nav,
+    .site-header--floating .site-header__search{ display:none; }
+    .site-header--floating .menu-toggle{
+      position:fixed; top:calc(env(safe-area-inset-top) + 14px); left:14px; z-index:95;
+    }
+    .site-header--floating .site-header__actions{
+      position:fixed; top:calc(env(safe-area-inset-top) + 14px); right:14px; z-index:95;
+    }
+  }
 </style>
-<header class="site-header">
+<header class="site-header{% if template.name == 'product' %} site-header--floating{% endif %}">
   <div class="wrap wrap--wide site-header__inner">
     <button class="menu-toggle" data-menu-toggle aria-expanded="false" aria-label="{{ 'general.menu' | t }}">
       <span></span><span></span><span></span>
@@ -43,7 +61,7 @@
     </nav>
 
     <div class="site-header__actions">
-      <a href="{{ routes.search_url }}" aria-label="{{ 'general.search' | t }}">{% render 'icon', icon: 'search' %}</a>
+      <a href="{{ routes.search_url }}" class="site-header__search" aria-label="{{ 'general.search' | t }}">{% render 'icon', icon: 'search' %}</a>
       <button class="cart-btn" data-cart-open aria-label="{{ 'cart.title' | t }}">
         {% render 'icon', icon: 'bag' %}
         <span class="cart-btn__count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
