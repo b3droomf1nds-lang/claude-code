@@ -168,42 +168,46 @@
   opacity: 0;
 }
 
-/* ---------- Add to cart catches at the top while scrolling ----------
+/* ---------- Add to cart, fixed to the bottom of the screen on mobile
+   ----------
    theme.css already makes the WHOLE .pinfo buy column sticky at
    width >=900px (title, price, options — all of it as one rigid
-   block, top:98px). That's a different, pre-existing feature, and it
-   conflicts with sticking just the button on its own — turning it off
-   here (scoped to the product page only — .pinfo isn't used anywhere
-   else) so only the Add to cart button catches.
+   block, top:98px); that's a different, pre-existing feature and
+   doesn't apply below that width.
 
-   The button itself is pinned via JS (see main-product.liquid), not
-   plain CSS position:sticky — layering an independent position:sticky
-   element on this page turned out to be unreliable in testing
-   (Chrome silently failed to stick it at all). A small
-   IntersectionObserver toggles this ".is-pinned" class on the SAME
-   button (no clone, no separate element) once it reaches the top of
-   the viewport, switching it from normal flow to position:fixed at
-   the exact spot it already occupied; a placeholder holds its layout
-   space open so nothing jumps.
-
-   Pins flush to top:0 rather than leaving room for the site header —
-   this theme's header (.site-header, position:sticky in theme.css)
-   does not actually stay on screen while scrolling on this store (a
-   separate, pre-existing issue, confirmed on the homepage too, not
-   something introduced here), so reserving space under it would just
-   leave a floating gap above the button. */
-.pdp--bold .pinfo {
-  position: static;
-}
-.pdp--bold .atc.is-pinned {
-  position: fixed;
-  top: 0;
-  z-index: 30;
-  background: var(--base, #FAFAF8);
-  padding: 8px 0;
-}
-.pdp--bold .atc-placeholder {
-  display: none;
+   Below 900px the button (same single element, no clone) sits fixed
+   to the bottom of the viewport at all times. A script in
+   main-product.liquid moves this div to be a direct child of <body>
+   (so position:fixed is never nested inside an ancestor a
+   [data-reveal] scroll-in transform could turn into its own
+   containing block — see the comment on the div in the Liquid
+   template) — so this can't be scoped to ".pdp--bold .atc" any more,
+   it has to target the div wherever it ends up in the DOM. The same
+   script also toggles ".is-hidden" to slide it out of the way while
+   scrolling down and bring it back on scroll-up — see the
+   "Add to cart sits fixed..." script there. */
+@media (max-width: 899px) {
+  [data-atc-bar] {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    margin: 0;
+    background: var(--base, #FAFAF8);
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 24px rgba(19, 19, 22, 0.1);
+    transform: translateY(0);
+    transition: transform 0.3s var(--ease, ease);
+  }
+  [data-atc-bar].is-hidden {
+    transform: translateY(100%);
+  }
+  /* Room at the bottom of the buy column so the fixed bar never
+     covers the shipping note / stats / description under it. */
+  .pdp--bold .pinfo {
+    padding-bottom: 88px;
+  }
 }
 
 /* ---------- calculator, inline in the buy column just below the
@@ -213,43 +217,6 @@
 }
 .pdp--bold .pdp-calc-inline .calc {
   margin: 0;
-}
-
-/* ---------- sticky "jump to calculator" pill ---------- */
-.pdp-jump-calc {
-  position: fixed;
-  right: 20px;
-  bottom: calc(20px + env(safe-area-inset-bottom));
-  z-index: 84;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--sky, #EDF6FB);
-  color: var(--ink, #131316);
-  border: 1px solid rgba(19, 19, 22, .32);
-  border-radius: 999px;
-  padding: 12px 18px;
-  font: inherit;
-  font-size: 0.88rem;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: none;
-  transition: transform 0.25s var(--ease, ease), opacity 0.25s ease;
-}
-.pdp-jump-calc:hover {
-  transform: translateY(-1px);
-}
-.pdp-jump-calc__arrow {
-  display: inline-flex;
-  font-size: 1rem;
-}
-@media (max-width: 600px) {
-  .pdp-jump-calc {
-    left: 16px;
-    right: 16px;
-    justify-content: center;
-    bottom: calc(16px + env(safe-area-inset-bottom));
-  }
 }
 
 /* ---------- centre the thumbnail row when it doesn't fill the

@@ -91,31 +91,93 @@
       setMain(t, dir);
     }));
 
-    // Swipe left/right on the main image to step through photos — the
-    // dots below only show which photo is active, they're too small a
-    // target to be the only way to move between images on mobile.
-    const stepMain = (dir) => {
-      const visible = visibleThumbs();
-      const activeIdx = visible.indexOf($('.gallery__thumb.is-active', gallery));
-      if (activeIdx === -1 || visible.length < 2) return;
-      setMain(visible[(activeIdx + dir + visible.length) % visible.length], dir);
-    };
+    // Swipe left/right on the main image to step through photos — iPhone
+    // Photos style: the photo tracks your finger 1:1 as you drag (with
+    // the next/previous photo sliding in from off-screen live, not just
+    // appearing after you let go), then either continues off-screen into
+    // that photo or springs back to center depending on how far you'd
+    // dragged when you lifted your finger.
+    let gallerySwipeMoved = false;
     (function () {
-      let startX = 0, startY = 0, tracking = false;
-      const threshold = 40;
+      let startX = 0, startY = 0, dragging = false, axisLocked = null, containerW = 0;
+      let peek = null; // { img, dir, target }
+      const commitFraction = 0.28;
+      const settleMs = 220;
+
+      const removePeek = () => { if (peek) { peek.img.remove(); peek = null; } };
+
+      const addPeek = (dir) => {
+        const visible = visibleThumbs();
+        const activeIdx = visible.indexOf($('.gallery__thumb.is-active', gallery));
+        if (activeIdx === -1 || visible.length < 2) return null;
+        const target = visible[(activeIdx + dir + visible.length) % visible.length];
+        const img = document.createElement('img');
+        img.src = target.dataset.full;
+        img.alt = '';
+        img.setAttribute('aria-hidden', 'true');
+        img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;' +
+          'object-fit:cover;pointer-events:none;transform:translateX(' + (dir * 100) + '%)';
+        mainWrap.appendChild(img);
+        return { img, dir, target };
+      };
+
       mainWrap.addEventListener('touchstart', (e) => {
         if (e.touches.length !== 1) return;
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
-        tracking = true;
+        dragging = true;
+        axisLocked = null;
+        gallerySwipeMoved = false;
+        containerW = mainWrap.clientWidth || 1;
+        mainImg.style.transition = 'none';
       }, { passive: true });
+
+      mainWrap.addEventListener('touchmove', (e) => {
+        if (!dragging) return;
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+        if (axisLocked === null) axisLocked = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+        if (axisLocked !== 'x') return;
+        e.preventDefault();
+        if (Math.abs(dx) > 10) gallerySwipeMoved = true;
+        const dir = dx < 0 ? 1 : -1;
+        if (!peek || peek.dir !== dir) { removePeek(); peek = addPeek(dir); }
+        mainImg.style.transform = 'translateX(' + dx + 'px)';
+        if (peek) peek.img.style.transform = 'translateX(calc(' + (dir * 100) + '% + ' + dx + 'px))';
+      }, { passive: false });
+
       mainWrap.addEventListener('touchend', (e) => {
-        if (!tracking) return;
-        tracking = false;
+        if (!dragging) return;
+        dragging = false;
+        if (axisLocked !== 'x') { removePeek(); mainImg.style.transition = ''; mainImg.style.transform = ''; return; }
         const dx = e.changedTouches[0].clientX - startX;
-        const dy = e.changedTouches[0].clientY - startY;
-        if (Math.abs(dx) < threshold || Math.abs(dx) < Math.abs(dy)) return;
-        stepMain(dx < 0 ? 1 : -1);
+        const dir = dx < 0 ? 1 : -1;
+        const commit = peek && Math.abs(dx) > containerW * commitFraction;
+        const ease = 'transform ' + settleMs + 'ms cubic-bezier(.22,.61,.36,1)';
+
+        mainImg.style.transition = ease;
+        if (peek) peek.img.style.transition = ease;
+
+        if (commit) {
+          mainImg.style.transform = 'translateX(' + (dir * -100) + '%)';
+          peek.img.style.transform = 'translateX(0)';
+          const target = peek.target;
+          setTimeout(() => {
+            thumbs.forEach((x) => x.classList.remove('is-active'));
+            target.classList.add('is-active');
+            mainImg.style.transition = 'none';
+            mainImg.removeAttribute('srcset');
+            mainImg.removeAttribute('sizes');
+            mainImg.src = target.dataset.full;
+            mainImg.alt = $('img', target).alt;
+            mainImg.style.transform = '';
+            removePeek();
+          }, settleMs);
+        } else {
+          mainImg.style.transform = 'translateX(0)';
+          if (peek) peek.img.style.transform = 'translateX(' + (dir * 100) + '%)';
+          setTimeout(removePeek, settleMs);
+        }
       }, { passive: true });
     })();
 
@@ -177,6 +239,7 @@
       })();
 
       mainWrap.addEventListener('click', () => {
+        if (gallerySwipeMoved) { gallerySwipeMoved = false; return; }
         const active = $('.gallery__thumb.is-active', gallery);
         lbOpen(Math.max(0, visibleThumbs().indexOf(active)));
       });
