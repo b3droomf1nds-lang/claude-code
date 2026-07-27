@@ -361,18 +361,23 @@
         atc.style.width = '';
       }
 
-      /* Only ever STARTS pinning while actively SCROLLING UP, and only
-         until the button's natural spot has scrolled up enough that its
-         resting bottom edge reaches the same line the pinned bar's
-         bottom edge sits on — at which point they swap with no gap and
-         no jump. Direction only gates the START of a pin: a fresh
-         downward scroll never begins one. But once pinned, reversing
-         to scroll down while still short of that line must NOT let the
-         real button switch on early — you're still "over" its spot on
-         screen, just not all the way down to where the sticky bar
-         lives yet, so it stays hidden behind the sticky bar until the
-         resting bottom edge actually reaches that line, regardless of
-         which direction got it there. */
+      /* A pin only ever STARTS when both: (a) actively scrolling up, and
+         (b) the button's natural spot is genuinely out of view (its
+         resting bottom edge is above the top of the viewport) — meaning
+         you'd already scrolled past it earlier and are now catching
+         back up. If the real button is already visible in its normal
+         spot (e.g. you scrolled down, it came into view normally, and
+         you nudge back up a little while it's still on screen) it must
+         NOT switch to the sticky bar — it just stays the regular button,
+         same as any other in-flow content.
+
+         Once a pin HAS started, though, it stays pinned until the
+         resting bottom edge scrolls all the way down to the same line
+         the pinned bar's bottom sits on — regardless of direction from
+         there, so a brief reversal while still short of that line
+         doesn't let the real button switch on early (see the previous
+         fix). Only that exact alignment ends the pin, with no gap and
+         no jump. */
       var lastY = window.scrollY;
       var ticking = false;
       function update() {
@@ -382,10 +387,11 @@
         var restingBottom = restingTop + naturalHeight;
         var pinnedBottomLine = window.innerHeight - marginBottom;
         var belowSpot = restingBottom < pinnedBottomLine;
-        if (belowSpot) {
-          if (!scrollingDown) pin();
+        var outOfView = restingBottom <= 0;
+        if (pinned) {
+          if (!belowSpot) unpin();
         } else {
-          unpin();
+          if (!scrollingDown && outOfView) pin();
         }
         lastY = y;
         ticking = false;
