@@ -404,20 +404,19 @@
          out-of-range state) gets a short cooldown right when it
          happens. */
       var PIN_START_DISTANCE = 10;
-      /* The bottom-of-page elastic bounce is a passive spring effect —
-         the browser moves scrollY back up on its own, with no fresh
-         upward input behind it (the finger already lifted, or is still
-         mid-downward-drag when the edge is hit). A real scroll-up always
-         has a live upward wheel/touch event driving it. So instead of
-         trying to fingerprint the bounce itself (which turned out to
-         overlap with ordinary mobile viewport resize noise), pin-start
-         now requires recent, genuine upward input directly from a wheel
-         or touch listener — the bounce's own scroll events don't carry
-         one, so they can't start a pin, while a real drag or flick
-         always does. */
-      var UP_INPUT_WINDOW_MS = 400;
-      var lastUpInputTime = 0;
+      var OVERSCROLL_COOLDOWN_MS = 250;
+      /* Mobile browsers resize window.innerHeight on the fly as the
+         address bar collapses/expands, which happens most right at the
+         top/bottom of the page — exactly where a real scroll-up gesture
+         also starts. Comparing scrollY to a tight maxScroll bound there
+         produces false "overscroll" reads from that resizing alone, not
+         from an actual rubber-band bounce, which would otherwise block a
+         genuine scroll-from-the-bottom for the whole cooldown window. A
+         generous tolerance keeps the bounce (a much larger excursion)
+         filtered while no longer misfiring on ordinary toolbar resize. */
+      var OVERSCROLL_TOLERANCE = 60;
       var upDistance = 0;
+      var lastOverscrollTime = 0;
       var lastY = window.scrollY;
       var ticking = false;
       function update() {
@@ -428,7 +427,9 @@
         var pinnedBottomLine = window.innerHeight - marginBottom;
         var belowSpot = restingBottom < pinnedBottomLine;
         var outOfView = restingBottom <= 0;
-        var recentUpInput = Date.now() - lastUpInputTime < UP_INPUT_WINDOW_MS;
+        var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        if (y < -OVERSCROLL_TOLERANCE || y > maxScroll + OVERSCROLL_TOLERANCE) lastOverscrollTime = Date.now();
+        var inOverscrollCooldown = Date.now() - lastOverscrollTime < OVERSCROLL_COOLDOWN_MS;
         if (scrollingDown) {
           upDistance = 0;
           unpin();
@@ -436,7 +437,7 @@
           upDistance += lastY - y;
           if (pinned) {
             if (!belowSpot) unpin();
-          } else if (outOfView && recentUpInput && upDistance >= PIN_START_DISTANCE) {
+          } else if (outOfView && !inOverscrollCooldown && upDistance >= PIN_START_DISTANCE) {
             pin();
           }
         }
@@ -460,7 +461,6 @@
          move any further. */
       window.addEventListener('wheel', function (e) {
         if (e.deltaY > 0) unpin();
-        else if (e.deltaY < 0) lastUpInputTime = Date.now();
       }, { passive: true });
       var touchY = null;
       window.addEventListener('touchstart', function (e) {
@@ -470,7 +470,6 @@
         if (touchY === null || !e.touches || !e.touches.length) return;
         var y = e.touches[0].clientY;
         if (touchY - y > 4) unpin();
-        else if (y - touchY > 4) lastUpInputTime = Date.now();
         touchY = y;
       }, { passive: true });
 
