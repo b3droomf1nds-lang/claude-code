@@ -403,8 +403,18 @@
          while a real bounce (which always passes through that
          out-of-range state) gets a short cooldown right when it
          happens. */
-      var PIN_START_DISTANCE = 20;
-      var OVERSCROLL_COOLDOWN_MS = 700;
+      var PIN_START_DISTANCE = 10;
+      var OVERSCROLL_COOLDOWN_MS = 250;
+      /* Mobile browsers resize window.innerHeight on the fly as the
+         address bar collapses/expands, which happens most right at the
+         top/bottom of the page — exactly where a real scroll-up gesture
+         also starts. Comparing scrollY to a tight maxScroll bound there
+         produces false "overscroll" reads from that resizing alone, not
+         from an actual rubber-band bounce, which would otherwise block a
+         genuine scroll-from-the-bottom for the whole cooldown window. A
+         generous tolerance keeps the bounce (a much larger excursion)
+         filtered while no longer misfiring on ordinary toolbar resize. */
+      var OVERSCROLL_TOLERANCE = 60;
       var upDistance = 0;
       var lastOverscrollTime = 0;
       var lastY = window.scrollY;
@@ -418,7 +428,7 @@
         var belowSpot = restingBottom < pinnedBottomLine;
         var outOfView = restingBottom <= 0;
         var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-        if (y < 0 || y > maxScroll) lastOverscrollTime = Date.now();
+        if (y < -OVERSCROLL_TOLERANCE || y > maxScroll + OVERSCROLL_TOLERANCE) lastOverscrollTime = Date.now();
         var inOverscrollCooldown = Date.now() - lastOverscrollTime < OVERSCROLL_COOLDOWN_MS;
         if (scrollingDown) {
           upDistance = 0;
