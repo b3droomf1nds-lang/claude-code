@@ -371,13 +371,17 @@
          NOT switch to the sticky bar — it just stays the regular button,
          same as any other in-flow content.
 
-         Once a pin HAS started, though, it stays pinned until the
-         resting bottom edge scrolls all the way down to the same line
-         the pinned bar's bottom sits on — regardless of direction from
-         there, so a brief reversal while still short of that line
-         doesn't let the real button switch on early (see the previous
-         fix). Only that exact alignment ends the pin, with no gap and
-         no jump. */
+         While actively scrolling up, it stays pinned until the resting
+         bottom edge scrolls all the way down to the same line the
+         pinned bar's bottom sits on — that's the ONLY way it ends: exact
+         alignment, no gap, no jump, the real button appearing right
+         where the sticky one was.
+
+         The instant you reverse to scrolling down, though, the sticky
+         bar goes away immediately regardless of position — scrolling
+         down is a "never mind" signal, so it always drops straight back
+         to the regular button rather than continuing to chase the
+         catch-up point. */
       var lastY = window.scrollY;
       var ticking = false;
       function update() {
@@ -388,10 +392,12 @@
         var pinnedBottomLine = window.innerHeight - marginBottom;
         var belowSpot = restingBottom < pinnedBottomLine;
         var outOfView = restingBottom <= 0;
-        if (pinned) {
+        if (scrollingDown) {
+          unpin();
+        } else if (pinned) {
           if (!belowSpot) unpin();
-        } else {
-          if (!scrollingDown && outOfView) pin();
+        } else if (outOfView) {
+          pin();
         }
         lastY = y;
         ticking = false;
