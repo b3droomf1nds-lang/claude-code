@@ -48,30 +48,57 @@
     const mainWrap = $('[data-gallery-main]', gallery);
     const thumbs = $$('[data-gallery-thumb]', gallery);
 
-    const setMain = (t) => {
+    // dir: -1 (came from the right, i.e. "previous"), 1 ("next"), or 0/
+    // omitted for an instant swap (e.g. switching color filters) with no
+    // slide. Old image fades+slides out one direction, the new one
+    // fades+slides in from the opposite side — same single <img>, just
+    // animated across the swap so it reads as continuous motion instead
+    // of an instant cut.
+    const setMain = (t, dir) => {
       thumbs.forEach((x) => x.classList.remove('is-active'));
       t.classList.add('is-active');
-      // The main image starts with a srcset/sizes pair (for responsive
-      // loading of the FIRST image). Browsers prefer srcset over src
-      // when both are present, so just reassigning .src here would be
-      // silently ignored — the old image would keep showing. Clearing
-      // srcset/sizes first makes the plain .src actually take effect.
-      mainImg.removeAttribute('srcset');
-      mainImg.removeAttribute('sizes');
-      mainImg.src = t.dataset.full;
-      mainImg.alt = $('img', t).alt;
+      const apply = () => {
+        // The main image starts with a srcset/sizes pair (for responsive
+        // loading of the FIRST image). Browsers prefer srcset over src
+        // when both are present, so just reassigning .src here would be
+        // silently ignored — the old image would keep showing. Clearing
+        // srcset/sizes first makes the plain .src actually take effect.
+        mainImg.removeAttribute('srcset');
+        mainImg.removeAttribute('sizes');
+        mainImg.src = t.dataset.full;
+        mainImg.alt = $('img', t).alt;
+      };
+      if (!dir) { apply(); return; }
+      mainImg.style.transition = 'opacity .16s ease, transform .16s ease';
+      mainImg.style.opacity = '0';
+      mainImg.style.transform = 'translateX(' + (dir * -16) + 'px)';
+      setTimeout(() => {
+        apply();
+        mainImg.style.transition = 'none';
+        mainImg.style.transform = 'translateX(' + (dir * 16) + 'px)';
+        void mainImg.offsetWidth; // force reflow so the next transition actually animates
+        mainImg.style.transition = 'opacity .22s ease, transform .22s ease';
+        mainImg.style.opacity = '1';
+        mainImg.style.transform = 'translateX(0)';
+      }, 160);
     };
-    thumbs.forEach((t) => t.addEventListener('click', () => setMain(t)));
+    const visibleThumbs = () => thumbs.filter((t) => !t.hasAttribute('data-color-hidden'));
+    thumbs.forEach((t) => t.addEventListener('click', () => {
+      const visible = visibleThumbs();
+      const activeIdx = visible.indexOf($('.gallery__thumb.is-active', gallery));
+      const newIdx = visible.indexOf(t);
+      const dir = newIdx === activeIdx ? 0 : (newIdx > activeIdx ? 1 : -1);
+      setMain(t, dir);
+    }));
 
     // Swipe left/right on the main image to step through photos — the
     // dots below only show which photo is active, they're too small a
     // target to be the only way to move between images on mobile.
-    const visibleThumbs = () => thumbs.filter((t) => !t.hasAttribute('data-color-hidden'));
     const stepMain = (dir) => {
       const visible = visibleThumbs();
       const activeIdx = visible.indexOf($('.gallery__thumb.is-active', gallery));
       if (activeIdx === -1 || visible.length < 2) return;
-      setMain(visible[(activeIdx + dir + visible.length) % visible.length]);
+      setMain(visible[(activeIdx + dir + visible.length) % visible.length], dir);
     };
     (function () {
       let startX = 0, startY = 0, tracking = false;
