@@ -332,12 +332,17 @@
       atc.parentNode.insertBefore(sentinel, atc);
 
       /* Cache the button's own natural (unpinned) height/margins up
-         front, before it's ever pinned, so we can work out where it
-         would sit in normal flow at any scroll position even while it's
-         currently pinned (and thus not actually in flow). */
+         front, before it's ever pinned — the pinned state adds its own
+         wrapper padding for the bottom bar's background, which makes
+         .atc taller than it sits normally in the buy column. Using that
+         pinned height to decide when to unpin would land the real
+         button's bottom edge in the wrong place, so this is measured
+         once while still unpinned and reused for the rest of the page's
+         life. */
       var atcStyle = getComputedStyle(atc);
       var naturalHeight = atc.getBoundingClientRect().height;
       var marginTop = parseFloat(atcStyle.marginTop) || 0;
+      var marginBottom = parseFloat(atcStyle.marginBottom) || 0;
 
       var pinned = false;
       function pin() {
@@ -356,16 +361,14 @@
         atc.style.width = '';
       }
 
-      /* Only ever pinned while actively SCROLLING UP AND the button's
-         natural spot is still above the top of the viewport — i.e. you
-         scrolled past it going down earlier and haven't caught back up
-         to it yet. The instant any part of it would be visible in
-         normal flow, unpin so the real button takes over; the sticky
-         bar must never show at the same time the real one is already on
-         screen. Deliberately NOT triggered by the natural spot being
-         below the viewport (e.g. once you've scrolled all the way back
-         up past it, near the top of the page) — that's "above the
-         button" territory, where there should never be a sticky bar.
+      /* Only ever pinned while actively SCROLLING UP, and only until the
+         button's natural spot has scrolled up enough that its resting
+         bottom edge reaches the same line the pinned bar's bottom edge
+         sits on. The real button must NOT pop into view (unpin) any
+         earlier than that — even once it's technically started to
+         enter the viewport from the top, it stays hidden behind the
+         sticky bar until it's scrolled down to exactly where the sticky
+         one lives, at which point they swap with no gap and no jump.
          While scrolling down it never pins — it just isn't there, only
          reappearing normally when you scroll back up through its actual
          place in the buy column. */
@@ -376,8 +379,9 @@
         var scrollingDown = y > lastY;
         var restingTop = sentinel.getBoundingClientRect().bottom + marginTop;
         var restingBottom = restingTop + naturalHeight;
-        var stillAbove = restingBottom <= 0;
-        if (!scrollingDown && stillAbove) pin(); else unpin();
+        var pinnedBottomLine = window.innerHeight - marginBottom;
+        var belowSpot = restingBottom < pinnedBottomLine;
+        if (!scrollingDown && belowSpot) pin(); else unpin();
         lastY = y;
         ticking = false;
       }
