@@ -384,20 +384,26 @@
          catch-up point.
 
          One exception: right at the bottom of the page, the browser's
-         own elastic overscroll bounces the view back up a few px on its
-         own — nothing to do with the user actually scrolling up — and
-         that rebound must NOT start a pin (this is the main scenario
-         the sticky bar exists for, so it can't just be disabled near
-         the bottom; the bounce itself has to be told apart from a real
-         upward scroll). A real upward scroll keeps moving up tick after
-         tick; the bounce-settle is a one-off blip that stops almost
-         immediately. So a fresh pin only starts once the cumulative
-         upward movement (reset the moment the direction flips back to
-         down) passes a small threshold — enough to filter the bounce's
-         single-tick rebound without adding any noticeable delay to a
-         genuine upward scroll. */
-      var PIN_START_THRESHOLD = 24;
+         own elastic overscroll bounces the view back up on its own —
+         nothing to do with the user actually scrolling up — and that
+         rebound must NOT start a pin (this is the main scenario the
+         sticky bar exists for, so it can't just be disabled near the
+         bottom; the bounce itself has to be told apart from a real
+         upward scroll). A real upward scroll is a continuous streak
+         that keeps going; a bounce is a one-off rebound that covers its
+         distance and settles back within a couple hundred ms. So a
+         fresh pin only starts once the CURRENT continuous upward streak
+         (distance accumulated since the direction last flipped back to
+         down, wall-clock time since that same moment) clears both a
+         minimum distance AND a minimum duration — tied to how long
+         upward movement has actually been happening, not to how
+         recently the scroll position was near the bottom, since by the
+         time enough distance has accumulated to check, the position
+         itself may already have drifted well clear of the bottom. */
+      var PIN_START_DISTANCE = 60;
+      var PIN_START_DURATION_MS = 350;
       var upDistance = 0;
+      var upStreakStart = 0;
       var lastY = window.scrollY;
       var ticking = false;
       function update() {
@@ -412,10 +418,15 @@
           upDistance = 0;
           unpin();
         } else {
+          if (upDistance === 0) upStreakStart = Date.now();
           upDistance += lastY - y;
           if (pinned) {
             if (!belowSpot) unpin();
-          } else if (outOfView && upDistance >= PIN_START_THRESHOLD) {
+          } else if (
+            outOfView &&
+            upDistance >= PIN_START_DISTANCE &&
+            Date.now() - upStreakStart >= PIN_START_DURATION_MS
+          ) {
             pin();
           }
         }
@@ -426,6 +437,29 @@
         if (ticking) return;
         ticking = true;
         window.requestAnimationFrame(update);
+      }, { passive: true });
+
+      /* Pinning shrinks the page (the gap closes up), so if you were
+         already at the very bottom of the page when it pinned, there's
+         nowhere further down left to scroll to — no "scroll" event ever
+         fires from a downward drag/wheel in that state, so the listener
+         above would never see it and the sticky bar would get stuck
+         pinned forever. These two listeners catch a downward scroll
+         ATTEMPT directly (wheel delta, or a touch drag moving content
+         down) so unpin() still fires even when scrollY itself can't
+         move any further. */
+      window.addEventListener('wheel', function (e) {
+        if (e.deltaY > 0) unpin();
+      }, { passive: true });
+      var touchY = null;
+      window.addEventListener('touchstart', function (e) {
+        touchY = e.touches && e.touches.length ? e.touches[0].clientY : null;
+      }, { passive: true });
+      window.addEventListener('touchmove', function (e) {
+        if (touchY === null || !e.touches || !e.touches.length) return;
+        var y = e.touches[0].clientY;
+        if (touchY - y > 4) unpin();
+        touchY = y;
       }, { passive: true });
 
       window.addEventListener('resize', function () {
