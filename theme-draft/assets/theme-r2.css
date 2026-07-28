@@ -600,7 +600,7 @@ h1 em,h2 em,.plp__title em{
 
 
 /* VOLTICAL PRODUCT LAYOUT V2 — MUTED TYPE + CONTINUOUS SQUIRCLES */
-*,*::before,*::after{corner-shape:squircle}
+*,*::before,*::after{corner-shape:round}
 
 .product-card{
   --product-copy:#696660;
@@ -611,7 +611,7 @@ h1 em,h2 em,.plp__title em{
   isolation:isolate;
   background:var(--tile,#F4F8F8);
   border-radius:clamp(30px,3vw,54px);
-  corner-shape:squircle;
+  corner-shape:round;
 }
 .product-card__media,
 .product-card__media--framed{
@@ -708,7 +708,7 @@ h1 em,h2 em,.plp__title em{
 .product-gallery,
 [class*="tile"],
 [class*="panel"]{
-  corner-shape:squircle;
+  corner-shape:round;
 }
 
 @media (max-width:720px){
