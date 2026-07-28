@@ -56,11 +56,11 @@
     .fsplit2__banner-media{ order:1; aspect-ratio:4/3; padding:20px; }
   }
   @media (min-width:900px){
-    .fsplit2{ min-height:100vh; padding-top:0; padding-bottom:0; display:flex; flex-direction:column; justify-content:center; }
+    .fsplit2{ min-height:calc(100vh + 16px); padding-top:0; padding-bottom:0; display:flex; flex-direction:column; justify-content:center; }
     .fsplit2__banner{
       width:calc(100vw - 150px);
-      height:calc(100vh - 150px);
-      margin:75px calc(50% - 50vw + 75px);
+      height:calc(100vh - 16px);
+      margin:8px calc(50% - 50vw + 75px);
       box-sizing:border-box;
     }
     .fsplit2__banner-heading{
