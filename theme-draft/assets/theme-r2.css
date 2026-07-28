@@ -552,7 +552,7 @@ h1 em,h2 em,.plp__title em{
 .lightbox{position:fixed;inset:0;background:#fff;z-index:120;display:flex;align-items:center;justify-content:center}
 .lightbox img{max-width:min(88vw,1200px);max-height:84vh;object-fit:contain}
 .lightbox__btn{
-  position:absolute;width:44px;height:44px;border-radius:50%;background:var(--tile);color:var(--ink-60);
+  position:absolute;width:52px;height:52px;border-radius:50%;background:var(--tile);color:var(--ink-60);
   display:flex;align-items:center;justify-content:center;font-size:1.3rem;transition:background .2s,color .2s,transform .2s;
 }
 .lightbox__btn:hover{background:var(--lilac);color:var(--ink);transform:scale(1.05)}
