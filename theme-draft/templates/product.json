@@ -21,7 +21,46 @@
         "xsell_usbc": "voltical-usb-c-charge-data-cable-new",
         "xsell_watch": "voltical-watch-charge-cable"
       }
+    },
+    "standard": {
+      "type": "standard",
+      "blocks": {
+        "t1": {
+          "type": "item",
+          "settings": {
+            "icon": "bolt",
+            "heading": "Tested before it ships",
+            "text": "Every batch is sample-tested for output, alignment and heat before it's approved to sell."
+          }
+        },
+        "t2": {
+          "type": "item",
+          "settings": {
+            "icon": "shield",
+            "heading": "12-month warranty",
+            "text": "If it fails in normal use within a year, we replace it. One email, no forms."
+          }
+        },
+        "t3": {
+          "type": "item",
+          "settings": {
+            "icon": "magnet",
+            "heading": "30-day returns",
+            "text": "Live with it for a month. If it isn't earning its place, send it back."
+          }
+        },
+        "t4": {
+          "type": "item",
+          "settings": {
+            "icon": "bolt",
+            "heading": "Human support",
+            "text": "Questions answered by people who use the products, typically within one business day."
+          }
+        }
+      },
+      "block_order": ["t1", "t2", "t3", "t4"],
+      "settings": {}
     }
   },
-  "order": ["main"]
+  "order": ["main", "standard"]
 }
