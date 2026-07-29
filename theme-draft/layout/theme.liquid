@@ -21,12 +21,12 @@
        overflowing element gets clipped instead of widening the page. */
     html, body { overflow-x: hidden; overflow-x: clip; }
 
-    /* Scroll-snap: whichever section-stop is nearest above/below where the
-       user releases the wheel/trackpad, the page settles there — centered
-       in the viewport for the watch cable, USB-C cable, Core and Core Pro
-       sections. Snapping only ever happens after the user stops scrolling
-       (native browser behavior) — nothing auto-moves on its own. */
-    html{ scroll-snap-type: y mandatory; }
+    /* Scroll-snap: each of the sections below has exactly one stopping
+       point, centered in the viewport. "proximity" (not "mandatory") means
+       a small scroll that doesn't come close to leaving the section just
+       stays put — it only pulls you the rest of the way once you're
+       already near a stopping point. Nothing auto-moves on its own. */
+    html{ scroll-snap-type: y proximity; }
     .apple-hero, .lineup, .standard{
       scroll-snap-align: start;
       scroll-margin-top: 14px;
