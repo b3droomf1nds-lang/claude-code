@@ -21,19 +21,6 @@
        overflowing element gets clipped instead of widening the page. */
     html, body { overflow-x: hidden; overflow-x: clip; }
 
-    /* Scroll-snap: each of the sections below has exactly one stopping
-       point, centered in the viewport. "proximity" (not "mandatory") means
-       a small scroll that doesn't come close to leaving the section just
-       stays put — it only pulls you the rest of the way once you're
-       already near a stopping point. Nothing auto-moves on its own. */
-    html{ scroll-snap-type: y proximity; }
-    .apple-hero, .lineup, .standard{
-      scroll-snap-align: start;
-      scroll-margin-top: 14px;
-    }
-    .spotlight, .fsplit2, .fdark{
-      scroll-snap-align: center;
-    }
 
     /* With viewport-fit=cover, the page now extends its own background
        under the status bar/notch safe area instead of leaving that strip
@@ -226,6 +213,42 @@
     window.addEventListener('scroll', onScroll, { passive:true });
     window.addEventListener('resize', update);
     update();
+  })();
+  </script>
+  <script>
+  (function(){
+    // Each of these sections has one stopping point, centered in the
+    // viewport. Nothing moves while the user is actively scrolling — only
+    // once scrolling has fully stopped do we check whether the page is
+    // already within a small distance of a section's center, and if so,
+    // ease the rest of the way there. A scroll that stops mid-section,
+    // far from any center, is left exactly where it landed.
+    var SNAP_SELECTOR = '.spotlight, .fsplit2, .fdark';
+    var THRESHOLD = 45;
+    var els = Array.prototype.slice.call(document.querySelectorAll(SNAP_SELECTOR));
+    if(!els.length) return;
+
+    var idleTimer = null;
+    window.addEventListener('scroll', function(){
+      if(idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(onIdle, 140);
+    }, { passive:true });
+
+    function onIdle(){
+      var vh = window.innerHeight;
+      var here = window.pageYOffset;
+      var here_center = here + vh / 2;
+      var best = null, bestDist = Infinity;
+      els.forEach(function(el){
+        var r = el.getBoundingClientRect();
+        var elCenter = here + r.top + r.height / 2;
+        var dist = Math.abs(elCenter - here_center);
+        if(dist < bestDist){ bestDist = dist; best = elCenter - vh / 2; }
+      });
+      if(best !== null && bestDist > 0.5 && bestDist <= THRESHOLD){
+        window.scrollTo({ top: best, behavior: 'smooth' });
+      }
+    }
   })();
   </script>
 </body>
