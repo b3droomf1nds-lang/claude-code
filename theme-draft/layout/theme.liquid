@@ -224,33 +224,5 @@
     update();
   })();
   </script>
-  <script>
-  (function(){
-    // Halve the distance each mouse-wheel "bump" moves the page, so the
-    // scroll-snap points above land more gradually/naturally. Trackpad and
-    // touch scrolling (many tiny deltas) are left alone — only clearly
-    // discrete wheel notches are intercepted.
-    if(window.matchMedia && window.matchMedia('(pointer:coarse)').matches) return;
-    var target = null, raf = null;
-    function step(){
-      raf = null;
-      var el = document.scrollingElement || document.documentElement;
-      var cur = el.scrollTop;
-      var diff = target - cur;
-      if(Math.abs(diff) < 0.5){ el.scrollTop = target; return; }
-      el.scrollTop = cur + diff * 0.35;
-      raf = requestAnimationFrame(step);
-    }
-    window.addEventListener('wheel', function(e){
-      if(Math.abs(e.deltaY) < 4 || e.ctrlKey) return; // ignore pinch-zoom / tiny deltas
-      e.preventDefault();
-      var el = document.scrollingElement || document.documentElement;
-      var base = target !== null ? target : el.scrollTop;
-      target = base + e.deltaY * 0.5;
-      target = Math.max(0, Math.min(target, el.scrollHeight - el.clientHeight));
-      if(!raf) raf = requestAnimationFrame(step);
-    }, { passive:false });
-  })();
-  </script>
 </body>
 </html>
