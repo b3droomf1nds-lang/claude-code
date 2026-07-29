@@ -21,6 +21,16 @@
        overflowing element gets clipped instead of widening the page. */
     html, body { overflow-x: hidden; overflow-x: clip; }
 
+    /* Natural scroll-snap: gently pulls the wheel/trackpad to rest at the
+       top of each major section instead of stopping mid-section with a
+       sliver of the previous one showing. "proximity" (not "mandatory")
+       only snaps when already close, so normal scrolling still feels free. */
+    html{ scroll-snap-type: y proximity; }
+    .apple-hero, .lineup, .spotlight, .fsplit2, .fdark, .standard{
+      scroll-snap-align: start;
+      scroll-margin-top: 14px;
+    }
+
     /* With viewport-fit=cover, the page now extends its own background
        under the status bar/notch safe area instead of leaving that strip
        to the browser's own default scrim — push visible header content
@@ -212,6 +222,34 @@
     window.addEventListener('scroll', onScroll, { passive:true });
     window.addEventListener('resize', update);
     update();
+  })();
+  </script>
+  <script>
+  (function(){
+    // Halve the distance each mouse-wheel "bump" moves the page, so the
+    // scroll-snap points above land more gradually/naturally. Trackpad and
+    // touch scrolling (many tiny deltas) are left alone — only clearly
+    // discrete wheel notches are intercepted.
+    if(window.matchMedia && window.matchMedia('(pointer:coarse)').matches) return;
+    var target = null, raf = null;
+    function step(){
+      raf = null;
+      var el = document.scrollingElement || document.documentElement;
+      var cur = el.scrollTop;
+      var diff = target - cur;
+      if(Math.abs(diff) < 0.5){ el.scrollTop = target; return; }
+      el.scrollTop = cur + diff * 0.35;
+      raf = requestAnimationFrame(step);
+    }
+    window.addEventListener('wheel', function(e){
+      if(Math.abs(e.deltaY) < 4 || e.ctrlKey) return; // ignore pinch-zoom / tiny deltas
+      e.preventDefault();
+      var el = document.scrollingElement || document.documentElement;
+      var base = target !== null ? target : el.scrollTop;
+      target = base + e.deltaY * 0.5;
+      target = Math.max(0, Math.min(target, el.scrollHeight - el.clientHeight));
+      if(!raf) raf = requestAnimationFrame(step);
+    }, { passive:false });
   })();
   </script>
 </body>
