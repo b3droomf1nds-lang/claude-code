@@ -217,16 +217,33 @@
   </script>
   <script>
   (function(){
-    // Each of these sections has one stopping point, centered in the
-    // viewport. Nothing moves while the user is actively scrolling — only
-    // once scrolling has fully stopped do we check whether the page is
-    // already within a small distance of a section's center, and if so,
-    // ease the rest of the way there. A scroll that stops mid-section,
-    // far from any center, is left exactly where it landed.
+    // Each of these sections has exactly one fixed stopping point: its
+    // center. Points are measured once (not re-measured live against the
+    // current scroll, which is what caused the extra little jump — a
+    // reveal/fade animation on the section was still settling when we
+    // measured, so the target itself was moving). Nothing moves while the
+    // user is scrolling; once fully stopped, if the page already sits
+    // within a small distance of a point, it eases the rest of the way to
+    // that exact point and stops — no comparing against other points.
     var SNAP_SELECTOR = '.spotlight, .fsplit2, .fdark';
     var THRESHOLD = 45;
     var els = Array.prototype.slice.call(document.querySelectorAll(SNAP_SELECTOR));
     if(!els.length) return;
+
+    var points = [];
+    function measure(){
+      points = els.map(function(el){
+        var top = el.getBoundingClientRect().top + window.pageYOffset;
+        return top + el.offsetHeight / 2;
+      });
+    }
+    measure();
+    window.addEventListener('load', measure);
+    var resizeTimer = null;
+    window.addEventListener('resize', function(){
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(measure, 200);
+    });
 
     var idleTimer = null;
     window.addEventListener('scroll', function(){
@@ -236,17 +253,13 @@
 
     function onIdle(){
       var vh = window.innerHeight;
-      var here = window.pageYOffset;
-      var here_center = here + vh / 2;
-      var best = null, bestDist = Infinity;
-      els.forEach(function(el){
-        var r = el.getBoundingClientRect();
-        var elCenter = here + r.top + r.height / 2;
-        var dist = Math.abs(elCenter - here_center);
-        if(dist < bestDist){ bestDist = dist; best = elCenter - vh / 2; }
-      });
-      if(best !== null && bestDist > 0.5 && bestDist <= THRESHOLD){
-        window.scrollTo({ top: best, behavior: 'smooth' });
+      var hereCenter = window.pageYOffset + vh / 2;
+      for(var i = 0; i < points.length; i++){
+        var dist = points[i] - hereCenter;
+        if(Math.abs(dist) > 0.5 && Math.abs(dist) <= THRESHOLD){
+          window.scrollTo({ top: points[i] - vh / 2, behavior: 'smooth' });
+          return;
+        }
       }
     }
   })();
