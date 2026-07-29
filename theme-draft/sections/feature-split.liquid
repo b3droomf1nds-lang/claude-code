@@ -7,7 +7,7 @@
   section. Keeps the same sticky Explore/Buy bar pattern too.
 {%- endcomment -%}
 <style>
-  .fsplit2{ background:var(--ink-04,rgba(19,19,22,.045)); color:var(--ink); padding:calc((clamp(64px,9vw,120px) + 90px) * 0.3) 0 clamp(72px,10vw,130px); }
+  .fsplit2{ background:#FFFFFF; color:var(--ink); padding:calc((clamp(64px,9vw,120px) + 90px) * 0.3) 0 clamp(72px,10vw,130px); }
   .fsplit2 .wrap--wide{ max-width:2510px; padding:0 clamp(14px,2.5vw,24px); }
 
   .fsplit2__banner{
@@ -78,18 +78,6 @@
     box-shadow:0 12px 30px rgba(19,19,22,.1);
     transform:translateY(-140%);
     transition:transform .4s cubic-bezier(.4,0,.2,1);
-  }
-  /* The bar floats with a 14px gap on every side; that gap shows the plain
-     page background (white) rather than the Core section's own tint,
-     which reads as a mismatched sliver above the card. Fill just that
-     strip with the same tint, positioned relative to the bar itself so it
-     hides/shows in lockstep with it. */
-  .fsplit2__stickybar::before{
-    content:"";
-    position:absolute;
-    top:-14px; left:-14px; right:-14px;
-    height:14px;
-    background:var(--ink-04, rgba(19,19,22,.045));
   }
   .fsplit2__stickybar.is-visible{ transform:translateY(0); }
   .fsplit2__stickybar-inner{
