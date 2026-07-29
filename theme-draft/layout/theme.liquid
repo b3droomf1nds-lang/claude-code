@@ -36,7 +36,7 @@
     .spotlight{ background:var(--base) !important; }
     [id^="shopify-section-"][id$="__spot_usb_cable"] .spotlight{
       padding-bottom:calc(clamp(64px,9vw,128px) + 25px);
-      background:var(--ink-04, rgba(19,19,22,.045)) !important;
+      background:linear-gradient(to bottom, var(--base) 0, var(--base) calc(100% - 10px), var(--ink-04, rgba(19,19,22,.045)) calc(100% - 10px), var(--ink-04, rgba(19,19,22,.045)) 100%) !important;
     }
     /* Several headings/badges explicitly set 'Voltical Relay' as the first
        font (which wins over the --sans fallback above) — force those back
