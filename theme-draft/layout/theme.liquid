@@ -101,11 +101,15 @@
       box-shadow:inset 0 1px 0 rgba(255,255,255,.8), 0 1px 2px rgba(0,0,0,.15);
     }
     .vt-ctapill__plus svg{ width:22px; height:22px; display:block; }
-    /* On a light-surface section (Core's white bubble), the glass itself
-       stays colourless — only the text/border switch to dark so it's
-       still legible against a pale background. */
+    /* On a light-surface section (Core), the glass carries its own fixed
+       cream tint instead of a near-transparent fill — previously it just
+       showed whatever was directly behind it (via backdrop-filter), so it
+       looked right over the section's cream canvas but washed-out/plain
+       over the white bubble itself. A fixed tint reads the same either
+       way. */
     .vt-ctapill[data-surface="light"] .vt-ctapill__inner{
       color:var(--ink,#131316);
+      background:rgba(225,225,222,.55);
       border-color:rgba(19,19,22,.18);
       box-shadow:
         0 10px 34px rgba(19,19,22,.12),
