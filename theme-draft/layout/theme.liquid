@@ -251,13 +251,35 @@
       idleTimer = setTimeout(onIdle, 140);
     }, { passive:true });
 
+    // Native `behavior:'smooth'` scales its duration down for short
+    // distances, so a small correction reads as an instant jump-cut rather
+    // than motion. Animate it ourselves with a fixed minimum duration so
+    // even a tiny nudge visibly glides instead of snapping.
+    function easeInOutQuad(t){ return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; }
+    var animId = null;
+    function animateTo(target){
+      if(animId) cancelAnimationFrame(animId);
+      var start = window.pageYOffset;
+      var change = target - start;
+      var duration = 320;
+      var startTime = null;
+      function frame(now){
+        if(startTime === null) startTime = now;
+        var t = Math.min(1, (now - startTime) / duration);
+        window.scrollTo(0, start + change * easeInOutQuad(t));
+        if(t < 1) animId = requestAnimationFrame(frame);
+        else animId = null;
+      }
+      animId = requestAnimationFrame(frame);
+    }
+
     function onIdle(){
       var vh = window.innerHeight;
       var hereCenter = window.pageYOffset + vh / 2;
       for(var i = 0; i < points.length; i++){
         var dist = points[i] - hereCenter;
         if(Math.abs(dist) > 0.5 && Math.abs(dist) <= THRESHOLD){
-          window.scrollTo({ top: points[i] - vh / 2, behavior: 'smooth' });
+          animateTo(points[i] - vh / 2);
           return;
         }
       }
