@@ -79,6 +79,18 @@
     transform:translateY(-140%);
     transition:transform .4s cubic-bezier(.4,0,.2,1);
   }
+  /* The bar floats with a 14px gap on every side; that gap shows the plain
+     page background (white) rather than the Core section's own tint,
+     which reads as a mismatched sliver above the card. Fill just that
+     strip with the same tint, positioned relative to the bar itself so it
+     hides/shows in lockstep with it. */
+  .fsplit2__stickybar::before{
+    content:"";
+    position:absolute;
+    top:-14px; left:-14px; right:-14px;
+    height:14px;
+    background:var(--ink-04, rgba(19,19,22,.045));
+  }
   .fsplit2__stickybar.is-visible{ transform:translateY(0); }
   .fsplit2__stickybar-inner{
     padding:12px 16px 12px 22px;
