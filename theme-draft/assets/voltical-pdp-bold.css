@@ -261,6 +261,7 @@
     width: auto;
     height: 99vh;
     margin-left: auto;
+    transform: translateX(-40px);
   }
 }
 
