@@ -243,6 +243,26 @@
   .pdp--bold .product__grid {
     grid-template-columns: 50% calc(50% - var(--s7));
   }
+
+  /* ---------- desktop: photo takes up roughly 2/3 of the viewport's
+     vertical space instead of being sized off the column's width ----
+     Height-driven instead of width-driven — aspect-ratio then derives
+     the width from that height, and margin-left:auto keeps the
+     (now narrower) image flush against the column's right edge, so it
+     still lines up with the page center from the rule above. */
+  .pdp--bold .gallery__main {
+    width: auto;
+    max-width: 100%;
+    height: 66vh;
+    margin-left: auto;
+  }
+}
+
+/* ---------- product page's own canvas, kept distinct from the photo
+   tile's background (--tile, set on .gallery__main) — the page itself
+   uses the site's Apple-style off-white. ---------- */
+.pdp--bold {
+  background: var(--base, #FCFDFE);
 }
 
 /* ---------- shrink the big top gap under the nav ----------
