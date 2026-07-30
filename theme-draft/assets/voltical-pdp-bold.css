@@ -232,6 +232,19 @@
   aspect-ratio: 2 / 3;
 }
 
+/* ---------- desktop: gallery column's right edge lands exactly on
+   the page's horizontal center ----------
+   The base theme's .product__grid splits 1.1fr/.9fr (theme-r2.css),
+   which puts the gallery's right edge past center. Size the gallery
+   column to exactly 50% of the row instead, with the grid gap
+   (var(--s7)) eaten out of the buy column's share so the two columns
+   still add up to 100% and the row doesn't overflow. */
+@media (min-width: 900px) {
+  .pdp--bold .product__grid {
+    grid-template-columns: 50% calc(50% - var(--s7));
+  }
+}
+
 /* ---------- shrink the big top gap under the nav ----------
    .section (theme.css) adds clamp(80px,11vw,150px) of padding on
    BOTH top and bottom — that spacing is meant to separate stacked
