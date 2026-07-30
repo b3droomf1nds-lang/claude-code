@@ -260,9 +260,10 @@
 
 /* ---------- product page's own canvas, kept distinct from the photo
    tile's background (--tile, set on .gallery__main) — the page itself
-   uses the site's Apple-style off-white. ---------- */
+   uses the same Apple-style cream tint as the homepage's Core section
+   (.fsplit2) instead of a flat white. ---------- */
 .pdp--bold {
-  background: var(--base, #FCFDFE);
+  background: var(--ink-04, rgba(19, 19, 22, .045));
 }
 
 /* ---------- shrink the big top gap under the nav ----------
