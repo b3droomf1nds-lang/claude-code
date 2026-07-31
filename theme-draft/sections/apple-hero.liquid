@@ -36,6 +36,12 @@
     justify-content:center;
     transform:translateY(69px);
   }
+  /* 35% bigger than the theme's base .btn font-size (.95rem) — scoped to
+     just these two hero CTAs ("Learn more" / "Shop the lineup") so it
+     doesn't affect .btn everywhere else on the site. */
+  .apple-hero__ctas .btn{
+    font-size:1.2825rem;
+  }
   .apple-hero__media{
     flex:1 1 0;
     width:100%;
@@ -68,7 +74,7 @@
        to the larger value, not the sum), which is why smaller nudges never
        visibly moved anything. */
     .apple-hero__ctas{ padding-top:8px; }
-    .apple-hero__ctas .btn{ padding:13px 26px; font-size:.689rem; gap:7px; }
+    .apple-hero__ctas .btn{ padding:13px 26px; font-size:.9302rem; gap:7px; }
     /* pushed down with padding (not a flex-item margin) and clipped by the
        section's own overflow:hidden above, so the image can never render
        outside the hero's box no matter how the page scrolls — the grid
