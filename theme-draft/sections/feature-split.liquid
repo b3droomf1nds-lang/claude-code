@@ -210,7 +210,7 @@
       var rect = root.getBoundingClientRect();
       var vh = window.innerHeight;
       var sectionCenter = rect.top + rect.height / 2;
-      var startCenter = vh * 1.4;   // section still low in the viewport: full zoom-in
+      var startCenter = vh * 2.4;   // starts much earlier — well below the viewport — so there's more scroll distance to animate across
       var endCenter = vh * 0.5;     // section centered: fully zoomed out, locks here
       var progress = (startCenter - sectionCenter) / (startCenter - endCenter);
       if(progress < 0) progress = 0;
