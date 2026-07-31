@@ -11,6 +11,7 @@
   .fsplit2 .wrap--wide{ max-width:2510px; padding:0 clamp(14px,2.5vw,24px); }
 
   .fsplit2__banner{
+    --fsplit2-scale:1;
     width:100%;
     display:flex;
     align-items:stretch;
@@ -20,6 +21,8 @@
     corner-shape:round;
     box-shadow:0 1px 2px rgba(19,19,22,.04),0 24px 60px -24px rgba(19,19,22,.14);
     overflow:hidden;
+    transform:scale(var(--fsplit2-scale,1));
+    will-change:transform;
   }
   .fsplit2__banner-text{
     flex:1 1 45%; min-width:260px;
@@ -63,7 +66,7 @@
       height:calc(100vh - 125px);
       margin:75px calc(50% - 50vw + 75px);
       box-sizing:border-box;
-      transform:translateY(-50px);
+      transform:translateY(-50px) scale(var(--fsplit2-scale,1));
     }
     .fsplit2__banner-heading{
       font-size:clamp(1.5rem,2.4vw,2rem);
@@ -190,6 +193,39 @@
       var y = root.getBoundingClientRect().top + window.pageYOffset - barHeight - 16;
       window.scrollTo({ top: y, behavior: 'smooth' });
     });
+  }
+
+  /* ---------- scroll-driven zoom-out (Rhode-style) ----------
+     The banner card starts oversized and scales DOWN to its normal
+     size as the section scrolls up toward the middle of the screen —
+     then locks at that size (never shrinks further, never grows back)
+     for the rest of the scroll. Driven by a CSS custom property so it
+     composites with the section's own translate transforms instead of
+     replacing them (see .fsplit2__banner in the <style> above). */
+  var banner = root.querySelector('.fsplit2__banner');
+  if(banner){
+    var MAX_SCALE = 1.15;
+    var ticking = false;
+    function updateZoom(){
+      var rect = root.getBoundingClientRect();
+      var vh = window.innerHeight;
+      var sectionCenter = rect.top + rect.height / 2;
+      var startCenter = vh * 1.4;   // section still low in the viewport: full zoom-in
+      var endCenter = vh * 0.5;     // section centered: fully zoomed out, locks here
+      var progress = (startCenter - sectionCenter) / (startCenter - endCenter);
+      if(progress < 0) progress = 0;
+      if(progress > 1) progress = 1;
+      var scale = MAX_SCALE - (MAX_SCALE - 1) * progress;
+      banner.style.setProperty('--fsplit2-scale', scale.toFixed(4));
+      ticking = false;
+    }
+    window.addEventListener('scroll', function(){
+      if(ticking) return;
+      ticking = true;
+      requestAnimationFrame(updateZoom);
+    }, { passive: true });
+    window.addEventListener('resize', updateZoom);
+    updateZoom();
   }
 })();
 </script>
