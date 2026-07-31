@@ -15,7 +15,7 @@
     {%- comment -%} Core Pro: force swatch order to black, grey, blue,
       purple regardless of the order set in Shopify admin. {%- endcomment -%}
     {%- if product.handle == 'voltical-core-pro-5k-10k' -%}
-      {%- assign color_priority = 'black,grey,blue,purple' | split: ',' -%}
+      {%- assign color_priority = 'black,silver,blue,purple' | split: ',' -%}
       {%- assign color_values = '' | split: ',' -%}
       {%- for p in color_priority -%}
         {%- for value in option.values -%}

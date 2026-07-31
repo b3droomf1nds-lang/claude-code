@@ -215,11 +215,12 @@
               {%- if is_color or is_capacity -%}{%- assign is_boxed = true -%}{%- endif -%}
               {%- assign current_opt_value = current_variant.options[forloop.index0] -%}
 
-              {%- comment -%} Core Pro: force swatch order to black, grey,
-                blue, purple regardless of the order set in Shopify admin. {%- endcomment -%}
+              {%- comment -%} Core Pro: force swatch order to black, silver,
+                blue, purple regardless of the order set in Shopify admin;
+                force capacity order to highest mAh first (10k above 5k). {%- endcomment -%}
               {%- assign ordered_values = option.values -%}
               {%- if is_color and product.handle == 'voltical-core-pro-5k-10k' -%}
-                {%- assign color_priority = 'black,grey,blue,purple' | split: ',' -%}
+                {%- assign color_priority = 'black,silver,blue,purple' | split: ',' -%}
                 {%- assign ordered_values = ''  | split: ',' -%}
                 {%- for p in color_priority -%}
                   {%- for value in option.values -%}
@@ -236,6 +237,38 @@
                     {%- assign v_arr = value | split: '|' -%}
                     {%- assign ordered_values = ordered_values | concat: v_arr -%}
                   {%- endunless -%}
+                {%- endfor -%}
+              {%- elsif is_capacity -%}
+                {%- comment -%} Sort capacity options highest-mAh-first
+                  (e.g. 10k above 5k) via repeated max-extraction — Liquid
+                  has no numeric-descending sort filter. {%- endcomment -%}
+                {%- assign remaining = option.values -%}
+                {%- assign ordered_values = '' | split: ',' -%}
+                {%- for i in (1..12) -%}
+                  {%- assign remaining_size = remaining | size -%}
+                  {%- if remaining_size == 0 -%}{%- break -%}{%- endif -%}
+                  {%- assign best_val = remaining[0] -%}
+                  {%- assign best_num = best_val | downcase | remove: ',' | remove: ' ' | remove: 'mah' | plus: 0 -%}
+                  {%- for value in remaining -%}
+                    {%- assign num = value | downcase | remove: ',' | remove: ' ' | remove: 'mah' | plus: 0 -%}
+                    {%- if num > best_num -%}
+                      {%- assign best_num = num -%}
+                      {%- assign best_val = value -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+                  {%- assign v_arr = best_val | split: '|' -%}
+                  {%- assign ordered_values = ordered_values | concat: v_arr -%}
+                  {%- assign new_remaining = '' | split: ',' -%}
+                  {%- assign removed = false -%}
+                  {%- for value in remaining -%}
+                    {%- if value == best_val and removed == false -%}
+                      {%- assign removed = true -%}
+                    {%- else -%}
+                      {%- assign v_arr2 = value | split: '|' -%}
+                      {%- assign new_remaining = new_remaining | concat: v_arr2 -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+                  {%- assign remaining = new_remaining -%}
                 {%- endfor -%}
               {%- endif -%}
 
