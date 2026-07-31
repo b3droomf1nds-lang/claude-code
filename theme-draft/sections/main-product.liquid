@@ -20,6 +20,17 @@
   {%- assign current_variant = explicit_variant -%}
 {%- elsif capacity_idx > -1 -%}
   {%- assign base_variant = product.selected_or_first_available_variant -%}
+  {%- comment -%} Core Pro: default to the Black color option instead of
+    whatever Shopify's own first-available-variant happens to be. {%- endcomment -%}
+  {%- if product.handle == 'voltical-core-pro-5k-10k' -%}
+    {%- for v in product.variants -%}
+      {%- assign v_opts_dc = v.options | join: '|' | downcase -%}
+      {%- if v_opts_dc contains 'black' -%}
+        {%- assign base_variant = v -%}
+        {%- break -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
   {%- assign best_variant = base_variant -%}
   {%- assign best_capacity = -1 -%}
   {%- for v in product.variants -%}
@@ -188,6 +199,13 @@
             </fieldset>
           {%- else -%}
             {%- for option in product.options_with_values -%}
+              {%- comment -%} A single-value option (e.g. the Watch cable's
+                Color: White) has nothing to actually choose between — skip
+                rendering a picker for it; the one value is already what
+                current_variant uses. {%- endcomment -%}
+              {%- if option.values.size <= 1 -%}
+                {%- continue -%}
+              {%- endif -%}
               {%- assign oname = option.name | downcase -%}
               {%- assign is_color = false -%}
               {%- assign is_capacity = false -%}
@@ -196,10 +214,35 @@
               {%- assign is_boxed = false -%}
               {%- if is_color or is_capacity -%}{%- assign is_boxed = true -%}{%- endif -%}
               {%- assign current_opt_value = current_variant.options[forloop.index0] -%}
+
+              {%- comment -%} Core Pro: force swatch order to black, grey,
+                blue, purple regardless of the order set in Shopify admin. {%- endcomment -%}
+              {%- assign ordered_values = option.values -%}
+              {%- if is_color and product.handle == 'voltical-core-pro-5k-10k' -%}
+                {%- assign color_priority = 'black,grey,blue,purple' | split: ',' -%}
+                {%- assign ordered_values = ''  | split: ',' -%}
+                {%- for p in color_priority -%}
+                  {%- for value in option.values -%}
+                    {%- assign vd = value | downcase -%}
+                    {%- if vd == p -%}
+                      {%- assign v_arr = value | split: '|' -%}
+                      {%- assign ordered_values = ordered_values | concat: v_arr -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+                {%- endfor -%}
+                {%- for value in option.values -%}
+                  {%- assign vd = value | downcase -%}
+                  {%- unless color_priority contains vd -%}
+                    {%- assign v_arr = value | split: '|' -%}
+                    {%- assign ordered_values = ordered_values | concat: v_arr -%}
+                  {%- endunless -%}
+                {%- endfor -%}
+              {%- endif -%}
+
               <fieldset class="opt{% if is_boxed %} opt--boxed{% endif %}">
                 <div class="opt__label">{{ option.name }}</div>
                 <div class="opt__values{% if is_boxed %} opt__values--boxed{% endif %}">
-                  {%- for value in option.values -%}
+                  {%- for value in ordered_values -%}
                     {%- assign input_id = 'opt-' | append: section.id | append: '-' | append: forloop.parentloop.index | append: '-' | append: forloop.index -%}
                     <input type="radio"
                       name="opt-{{ section.id }}-{{ option.name | handleize }}"
@@ -212,6 +255,7 @@
                         <i class="swatch" aria-hidden="true" style="background:
                           {%- if cd contains 'black' or cd contains 'midnight' -%}#2b2b2e
                           {%- elsif cd contains 'white' or cd contains 'starlight' -%}#efeae0
+                          {%- elsif cd contains 'grey' or cd contains 'gray' -%}#8f8f94
                           {%- elsif cd contains 'gold' -%}#CBB88E
                           {%- elsif cd contains 'silver' -%}#d6d6db
                           {%- elsif cd contains 'blue' -%}#9db8d9
