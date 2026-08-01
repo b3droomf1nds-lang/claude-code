@@ -126,6 +126,24 @@
       setMain(t, dir);
     }));
 
+    // Desktop click-through arrows (hidden on mobile via CSS — swipe
+    // covers that there). Step to the next/previous VISIBLE thumb,
+    // wrapping around, same setMain() slide used by thumbnail clicks.
+    const stepGallery = (dir) => {
+      const visible = visibleThumbs();
+      if (visible.length < 2) return;
+      const activeIdx = visible.indexOf($('.gallery__thumb.is-active', gallery));
+      const newIdx = (activeIdx + dir + visible.length) % visible.length;
+      setMain(visible[newIdx], dir);
+    };
+    const prevBtn = $('[data-gallery-prev]', gallery);
+    const nextBtn = $('[data-gallery-next]', gallery);
+    // stopPropagation: .gallery__main itself has its own click handler
+    // (opens the lightbox, wired up below) — without this, clicking an
+    // arrow would also open the lightbox.
+    if (prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); stepGallery(-1); });
+    if (nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); stepGallery(1); });
+
     // Swipe left/right on the main image to step through photos — iPhone
     // Photos style: the photo tracks your finger 1:1 as you drag (with
     // the next/previous photo sliding in from off-screen live, not just

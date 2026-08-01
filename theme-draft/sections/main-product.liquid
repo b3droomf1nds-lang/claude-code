@@ -153,6 +153,15 @@
                  sizes="(min-width:900px) 50vw, 94vw"
                  alt="{{ first_img.alt | default: product.title | escape }}" width="1200" height="1200">
           {%- endif -%}
+          {%- comment -%} Desktop-only click-through arrows — hidden on
+            mobile (swipe covers that there) and hidden entirely when
+            there's nothing to click through to. {%- endcomment -%}
+          {%- assign _image_count = 0 -%}
+          {%- for media in product.media -%}{%- if media.media_type == 'image' -%}{%- assign _image_count = _image_count | plus: 1 -%}{%- endif -%}{%- endfor -%}
+          {%- if _image_count > 1 -%}
+            <button type="button" class="gallery__arrow gallery__arrow--prev" data-gallery-prev aria-label="{{ 'general.previous' | t }}"><svg width="12" height="20" viewBox="0 0 14 24" fill="none" aria-hidden="true"><path d="M11 2 3 12l8 10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button type="button" class="gallery__arrow gallery__arrow--next" data-gallery-next aria-label="{{ 'general.next' | t }}"><svg width="12" height="20" viewBox="0 0 14 24" fill="none" aria-hidden="true"><path d="M3 2l8 10-8 10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          {%- endif -%}
         </div>
         <div class="gallery__thumbs">
           {%- for media in product.media -%}

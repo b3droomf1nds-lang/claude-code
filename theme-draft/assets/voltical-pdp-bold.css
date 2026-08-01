@@ -274,6 +274,45 @@
   object-fit: cover;
 }
 
+/* ---------- desktop click-through arrows ----------
+   Hidden by default (and hidden entirely on mobile, where swipe
+   already covers this) — shown only on hover/focus of the photo
+   itself so they don't clutter a static image. */
+.pdp--bold .gallery__arrow {
+  display: none;
+}
+@media (min-width: 900px) {
+  .pdp--bold .gallery__arrow {
+    display: flex;
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .88);
+    color: var(--ink, #131316);
+    box-shadow: 0 4px 16px rgba(19, 19, 22, .16);
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(-50%);
+    transition: opacity .2s, background .2s, transform .2s;
+  }
+  .pdp--bold .gallery__main:hover .gallery__arrow,
+  .pdp--bold .gallery__arrow:focus-visible {
+    opacity: 1;
+  }
+  .pdp--bold .gallery__arrow:hover {
+    background: #FFFFFF;
+    transform: translateY(-50%) scale(1.06);
+  }
+  .pdp--bold .gallery__arrow--prev { left: 18px; }
+  .pdp--bold .gallery__arrow--next { right: 18px; }
+}
+
 /* ---------- desktop: gallery column's right edge lands exactly on
    the page's horizontal center ----------
    The base theme's .product__grid splits 1.1fr/.9fr (theme-r2.css),
@@ -331,7 +370,6 @@
    staying flat. ---------- */
 .pdp--bold .product__grid {
   position: relative;
-  overflow: hidden;
   background: #FAFBFD;
   border-radius: clamp(20px, 3vw, 36px);
   padding: clamp(16px, 3vw, 32px);
@@ -341,8 +379,14 @@
      canvas-sampled --gallery-bg-color custom property as
      .gallery__main above (set/kept in sync by theme-r3.js) — a plain
      background-color, no blur filter, so there's nothing here that
-     needs repainting while the swipe drag runs. */
+     needs repainting while the swipe drag runs.
+     overflow:hidden lives here (mobile only) to clip to the rounded
+     corners — desktop deliberately lets .gallery__main overflow this
+     box's LEFT edge (negative margin-left, see the desktop rule
+     below), so overflow:hidden up in the shared rule was clipping off
+     the left side of the enlarged photo bubble there. */
   .pdp--bold .product__grid {
+    overflow: hidden;
     background: var(--gallery-bg-color, #FAFBFD);
   }
 }
