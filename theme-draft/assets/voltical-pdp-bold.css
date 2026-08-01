@@ -339,16 +339,18 @@
      (the page center from the rule above) without ever crossing it,
      and without cropping anything.
 
-     5:4 instead of 2:3 here (desktop only — mobile keeps 2:3 above):
-     at the same height this makes the box noticeably wider — width is
-     set explicitly (height * 5/4) rather than left to aspect-ratio's
-     auto-computation so the extra width is never in doubt.
+     Back to 2:3 here (width = height * 2/3) — the actual product
+     photos are shot at 1364x2048px, a real 2:3 ratio. The box had
+     been widened to 5:4 (landscape) for an earlier "wider" request,
+     but with no padding/contain left to letterbox it (removed for
+     swipe stability, see .gallery__main img above), object-fit:cover
+     had to zoom in and crop a 2:3 photo hard to fill a 5:4 landscape
+     box — that's the "zoomed in" look. Matching the box back to the
+     photo's own ratio means cover has nothing left to crop.
      margin-left:auto + translateX(-430px) still anchor the RIGHT edge
-     at the same spot regardless of how wide the box gets, so that
-     extra width is added entirely on the left and the box's centre
-     moves left to compensate. */
+     at the same spot regardless of box width. */
   .pdp--bold .gallery__main {
-    width: 102.09375vh;
+    width: 54.45vh;
     height: 81.675vh;
     margin-left: auto;
     transform: translateX(-430px);
