@@ -251,6 +251,14 @@
   align-items: center;
   justify-content: center;
 }
+@media (max-width: 899px) {
+  /* the outer .product__grid card now matches this photo's own
+     backdrop colour, so the shadow that used to separate the two just
+     reads as a stray edge — drop it here, mobile only. */
+  .pdp--bold .gallery__main {
+    box-shadow: none;
+  }
+}
 /* Fills the bubble with the AVERAGE COLOUR OF THE WHITE STUDIO
    BACKDROP the product is shot on — not the product itself. Product
    photos are shot centred with generous plain backdrop margin around
