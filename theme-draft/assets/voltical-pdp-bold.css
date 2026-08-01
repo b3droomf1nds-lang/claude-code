@@ -266,11 +266,20 @@
     box-shadow: none;
   }
 }
+/* width/height:100% (not auto/max-*) so this box is exactly the same
+   size as .gallery__peek-img's box below — object-fit:contain still
+   letterboxes the actual pixels correctly either way, but the swipe
+   drag/commit animation in theme-r3.js moves both images by
+   translateX(percentage), which resolves against EACH element's own
+   box width. A shrink-to-fit box here (narrower than the peek's full
+   box whenever the photo isn't exactly 2:3) made the two slide by
+   different physical distances, so removing the peek at the end of a
+   completed swipe revealed mainImg sitting slightly off from where
+   the animation had implied it would land — the "jump" at the very
+   end of the swipe. */
 .pdp--bold .gallery__main img {
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: 100%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   will-change: transform;
 }
