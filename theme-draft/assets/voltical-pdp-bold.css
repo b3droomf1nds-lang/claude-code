@@ -405,8 +405,10 @@
          rgb(255, 202, 159), i.e. ratios (1, .792, .624).
        - Applied those ratios to the flat colour the old ink-tint
          composited to (#F2F2F4: rgba(19,19,22,.045) over the site's
-         --base white, #FCFDFE) -> rgb(242,192,152). */
-    background: #F2C098;
+         --base white, #FCFDFE) -> rgb(242,192,152), then lightened
+         (blended 40% toward white, same hue direction) for a lighter
+         version of that same night-light warmth. */
+    background: #F7D9C1;
   }
 }
 @media (max-width: 899px) {
