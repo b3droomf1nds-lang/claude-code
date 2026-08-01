@@ -370,11 +370,11 @@
    set on .gallery__main) — the page itself uses a light cream tint
    instead of a flat white. Desktop only — mobile keeps the original
    plain background it had before this change.
-   #FBF6F2 specifically called "perfect" — don't drift off it without
-   being asked. ---------- */
+   #FBF6F2 was called "perfect" — this is 50% lighter than that on
+   request, not a drift. ---------- */
 @media (min-width: 900px) {
   .pdp--bold {
-    background: #FBF6F2;
+    background: #FDFAF8;
   }
 }
 @media (max-width: 899px) {
