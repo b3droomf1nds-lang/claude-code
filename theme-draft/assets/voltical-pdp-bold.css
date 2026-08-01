@@ -333,7 +333,7 @@
      (the page center from the rule above) without ever crossing it,
      and without cropping anything.
 
-     4:5 here (width = height * 4/5), with the padding-inset "bubble"
+     5:4 here (width = height * 5/4), with the padding-inset "bubble"
      border restored — DESKTOP ONLY. The padding+object-fit:contain
      combo was reverted everywhere for the mobile swipe bug, but that
      bug only ever happened on touch (the drag/peek code only runs on
@@ -345,7 +345,7 @@
      margin-left:auto + translateX(-430px) still anchor the RIGHT edge
      at the same spot regardless of box width. */
   .pdp--bold .gallery__main {
-    width: 65.34vh;
+    width: 102.09vh;
     height: 81.675vh;
     margin-left: auto;
     transform: translateX(-430px);
