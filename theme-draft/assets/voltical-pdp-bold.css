@@ -388,7 +388,25 @@
    background it had before this change. ---------- */
 @media (min-width: 900px) {
   .pdp--bold {
-    background: var(--ink-04, rgba(19, 19, 22, .045));
+    /* Simulates Windows Night Light at 50% strength, researched (not
+       guessed) this time:
+       - Night Light's Strength slider (0-100) maps LINEARLY to colour
+         temperature, 6500K (0, off) down to 1200K (100, max warmth) —
+         so 50% strength = 3850K.
+       - Per a KDE/KWin engineering writeup on implementing the same
+         kind of filter, Night Light-style tools render the warm shift
+         as a simple PER-CHANNEL MULTIPLICATION (not a full chromatic-
+         adaptation transform) using the RGB ratio of an ideal
+         blackbody radiator at the target temperature — the "naive"
+         approach, in their words, but it's what these tools actually
+         use.
+       - Ran 3850K through the standard Kelvin-to-RGB approximation
+         (Tanner Helland's algorithm) to get that blackbody colour:
+         rgb(255, 202, 159), i.e. ratios (1, .792, .624).
+       - Applied those ratios to the flat colour the old ink-tint
+         composited to (#F2F2F4: rgba(19,19,22,.045) over the site's
+         --base white, #FCFDFE) -> rgb(242,192,152). */
+    background: #F2C098;
   }
 }
 @media (max-width: 899px) {
