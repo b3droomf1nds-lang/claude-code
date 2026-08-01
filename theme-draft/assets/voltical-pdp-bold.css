@@ -372,23 +372,18 @@
 }
 
 /* ---------- top of the product page (gallery + buy box) sits on its
-   own pale card, kept distinct from the photo tile's own background
-   (--tile, set on .gallery__main) — everything below (tiles, compare,
-   trust badges) stays on the site's normal background. Mobile: flat
-   pale tint (image sits above text, so there's no "beside" to fade
-   across). Desktop: overridden below to fade left-to-right instead of
-   staying flat. ---------- */
-.pdp--bold .product__grid {
-  position: relative;
-  background: #FAFBFD;
-  border-radius: clamp(20px, 3vw, 36px);
-  padding: clamp(16px, 3vw, 32px);
+   own canvas, kept distinct from the photo tile's background (--tile,
+   set on .gallery__main) — the page itself uses the same Apple-style
+   cream tint as the homepage's Core section (.fsplit2) instead of a
+   flat white. Desktop only — mobile keeps the original plain
+   background it had before this change. ---------- */
+@media (min-width: 900px) {
+  .pdp--bold {
+    background: var(--ink-04, rgba(19, 19, 22, .045));
+  }
 }
 @media (max-width: 899px) {
-  /* Back to the original flat pale card colour (#FAFBFD, set in the
-     shared rule above) — no longer matched to the gallery photo's own
-     backdrop colour.
-     overflow:hidden lives here (mobile only) to clip to the rounded
+  /* overflow:hidden lives here (mobile only) to clip to the rounded
      corners — desktop deliberately lets .gallery__main overflow this
      box's LEFT edge (negative margin-left, see the desktop rule
      below), so overflow:hidden up in the shared rule was clipping off
