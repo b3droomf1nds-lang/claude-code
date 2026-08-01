@@ -419,7 +419,10 @@
   display: none;
 }
 
-/* ---------- push the spec sheet further down the buy column ---------- */
+/* ---------- push the description & spec sheet further down the buy column ---------- */
+.pdp--bold .pinfo__desc {
+  margin-top: 532px !important;
+}
 .pdp--bold .specs {
   margin-top: calc(var(--s4) + 500px);
 }
