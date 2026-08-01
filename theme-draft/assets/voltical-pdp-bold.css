@@ -388,13 +388,14 @@
    background it had before this change. ---------- */
 @media (min-width: 900px) {
   .pdp--bold {
-    /* Starting from the earlier composite (~#F2F2F4, the ink-tint-on-
-       --base blend), then run through an approximation of Windows
-       Night Light's colour-temperature curve at 50% strength: red
-       stays put, green pulled down ~7.5%, blue pulled down ~15% —
-       roughly half of night-light's full-strength shift (which drops
-       green ~15%, blue ~30%). */
-    background: #F2E0CF;
+    /* Same visible tint as before, but computed as a flat colour
+       instead of a semi-transparent ink overlay on top of the site's
+       --base white (#FCFDFE) — that composite came out to roughly
+       #F2F2F4, i.e. its blue channel sat 2 units above red/green.
+       Halved that gap here (blue channel now only 1 unit above) so
+       this section reads slightly warmer/less blue than the rest of
+       the site, independent of whatever --base itself is. */
+    background: #F2F2F3;
   }
 }
 @media (max-width: 899px) {
