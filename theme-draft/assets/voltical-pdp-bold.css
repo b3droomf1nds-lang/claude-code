@@ -407,6 +407,32 @@
     flex: 1;
     justify-content: space-between;
   }
+
+  /* ---------- free per-section nudges ----------
+     Each piece in the buy column (title, options/colours, the "you
+     might also like" cross-sell, the Add to cart button, and the
+     dispatch note) gets its own translateY hook, defaulting to 0 (no
+     visual change from the space-between layout above) — set any of
+     these custom properties on .pdp--bold to slide that one section
+     up/down independently without disturbing the others. */
+  .pdp--bold .pinfo__top h1 {
+    transform: translateY(var(--title-y, 0px));
+  }
+  .pdp--bold .pinfo__top .pinfo__price {
+    transform: translateY(var(--price-y, 0px));
+  }
+  .pdp--bold .pinfo__top .opt {
+    transform: translateY(var(--opt-y, 0px));
+  }
+  .pdp--bold .pinfo__top .addon {
+    transform: translateY(var(--addon-y, 0px));
+  }
+  .pdp--bold .pinfo__top .atc {
+    transform: translateY(var(--atc-y, 0px));
+  }
+  .pdp--bold .pinfo__top .ship-note {
+    transform: translateY(var(--ship-y, 0px));
+  }
 }
 
 /* ---------- top of the product page (gallery + buy box) — cream
