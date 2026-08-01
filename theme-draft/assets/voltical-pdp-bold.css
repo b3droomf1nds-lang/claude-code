@@ -385,11 +385,9 @@
   padding: clamp(16px, 3vw, 32px);
 }
 @media (max-width: 899px) {
-  /* Mobile: matches the gallery photo's own backdrop colour, same
-     canvas-sampled --gallery-bg-color custom property as
-     .gallery__main above (set/kept in sync by theme-r3.js) — a plain
-     background-color, no blur filter, so there's nothing here that
-     needs repainting while the swipe drag runs.
+  /* Back to the original flat pale card colour (#FAFBFD, set in the
+     shared rule above) — no longer matched to the gallery photo's own
+     backdrop colour.
      overflow:hidden lives here (mobile only) to clip to the rounded
      corners — desktop deliberately lets .gallery__main overflow this
      box's LEFT edge (negative margin-left, see the desktop rule
@@ -397,16 +395,6 @@
      the left side of the enlarged photo bubble there. */
   .pdp--bold .product__grid {
     overflow: hidden;
-    background: var(--gallery-bg-color, #FAFBFD);
-  }
-}
-@media (min-width: 900px) {
-  /* pale right around the gallery photo, fading out to the site's
-     normal white by roughly where the buy column (title/price/ATC)
-     starts, so the two feel like one continuous surface instead of a
-     hard-edged card. */
-  .pdp--bold .product__grid {
-    background: linear-gradient(to right, #FAFBFD 0%, #FAFBFD 38%, var(--base, #FCFDFE) 58%);
   }
 }
 
