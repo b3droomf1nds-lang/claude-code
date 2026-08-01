@@ -141,12 +141,12 @@
 
       const removePeek = () => { if (peek) { peek.img.remove(); peek = null; } };
 
-      // Every offscreen position below is computed in PIXELS off the same
-      // single containerW measurement (not '%', which resolves against
-      // each element's OWN box width) — mainImg and the peek image are
-      // sized identically in CSS, but relying on that meant any future
-      // sizing tweak to either one could silently reintroduce a mismatch.
-      // One shared pixel reference removes that dependency entirely.
+      // Peek is styled inline here (not via a CSS class) to be byte-for-
+      // byte the same box as mainImg — width:100%/height:100%/cover, no
+      // padding or inset — since that exact match is what makes the
+      // swipe/commit transition seamless. Every offscreen position is a
+      // PIXEL offset off one shared containerW measurement (not '%',
+      // which resolves against each element's own box width).
       const addPeek = (dir) => {
         const visible = visibleThumbs();
         const activeIdx = visible.indexOf($('.gallery__thumb.is-active', gallery));
@@ -156,8 +156,9 @@
         img.src = target.dataset.full;
         img.alt = '';
         img.setAttribute('aria-hidden', 'true');
-        img.className = 'gallery__peek-img';
-        img.style.transform = 'translateX(' + (dir * containerW) + 'px)';
+        img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;' +
+          'object-fit:cover;pointer-events:none;z-index:1;' +
+          'transform:translateX(' + (dir * containerW) + 'px)';
         mainWrap.appendChild(img);
         return { img, dir, target };
       };
@@ -212,8 +213,11 @@
             mainImg.src = target.dataset.full;
             mainImg.alt = $('img', target).alt;
             mainImg.style.transform = '';
-            applyBgColor(target);
             removePeek();
+            // deferred: canvas colour sampling is synchronous work, kept
+            // off the swap frame itself so it can't contribute any jank
+            // right when the peek/mainImg switch happens.
+            setTimeout(() => applyBgColor(target), 0);
           }, settleMs);
         } else {
           mainImg.style.transform = 'translateX(0)';

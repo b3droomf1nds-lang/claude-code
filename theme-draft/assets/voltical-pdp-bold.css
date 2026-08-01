@@ -245,18 +245,11 @@
   /* Average colour of the photo's own white studio backdrop — sampled
      ONCE per photo change from its (already-loaded) thumbnail via a
      tiny offscreen canvas read in theme-r3.js, not a live CSS filter.
-     A blurred filter layer here used to have to be repainted every
-     touchmove frame during the swipe drag, which is what made the
-     swipe stutter/pause partway through; a plain background-color
-     costs nothing during the drag. */
+     Only actually visible on desktop below (mobile's img is back to a
+     flush, edge-to-edge fill — see the note on the img rule). */
   background: var(--gallery-bg-color, #FFFFFF);
   border-radius: clamp(22px, 2.4vw, 32px);
   box-shadow: 0 1px 2px rgba(19, 19, 22, .04), 0 18px 44px -22px rgba(19, 19, 22, .14);
-  padding: clamp(10px, 1.6vw, 18px);
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 @media (max-width: 899px) {
   /* the outer .product__grid card now matches this photo's own
@@ -266,37 +259,19 @@
     box-shadow: none;
   }
 }
-/* width/height:100% (not auto/max-*) so this box is exactly the same
-   size as .gallery__peek-img's box below — object-fit:contain still
-   letterboxes the actual pixels correctly either way, but the swipe
-   drag/commit animation in theme-r3.js moves both images by
-   translateX(percentage), which resolves against EACH element's own
-   box width. A shrink-to-fit box here (narrower than the peek's full
-   box whenever the photo isn't exactly 2:3) made the two slide by
-   different physical distances, so removing the peek at the end of a
-   completed swipe revealed mainImg sitting slightly off from where
-   the animation had implied it would land — the "jump" at the very
-   end of the swipe. */
+/* Reverted back to the theme's original edge-to-edge width:100%/
+   height:100%/object-fit:cover (no padding, no letterboxing) — this
+   is byte-for-byte what the swipe/peek image in theme-r3.js is styled
+   as too. An earlier "bubble" version padding-inset this photo with
+   object-fit:contain to avoid ever cropping it, but no combination of
+   matching box sizes ever fully eliminated a jump partway through a
+   completed swipe — reverting both sides back to this simpler,
+   known-good shared sizing removes the mismatch at its root instead
+   of chasing it. */
 .pdp--bold .gallery__main img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  will-change: transform;
-}
-/* The swipe-peek image (theme-r3.js addPeek) used to be inset:0 +
-   object-fit:cover — filling the WHOLE box edge to edge, bigger/more
-   cropped than the committed photo above (which sits inset on padding
-   with object-fit:contain). That mismatch is what made a completed
-   swipe look like it "settled" into a smaller, more zoomed-out photo a
-   moment later — the peek was never actually the same size as the
-   real thing. Matching the same inset + contain here fixes it. */
-.pdp--bold .gallery__peek-img {
-  position: absolute;
-  inset: clamp(10px, 1.6vw, 18px);
-  object-fit: contain;
-  pointer-events: none;
-  z-index: 1;
-  will-change: transform;
+  object-fit: cover;
 }
 
 /* ---------- desktop: gallery column's right edge lands exactly on
