@@ -380,39 +380,14 @@
   }
 }
 
-/* ---------- top of the product page: no more full-width flat tint —
-   instead just a soft ambient glow sitting behind the gallery photo
-   itself, in the same night-light-simulated cream (#FEF9F5, see the
-   Night Light research two commits back) but a shade darker at its
-   core so it actually reads. It's a big, heavily-blurred box-shadow
-   on .gallery__main, layered after the existing hairline-border/
-   depth shadows below (box-shadow doesn't merge across separate
-   rules, so all of them are repeated here together) — box-shadow
-   paints outside the box regardless of the element's own
-   overflow:hidden (that only clips the box's CONTENT, i.e. the
-   photo), so this glow isn't clipped even though the photo is.
-   Automatically follows the image's exact position/size, including
-   the desktop margin-left:auto + translateX(-430px) left-shift,
-   since it's drawn relative to the box itself rather than positioned
-   independently. Desktop only — mobile keeps its plain background,
-   as before. ---------- */
+/* ---------- top of the product page (gallery + buy box) sits on its
+   own canvas, kept distinct from the photo tile's background (--tile,
+   set on .gallery__main) — the page itself uses a light cream tint
+   instead of a flat white. Desktop only — mobile keeps the original
+   plain background it had before this change. ---------- */
 @media (min-width: 900px) {
-  .pdp--bold .gallery__main {
-    /* A single very-large-blur shadow (tried up to 3900px) stops
-       reading as "further out" past a point — at that size you're
-       only ever looking at the near-flat centre of an extremely wide
-       gaussian, so it just looks uniformly faint no matter how much
-       bigger the blur radius gets. Layered shadows instead: each ring
-       is its own visible step, so the glow keeps reading as it
-       extends much further out. */
-    box-shadow:
-      inset 0 0 0 1px rgba(19, 19, 22, .07),
-      0 1px 2px rgba(19, 19, 22, .04),
-      0 18px 44px -22px rgba(19, 19, 22, .14),
-      0 0 70px 30px rgba(247, 217, 193, .38),
-      0 0 220px 90px rgba(247, 217, 193, .24),
-      0 0 480px 180px rgba(247, 217, 193, .14),
-      0 0 900px 320px rgba(247, 217, 193, .07);
+  .pdp--bold {
+    background: #FEF9F5;
   }
 }
 @media (max-width: 899px) {
