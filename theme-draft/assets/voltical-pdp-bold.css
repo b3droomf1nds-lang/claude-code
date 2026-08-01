@@ -419,6 +419,11 @@
   display: none;
 }
 
+/* ---------- push the spec sheet further down the buy column ---------- */
+.pdp--bold .specs {
+  margin-top: calc(var(--s4) + 500px);
+}
+
 /* ---------- mobile: drop the "bubble" card look on the top gallery photo ----------
    .gallery__main above gives the photo a shadow (and, on desktop, a
    visible background) so it reads as a raised card. On mobile the
