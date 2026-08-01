@@ -388,8 +388,10 @@
    background it had before this change. ---------- */
 @media (min-width: 900px) {
   .pdp--bold {
-    /* A very light, barely-there cream. */
-    background: #FCFBF6;
+    /* Same subtlety as before (same distance from pure white), just
+       reshuffled toward red-dominant (orange/brown-leaning) instead
+       of red-and-green-together (yellow-leaning). */
+    background: #FFFAF6;
   }
 }
 @media (max-width: 899px) {
