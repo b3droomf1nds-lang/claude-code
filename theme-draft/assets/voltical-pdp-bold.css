@@ -249,14 +249,23 @@
      flush, edge-to-edge fill — see the note on the img rule). */
   background: var(--gallery-bg-color, #FFFFFF);
   border-radius: clamp(22px, 2.4vw, 32px);
-  box-shadow: 0 1px 2px rgba(19, 19, 22, .04), 0 18px 44px -22px rgba(19, 19, 22, .14);
+  /* A hairline border does the actual "separate this from the page"
+     work — box-shadow alone reads as pure ambient light/depth, but a
+     lot of monitors (esp. with a blue-light/night-shift filter warming
+     everything toward yellow) wash that softness out until there's
+     barely any visible edge left. The border is a fixed neutral ink
+     tone, so it stays visibly present regardless of colour temperature
+     or whatever the page background happens to be behind it. */
+  box-shadow: inset 0 0 0 1px rgba(19, 19, 22, .07), 0 1px 2px rgba(19, 19, 22, .04), 0 18px 44px -22px rgba(19, 19, 22, .14);
 }
 @media (max-width: 899px) {
-  /* the outer .product__grid card now matches this photo's own
-     backdrop colour, so the shadow that used to separate the two just
-     reads as a stray edge — drop it here, mobile only. */
+  /* Keep the hairline border (that's the definition), drop only the
+     ambient drop-shadow — on mobile the card behind this used to match
+     the photo's own backdrop colour, which made the drop-shadow read
+     as a stray edge; it no longer matches, but the softer shadow still
+     isn't needed once the border is doing the defining. */
   .pdp--bold .gallery__main {
-    box-shadow: none;
+    box-shadow: inset 0 0 0 1px rgba(19, 19, 22, .07);
   }
 }
 /* Reverted back to the theme's original edge-to-edge width:100%/
