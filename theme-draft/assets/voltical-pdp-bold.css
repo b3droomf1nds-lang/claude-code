@@ -409,20 +409,32 @@
   }
 
   /* ---------- free per-section nudges ----------
-     Each piece in the buy column (title, options/colours, the "you
-     might also like" cross-sell, the Add to cart button, and the
-     dispatch note) gets its own translateY hook, defaulting to 0 (no
-     visual change from the space-between layout above) — set any of
-     these custom properties on .pdp--bold to slide that one section
-     up/down independently without disturbing the others. */
+     Each piece in the buy column gets its own nudge hook, defaulting
+     to 0 (no visual change from the space-between layout above).
+     Title moves on both axes (--title-x/--title-y); everything else
+     that only ever needs to slide up/down keeps a single -y hook.
+     Each variant option fieldset (Color, Capacity, etc.) gets its OWN
+     independent --opt-0-y / --opt-1-y / --opt-2-y hook instead of one
+     shared value, keyed by its render order in the form (see the
+     matching indexed selectors in the drag script) — up to 4 options,
+     more than this catalog ever actually uses. */
   .pdp--bold .pinfo__top h1 {
-    transform: translateY(var(--title-y, 0px));
+    transform: translate(var(--title-x, 0px), var(--title-y, 0px));
   }
   .pdp--bold .pinfo__top .pinfo__price {
     transform: translateY(var(--price-y, 0px));
   }
-  .pdp--bold .pinfo__top .opt {
-    transform: translateY(var(--opt-y, 0px));
+  .pdp--bold .pinfo__top .opt:nth-of-type(1) {
+    transform: translateY(var(--opt-0-y, 0px));
+  }
+  .pdp--bold .pinfo__top .opt:nth-of-type(2) {
+    transform: translateY(var(--opt-1-y, 0px));
+  }
+  .pdp--bold .pinfo__top .opt:nth-of-type(3) {
+    transform: translateY(var(--opt-2-y, 0px));
+  }
+  .pdp--bold .pinfo__top .opt:nth-of-type(4) {
+    transform: translateY(var(--opt-3-y, 0px));
   }
   .pdp--bold .pinfo__top .addon {
     transform: translateY(var(--addon-y, 0px));
@@ -432,6 +444,17 @@
   }
   .pdp--bold .pinfo__top .ship-note {
     transform: translateY(var(--ship-y, 0px));
+  }
+
+  /* ---------- gallery photo + thumbnail dots move together as one
+     unit ----------
+     Targets .gallery itself (the shared parent of .gallery__main and
+     .gallery__thumbs), layered on top of .gallery__main's own
+     existing centring transform above — moving the whole unit doesn't
+     touch that centring math, it just slides the already-centred
+     result. */
+  .pdp--bold .gallery {
+    transform: translate(var(--gallery-x, 0px), var(--gallery-y, 0px));
   }
 }
 
