@@ -227,9 +227,27 @@
 }
 
 /* ---------- main photo frame: portrait 2:3 instead of the theme's
-   default square (1:1) ---------- */
+   default square (1:1) — and the same white rounded "bubble" card
+   (background + radius + shadow) used by the .ftiles__tile cards
+   further down the page, so the top gallery photo and the tile grid
+   photos read as one consistent style. ---------- */
 .pdp--bold .gallery__main {
   aspect-ratio: 2 / 3;
+  background: #FFFFFF;
+  border-radius: clamp(22px, 2.4vw, 32px);
+  box-shadow: 0 1px 2px rgba(19, 19, 22, .04), 0 18px 44px -22px rgba(19, 19, 22, .14);
+  padding: clamp(10px, 1.6vw, 18px);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pdp--bold .gallery__main img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 /* ---------- desktop: gallery column's right edge lands exactly on
