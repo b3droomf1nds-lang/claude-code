@@ -388,10 +388,11 @@
    background it had before this change. ---------- */
 @media (min-width: 900px) {
   .pdp--bold {
-    /* Same subtlety as before (same distance from pure white), just
-       reshuffled toward red-dominant (orange/brown-leaning) instead
-       of red-and-green-together (yellow-leaning). */
-    background: #FFFAF6;
+    /* A genuine cream, not a pale yellow — darker/more saturated than
+       the last version, with red clearly leading green (not moving
+       together, which is what reads as yellow) and blue dropped
+       further still, for an orange/beige lean. */
+    background: #F2E8D2;
   }
 }
 @media (max-width: 899px) {
