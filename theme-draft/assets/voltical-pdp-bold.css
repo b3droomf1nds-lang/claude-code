@@ -380,35 +380,29 @@
   }
 }
 
-/* ---------- top of the product page (gallery + buy box) sits on its
-   own canvas, kept distinct from the photo tile's background (--tile,
-   set on .gallery__main) — the page itself uses the same Apple-style
-   cream tint as the homepage's Core section (.fsplit2) instead of a
-   flat white. Desktop only — mobile keeps the original plain
-   background it had before this change. ---------- */
+/* ---------- top of the product page: no more full-width flat tint —
+   instead just a soft ambient glow sitting behind the gallery photo
+   itself, in the same night-light-simulated cream (#FEF9F5, see the
+   Night Light research two commits back) but a shade darker at its
+   core so it actually reads. It's a big, heavily-blurred box-shadow
+   on .gallery__main, layered after the existing hairline-border/
+   depth shadows below (box-shadow doesn't merge across separate
+   rules, so all of them are repeated here together) — box-shadow
+   paints outside the box regardless of the element's own
+   overflow:hidden (that only clips the box's CONTENT, i.e. the
+   photo), so this glow isn't clipped even though the photo is.
+   Automatically follows the image's exact position/size, including
+   the desktop margin-left:auto + translateX(-430px) left-shift,
+   since it's drawn relative to the box itself rather than positioned
+   independently. Desktop only — mobile keeps its plain background,
+   as before. ---------- */
 @media (min-width: 900px) {
-  .pdp--bold {
-    /* Simulates Windows Night Light at 50% strength, researched (not
-       guessed) this time:
-       - Night Light's Strength slider (0-100) maps LINEARLY to colour
-         temperature, 6500K (0, off) down to 1200K (100, max warmth) —
-         so 50% strength = 3850K.
-       - Per a KDE/KWin engineering writeup on implementing the same
-         kind of filter, Night Light-style tools render the warm shift
-         as a simple PER-CHANNEL MULTIPLICATION (not a full chromatic-
-         adaptation transform) using the RGB ratio of an ideal
-         blackbody radiator at the target temperature — the "naive"
-         approach, in their words, but it's what these tools actually
-         use.
-       - Ran 3850K through the standard Kelvin-to-RGB approximation
-         (Tanner Helland's algorithm) to get that blackbody colour:
-         rgb(255, 202, 159), i.e. ratios (1, .792, .624).
-       - Applied those ratios to the flat colour the old ink-tint
-         composited to (#F2F2F4: rgba(19,19,22,.045) over the site's
-         --base white, #FCFDFE) -> rgb(242,192,152), then lightened
-         (blended 90% toward white, same hue direction) for a very
-         light version of that same night-light warmth. */
-    background: #FEF9F5;
+  .pdp--bold .gallery__main {
+    box-shadow:
+      inset 0 0 0 1px rgba(19, 19, 22, .07),
+      0 1px 2px rgba(19, 19, 22, .04),
+      0 18px 44px -22px rgba(19, 19, 22, .14),
+      0 0 180px 90px rgba(247, 217, 193, .5);
   }
 }
 @media (max-width: 899px) {
