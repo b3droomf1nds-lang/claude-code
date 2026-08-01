@@ -244,22 +244,25 @@
   align-items: center;
   justify-content: center;
 }
-/* Fills the bubble behind the photo with a heavily blurred copy of that
-   SAME photo — the blur smears it down to essentially its average
-   colour, so the padding around the photo reads as "the photo's own
-   background colour" instead of a flat white that doesn't match every
-   image. --gallery-bg-url is set inline (first load) and kept in sync
-   by the gallery-swap JS in theme-r3.js on every thumbnail change.
-   Scaled up past the box edges so the blur's soft fringe never peeks
-   out from behind the rounded corners. */
+/* Fills the bubble with the AVERAGE COLOUR OF THE WHITE STUDIO
+   BACKDROP the product is shot on — not the product itself. Product
+   photos are shot centred with generous plain backdrop margin around
+   them, so zooming way into a corner (600% background-size, positioned
+   at the very edge) is guaranteed to land on pure backdrop with none
+   of the product's own colour mixed in; the blur then smooths that
+   corner down to one flat, even tone. --gallery-bg-url is set inline
+   (first load) and kept in sync by the gallery-swap JS in theme-r3.js
+   on every thumbnail change. Scaled up past the box edges so the
+   blur's soft fringe never peeks out from behind the rounded corners. */
 .pdp--bold .gallery__main::before {
   content: "";
   position: absolute;
   inset: -20%;
   background-image: var(--gallery-bg-url);
-  background-size: cover;
-  background-position: center;
-  filter: blur(60px) saturate(1.15);
+  background-repeat: no-repeat;
+  background-size: 600%;
+  background-position: 2% 2%;
+  filter: blur(70px);
   transform: scale(1.2);
   z-index: 0;
 }
@@ -300,15 +303,16 @@
      and without cropping anything.
 
      1:1 instead of 2:3 here (desktop only — mobile keeps 2:3 above):
-     at the same height this makes the box noticeably wider. Nothing
-     about the pinning changes — margin-left:auto + translateX(-30px)
-     still anchor the RIGHT edge at the same spot regardless of how
-     wide the box gets, so the extra width is added entirely on the
-     left and the box's centre simply moves left with it. */
+     at the same height this makes the box noticeably wider — width is
+     set explicitly to match the height (rather than left to
+     aspect-ratio's auto-computation) so the extra width is never in
+     doubt. margin-left:auto + translateX(-30px) still anchor the
+     RIGHT edge at the same spot regardless of how wide the box gets,
+     so that extra width is added entirely on the left and the box's
+     centre moves left to compensate. */
   .pdp--bold .gallery__main {
-    width: auto;
+    width: 81.675vh;
     height: 81.675vh;
-    aspect-ratio: 1 / 1;
     margin-left: auto;
     transform: translateX(-30px);
   }
