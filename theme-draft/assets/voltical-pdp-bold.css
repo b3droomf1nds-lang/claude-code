@@ -417,3 +417,15 @@
 .pdp--bold .pstats {
   display: none;
 }
+
+/* ---------- mobile: drop the "bubble" card look on the top gallery photo ----------
+   .gallery__main above gives the photo a shadow (and, on desktop, a
+   visible background) so it reads as a raised card. On mobile the
+   photo is already edge-to-edge (object-fit:cover, no padding), so
+   the shadow was the only thing left implying a bubble/card — kill
+   it here so the photo just sits flat against the page. */
+@media (max-width: 899px) {
+  .pdp--bold .gallery__main {
+    box-shadow: none;
+  }
+}
