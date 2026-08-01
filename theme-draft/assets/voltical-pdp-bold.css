@@ -372,7 +372,7 @@
    plain background it had before this change. ---------- */
 @media (min-width: 900px) {
   .pdp--bold {
-    background: #EEDACA;
+    background: #F1E1D5;
   }
 }
 @media (max-width: 899px) {
