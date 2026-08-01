@@ -256,7 +256,7 @@
      barely any visible edge left. The border is a fixed neutral ink
      tone, so it stays visibly present regardless of colour temperature
      or whatever the page background happens to be behind it. */
-  box-shadow: inset 0 0 0 1px rgba(196, 154, 92, .4), 0 1px 2px rgba(19, 19, 22, .04), 0 18px 44px -22px rgba(19, 19, 22, .14);
+  box-shadow: inset 0 0 0 1px rgba(19, 19, 22, .07), 0 1px 2px rgba(19, 19, 22, .04), 0 18px 44px -22px rgba(19, 19, 22, .14);
 }
 @media (max-width: 899px) {
   /* Keep the hairline border (that's the definition), drop only the
@@ -265,7 +265,7 @@
      as a stray edge; it no longer matches, but the softer shadow still
      isn't needed once the border is doing the defining. */
   .pdp--bold .gallery__main {
-    box-shadow: inset 0 0 0 1px rgba(196, 154, 92, .4);
+    box-shadow: inset 0 0 0 1px rgba(19, 19, 22, .07);
   }
 }
 /* Reverted back to the theme's original edge-to-edge width:100%/
