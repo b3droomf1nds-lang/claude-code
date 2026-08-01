@@ -365,6 +365,16 @@
   }
 }
 
+/* ---------- top of the product page (gallery + buy box) sits on its
+   own canvas, kept distinct from the photo tile's background (--tile,
+   set on .gallery__main) — the page itself uses a light cream tint
+   instead of a flat white. Desktop only — mobile keeps the original
+   plain background it had before this change. ---------- */
+@media (min-width: 900px) {
+  .pdp--bold {
+    background: #FEFAF8;
+  }
+}
 @media (max-width: 899px) {
   /* overflow:hidden lives here (mobile only) to clip to the rounded
      corners — desktop deliberately lets .gallery__main overflow this
