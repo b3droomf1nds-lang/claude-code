@@ -342,13 +342,23 @@
      means the photo is never cropped regardless of box ratio, and the
      padding shows the canvas-sampled --gallery-bg-color underneath as
      a border that matches the photo's own backdrop colour.
-     margin-left:auto + translateX(-430px) still anchor the RIGHT edge
-     at the same spot regardless of box width. */
+     margin-left:auto + translateX(-340px) still anchor the RIGHT edge
+     at the same spot regardless of box width.
+     -340px specifically (was -430px): the gallery and the buy column
+     had each been nudged sideways by different amounts over several
+     separate requests (gallery -430px left, buy column +250px right)
+     — since the underlying grid is centred with equal padding either
+     side, that mismatch is exactly what was making the left gap
+     (viewport edge to the photo) and right gap (buy column to the
+     viewport edge) unequal. Averaging the two nudges to the same
+     340px each, in their own directions, re-balances the two gaps
+     without changing where the photo's right edge or the buy
+     column's left edge sit relative to each other. */
   .pdp--bold .gallery__main {
     width: 102.09vh;
     height: 81.675vh;
     margin-left: auto;
-    transform: translateX(-430px);
+    transform: translateX(-340px);
     padding: clamp(10px, 1.6vw, 18px);
     box-sizing: border-box;
   }
@@ -359,9 +369,10 @@
   }
 
   /* ---------- desktop: nudge the buy column (title/price/options/ATC)
-     250px right of where the grid puts it ---------- */
+     340px right of where the grid puts it — see the matching note on
+     .gallery__main above for why 340px (was 250px). ---------- */
   .pdp--bold .pinfo {
-    transform: translateX(250px);
+    transform: translateX(340px);
   }
 }
 
