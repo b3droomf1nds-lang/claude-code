@@ -67,6 +67,7 @@
         mainImg.removeAttribute('sizes');
         mainImg.src = t.dataset.full;
         mainImg.alt = $('img', t).alt;
+        if (mainWrap) mainWrap.style.setProperty('--gallery-bg-url', 'url("' + t.dataset.full + '")');
       };
       if (!dir) { apply(); return; }
       mainImg.style.transition = 'opacity .16s ease, transform .16s ease';

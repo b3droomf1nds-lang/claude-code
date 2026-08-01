@@ -232,6 +232,8 @@
    further down the page, so the top gallery photo and the tile grid
    photos read as one consistent style. ---------- */
 .pdp--bold .gallery__main {
+  position: relative;
+  overflow: hidden;
   aspect-ratio: 2 / 3;
   background: #FFFFFF;
   border-radius: clamp(22px, 2.4vw, 32px);
@@ -242,7 +244,28 @@
   align-items: center;
   justify-content: center;
 }
+/* Fills the bubble behind the photo with a heavily blurred copy of that
+   SAME photo — the blur smears it down to essentially its average
+   colour, so the padding around the photo reads as "the photo's own
+   background colour" instead of a flat white that doesn't match every
+   image. --gallery-bg-url is set inline (first load) and kept in sync
+   by the gallery-swap JS in theme-r3.js on every thumbnail change.
+   Scaled up past the box edges so the blur's soft fringe never peeks
+   out from behind the rounded corners. */
+.pdp--bold .gallery__main::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background-image: var(--gallery-bg-url);
+  background-size: cover;
+  background-position: center;
+  filter: blur(60px) saturate(1.15);
+  transform: scale(1.2);
+  z-index: 0;
+}
 .pdp--bold .gallery__main img {
+  position: relative;
+  z-index: 1;
   width: auto;
   height: auto;
   max-width: 100%;
@@ -274,10 +297,18 @@
      left (overflowing into the gutter to the left of the column) so
      its right edge still lands exactly on the column's right edge
      (the page center from the rule above) without ever crossing it,
-     and without cropping anything. */
+     and without cropping anything.
+
+     1:1 instead of 2:3 here (desktop only — mobile keeps 2:3 above):
+     at the same height this makes the box noticeably wider. Nothing
+     about the pinning changes — margin-left:auto + translateX(-30px)
+     still anchor the RIGHT edge at the same spot regardless of how
+     wide the box gets, so the extra width is added entirely on the
+     left and the box's centre simply moves left with it. */
   .pdp--bold .gallery__main {
     width: auto;
     height: 81.675vh;
+    aspect-ratio: 1 / 1;
     margin-left: auto;
     transform: translateX(-30px);
   }
