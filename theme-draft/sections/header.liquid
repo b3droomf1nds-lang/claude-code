@@ -1,10 +1,12 @@
 <style>
   .site-nav a[aria-current="page"]{ background: var(--ink-12); color: var(--ink); }
-  /* match the mobile menu's link styling (bold, full-strength ink,
-     same white bar background it already shares with .site-header) —
-     desktop links were thinner (500) and muted (--ink-60) before. */
-  .site-nav{ background: var(--base, #FCFDFE); }
-  .site-nav a{ font-weight: 600; color: var(--ink); }
+  /* match the mobile menu's link styling (bold, full-strength ink) —
+     desktop links were thinner (500) and muted (--ink-60) before.
+     Desktop only — .site-nav is display:none below 900px anyway, but
+     scoping explicitly here to leave mobile's own background alone. */
+  @media (min-width: 900px) {
+    .site-nav a{ font-weight: 600; color: var(--ink); }
+  }
   .site-header__logo{ font-family: Inter, var(--font-body-family, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif) !important; letter-spacing:0 !important; text-transform:none !important; font-weight:700 !important; }
   .site-nav__ucalc{ display:inline-flex; align-items:center; }
   .site-nav__ucalc-badge{
