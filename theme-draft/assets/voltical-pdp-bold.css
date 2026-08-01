@@ -339,21 +339,29 @@
      (the page center from the rule above) without ever crossing it,
      and without cropping anything.
 
-     Back to 2:3 here (width = height * 2/3) — the actual product
-     photos are shot at 1364x2048px, a real 2:3 ratio. The box had
-     been widened to 5:4 (landscape) for an earlier "wider" request,
-     but with no padding/contain left to letterbox it (removed for
-     swipe stability, see .gallery__main img above), object-fit:cover
-     had to zoom in and crop a 2:3 photo hard to fill a 5:4 landscape
-     box — that's the "zoomed in" look. Matching the box back to the
-     photo's own ratio means cover has nothing left to crop.
+     4:5 here (width = height * 4/5), with the padding-inset "bubble"
+     border restored — DESKTOP ONLY. The padding+object-fit:contain
+     combo was reverted everywhere for the mobile swipe bug, but that
+     bug only ever happened on touch (the drag/peek code only runs on
+     touchstart/touchmove/touchend, never on desktop clicks), so
+     there's no swipe risk in bringing it back here. object-fit:contain
+     means the photo is never cropped regardless of box ratio, and the
+     padding shows the canvas-sampled --gallery-bg-color underneath as
+     a border that matches the photo's own backdrop colour.
      margin-left:auto + translateX(-430px) still anchor the RIGHT edge
      at the same spot regardless of box width. */
   .pdp--bold .gallery__main {
-    width: 54.45vh;
+    width: 65.34vh;
     height: 81.675vh;
     margin-left: auto;
     transform: translateX(-430px);
+    padding: clamp(10px, 1.6vw, 18px);
+    box-sizing: border-box;
+  }
+  .pdp--bold .gallery__main img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
   }
 
   /* ---------- desktop: nudge the buy column (title/price/options/ATC)
