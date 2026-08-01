@@ -188,6 +188,7 @@
 
       {%- comment -%} ---------- Buy column ---------- {%- endcomment -%}
       <div class="pinfo">
+        <div class="pinfo__top">
         <h1>{{ display_title }}</h1>
         <p class="pinfo__price price-row">
           <span class="price-row__main" data-price>{{ current_variant.price | money }}</span>
@@ -342,6 +343,7 @@
             </p>
           </div>
         </form>
+        </div>
 
         <div class="pinfo__below" data-reveal>
           {%- if stat_src != blank -%}

@@ -375,9 +375,11 @@
     transform: translateX(340px);
   }
 
-  /* ---------- desktop: stretch the buy column to the same height as
-     the gallery photo (81.675vh, matching .gallery__main above), so
-     the Add to cart button — pinned to the bottom of the form via
+  /* ---------- desktop: stretch just the title/price/options/ATC area
+     (.pinfo__top — NOT .pinfo__below, which holds the description and
+     spec sheet and can run arbitrarily long) to the same height as the
+     gallery photo (81.675vh, matching .gallery__main above), so the
+     Add to cart button — pinned to the bottom of the form via
      justify-content:space-between — lands exactly level with the
      bottom of the photo bubble. The options/fieldsets and the
      cross-sell block share the leftover vertical space between them,
@@ -385,13 +387,21 @@
      them instead of piling up in one gap. The ship-note ("dispatch in
      24 hours") stays glued directly under the button because it's
      wrapped together with it in .atc-wrap, which is treated as a
-     single flex item. */
-  .pdp--bold .pinfo {
+     single flex item.
+     Scoping this to .pinfo__top instead of the whole .pinfo matters:
+     .pinfo__below sits right after the form as a sibling, and its
+     content (description pushed 500px down, then the spec sheet) is
+     far taller than 81.675vh on its own — if that were included in
+     the same flex box, the box's real content height would blow past
+     the target height entirely and leave zero free space for the
+     form's flex:1 to actually distribute, so nothing would visibly
+     move. */
+  .pdp--bold .pinfo__top {
     display: flex;
     flex-direction: column;
-    min-height: 81.675vh;
+    height: 81.675vh;
   }
-  .pdp--bold .pinfo form[data-product-form] {
+  .pdp--bold .pinfo__top form[data-product-form] {
     display: flex;
     flex-direction: column;
     flex: 1;
