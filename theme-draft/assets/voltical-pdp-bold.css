@@ -406,9 +406,9 @@
        - Applied those ratios to the flat colour the old ink-tint
          composited to (#F2F2F4: rgba(19,19,22,.045) over the site's
          --base white, #FCFDFE) -> rgb(242,192,152), then lightened
-         (blended 75% toward white, same hue direction) for a much
-         lighter version of that same night-light warmth. */
-    background: #FCEFE5;
+         (blended 90% toward white, same hue direction) for a very
+         light version of that same night-light warmth. */
+    background: #FEF9F5;
   }
 }
 @media (max-width: 899px) {
