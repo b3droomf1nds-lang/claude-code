@@ -30,6 +30,13 @@
   text-transform: none;
 }
 
+/* ---------- product title ----------
+   theme-r2.css lowercases the whole .pinfo h1 ("voltical core 5k &
+   10k") — keep that styling but capitalize just the brand's V. ---------- */
+.pdp--bold .pinfo h1::first-letter {
+  text-transform: uppercase;
+}
+
 /* ---------- stat tiles ---------- */
 .pdp--bold .pstats {
   display: grid;
