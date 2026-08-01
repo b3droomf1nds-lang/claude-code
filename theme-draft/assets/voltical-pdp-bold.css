@@ -388,14 +388,17 @@
    background it had before this change. ---------- */
 @media (min-width: 900px) {
   .pdp--bold {
-    /* Same visible tint as before, but computed as a flat colour
-       instead of a semi-transparent ink overlay on top of the site's
-       --base white (#FCFDFE) — that composite came out to roughly
-       #F2F2F4, i.e. its blue channel sat 2 units above red/green.
-       Halved that gap here (blue channel now only 1 unit above) so
-       this section reads slightly warmer/less blue than the rest of
-       the site, independent of whatever --base itself is. */
-    background: #F2F2F3;
+    /* Actual Windows Night Light math, not a guess: the Strength
+       slider (0-100) maps linearly to 6500K (off, strength 0) down to
+       1200K (max warmth, strength 100) — so 50% strength is 3850K.
+       Ran 3850K through the standard Kelvin-to-RGB approximation
+       (Tanner Helland's algorithm) to get the "white point" Night
+       Light renders at that setting: rgb(255, 202, 159). Night Light
+       works as a multiplicative tint (scales each channel down toward
+       that white point, doesn't just overlay a colour), so applied
+       that same ratio (1, .792, .624) to the earlier flat colour here
+       (#F2F2F3) instead of eyeballing an orange. */
+    background: #F2C098;
   }
 }
 @media (max-width: 899px) {
