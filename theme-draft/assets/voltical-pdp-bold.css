@@ -365,16 +365,17 @@
   }
 }
 
-/* ---------- top of the product page (gallery + buy box) sits on its
-   own canvas, kept distinct from the photo tile's background (--tile,
-   set on .gallery__main) — the page itself uses a light cream tint
-   instead of a flat white. Desktop only — mobile keeps the original
-   plain background it had before this change.
-   #FBF6F2 was called "perfect" — this is 50% lighter than that on
-   request, not a drift. ---------- */
+/* ---------- top of the product page (gallery + buy box) — cream
+   right around the gallery photo, fading out very gradually to the
+   site's normal homepage white (--base) by the time you reach the
+   buy column (title/price/ATC), so the two feel like one continuous
+   surface instead of a hard-edged card. Desktop only — mobile keeps
+   the original plain background it had before this change.
+   #FBF6F2 was called "perfect" — this fades FROM a 50%-lighter
+   version of it (#FDFAF8), not a drift off it. ---------- */
 @media (min-width: 900px) {
   .pdp--bold {
-    background: #FDFAF8;
+    background: linear-gradient(to right, #FDFAF8 0%, #FDFAF8 30%, var(--base, #FCFDFE) 68%);
   }
 }
 @media (max-width: 899px) {
