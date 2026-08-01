@@ -414,7 +414,8 @@
 /* ---------- hide calculator, benefit checks & stat tiles from buy column ---------- */
 .pdp--bold .pdp-calc-inline,
 .pdp--bold .pchecks,
-.pdp--bold .pstats {
+.pdp--bold .pstats,
+.pdp--bold .trust-row {
   display: none;
 }
 
