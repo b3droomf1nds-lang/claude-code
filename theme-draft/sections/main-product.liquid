@@ -108,7 +108,9 @@
   {%- endcase -%}
 {%- endif -%}
 
-{{ 'voltical-pdp-bold.css' | asset_url | stylesheet_tag }}
+{%- comment -%} voltical-pdp-bold.css now loads in <head> (theme.liquid)
+  so it's applied before first paint instead of after — see the
+  comment there. {%- endcomment -%}
 
 {%- comment -%} Bold buy-box data: stat tiles + benefit checks per product {%- endcomment -%}
 {%- assign stat_src = '' -%}
