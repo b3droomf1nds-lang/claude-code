@@ -388,8 +388,8 @@
    background it had before this change. ---------- */
 @media (min-width: 900px) {
   .pdp--bold {
-    /* A very light cream instead of the near-neutral grey-white. */
-    background: #FAF6EC;
+    /* A very light, barely-there cream. */
+    background: #FCFBF6;
   }
 }
 @media (max-width: 899px) {
