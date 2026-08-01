@@ -1,0 +1,162 @@
+{%- comment -%}
+  Apple-style "worth the upgrade?" comparison: a select dropdown picks
+  what you're comparing against, and a grid of stat cards below updates
+  to show that comparison's numbers. Stat values/labels are plain text
+  settings (drop in your own calculator output per comparison target).
+{%- endcomment -%}
+<style>
+  .cmp{ color:var(--ink); padding:clamp(48px,7vw,96px) 0; background:var(--ink-04,rgba(19,19,22,.045)); }
+  .cmp__head{ max-width:640px; margin:0 auto clamp(24px,3vw,36px); text-align:center; }
+  .cmp__heading{
+    font-family:var(--sans); font-weight:600; letter-spacing:-0.03em;
+    font-size:clamp(1.7rem,3vw,2.4rem); line-height:1.1; margin:0 0 12px;
+  }
+  .cmp__sub{ color:var(--ink-60); font-size:clamp(.95rem,1.2vw,1.05rem); margin:0; }
+
+  .cmp__select-row{ max-width:420px; margin:0 auto clamp(28px,4vw,44px); }
+  .cmp__select-label{
+    display:block; font-size:.85rem; color:var(--ink-60); margin-bottom:8px;
+  }
+  .cmp__select-wrap{ position:relative; }
+  .cmp__select-wrap::after{
+    content:"";
+    position:absolute; right:20px; top:50%; width:9px; height:9px;
+    border-right:2px solid var(--ink-60); border-bottom:2px solid var(--ink-60);
+    transform:translateY(-65%) rotate(45deg); pointer-events:none;
+  }
+  .cmp__select{
+    appearance:none; -webkit-appearance:none;
+    width:100%; font-family:var(--sans); font-weight:600; font-size:1rem;
+    color:var(--ink); background:#FFFFFF;
+    border:1px solid rgba(19,19,22,.12); border-radius:16px;
+    padding:16px 44px 16px 20px;
+    box-shadow:0 1px 2px rgba(19,19,22,.04);
+  }
+
+  .cmp__lede{
+    text-align:center; font-size:clamp(1.15rem,2vw,1.5rem); font-weight:500;
+    letter-spacing:-0.01em; margin:0 0 clamp(20px,3vw,32px);
+  }
+  .cmp__lede strong{ font-weight:700; }
+
+  .cmp__grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:clamp(12px,1.6vw,20px); }
+  @media (min-width:900px){ .cmp__grid{ grid-template-columns:repeat(4,1fr); } }
+  .cmp__group{ display:contents; }
+  .cmp__group[hidden]{ display:none; }
+  .cmp__card{
+    background:#FFFFFF; border-radius:clamp(20px,2.2vw,28px);
+    padding:clamp(26px,3vw,34px) 20px;
+    min-height:200px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; gap:6px;
+    box-shadow:0 1px 2px rgba(19,19,22,.04),0 18px 44px -22px rgba(19,19,22,.14);
+  }
+  .cmp__stat{
+    font-family:var(--sans); font-weight:700; letter-spacing:-0.02em;
+    font-size:clamp(1.6rem,3vw,2.3rem); line-height:1.05; color:var(--ink);
+  }
+  .cmp__label{ font-size:.9rem; color:var(--ink-60); line-height:1.3; }
+</style>
+
+<section class="section cmp">
+  <div class="wrap wrap--wide">
+    {%- if section.settings.heading != blank or section.settings.subheading != blank -%}
+      <div class="cmp__head" data-reveal>
+        {%- if section.settings.heading != blank -%}<h2 class="cmp__heading">{{ section.settings.heading }}</h2>{%- endif -%}
+        {%- if section.settings.subheading != blank -%}<p class="cmp__sub">{{ section.settings.subheading }}</p>{%- endif -%}
+      </div>
+    {%- endif -%}
+
+    <div class="cmp__select-row" data-reveal>
+      {%- if section.settings.select_label != blank -%}
+        <label class="cmp__select-label" for="cmp-select-{{ section.id }}">{{ section.settings.select_label }}</label>
+      {%- endif -%}
+      <div class="cmp__select-wrap">
+        <select class="cmp__select" id="cmp-select-{{ section.id }}" data-cmp-select="{{ section.id }}">
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'compare_target' -%}
+              <option value="{{ forloop.index0 }}">{{ block.settings.label }}</option>
+            {%- endif -%}
+          {%- endfor -%}
+        </select>
+      </div>
+    </div>
+
+    {%- if section.settings.lede != blank -%}
+      <p class="cmp__lede">{{ section.settings.lede }}</p>
+    {%- endif -%}
+
+    <div class="cmp__grid" data-cmp-root="{{ section.id }}">
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'compare_target' -%}
+          <div class="cmp__group" data-cmp-group="{{ forloop.index0 }}"{% unless forloop.first %} hidden{% endunless %} {{ block.shopify_attributes }}>
+            {%- for i in (1..4) -%}
+              {%- assign val_key = 'stat_' | append: i | append: '_value' -%}
+              {%- assign lbl_key = 'stat_' | append: i | append: '_label' -%}
+              {%- assign val = block.settings[val_key] -%}
+              {%- assign lbl = block.settings[lbl_key] -%}
+              {%- if val != blank or lbl != blank -%}
+                <div class="cmp__card">
+                  {%- if val != blank -%}<div class="cmp__stat">{{ val }}</div>{%- endif -%}
+                  {%- if lbl != blank -%}<div class="cmp__label">{{ lbl }}</div>{%- endif -%}
+                </div>
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var select = document.getElementById('cmp-select-{{ section.id }}');
+  var root = document.querySelector('[data-cmp-root="{{ section.id }}"]');
+  if(!select || !root) return;
+  select.addEventListener('change', function(){
+    var groups = root.querySelectorAll('[data-cmp-group]');
+    groups.forEach(function(g){
+      g.hidden = g.getAttribute('data-cmp-group') !== select.value;
+    });
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Compare selector",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Worth the upgrade? Absolutely." },
+    { "type": "textarea", "id": "subheading", "label": "Subheading" },
+    { "type": "text", "id": "select_label", "label": "Select label", "default": "Select what you're switching from:" },
+    { "type": "text", "id": "lede", "label": "Line above the stat grid", "default": "A few ways Core gives you more." }
+  ],
+  "blocks": [
+    {
+      "type": "compare_target",
+      "name": "Comparison target",
+      "settings": [
+        { "type": "text", "id": "label", "label": "Dropdown label", "default": "A generic 10,000mAh power bank" },
+        { "type": "text", "id": "stat_1_value", "label": "Stat 1 value", "default": "3.5x" },
+        { "type": "text", "id": "stat_1_label", "label": "Stat 1 label", "default": "smaller footprint" },
+        { "type": "text", "id": "stat_2_value", "label": "Stat 2 value", "default": "42%" },
+        { "type": "text", "id": "stat_2_label", "label": "Stat 2 label", "default": "lighter to carry" },
+        { "type": "text", "id": "stat_3_value", "label": "Stat 3 value", "default": "Magnetic" },
+        { "type": "text", "id": "stat_3_label", "label": "Stat 3 label", "default": "no cables, ever" },
+        { "type": "text", "id": "stat_4_value", "label": "Stat 4 value", "default": "18W" },
+        { "type": "text", "id": "stat_4_label", "label": "Stat 4 label", "default": "faster wireless output" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Compare selector",
+      "blocks": [
+        { "type": "compare_target", "settings": { "label": "A generic 10,000mAh power bank" } },
+        { "type": "compare_target", "settings": { "label": "A wired charging cable" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

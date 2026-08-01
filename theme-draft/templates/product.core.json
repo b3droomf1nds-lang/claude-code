@@ -1,0 +1,147 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-product",
+      "settings": {
+        "trust_1_value": "12-mo",
+        "trust_1_label": "Warranty",
+        "trust_2_value": "30-day",
+        "trust_2_label": "Returns",
+        "trust_3_value": "24 h",
+        "trust_3_label": "Dispatch",
+        "xsell_usbc": "voltical-usb-c-charge-data-cable-new",
+        "xsell_watch": "voltical-watch-charge-cable"
+      }
+    },
+    "ftiles": {
+      "type": "feature-tiles",
+      "blocks": {
+        "t1": {
+          "type": "tile",
+          "settings": {
+            "heading": "Pair with the USB-C Cable",
+            "subheading": "to charge Core straight from the wall.",
+            "link_product": "voltical-usb-c-charge-data-cable-new",
+            "wide": true
+          }
+        },
+        "t2": {
+          "type": "tile",
+          "settings": {
+            "heading": "Slim enough for any pocket.",
+            "subheading": "Thin, light, and still all-day power.",
+            "link_product": "voltical-core-5k-10k"
+          }
+        },
+        "t3": {
+          "type": "tile",
+          "settings": {
+            "heading": "Reversible. Magnetic. Effortless.",
+            "subheading": "Snaps on in the dark, first try, every time.",
+            "link_product": "voltical-core-5k-10k"
+          }
+        },
+        "t4": {
+          "type": "tile",
+          "settings": {
+            "heading": "Charge your phone while you hold it.",
+            "subheading": "No dangling cable, no awkward angle.",
+            "link_product": "voltical-core-5k-10k"
+          }
+        },
+        "t5": {
+          "type": "tile",
+          "settings": {
+            "heading": "Built to outlast the box it came in.",
+            "subheading": "Aluminium shell, tested past 1,000 cycles.",
+            "link_product": "voltical-core-5k-10k"
+          }
+        }
+      },
+      "block_order": ["t1", "t2", "t3", "t4", "t5"],
+      "settings": {
+        "heading": "Made to go with it.",
+        "subheading": "A few things that make Core even better."
+      }
+    },
+    "compare": {
+      "type": "compare-select",
+      "blocks": {
+        "c1": {
+          "type": "compare_target",
+          "settings": {
+            "label": "A generic 10,000mAh power bank",
+            "stat_1_value": "3.5x",
+            "stat_1_label": "smaller footprint",
+            "stat_2_value": "42%",
+            "stat_2_label": "lighter to carry",
+            "stat_3_value": "Magnetic",
+            "stat_3_label": "no cables, ever",
+            "stat_4_value": "18W",
+            "stat_4_label": "faster wireless output"
+          }
+        },
+        "c2": {
+          "type": "compare_target",
+          "settings": {
+            "label": "A wired charging cable",
+            "stat_1_value": "0",
+            "stat_1_label": "cables to carry",
+            "stat_2_value": "1-tap",
+            "stat_2_label": "magnetic alignment",
+            "stat_3_value": "All day",
+            "stat_3_label": "power on the move",
+            "stat_4_value": "Pocket",
+            "stat_4_label": "sized"
+          }
+        }
+      },
+      "block_order": ["c1", "c2"],
+      "settings": {
+        "heading": "Worth carrying? Absolutely.",
+        "select_label": "Select what you're switching from:",
+        "lede": "A few ways Core gives you more."
+      }
+    },
+    "standard": {
+      "type": "standard",
+      "blocks": {
+        "t1": {
+          "type": "item",
+          "settings": {
+            "icon": "bolt",
+            "heading": "Tested before it ships",
+            "text": "Every batch is sample-tested for output, alignment and heat before it's approved to sell."
+          }
+        },
+        "t2": {
+          "type": "item",
+          "settings": {
+            "icon": "shield",
+            "heading": "12-month warranty",
+            "text": "If it fails in normal use within a year, we replace it. One email, no forms."
+          }
+        },
+        "t3": {
+          "type": "item",
+          "settings": {
+            "icon": "magnet",
+            "heading": "30-day returns",
+            "text": "Live with it for a month. If it isn't earning its place, send it back."
+          }
+        },
+        "t4": {
+          "type": "item",
+          "settings": {
+            "icon": "bolt",
+            "heading": "Human support",
+            "text": "Questions answered by people who use the products, typically within one business day."
+          }
+        }
+      },
+      "block_order": ["t1", "t2", "t3", "t4"],
+      "settings": {}
+    }
+  },
+  "order": ["main", "ftiles", "compare", "standard"]
+}
