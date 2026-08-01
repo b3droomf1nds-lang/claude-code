@@ -290,6 +290,20 @@
   max-height: 100%;
   object-fit: contain;
 }
+/* The swipe-peek image (theme-r3.js addPeek) used to be inset:0 +
+   object-fit:cover — filling the WHOLE box edge to edge, bigger/more
+   cropped than the committed photo above (which sits inset on padding
+   with object-fit:contain). That mismatch is what made a completed
+   swipe look like it "settled" into a smaller, more zoomed-out photo a
+   moment later — the peek was never actually the same size as the
+   real thing. Matching the same inset + contain here fixes it. */
+.pdp--bold .gallery__peek-img {
+  position: absolute;
+  inset: clamp(10px, 1.6vw, 18px);
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 1;
+}
 
 /* ---------- desktop: gallery column's right edge lands exactly on
    the page's horizontal center ----------

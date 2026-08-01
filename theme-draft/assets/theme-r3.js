@@ -118,8 +118,8 @@
         img.src = target.dataset.full;
         img.alt = '';
         img.setAttribute('aria-hidden', 'true');
-        img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;' +
-          'object-fit:cover;pointer-events:none;transform:translateX(' + (dir * 100) + '%)';
+        img.className = 'gallery__peek-img';
+        img.style.transform = 'translateX(' + (dir * 100) + '%)';
         mainWrap.appendChild(img);
         return { img, dir, target };
       };
