@@ -265,15 +265,15 @@
   }
 }
 
-/* ---------- product page's own canvas, kept distinct from the photo
-   tile's background (--tile, set on .gallery__main) — the page itself
-   uses the same Apple-style cream tint as the homepage's Core section
-   (.fsplit2) instead of a flat white. Desktop only — mobile keeps the
-   original plain background it had before this change. ---------- */
-@media (min-width: 900px) {
-  .pdp--bold {
-    background: var(--ink-04, rgba(19, 19, 22, .045));
-  }
+/* ---------- top of the product page (gallery + buy box) sits on its
+   own pale card, kept distinct from the photo tile's own background
+   (--tile, set on .gallery__main) — everything below (tiles, compare,
+   trust badges) stays on the site's normal background. Same on mobile
+   and desktop. ---------- */
+.pdp--bold .product__grid {
+  background: #FAFBFD;
+  border-radius: clamp(20px, 3vw, 36px);
+  padding: clamp(16px, 3vw, 32px);
 }
 
 /* ---------- shrink the big top gap under the nav ----------
