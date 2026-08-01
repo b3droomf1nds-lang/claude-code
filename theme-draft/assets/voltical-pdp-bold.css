@@ -309,16 +309,16 @@
      (the page center from the rule above) without ever crossing it,
      and without cropping anything.
 
-     1:1 instead of 2:3 here (desktop only — mobile keeps 2:3 above):
+     3:2 instead of 2:3 here (desktop only — mobile keeps 2:3 above):
      at the same height this makes the box noticeably wider — width is
-     set explicitly to match the height (rather than left to
-     aspect-ratio's auto-computation) so the extra width is never in
-     doubt. margin-left:auto + translateX(-30px) still anchor the
-     RIGHT edge at the same spot regardless of how wide the box gets,
-     so that extra width is added entirely on the left and the box's
-     centre moves left to compensate. */
+     set explicitly (height * 3/2) rather than left to aspect-ratio's
+     auto-computation so the extra width is never in doubt.
+     margin-left:auto + translateX(-430px) still anchor the RIGHT edge
+     at the same spot regardless of how wide the box gets, so that
+     extra width is added entirely on the left and the box's centre
+     moves left to compensate. */
   .pdp--bold .gallery__main {
-    width: 81.675vh;
+    width: 122.5125vh;
     height: 81.675vh;
     margin-left: auto;
     transform: translateX(-430px);
