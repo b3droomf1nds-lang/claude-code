@@ -398,11 +398,21 @@
    as before. ---------- */
 @media (min-width: 900px) {
   .pdp--bold .gallery__main {
+    /* A single very-large-blur shadow (tried up to 3900px) stops
+       reading as "further out" past a point — at that size you're
+       only ever looking at the near-flat centre of an extremely wide
+       gaussian, so it just looks uniformly faint no matter how much
+       bigger the blur radius gets. Layered shadows instead: each ring
+       is its own visible step, so the glow keeps reading as it
+       extends much further out. */
     box-shadow:
       inset 0 0 0 1px rgba(19, 19, 22, .07),
       0 1px 2px rgba(19, 19, 22, .04),
       0 18px 44px -22px rgba(19, 19, 22, .14),
-      0 0 3900px 0 rgba(247, 217, 193, .32);
+      0 0 70px 30px rgba(247, 217, 193, .38),
+      0 0 220px 90px rgba(247, 217, 193, .24),
+      0 0 480px 180px rgba(247, 217, 193, .14),
+      0 0 900px 320px rgba(247, 217, 193, .07);
   }
 }
 @media (max-width: 899px) {
