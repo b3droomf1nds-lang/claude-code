@@ -339,9 +339,36 @@
    across). Desktop: overridden below to fade left-to-right instead of
    staying flat. ---------- */
 .pdp--bold .product__grid {
+  position: relative;
+  overflow: hidden;
   background: #FAFBFD;
   border-radius: clamp(20px, 3vw, 36px);
   padding: clamp(16px, 3vw, 32px);
+}
+@media (max-width: 899px) {
+  /* Mobile: same corner-sample-and-blur trick as .gallery__main's own
+     backdrop (see below) — fills the card behind the photo+text with
+     the top photo's actual backdrop colour instead of the flat static
+     tint, so the two visually match. --gallery-bg-url is set inline on
+     this element (first load) and kept in sync by the gallery-swap JS
+     in theme-r3.js on every thumbnail change. */
+  .pdp--bold .product__grid::before {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    background-image: var(--gallery-bg-url);
+    background-repeat: no-repeat;
+    background-size: 600%;
+    background-position: 2% 2%;
+    filter: blur(70px);
+    transform: scale(1.2);
+    z-index: 0;
+  }
+  .pdp--bold .product__grid > .gallery,
+  .pdp--bold .product__grid > .pinfo {
+    position: relative;
+    z-index: 1;
+  }
 }
 @media (min-width: 900px) {
   /* pale right around the gallery photo, fading out to the site's

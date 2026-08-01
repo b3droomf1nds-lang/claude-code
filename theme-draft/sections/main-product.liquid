@@ -139,13 +139,13 @@
 <section class="section pdp--bold">
   <div class="wrap wrap--wide">
 
-    <div class="product__grid">
+    {%- assign first_img = current_variant.featured_image | default: product.featured_image -%}
+    <div class="product__grid"
+      {%- if first_img %} style="--gallery-bg-url:url('{{ first_img | image_url: width: 100 }}')"{% endif %}>
 
       {%- comment -%} ---------- Gallery ---------- {%- endcomment -%}
       <div class="gallery" data-gallery data-reveal>
-        {%- assign first_img = current_variant.featured_image | default: product.featured_image -%}
-        <div class="gallery__main" data-gallery-main role="button" tabindex="0" aria-label="{{ 'products.view_image' | t }}"
-          {%- if first_img %} style="--gallery-bg-url:url('{{ first_img | image_url: width: 100 }}')"{% endif %}>
+        <div class="gallery__main" data-gallery-main role="button" tabindex="0" aria-label="{{ 'products.view_image' | t }}">
           {%- if first_img -%}
             <img src="{{ first_img | image_url: width: 1600 }}"
                  srcset="{{ first_img | image_url: width: 1200 }} 1200w, {{ first_img | image_url: width: 1600 }} 1600w, {{ first_img | image_url: width: 2200 }} 2200w, {{ first_img | image_url: width: 3000 }} 3000w"

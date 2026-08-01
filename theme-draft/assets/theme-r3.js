@@ -46,6 +46,7 @@
   if (gallery) {
     const mainImg = $('[data-gallery-main] img', gallery);
     const mainWrap = $('[data-gallery-main]', gallery);
+    const gridWrap = gallery.closest('.product__grid');
     const thumbs = $$('[data-gallery-thumb]', gallery);
 
     // dir: -1 (came from the right, i.e. "previous"), 1 ("next"), or 0/
@@ -68,6 +69,7 @@
         mainImg.src = t.dataset.full;
         mainImg.alt = $('img', t).alt;
         if (mainWrap) mainWrap.style.setProperty('--gallery-bg-url', 'url("' + t.dataset.full + '")');
+        if (gridWrap) gridWrap.style.setProperty('--gallery-bg-url', 'url("' + t.dataset.full + '")');
       };
       if (!dir) { apply(); return; }
       mainImg.style.transition = 'opacity .16s ease, transform .16s ease';
