@@ -141,6 +141,12 @@
 
       const removePeek = () => { if (peek) { peek.img.remove(); peek = null; } };
 
+      // Every offscreen position below is computed in PIXELS off the same
+      // single containerW measurement (not '%', which resolves against
+      // each element's OWN box width) — mainImg and the peek image are
+      // sized identically in CSS, but relying on that meant any future
+      // sizing tweak to either one could silently reintroduce a mismatch.
+      // One shared pixel reference removes that dependency entirely.
       const addPeek = (dir) => {
         const visible = visibleThumbs();
         const activeIdx = visible.indexOf($('.gallery__thumb.is-active', gallery));
@@ -151,7 +157,7 @@
         img.alt = '';
         img.setAttribute('aria-hidden', 'true');
         img.className = 'gallery__peek-img';
-        img.style.transform = 'translateX(' + (dir * 100) + '%)';
+        img.style.transform = 'translateX(' + (dir * containerW) + 'px)';
         mainWrap.appendChild(img);
         return { img, dir, target };
       };
@@ -178,7 +184,7 @@
         const dir = dx < 0 ? 1 : -1;
         if (!peek || peek.dir !== dir) { removePeek(); peek = addPeek(dir); }
         mainImg.style.transform = 'translateX(' + dx + 'px)';
-        if (peek) peek.img.style.transform = 'translateX(calc(' + (dir * 100) + '% + ' + dx + 'px))';
+        if (peek) peek.img.style.transform = 'translateX(' + (dir * containerW + dx) + 'px)';
       }, { passive: false });
 
       mainWrap.addEventListener('touchend', (e) => {
@@ -194,7 +200,7 @@
         if (peek) peek.img.style.transition = ease;
 
         if (commit) {
-          mainImg.style.transform = 'translateX(' + (dir * -100) + '%)';
+          mainImg.style.transform = 'translateX(' + (dir * -containerW) + 'px)';
           peek.img.style.transform = 'translateX(0)';
           const target = peek.target;
           setTimeout(() => {
@@ -211,7 +217,7 @@
           }, settleMs);
         } else {
           mainImg.style.transform = 'translateX(0)';
-          if (peek) peek.img.style.transform = 'translateX(' + (dir * 100) + '%)';
+          if (peek) peek.img.style.transform = 'translateX(' + (dir * containerW) + 'px)';
           setTimeout(removePeek, settleMs);
         }
       }, { passive: true });
