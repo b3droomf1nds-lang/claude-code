@@ -140,8 +140,7 @@
   <div class="wrap wrap--wide">
 
     {%- assign first_img = current_variant.featured_image | default: product.featured_image -%}
-    <div class="product__grid"
-      {%- if first_img %} style="--gallery-bg-url:url('{{ first_img | image_url: width: 100 }}')"{% endif %}>
+    <div class="product__grid">
 
       {%- comment -%} ---------- Gallery ---------- {%- endcomment -%}
       <div class="gallery" data-gallery data-reveal>

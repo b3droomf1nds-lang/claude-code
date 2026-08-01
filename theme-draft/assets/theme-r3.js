@@ -49,6 +49,39 @@
     const gridWrap = gallery.closest('.product__grid');
     const thumbs = $$('[data-gallery-thumb]', gallery);
 
+    // Approximates the photo's backdrop colour by averaging a tiny
+    // corner sample of its ALREADY-LOADED thumbnail — a one-off canvas
+    // read, not a live CSS filter. An earlier version used a
+    // filter:blur() layer that had to be repainted every touchmove
+    // frame during the swipe drag, which is what caused the swipe to
+    // stutter; this runs once per photo change and just sets a plain
+    // background-color, so it costs nothing during the drag itself.
+    const sampleCornerColor = (thumbImgEl, apply) => {
+      const run = () => {
+        try {
+          const c = document.createElement('canvas');
+          c.width = 6; c.height = 6;
+          const ctx = c.getContext('2d');
+          const sw = thumbImgEl.naturalWidth * 0.12 || 1;
+          const sh = thumbImgEl.naturalHeight * 0.12 || 1;
+          ctx.drawImage(thumbImgEl, 0, 0, sw, sh, 0, 0, 6, 6);
+          const d = ctx.getImageData(0, 0, 6, 6).data;
+          let r = 0, g = 0, b = 0, n = 0;
+          for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; n++; }
+          apply('rgb(' + Math.round(r / n) + ',' + Math.round(g / n) + ',' + Math.round(b / n) + ')');
+        } catch (e) { /* tainted canvas (CORS) or similar — just keep the CSS fallback colour */ }
+      };
+      if (thumbImgEl.complete) run();
+      else thumbImgEl.addEventListener('load', run, { once: true });
+    };
+    const applyBgColor = (t) => {
+      sampleCornerColor($('img', t), (rgb) => {
+        if (mainWrap) mainWrap.style.setProperty('--gallery-bg-color', rgb);
+        if (gridWrap) gridWrap.style.setProperty('--gallery-bg-color', rgb);
+      });
+    };
+    if (thumbs.length) applyBgColor($('.gallery__thumb.is-active', gallery) || thumbs[0]);
+
     // dir: -1 (came from the right, i.e. "previous"), 1 ("next"), or 0/
     // omitted for an instant swap (e.g. switching color filters) with no
     // slide. Old image fades+slides out one direction, the new one
@@ -68,8 +101,7 @@
         mainImg.removeAttribute('sizes');
         mainImg.src = t.dataset.full;
         mainImg.alt = $('img', t).alt;
-        if (mainWrap) mainWrap.style.setProperty('--gallery-bg-url', 'url("' + t.dataset.full + '")');
-        if (gridWrap) gridWrap.style.setProperty('--gallery-bg-url', 'url("' + t.dataset.full + '")');
+        applyBgColor(t);
       };
       if (!dir) { apply(); return; }
       mainImg.style.transition = 'opacity .16s ease, transform .16s ease';
@@ -174,6 +206,7 @@
             mainImg.src = target.dataset.full;
             mainImg.alt = $('img', target).alt;
             mainImg.style.transform = '';
+            applyBgColor(target);
             removePeek();
           }, settleMs);
         } else {
