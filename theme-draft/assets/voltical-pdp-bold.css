@@ -387,7 +387,7 @@
    plain background it had before this change. ---------- */
 @media (min-width: 900px) {
   .pdp--bold {
-    background: #FCF4EC;
+    background: #FAF1E8;
   }
 }
 @media (max-width: 899px) {
