@@ -610,6 +610,111 @@
         }
       }, 500);
     });
+
+    /* ---------- DRAFT-ONLY: click-and-drag positioning for the buy
+       column ----------
+       Lets you click-hold and drag the title, price, options, the
+       cross-sell "you might also like" block, Add to cart, or the
+       ship-note straight up/down to preview a position, instead of
+       asking for a px number each time. Each one writes to the same
+       CSS custom property its permanent position already reads from
+       (see --title-y/--price-y/--opt-y/--addon-y/--atc-y/--ship-y in
+       voltical-pdp-bold.css), so what you see while dragging is
+       exactly what a final CSS value would look like. Positions are
+       remembered in localStorage so they survive a refresh while
+       you're tuning them, but this is a LIVE PREVIEW ONLY — it does
+       NOT save anything back to the theme. Read the numbers off the
+       little panel in the bottom-right corner and say what you want
+       kept; this whole block should come back out before the theme
+       ever goes live.
+       Desktop only (matches the flex layout these variables apply
+       to) — skip entirely on narrow viewports. */
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!window.matchMedia('(min-width: 900px)').matches) return;
+      var pdpBold = document.querySelector('.pdp--bold');
+      var top = document.querySelector('.pdp--bold .pinfo__top');
+      if (!pdpBold || !top) return;
+
+      var targets = [
+        { sel: 'h1', name: 'title', varName: '--title-y' },
+        { sel: '.pinfo__price', name: 'price', varName: '--price-y' },
+        { sel: '.opt', name: 'options', varName: '--opt-y' },
+        { sel: '.addon', name: 'cross-sell', varName: '--addon-y' },
+        { sel: '.atc', name: 'add to cart', varName: '--atc-y' },
+        { sel: '.ship-note', name: 'dispatch note', varName: '--ship-y' }
+      ];
+
+      var panel = document.createElement('div');
+      panel.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:999999;background:#131316;color:#fff;font:12px/1.6 -apple-system,sans-serif;padding:12px 16px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.35);min-width:180px';
+      document.body.appendChild(panel);
+
+      function renderPanel() {
+        var rows = targets.map(function (t) {
+          var v = getComputedStyle(pdpBold).getPropertyValue(t.varName).trim() || '0px';
+          return t.name + ': <b>' + v + '</b>';
+        }).join('<br>');
+        panel.innerHTML = '<b>Drag to reposition (preview only)</b><br>' + rows +
+          '<br><a href="#" data-reset-drag style="color:#9db8d9;display:inline-block;margin-top:6px">reset all</a>';
+      }
+      renderPanel();
+
+      panel.addEventListener('click', function (e) {
+        if (!e.target.hasAttribute('data-reset-drag')) return;
+        e.preventDefault();
+        targets.forEach(function (t) {
+          pdpBold.style.removeProperty(t.varName);
+          localStorage.removeItem('pdpDragY:' + t.varName);
+        });
+        renderPanel();
+      });
+
+      targets.forEach(function (t) {
+        var saved = localStorage.getItem('pdpDragY:' + t.varName);
+        if (saved) pdpBold.style.setProperty(t.varName, saved);
+      });
+      renderPanel();
+
+      targets.forEach(function (t) {
+        var els = top.querySelectorAll(t.sel);
+        els.forEach(function (el) {
+          el.style.cursor = 'ns-resize';
+          var dragging = false, moved = false, startY = 0, startVal = 0;
+
+          el.addEventListener('pointerdown', function (e) {
+            if (e.button !== 0) return;
+            dragging = true;
+            moved = false;
+            startY = e.clientY;
+            startVal = parseFloat(getComputedStyle(pdpBold).getPropertyValue(t.varName)) || 0;
+            el.setPointerCapture(e.pointerId);
+          });
+
+          el.addEventListener('pointermove', function (e) {
+            if (!dragging) return;
+            var dy = e.clientY - startY;
+            if (Math.abs(dy) > 4) moved = true;
+            if (moved) {
+              pdpBold.style.setProperty(t.varName, Math.round(startVal + dy) + 'px');
+              renderPanel();
+            }
+          });
+
+          function endDrag() {
+            if (!dragging) return;
+            dragging = false;
+            if (moved) {
+              localStorage.setItem('pdpDragY:' + t.varName, pdpBold.style.getPropertyValue(t.varName));
+              el.addEventListener('click', function suppress(ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+              }, { capture: true, once: true });
+            }
+          }
+          el.addEventListener('pointerup', endDrag);
+          el.addEventListener('pointercancel', endDrag);
+        });
+      });
+    });
   </script>
 
   <script type="application/ld+json">
