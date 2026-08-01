@@ -388,11 +388,9 @@
    background it had before this change. ---------- */
 @media (min-width: 900px) {
   .pdp--bold {
-    /* A genuine cream, not a pale yellow — darker/more saturated than
-       the last version, with red clearly leading green (not moving
-       together, which is what reads as yellow) and blue dropped
-       further still, for an orange/beige lean. */
-    background: #F2E8D2;
+    /* Same cream hue/ratio as before (red leading green, blue
+       dropped furthest), just scaled way lighter. */
+    background: #FAF7EF;
   }
 }
 @media (max-width: 899px) {
