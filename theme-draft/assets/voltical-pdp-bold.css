@@ -316,6 +316,12 @@
     margin-left: auto;
     transform: translateX(-430px);
   }
+
+  /* ---------- desktop: nudge the buy column (title/price/options/ATC)
+     250px right of where the grid puts it ---------- */
+  .pdp--bold .pinfo {
+    transform: translateX(250px);
+  }
 }
 
 /* ---------- top of the product page (gallery + buy box) sits on its
