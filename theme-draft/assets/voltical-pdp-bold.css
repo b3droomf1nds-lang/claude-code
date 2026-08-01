@@ -334,12 +334,23 @@
 /* ---------- top of the product page (gallery + buy box) sits on its
    own pale card, kept distinct from the photo tile's own background
    (--tile, set on .gallery__main) — everything below (tiles, compare,
-   trust badges) stays on the site's normal background. Same on mobile
-   and desktop. ---------- */
+   trust badges) stays on the site's normal background. Mobile: flat
+   pale tint (image sits above text, so there's no "beside" to fade
+   across). Desktop: overridden below to fade left-to-right instead of
+   staying flat. ---------- */
 .pdp--bold .product__grid {
   background: #FAFBFD;
   border-radius: clamp(20px, 3vw, 36px);
   padding: clamp(16px, 3vw, 32px);
+}
+@media (min-width: 900px) {
+  /* pale right around the gallery photo, fading out to the site's
+     normal white by roughly where the buy column (title/price/ATC)
+     starts, so the two feel like one continuous surface instead of a
+     hard-edged card. */
+  .pdp--bold .product__grid {
+    background: linear-gradient(to right, #FAFBFD 0%, #FAFBFD 38%, var(--base, #FCFDFE) 58%);
+  }
 }
 
 /* ---------- shrink the big top gap under the nav ----------
