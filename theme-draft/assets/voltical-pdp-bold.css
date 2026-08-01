@@ -374,6 +374,29 @@
   .pdp--bold .pinfo {
     transform: translateX(340px);
   }
+
+  /* ---------- desktop: stretch the buy column to the same height as
+     the gallery photo (81.675vh, matching .gallery__main above), so
+     the Add to cart button — pinned to the bottom of the form via
+     justify-content:space-between — lands exactly level with the
+     bottom of the photo bubble. The options/fieldsets and the
+     cross-sell block share the leftover vertical space between them,
+     so the extra room from moving the button down spreads out across
+     them instead of piling up in one gap. The ship-note ("dispatch in
+     24 hours") stays glued directly under the button because it's
+     wrapped together with it in .atc-wrap, which is treated as a
+     single flex item. */
+  .pdp--bold .pinfo {
+    display: flex;
+    flex-direction: column;
+    min-height: 81.675vh;
+  }
+  .pdp--bold .pinfo form[data-product-form] {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    justify-content: space-between;
+  }
 }
 
 /* ---------- top of the product page (gallery + buy box) — cream

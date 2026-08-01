@@ -326,19 +326,21 @@
             .pdp--bold .atc.is-pinned in voltical-pdp-bold.css. It keeps
             the form="pdp-form-..." attribute below so it still submits
             correctly even while pinned. {%- endcomment -%}
-          <div class="atc">
-            <button type="submit" form="pdp-form-{{ section.id }}" class="atc__btn" data-atc {% unless current_variant.available %}disabled{% endunless %}>
-              <span class="atc__fill" aria-hidden="true"></span>
-              <span class="atc__inner">
-                <span data-atc-label>{% if current_variant.available %}{{ 'products.add_to_cart' | t }}{% else %}{{ 'products.sold_out' | t }}{% endif %}</span>
-                <span class="atc__price t-mono" data-price-btn>{{ current_variant.price | money }}</span>
-              </span>
-            </button>
-          </div>
+          <div class="atc-wrap">
+            <div class="atc">
+              <button type="submit" form="pdp-form-{{ section.id }}" class="atc__btn" data-atc {% unless current_variant.available %}disabled{% endunless %}>
+                <span class="atc__fill" aria-hidden="true"></span>
+                <span class="atc__inner">
+                  <span data-atc-label>{% if current_variant.available %}{{ 'products.add_to_cart' | t }}{% else %}{{ 'products.sold_out' | t }}{% endif %}</span>
+                  <span class="atc__price t-mono" data-price-btn>{{ current_variant.price | money }}</span>
+                </span>
+              </button>
+            </div>
 
-          <p class="ship-note" data-ship-note {% unless current_variant.available %}hidden{% endunless %}>
-            <i class="charge-dot" aria-hidden="true"></i>{{ 'products.ship_note' | t }}
-          </p>
+            <p class="ship-note" data-ship-note {% unless current_variant.available %}hidden{% endunless %}>
+              <i class="charge-dot" aria-hidden="true"></i>{{ 'products.ship_note' | t }}
+            </p>
+          </div>
         </form>
 
         <div class="pinfo__below" data-reveal>
