@@ -419,12 +419,12 @@
   display: none;
 }
 
-/* ---------- push the description & spec sheet further down the buy column ---------- */
+/* ---------- push the description down, specs sits right after it ---------- */
 .pdp--bold .pinfo__desc {
   margin-top: 532px !important;
 }
 .pdp--bold .specs {
-  margin-top: calc(var(--s4) + 500px);
+  margin-top: var(--s4);
 }
 
 /* ---------- mobile: drop the "bubble" card look on the top gallery photo ----------
