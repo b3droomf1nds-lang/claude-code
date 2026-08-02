@@ -363,7 +363,10 @@
      (the page center from the rule above) without ever crossing it,
      and without cropping anything.
 
-     5:4 here (width = height * 5/4), with the padding-inset "bubble"
+     4:2.9 here (width = height * 4/2.9, was 5:4) — the extra width
+     over 5:4 doesn't crop or stretch the photo (still true 2:3 via
+     object-fit:contain below), it just widens the padding-inset
+     "bubble" border around it, with the padding-inset "bubble"
      border restored — DESKTOP ONLY. The padding+object-fit:contain
      combo was reverted everywhere for the mobile swipe bug, but that
      bug only ever happened on touch (the drag/peek code only runs on
@@ -385,7 +388,7 @@
      without changing where the photo's right edge or the buy
      column's left edge sit relative to each other. */
   .pdp--bold .gallery__main {
-    width: 102.09vh;
+    width: 112.66vh;
     height: 81.675vh;
     margin-left: auto;
     transform: translateX(-340px);
