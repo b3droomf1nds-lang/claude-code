@@ -430,9 +430,10 @@
      470px right of where the grid puts it (was 420px, was 370px, was
      340px) — this one's independent of the gallery's own -370px nudge
      (see .gallery__main above), pushed further right on its own per
-     request rather than moving in lockstep with the gallery. ---------- */
+     request rather than moving in lockstep with the gallery. Also
+     nudged 70px down. ---------- */
   .pdp--bold .pinfo {
-    transform: translateX(470px);
+    transform: translate(470px, 70px);
   }
 }
 
