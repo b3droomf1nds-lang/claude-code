@@ -341,15 +341,16 @@
    buy column (title/options/ATC) narrows to compensate ----------
    The base theme's .product__grid splits 1.1fr/.9fr (theme-r2.css).
    Was an even 50/50 split (so the gallery's right edge landed on
-   page-center) — bumped to 55/45 so the buy column actually narrows
-   now that the gallery bubble itself is wider (4:2.9, was 5:4; see
-   .gallery__main below), instead of the bubble just overflowing past
-   an unchanged column. Grid gap (var(--s7)) still eaten out of the
-   buy column's share so the two columns add up to 100% without
+   page-center) — bumped to 55/45, then 59/41 to keep pace with the
+   gallery bubble getting wider still (4:2.7, was 4:2.9, was 5:4; see
+   .gallery__main below), so the buy column keeps narrowing to
+   compensate instead of the bubble just overflowing past an
+   unchanged column. Grid gap (var(--s7)) still eaten out of the buy
+   column's share so the two columns add up to 100% without
    overflowing the row. */
 @media (min-width: 900px) {
   .pdp--bold .product__grid {
-    grid-template-columns: 55% calc(45% - var(--s7));
+    grid-template-columns: 59% calc(41% - var(--s7));
   }
 
   /* ---------- desktop: photo takes up roughly 2/3+ of the viewport's
@@ -366,8 +367,8 @@
      (the page center from the rule above) without ever crossing it,
      and without cropping anything.
 
-     4:2.9 here (width = height * 4/2.9, was 5:4) — the extra width
-     over 5:4 doesn't crop or stretch the photo (still true 2:3 via
+     4:2.7 here (width = height * 4/2.7, was 4:2.9, was 5:4) — the
+     extra width doesn't crop or stretch the photo (still true 2:3 via
      object-fit:contain below), it just widens the padding-inset
      "bubble" border around it, with the padding-inset "bubble"
      border restored — DESKTOP ONLY. The padding+object-fit:contain
@@ -378,23 +379,20 @@
      means the photo is never cropped regardless of box ratio, and the
      padding shows the canvas-sampled --gallery-bg-color underneath as
      a border that matches the photo's own backdrop colour.
-     margin-left:auto + translateX(-340px) still anchor the RIGHT edge
+     margin-left:auto + translateX(-370px) still anchor the RIGHT edge
      at the same spot regardless of box width.
-     -340px specifically (was -430px): the gallery and the buy column
-     had each been nudged sideways by different amounts over several
-     separate requests (gallery -430px left, buy column +250px right)
-     — since the underlying grid is centred with equal padding either
-     side, that mismatch is exactly what was making the left gap
-     (viewport edge to the photo) and right gap (buy column to the
-     viewport edge) unequal. Averaging the two nudges to the same
-     340px each, in their own directions, re-balances the two gaps
-     without changing where the photo's right edge or the buy
-     column's left edge sit relative to each other. */
+     -370px specifically (was -340px, was -430px): the gallery and the
+     buy column had each been nudged sideways by different amounts
+     over several separate requests. They were rebalanced to an equal
+     340px each; bumped both to 370px together (still equal) to push
+     them further apart now that the gallery bubble takes up more of
+     the row, keeping the left gap (viewport edge to photo) and right
+     gap (buy column to viewport edge) equal. */
   .pdp--bold .gallery__main {
-    width: 112.66vh;
+    width: 121vh;
     height: 81.675vh;
     margin-left: auto;
-    transform: translateX(-340px);
+    transform: translateX(-370px);
     padding: clamp(10px, 1.6vw, 18px);
     box-sizing: border-box;
   }
@@ -405,10 +403,10 @@
   }
 
   /* ---------- desktop: nudge the buy column (title/price/options/ATC)
-     340px right of where the grid puts it — see the matching note on
-     .gallery__main above for why 340px (was 250px). ---------- */
+     370px right of where the grid puts it (was 340px) — see the
+     matching note on .gallery__main above. ---------- */
   .pdp--bold .pinfo {
-    transform: translateX(340px);
+    transform: translateX(370px);
   }
 }
 
