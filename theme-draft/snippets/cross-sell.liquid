@@ -34,7 +34,7 @@
     <span class="addon__eyebrow">{{ 'products.xsell_eyebrow' | t }}</span>
     <div class="addon__title">
       <a href="{{ pair.url }}">{{ pair.title }}</a>
-      <span class="addon__price">+ {{ pair.selected_or_first_available_variant.price | money }}</span>
+      <span class="addon__price">{{ pair.selected_or_first_available_variant.price | money }}</span>
     </div>
     <p class="addon__desc">{{ 'products.xsell_desc' | t }}</p>
   </div>
@@ -56,7 +56,7 @@
     <span class="addon__eyebrow">{{ 'products.xsell_eyebrow' | t }}</span>
     <div class="addon__title">
       <a href="{{ pair2.url }}">{{ pair2.title }}</a>
-      <span class="addon__price">+ {{ pair2.selected_or_first_available_variant.price | money }}</span>
+      <span class="addon__price">{{ pair2.selected_or_first_available_variant.price | money }}</span>
     </div>
     <p class="addon__desc">{{ 'products.xsell_desc' | t }}</p>
   </div>
