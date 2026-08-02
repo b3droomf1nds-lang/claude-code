@@ -263,6 +263,23 @@
   justify-content: center;
 }
 
+/* ---------- desktop: centre the thumbnail dots under the top photo
+   bubble itself, not under the (wider, differently-offset) gallery
+   column ----------
+   .gallery__main is sized/positioned independently of its grid column
+   (own width + margin-left:auto + translateX(-370px) — see that rule
+   below), so centering .gallery__thumbs on the *column* via flex
+   justify-content:center lands it off-center from the bubble. Giving
+   the thumbs row the exact same width + margin + transform as the
+   bubble makes their centres match exactly, at any viewport width. ---------- */
+@media (min-width: 900px) {
+  .pdp--bold .gallery__thumbs {
+    width: 121vh;
+    margin-left: auto;
+    transform: translateX(-370px);
+  }
+}
+
 /* ---------- main photo frame: portrait 2:3 instead of the theme's
    default square (1:1) — and the same white rounded "bubble" card
    (background + radius + shadow) used by the .ftiles__tile cards
@@ -399,12 +416,12 @@
   }
 
   /* ---------- desktop: nudge the buy column (title/price/options/ATC)
-     420px right of where the grid puts it (was 370px, was 340px) —
-     this one's now independent of the gallery's own -370px nudge
+     470px right of where the grid puts it (was 420px, was 370px, was
+     340px) — this one's independent of the gallery's own -370px nudge
      (see .gallery__main above), pushed further right on its own per
      request rather than moving in lockstep with the gallery. ---------- */
   .pdp--bold .pinfo {
-    transform: translateX(420px);
+    transform: translateX(470px);
   }
 }
 
