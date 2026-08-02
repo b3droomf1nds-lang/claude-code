@@ -449,10 +449,11 @@
       if (btn.disabled) return;
       btn.classList.add('is-adding');
       const items = [{ id: Number(idInput.value), quantity: 1 }];
-      const addonEl = $('[data-addon]', pform);
-      if (addonEl && $('input', addonEl).checked) {
-        items.push({ id: Number(addonEl.dataset.addonVariant), quantity: 1 });
-      }
+      $$('[data-addon]', pform).forEach((addonEl) => {
+        if ($('input', addonEl).checked) {
+          items.push({ id: Number(addonEl.dataset.addonVariant), quantity: 1 });
+        }
+      });
       fetchJSON('/cart/add.js', { method: 'POST', body: JSON.stringify({ items: items }) })
         .then(() => {
           btn.classList.remove('is-adding'); btn.classList.add('is-added');

@@ -1,21 +1,27 @@
 {%- comment -%}
-  "Complete your setup" add-on toggle, rendered inside the product form
-  just above add-to-cart. When toggled on, theme.js adds the matching
-  cable together with the main product in a single /cart/add.js call.
-  Pairing: Watch Case → Watch charge cable; power banks / Puck → USB-C
-  cable; cables themselves get no toggle. Products set in section settings.
+  "Complete your setup" add-on toggle(s), rendered inside the product
+  form just above add-to-cart. When toggled on, theme.js adds the
+  matching product(s) together with the main product in a single
+  /cart/add.js call. Pairing: Watch Case → Watch charge cable; power
+  banks / Puck → USB-C cable AND (as a second, separate toggle) the
+  Watch charge cable too; cables themselves get no toggle. Products
+  set in section settings.
   Note: with JS disabled the form still adds the main product; the
   add-on toggle is JS-enhanced only.
 {%- endcomment -%}
 {%- assign lt = product.title | downcase -%}
+{%- assign _ref = nil -%}
+{%- assign _ref2 = nil -%}
 {%- if lt contains 'watch case' -%}
   {%- assign _ref = section.settings.xsell_watch -%}
 {%- elsif lt contains 'cable' -%}
   {%- assign _ref = nil -%}
 {%- else -%}
   {%- assign _ref = section.settings.xsell_usbc -%}
+  {%- assign _ref2 = section.settings.xsell_watch -%}
 {%- endif -%}
 {%- if _ref.handle -%}{%- assign pair = _ref -%}{%- elsif _ref -%}{%- assign pair = all_products[_ref] -%}{%- else -%}{%- assign pair = nil -%}{%- endif -%}
+{%- if _ref2.handle -%}{%- assign pair2 = _ref2 -%}{%- elsif _ref2 -%}{%- assign pair2 = all_products[_ref2] -%}{%- else -%}{%- assign pair2 = nil -%}{%- endif -%}
 
 {%- if pair and pair.available and pair.handle != product.handle -%}
 <div class="addon" data-addon data-addon-variant="{{ pair.selected_or_first_available_variant.id }}">
@@ -34,6 +40,28 @@
   </div>
   <label class="switch">
     <input type="checkbox" aria-label="{{ 'products.xsell_eyebrow' | t }}: {{ pair.title }}">
+    <i></i>
+  </label>
+</div>
+{%- endif -%}
+
+{%- if pair2 and pair2.available and pair2.handle != product.handle and pair2.handle != pair.handle -%}
+<div class="addon" data-addon data-addon-variant="{{ pair2.selected_or_first_available_variant.id }}">
+  <a class="addon__img" href="{{ pair2.url }}" tabindex="-1" aria-hidden="true">
+    {%- if pair2.featured_image -%}
+      <img src="{{ pair2.featured_image | image_url: width: 120 }}" alt="" loading="lazy">
+    {%- endif -%}
+  </a>
+  <div class="addon__body">
+    <span class="addon__eyebrow">{{ 'products.xsell_eyebrow' | t }}</span>
+    <div class="addon__title">
+      <a href="{{ pair2.url }}">{{ pair2.title }}</a>
+      <span class="addon__price">+ {{ pair2.selected_or_first_available_variant.price | money }}</span>
+    </div>
+    <p class="addon__desc">{{ 'products.xsell_desc' | t }}</p>
+  </div>
+  <label class="switch">
+    <input type="checkbox" aria-label="{{ 'products.xsell_eyebrow' | t }}: {{ pair2.title }}">
     <i></i>
   </label>
 </div>
