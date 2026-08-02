@@ -379,20 +379,17 @@
      means the photo is never cropped regardless of box ratio, and the
      padding shows the canvas-sampled --gallery-bg-color underneath as
      a border that matches the photo's own backdrop colour.
-     margin-left:auto + translateX(-370px) still anchor the RIGHT edge
+     margin-left:auto + translateX(-520px) still anchor the RIGHT edge
      at the same spot regardless of box width.
-     -370px specifically (was -340px, was -430px): the gallery and the
-     buy column had each been nudged sideways by different amounts
-     over several separate requests. They were rebalanced to an equal
-     340px each; bumped both to 370px together (still equal) to push
-     them further apart now that the gallery bubble takes up more of
-     the row, keeping the left gap (viewport edge to photo) and right
-     gap (buy column to viewport edge) equal. */
+     -520px specifically (was -370px, was -340px, was -430px): moved
+     another 150px left on its own request, independent of the buy
+     column's own nudge (see .pinfo below) — the two no longer move in
+     lockstep. */
   .pdp--bold .gallery__main {
     width: 121vh;
     height: 81.675vh;
     margin-left: auto;
-    transform: translateX(-370px);
+    transform: translateX(-520px);
     padding: clamp(10px, 1.6vw, 18px);
     box-sizing: border-box;
   }
@@ -403,10 +400,12 @@
   }
 
   /* ---------- desktop: nudge the buy column (title/price/options/ATC)
-     370px right of where the grid puts it (was 340px) — see the
-     matching note on .gallery__main above. ---------- */
+     420px right of where the grid puts it (was 370px, was 340px) —
+     this one's now independent of the gallery's own -370px nudge
+     (see .gallery__main above), pushed further right on its own per
+     request rather than moving in lockstep with the gallery. ---------- */
   .pdp--bold .pinfo {
-    transform: translateX(370px);
+    transform: translateX(420px);
   }
 }
 
