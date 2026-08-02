@@ -408,9 +408,9 @@
      also gets a top margin here so the bubble+dots drop down as one
      unit — far enough that the dots sit near the bottom of the first
      screenful on page load, instead of well above it. Pulled back up
-     75px, then another 20px, from the original 10vh. */
+     75px, then 20px, then another 20px, from the original 10vh. */
   .pdp--bold .gallery {
-    margin-top: calc(10vh - 95px);
+    margin-top: calc(10vh - 115px);
   }
   .pdp--bold .gallery__main {
     width: 121vh;
@@ -498,11 +498,12 @@
    top of .gallery, right before .gallery__main, so the photo
    naturally sits lower to make room for them (no extra margin hacks
    needed). "Buy Core" stands in for the now-hidden h1 title, so it's
-   plain (not a link). Font size bumped up from 0.8rem to 1.3rem. */
+   plain (not a link). Font size bumped up from 0.8rem to 1.3rem, then
+   way up again to 2.6rem. */
 .pdp-core-buy-label {
   display: block;
   margin-bottom: 6px;
-  font-size: 1.3rem;
+  font-size: 2.6rem;
   font-weight: 600;
   color: var(--ink, #131316);
 }
