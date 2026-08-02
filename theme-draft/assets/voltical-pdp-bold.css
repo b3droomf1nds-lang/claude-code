@@ -480,9 +480,13 @@
 }
 
 /* ---------- Core product page only: push everything down an extra
-   50px, then pulled back up 30px (net +20px) ---------- */
+   50px, then pulled back up 30px, then another 40px — net -5px
+   relative to the base .pdp--bold padding-top, so padding-top is
+   zeroed out and the last 5px comes off via a negative margin-top
+   instead (padding can't go negative). ---------- */
 .pdp--core {
-  padding-top: 35px;
+  padding-top: 0;
+  margin-top: -5px;
 }
 
 /* ---------- Core product page only: hide the "Voltical Core" title ----------
