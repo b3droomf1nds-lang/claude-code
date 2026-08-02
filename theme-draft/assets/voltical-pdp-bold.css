@@ -467,10 +467,15 @@
   .pdp--bold .product__grid {
     overflow: hidden;
   }
-  /* push the gallery bubble (and the Buy Core text above it, same
-     parent) down 50px */
+  /* push the gallery bubble down 50px */
   .pdp--bold .gallery {
     margin-top: 50px;
+  }
+  /* remove the Buy Core / Buy Core Pro text block entirely on mobile —
+     display:none collapses its space, no gap left behind */
+  .pdp-core-buy-label,
+  .pdp-core-pro-upsell {
+    display: none;
   }
 }
 
