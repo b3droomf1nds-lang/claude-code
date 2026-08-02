@@ -482,11 +482,11 @@
 
 /* ---------- Core product page only: gap above the "Buy Core" text /
    bubble ----------
-   Went 50px down, 30px up, 40px up (net -5px, padding zeroed with a
-   -5px margin-top to compensate), then +100px back on top of that —
-   net +95px relative to the base .pdp--bold padding-top. ---------- */
+   Went 50px down, 30px up, 40px up, +100px, then pulled back down to
+   35px net — still too much after the double-counted margin fix
+   below, so trimmed again. ---------- */
 .pdp--core {
-  padding-top: 95px;
+  padding-top: 35px;
   margin-top: 0;
 }
 
