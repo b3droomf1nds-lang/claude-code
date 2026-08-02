@@ -485,11 +485,27 @@
   padding-top: 65px;
 }
 
-/* ---------- Core product page only: "Buy Core Pro" text link sitting
-   above the gallery photo bubble ----------
-   Plain text, no button/pill styling — sits in normal flow at the top
-   of .gallery, right before .gallery__main, so the photo naturally
-   sits lower to make room for it (no extra margin hacks needed). */
+/* ---------- Core product page only: hide the "Voltical Core" title ----------
+   The h1 up in .pinfo is replaced by the "Buy Core" label above the
+   gallery bubble instead (see .pdp-core-buy-label below). */
+.pdp--core .pinfo h1 {
+  display: none;
+}
+
+/* ---------- Core product page only: "Buy Core" label + "Buy Core Pro"
+   text link sitting above the gallery photo bubble ----------
+   Both plain text, no button/pill styling — sit in normal flow at the
+   top of .gallery, right before .gallery__main, so the photo
+   naturally sits lower to make room for them (no extra margin hacks
+   needed). "Buy Core" stands in for the now-hidden h1 title, so it's
+   plain (not a link) and a bit smaller than "Buy Core Pro" below it. */
+.pdp-core-buy-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink, #131316);
+}
 .pdp-core-pro-upsell {
   display: block;
   margin-bottom: 14px;
