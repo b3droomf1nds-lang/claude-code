@@ -276,7 +276,7 @@
   .pdp--bold .gallery__thumbs {
     width: 121vh;
     margin-left: auto;
-    transform: translateX(-370px);
+    transform: translateX(-420px);
   }
 }
 
@@ -396,16 +396,18 @@
      means the photo is never cropped regardless of box ratio, and the
      padding shows the canvas-sampled --gallery-bg-color underneath as
      a border that matches the photo's own backdrop colour.
-     margin-left:auto + translateX(-370px) still anchor the RIGHT edge
+     margin-left:auto + translateX(-420px) still anchor the RIGHT edge
      at the same spot regardless of box width.
-     -370px specifically (was -340px, was -430px; briefly -520px, moved
-     back): the gallery and buy column nudges no longer move in
-     lockstep — see .pinfo below for its own separate nudge. */
+     -420px specifically (was -370px, was -340px, was -430px; briefly
+     -520px, moved back): the gallery and buy column nudges no longer
+     move in lockstep — see .pinfo below for its own separate nudge.
+     .gallery__thumbs below is kept at the same translateX so the dots
+     stay centred under the bubble. */
   .pdp--bold .gallery__main {
     width: 121vh;
     height: 81.675vh;
     margin-left: auto;
-    transform: translateX(-370px);
+    transform: translateX(-420px);
     padding: clamp(10px, 1.6vw, 18px);
     box-sizing: border-box;
   }
