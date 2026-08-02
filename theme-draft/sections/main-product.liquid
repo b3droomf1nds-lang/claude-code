@@ -188,7 +188,6 @@
 
       {%- comment -%} ---------- Buy column ---------- {%- endcomment -%}
       <div class="pinfo">
-        <div class="pinfo__top">
         <h1>{{ display_title }}</h1>
         <p class="pinfo__price price-row">
           <span class="price-row__main" data-price>{{ current_variant.price | money }}</span>
@@ -327,23 +326,20 @@
             .pdp--bold .atc.is-pinned in voltical-pdp-bold.css. It keeps
             the form="pdp-form-..." attribute below so it still submits
             correctly even while pinned. {%- endcomment -%}
-          <div class="atc-wrap">
-            <div class="atc">
-              <button type="submit" form="pdp-form-{{ section.id }}" class="atc__btn" data-atc {% unless current_variant.available %}disabled{% endunless %}>
-                <span class="atc__fill" aria-hidden="true"></span>
-                <span class="atc__inner">
-                  <span data-atc-label>{% if current_variant.available %}{{ 'products.add_to_cart' | t }}{% else %}{{ 'products.sold_out' | t }}{% endif %}</span>
-                  <span class="atc__price t-mono" data-price-btn>{{ current_variant.price | money }}</span>
-                </span>
-              </button>
-            </div>
-
-            <p class="ship-note" data-ship-note {% unless current_variant.available %}hidden{% endunless %}>
-              <i class="charge-dot" aria-hidden="true"></i>{{ 'products.ship_note' | t }}
-            </p>
+          <div class="atc">
+            <button type="submit" form="pdp-form-{{ section.id }}" class="atc__btn" data-atc {% unless current_variant.available %}disabled{% endunless %}>
+              <span class="atc__fill" aria-hidden="true"></span>
+              <span class="atc__inner">
+                <span data-atc-label>{% if current_variant.available %}{{ 'products.add_to_cart' | t }}{% else %}{{ 'products.sold_out' | t }}{% endif %}</span>
+                <span class="atc__price t-mono" data-price-btn>{{ current_variant.price | money }}</span>
+              </span>
+            </button>
           </div>
+
+          <p class="ship-note" data-ship-note {% unless current_variant.available %}hidden{% endunless %}>
+            <i class="charge-dot" aria-hidden="true"></i>{{ 'products.ship_note' | t }}
+          </p>
         </form>
-        </div>
 
         <div class="pinfo__below" data-reveal>
           {%- if stat_src != blank -%}
@@ -609,152 +605,6 @@
           try { deviceSelect.showPicker(); } catch (err) { /* needs a user gesture in some browsers — focus still applies */ }
         }
       }, 500);
-    });
-
-    /* ---------- DRAFT-ONLY: click-and-drag positioning for the buy
-       column + gallery ----------
-       Lets you click-hold and drag pieces of the page to preview a
-       position, instead of asking for a px number each time. Each one
-       writes to the same CSS custom property its permanent position
-       already reads from (see voltical-pdp-bold.css), so what you see
-       while dragging is exactly what a final CSS value would look
-       like:
-         - title: both axes (--title-x/--title-y)
-         - price, cross-sell, Add to cart, ship-note: up/down only
-         - EACH variant option fieldset (Color, Capacity, etc.) gets
-           its OWN up/down hook (--opt-0-y, --opt-1-y, ...), keyed by
-           its position in the form, so they move independently of
-           each other instead of as one group
-         - the gallery photo bubble + thumbnail dot row: both axes,
-           moved together as a single unit (--gallery-x/--gallery-y)
-       Positions are remembered in localStorage so they survive a
-       refresh while you're tuning them, but this is a LIVE PREVIEW
-       ONLY — it does NOT save anything back to the theme. Read the
-       numbers off the little panel in the bottom-right corner and say
-       what you want kept; this whole block should come back out
-       before the theme ever goes live.
-       Desktop only (matches the flex layout these variables apply
-       to) — skip entirely on narrow viewports. */
-    document.addEventListener('DOMContentLoaded', function () {
-      if (!window.matchMedia('(min-width: 900px)').matches) return;
-      var pdpBold = document.querySelector('.pdp--bold');
-      var top = document.querySelector('.pdp--bold .pinfo__top');
-      var gallery = document.querySelector('.pdp--bold .gallery');
-      if (!pdpBold || !top) return;
-
-      var targets = [
-        { el: top.querySelector('h1'), name: 'title', xVar: '--title-x', yVar: '--title-y' },
-        { el: top.querySelector('.pinfo__price'), name: 'price', yVar: '--price-y' },
-        { el: top.querySelector('.addon'), name: 'cross-sell', yVar: '--addon-y' },
-        { el: top.querySelector('.atc'), name: 'add to cart', yVar: '--atc-y' },
-        { el: top.querySelector('.ship-note'), name: 'dispatch note', yVar: '--ship-y' }
-      ];
-      top.querySelectorAll('.opt').forEach(function (el, i) {
-        var label = el.querySelector('.opt__label');
-        targets.push({
-          el: el,
-          name: label ? label.textContent.trim() : ('option ' + (i + 1)),
-          yVar: '--opt-' + i + '-y'
-        });
-      });
-      if (gallery) {
-        targets.push({ el: gallery, name: 'gallery photo + dots', xVar: '--gallery-x', yVar: '--gallery-y' });
-        /* <img> elements are natively draggable in every browser — a
-           mousedown+move on the photo itself was starting the
-           browser's own "drag this image out" gesture instead of our
-           pointermove-based one, which hijacks the pointer entirely
-           (no further pointermove events reach us once a native
-           dragstart fires). dragstart bubbles, so catching it here on
-           the shared ancestor covers the main photo and the
-           thumbnails in one place. */
-        gallery.addEventListener('dragstart', function (e) { e.preventDefault(); });
-      }
-      targets = targets.filter(function (t) { return t.el; });
-
-      var panel = document.createElement('div');
-      panel.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:999999;background:#131316;color:#fff;font:12px/1.6 -apple-system,sans-serif;padding:12px 16px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.35);min-width:200px;max-height:70vh;overflow:auto';
-      document.body.appendChild(panel);
-
-      function currentVal(varName) {
-        return pdpBold.style.getPropertyValue(varName) || getComputedStyle(pdpBold).getPropertyValue(varName).trim() || '0px';
-      }
-
-      function renderPanel() {
-        var rows = targets.map(function (t) {
-          var parts = [];
-          if (t.xVar) parts.push('x:' + currentVal(t.xVar));
-          if (t.yVar) parts.push('y:' + currentVal(t.yVar));
-          return t.name + ': <b>' + parts.join(' ') + '</b>';
-        }).join('<br>');
-        panel.innerHTML = '<b>Drag to reposition (preview only)</b><br>' + rows +
-          '<br><a href="#" data-reset-drag style="color:#9db8d9;display:inline-block;margin-top:6px">reset all</a>';
-      }
-
-      targets.forEach(function (t) {
-        [t.xVar, t.yVar].forEach(function (v) {
-          if (!v) return;
-          var saved = localStorage.getItem('pdpDragY:' + v);
-          if (saved) pdpBold.style.setProperty(v, saved);
-        });
-      });
-      renderPanel();
-
-      panel.addEventListener('click', function (e) {
-        if (!e.target.hasAttribute('data-reset-drag')) return;
-        e.preventDefault();
-        targets.forEach(function (t) {
-          [t.xVar, t.yVar].forEach(function (v) {
-            if (!v) return;
-            pdpBold.style.removeProperty(v);
-            localStorage.removeItem('pdpDragY:' + v);
-          });
-        });
-        renderPanel();
-      });
-
-      targets.forEach(function (t) {
-        var el = t.el;
-        el.style.cursor = t.xVar ? 'move' : 'ns-resize';
-        var dragging = false, moved = false, startX = 0, startY = 0, startXVal = 0, startYVal = 0;
-
-        el.addEventListener('pointerdown', function (e) {
-          if (e.button !== 0) return;
-          dragging = true;
-          moved = false;
-          startX = e.clientX;
-          startY = e.clientY;
-          startXVal = t.xVar ? parseFloat(getComputedStyle(pdpBold).getPropertyValue(t.xVar)) || 0 : 0;
-          startYVal = t.yVar ? parseFloat(getComputedStyle(pdpBold).getPropertyValue(t.yVar)) || 0 : 0;
-          el.setPointerCapture(e.pointerId);
-        });
-
-        el.addEventListener('pointermove', function (e) {
-          if (!dragging) return;
-          var dx = e.clientX - startX;
-          var dy = e.clientY - startY;
-          if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
-          if (moved) {
-            if (t.xVar) pdpBold.style.setProperty(t.xVar, Math.round(startXVal + dx) + 'px');
-            if (t.yVar) pdpBold.style.setProperty(t.yVar, Math.round(startYVal + dy) + 'px');
-            renderPanel();
-          }
-        });
-
-        function endDrag() {
-          if (!dragging) return;
-          dragging = false;
-          if (moved) {
-            if (t.xVar) localStorage.setItem('pdpDragY:' + t.xVar, pdpBold.style.getPropertyValue(t.xVar));
-            if (t.yVar) localStorage.setItem('pdpDragY:' + t.yVar, pdpBold.style.getPropertyValue(t.yVar));
-            el.addEventListener('click', function suppress(ev) {
-              ev.preventDefault();
-              ev.stopPropagation();
-            }, { capture: true, once: true });
-          }
-        }
-        el.addEventListener('pointerup', endDrag);
-        el.addEventListener('pointercancel', endDrag);
-      });
     });
   </script>
 
