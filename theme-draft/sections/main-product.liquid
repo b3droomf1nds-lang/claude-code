@@ -606,6 +606,36 @@
         }
       }, 500);
     });
+
+    /* ---------- header cart icon: hidden until you scroll up ----------
+       Starts hidden on load. Scrolling down keeps it hidden; scrolling
+       up reveals it (see .cart-btn.is-hidden in voltical-pdp-bold.css
+       for the actual fade/slide). Simple direction comparison against
+       the last scroll position — no need for the pinned-ATC script's
+       bounce-detection complexity since this isn't trying to line up
+       with a specific element's position, just react to direction. */
+    document.addEventListener('DOMContentLoaded', function () {
+      var cartBtn = document.querySelector('.cart-btn');
+      if (!cartBtn) return;
+      cartBtn.classList.add('is-hidden');
+      var lastY = window.scrollY;
+      var ticking = false;
+      function update() {
+        var y = window.scrollY;
+        if (y < lastY) {
+          cartBtn.classList.remove('is-hidden');
+        } else if (y > lastY) {
+          cartBtn.classList.add('is-hidden');
+        }
+        lastY = y;
+        ticking = false;
+      }
+      window.addEventListener('scroll', function () {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(update);
+      }, { passive: true });
+    });
   </script>
 
   <script type="application/ld+json">

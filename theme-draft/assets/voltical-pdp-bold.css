@@ -5,6 +5,22 @@
    Uses the theme's own tokens (theme.css :root).
    ============================================================ */
 
+/* ---------- header cart icon: hidden by default, only appears while
+   actively scrolling up ----------
+   This file only loads on product pages, so no extra scoping needed.
+   Direction is tracked in JS (see the script near the end of
+   main-product.liquid) via a .is-hidden class toggle — this just
+   defines what that class (and its absence) look like, with a
+   transition so it fades/slides rather than popping. */
+.cart-btn {
+  transition: opacity .25s ease, transform .25s ease;
+}
+.cart-btn.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+}
+
 /* ---------- paler pastel palette (product pages only) ---------- */
 :root {
   --mint: #F1F8F5;
