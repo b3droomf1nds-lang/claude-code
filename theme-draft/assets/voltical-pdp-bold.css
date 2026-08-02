@@ -443,9 +443,9 @@
 }
 
 /* ---------- Core product page only: push everything down an extra
-   100px ---------- */
+   50px ---------- */
 .pdp--core {
-  padding-top: 115px;
+  padding-top: 65px;
 }
 
 /* ---------- mobile: drop the "bubble" card look on the top gallery photo ----------
