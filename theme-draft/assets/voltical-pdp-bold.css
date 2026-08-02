@@ -480,14 +480,14 @@
   padding-top: 15px;
 }
 
-/* ---------- Core product page only: push everything down an extra
-   50px, then pulled back up 30px, then another 40px — net -5px
-   relative to the base .pdp--bold padding-top, so padding-top is
-   zeroed out and the last 5px comes off via a negative margin-top
-   instead (padding can't go negative). ---------- */
+/* ---------- Core product page only: gap above the "Buy Core" text /
+   bubble ----------
+   Went 50px down, 30px up, 40px up (net -5px, padding zeroed with a
+   -5px margin-top to compensate), then +100px back on top of that —
+   net +95px relative to the base .pdp--bold padding-top. ---------- */
 .pdp--core {
-  padding-top: 0;
-  margin-top: -5px;
+  padding-top: 95px;
+  margin-top: 0;
 }
 
 /* ---------- Core product page only: hide the "Voltical Core" title ----------
@@ -509,10 +509,12 @@
    bubble+dots up 20px by shortening the space above them, instead of
    moving .gallery itself — then trimmed another 20px via a negative
    margin-bottom on .pdp-core-pro-upsell (the last of the two, right
-   before the bubble), since both margins were already at 0. */
+   before the bubble), since both margins were already at 0. Now given
+   50px of breathing room above and below on its own. */
 .pdp-core-buy-label {
   display: block;
-  margin-bottom: 0;
+  margin-top: 50px;
+  margin-bottom: 50px;
   font-size: 2.6rem;
   font-weight: 600;
   color: var(--ink, #131316);
