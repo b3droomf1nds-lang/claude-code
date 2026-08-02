@@ -502,7 +502,9 @@
    way up again to 2.6rem. Bottom margins on both this and
    .pdp-core-pro-upsell below trimmed (6px->0, 14px->0) to pull the
    bubble+dots up 20px by shortening the space above them, instead of
-   moving .gallery itself. */
+   moving .gallery itself — then trimmed another 20px via a negative
+   margin-bottom on .pdp-core-pro-upsell (the last of the two, right
+   before the bubble), since both margins were already at 0. */
 .pdp-core-buy-label {
   display: block;
   margin-bottom: 0;
@@ -512,7 +514,7 @@
 }
 .pdp-core-pro-upsell {
   display: block;
-  margin-bottom: 0;
+  margin-bottom: -20px;
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--ink, #131316);
