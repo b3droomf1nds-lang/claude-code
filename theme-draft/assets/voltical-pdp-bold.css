@@ -411,14 +411,6 @@
   padding-top: 15px;
 }
 
-/* ---------- hide calculator, benefit checks & stat tiles from buy column ---------- */
-.pdp--bold .pdp-calc-inline,
-.pdp--bold .pchecks,
-.pdp--bold .pstats,
-.pdp--bold .trust-row {
-  display: none;
-}
-
 /* ---------- mobile: drop the "bubble" card look on the top gallery photo ----------
    .gallery__main above gives the photo a shadow (and, on desktop, a
    visible background) so it reads as a raised card. On mobile the
