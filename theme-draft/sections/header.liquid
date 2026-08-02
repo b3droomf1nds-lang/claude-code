@@ -43,6 +43,12 @@
     z-index: 50;
     background: transparent;
   }
+  /* pull the menu-toggle/logo/actions in from the edges, closer together
+     toward the middle, instead of spread to the full width */
+  .site-header-clone .site-header__inner{
+    justify-content: center;
+    gap: 60px;
+  }
 </style>
 <header class="site-header{% if template.name == 'product' %} site-header--hidden{% endif %}">
   <div class="wrap wrap--wide site-header__inner">

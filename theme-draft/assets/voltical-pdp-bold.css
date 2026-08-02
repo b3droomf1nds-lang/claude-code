@@ -410,7 +410,7 @@
      screenful on page load, instead of well above it. Pulled back up
      75px, then 20px, then another 20px, from the original 10vh. */
   .pdp--bold .gallery {
-    margin-top: calc(10vh - 115px);
+    margin-top: calc(10vh - 65px);
   }
   .pdp--bold .gallery__main {
     width: 121vh;
@@ -467,6 +467,11 @@
   .pdp--bold .product__grid {
     overflow: hidden;
   }
+  /* push the gallery bubble (and the Buy Core text above it, same
+     parent) down 50px */
+  .pdp--bold .gallery {
+    margin-top: 50px;
+  }
 }
 
 /* ---------- shrink the big top gap under the nav ----------
@@ -520,6 +525,7 @@
   font-size: 2.6rem;
   font-weight: 600;
   color: var(--ink, #131316);
+  transform: translateX(-200px);
 }
 .pdp-core-pro-upsell {
   display: block;
