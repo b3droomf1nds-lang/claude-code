@@ -1,4 +1,12 @@
 <style>
+  /* ---------- no header "bar" ----------
+     theme-r2.css gives .site-header a solid background (var(--base))
+     so it reads as a distinct sticky bar behind the logo/nav/icons.
+     Drop that so it's just the content floating with nothing behind
+     it, on every page (not just the product page's own floating
+     variant below). */
+  .site-header{ background: transparent; }
+
   .site-nav a[aria-current="page"]{ background: var(--ink-12); color: var(--ink); }
   /* match the mobile menu's link styling (bold, full-strength ink) —
      desktop links were thinner (500) and muted (--ink-60) before.
@@ -9,13 +17,6 @@
   }
   .site-header__logo{ font-family: Inter, var(--font-body-family, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif) !important; letter-spacing:0 !important; text-transform:none !important; font-weight:700 !important; }
   .site-nav__ucalc{ display:inline-flex; align-items:center; }
-  .site-nav__ucalc-badge{
-    display:inline-flex;align-items:center;justify-content:center;
-    padding:4px 8px;margin-left:6px;
-    color:#fff;background:#696660;border-radius:999px;
-    font-size:9px;font-weight:700;line-height:1;
-    letter-spacing:-.02em;text-transform:lowercase;
-  }
   .site-header__actions{ display:flex; align-items:center; }
   .site-header__actions > a,
   .site-header__actions > .cart-btn{
@@ -62,7 +63,7 @@
       {%- for link in section.settings.menu.links -%}
         <a href="{{ link.url }}" {% if link.current %}aria-current="page"{% endif %}>{{ link.title }}</a>
         {%- if link.title == 'Catalog' -%}
-          <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator<span class="site-nav__ucalc-badge">new</span></a>
+          <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator</a>
         {%- endif -%}
       {%- endfor -%}
     </nav>
@@ -80,7 +81,7 @@
     {%- for link in section.settings.menu.links -%}
       <a href="{{ link.url }}">{{ link.title }}</a>
       {%- if link.title == 'Catalog' -%}
-        <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator<span class="site-nav__ucalc-badge">new</span></a>
+        <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator</a>
       {%- endif -%}
     {%- endfor -%}
   </nav>
