@@ -533,6 +533,12 @@
 .pdp-core-pro-upsell:hover {
   color: rgba(19, 19, 22, 0.7);
 }
+@media (max-width: 899px) {
+  .pdp-core-buy-label,
+  .pdp-core-pro-upsell {
+    display: none;
+  }
+}
 
 /* ---------- cross-sell add-on toggle: more visible "on" colour ----------
    theme.css/theme-r2.css turn the switch pale lilac (--lilac-m,
