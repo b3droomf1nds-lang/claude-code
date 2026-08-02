@@ -413,17 +413,18 @@
 }
 
 /* ---------- top of the product page (gallery + buy box) — Apple
-   white right around the gallery photo, fading out very gradually to
-   the site's normal homepage white (--base) by the time you reach the
-   buy column (title/price/ATC), so the two feel like one continuous
-   surface instead of a hard-edged card. Desktop only — mobile keeps
-   the original plain background it had before this change.
-   Was a cream tone (#FDFAF8 fading from a 50%-lighter version of
-   #FBF6F2) — swapped to Apple's off-white (#FBFBFD), same fade
-   mechanic. ---------- */
+   grey-white right around the gallery photo, fading out very
+   gradually to the site's normal homepage white (--base) by the time
+   you reach the buy column (title/price/ATC), so the two feel like
+   one continuous surface instead of a hard-edged card. Desktop only —
+   mobile keeps the original plain background it had before this
+   change.
+   Was #FBFBFD (barely distinguishable from --base, so the fade was
+   nearly invisible) — bumped to #F5F5F7 (Apple's usual light-grey
+   surface tone) for a fade you can actually see, same mechanic. ---------- */
 @media (min-width: 900px) {
   .pdp--bold {
-    background: linear-gradient(to right, #FBFBFD 0%, #FBFBFD 30%, var(--base, #FCFDFE) 68%);
+    background: linear-gradient(to right, #F5F5F7 0%, #F5F5F7 30%, var(--base, #FCFDFE) 68%);
   }
 }
 @media (max-width: 899px) {
