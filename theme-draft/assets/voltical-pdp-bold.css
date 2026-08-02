@@ -418,11 +418,17 @@
    mobile keeps the original plain background it had before this
    change.
    Was #FBFBFD (barely distinguishable from --base, so the fade was
-   nearly invisible), then #F5F5F7 — still too subtle, bumped again to
-   #EBEBEE for a fade that actually reads at a glance, same mechanic. ---------- */
+   nearly invisible), then #F5F5F7, then #EBEBEE (too strong) —
+   settled on #F0F0F3, halfway between the two. Color stops also
+   reworked: the solid tone now holds through ~60% of the row (past
+   the gallery bubble's right edge, since the gallery column itself is
+   59% of the row — see grid-template-columns above) instead of
+   starting to fade at 30%, so it only actually starts getting lighter
+   once you're past the bubble, then fades out gradually across the
+   buy column. ---------- */
 @media (min-width: 900px) {
   .pdp--bold {
-    background: linear-gradient(to right, #EBEBEE 0%, #EBEBEE 30%, var(--base, #FCFDFE) 68%);
+    background: linear-gradient(to right, #F0F0F3 0%, #F0F0F3 60%, var(--base, #FCFDFE) 92%);
   }
 }
 @media (max-width: 899px) {
