@@ -130,6 +130,17 @@
   letter-spacing: 0.06em;
 }
 
+/* ---------- remove the price row from the top of the buy column ----------
+   Plain display:none, not just a visual hide — collapses its box
+   (including margins) out of normal flow, so the form/options right
+   below it move up to close the gap on their own with no extra
+   spacing math needed. The price still exists in the DOM (theme.js
+   reads it via .pinfo__price [data-price] to sync the Add to cart
+   button's own price label), just not shown up here. */
+.pdp--bold .pinfo__price {
+  display: none;
+}
+
 /* ---------- bolder option pills ---------- */
 .pdp--bold .opt__pill {
   font-weight: 600;
