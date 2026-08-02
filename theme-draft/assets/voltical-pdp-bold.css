@@ -337,16 +337,19 @@
   .pdp--bold .gallery__arrow--next { right: 18px; }
 }
 
-/* ---------- desktop: gallery column's right edge lands exactly on
-   the page's horizontal center ----------
-   The base theme's .product__grid splits 1.1fr/.9fr (theme-r2.css),
-   which puts the gallery's right edge past center. Size the gallery
-   column to exactly 50% of the row instead, with the grid gap
-   (var(--s7)) eaten out of the buy column's share so the two columns
-   still add up to 100% and the row doesn't overflow. */
+/* ---------- desktop: gallery column gets a larger share of the row,
+   buy column (title/options/ATC) narrows to compensate ----------
+   The base theme's .product__grid splits 1.1fr/.9fr (theme-r2.css).
+   Was an even 50/50 split (so the gallery's right edge landed on
+   page-center) — bumped to 55/45 so the buy column actually narrows
+   now that the gallery bubble itself is wider (4:2.9, was 5:4; see
+   .gallery__main below), instead of the bubble just overflowing past
+   an unchanged column. Grid gap (var(--s7)) still eaten out of the
+   buy column's share so the two columns add up to 100% without
+   overflowing the row. */
 @media (min-width: 900px) {
   .pdp--bold .product__grid {
-    grid-template-columns: 50% calc(50% - var(--s7));
+    grid-template-columns: 55% calc(45% - var(--s7));
   }
 
   /* ---------- desktop: photo takes up roughly 2/3+ of the viewport's
