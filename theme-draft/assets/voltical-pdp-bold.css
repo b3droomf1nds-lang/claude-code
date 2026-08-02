@@ -480,9 +480,9 @@
 }
 
 /* ---------- Core product page only: push everything down an extra
-   50px ---------- */
+   50px, then pulled back up 30px (net +20px) ---------- */
 .pdp--core {
-  padding-top: 65px;
+  padding-top: 35px;
 }
 
 /* ---------- Core product page only: hide the "Voltical Core" title ----------
