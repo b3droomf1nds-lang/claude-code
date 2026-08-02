@@ -510,10 +510,12 @@
    moving .gallery itself — then trimmed another 20px via a negative
    margin-bottom on .pdp-core-pro-upsell (the last of the two, right
    before the bubble), since both margins were already at 0. Now given
-   50px of breathing room above and below on its own. */
+   50px below on its own — no margin-top added on top of that, since
+   the +100px bar padding above already covers the "above" spacing and
+   stacking both was too much. */
 .pdp-core-buy-label {
   display: block;
-  margin-top: 50px;
+  margin-top: 0;
   margin-bottom: 50px;
   font-size: 2.6rem;
   font-weight: 600;
