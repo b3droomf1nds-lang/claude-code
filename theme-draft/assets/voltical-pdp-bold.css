@@ -140,6 +140,9 @@
 .pdp--bold .pinfo__price {
   display: none;
 }
+.pdp--bold form[data-product-form] {
+  margin-top: 20px;
+}
 
 /* ---------- bolder option pills ---------- */
 .pdp--bold .opt__pill {
