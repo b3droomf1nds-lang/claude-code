@@ -407,9 +407,10 @@
      .gallery (the parent of both .gallery__main and .gallery__thumbs)
      also gets a top margin here so the bubble+dots drop down as one
      unit — far enough that the dots sit near the bottom of the first
-     screenful on page load, instead of well above it. */
+     screenful on page load, instead of well above it. Pulled back up
+     75px from the original 10vh. */
   .pdp--bold .gallery {
-    margin-top: 10vh;
+    margin-top: calc(10vh - 75px);
   }
   .pdp--bold .gallery__main {
     width: 121vh;
