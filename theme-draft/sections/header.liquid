@@ -23,6 +23,17 @@
     height:24px;
   }
 
+  /* ---------- product page: transparent copy of the bar's contents,
+     sitting 100px below the real (solid) bar, overlaid on top of the
+     page content already there ---------- */
+  .site-header-clone{
+    position: absolute;
+    top: 100px;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: transparent;
+  }
 </style>
 <header class="site-header">
   <div class="wrap wrap--wide site-header__inner">
@@ -61,6 +72,39 @@
     {%- endfor -%}
   </nav>
 </header>
+
+{%- if template.name == 'product' -%}
+  <div style="position:relative; height:0;">
+    <div class="site-header-clone">
+      <div class="wrap wrap--wide site-header__inner">
+        <button class="menu-toggle" aria-label="{{ 'general.menu' | t }}" onclick="document.querySelector('[data-menu-toggle]').click()">
+          <span></span><span></span><span></span>
+        </button>
+
+        <a href="{{ routes.root_url }}" class="site-header__logo" aria-label="{{ shop.name }}">
+          {{ shop.name | downcase | capitalize }}
+        </a>
+
+        <nav class="site-nav" aria-label="{{ 'general.menu' | t }}">
+          {%- for link in section.settings.menu.links -%}
+            <a href="{{ link.url }}" {% if link.current %}aria-current="page"{% endif %}>{{ link.title }}</a>
+            {%- if link.title == 'Catalog' -%}
+              <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator</a>
+            {%- endif -%}
+          {%- endfor -%}
+        </nav>
+
+        <div class="site-header__actions">
+          <a href="{{ routes.search_url }}" class="site-header__search" aria-label="{{ 'general.search' | t }}">{% render 'icon', icon: 'search' %}</a>
+          <button class="cart-btn" data-cart-open aria-label="{{ 'cart.title' | t }}">
+            {% render 'icon', icon: 'bag' %}
+            <span class="cart-btn__count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endif -%}
 
 {% schema %}
 {
