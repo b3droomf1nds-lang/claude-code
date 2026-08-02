@@ -1,12 +1,4 @@
 <style>
-  /* ---------- no header "bar" ----------
-     theme-r2.css gives .site-header a solid background (var(--base))
-     so it reads as a distinct sticky bar behind the logo/nav/icons.
-     Drop that so it's just the content floating with nothing behind
-     it, on every page (not just the product page's own floating
-     variant below). */
-  .site-header{ background: transparent; }
-
   .site-nav a[aria-current="page"]{ background: var(--ink-12); color: var(--ink); }
   /* match the mobile menu's link styling (bold, full-strength ink) —
      desktop links were thinner (500) and muted (--ink-60) before.
@@ -46,6 +38,19 @@
     }
     .site-header--floating .site-header__actions{
       position:fixed; top:calc(env(safe-area-inset-top) + 14px); right:14px; z-index:95;
+    }
+  }
+
+  /* ---------- product page, desktop: no sticky bar, no background ----------
+     theme-r2.css makes .site-header a sticky (pinned-to-top), solid-
+     background bar. On the product page that bar is dropped entirely
+     — the same logo/nav/icons stay, just sitting in normal page flow
+     (not stuck to the top over the content) with nothing behind them. ---------- */
+  @media (min-width:900px){
+    .site-header--floating{
+      position: static;
+      background: transparent;
+      box-shadow: none;
     }
   }
 </style>
