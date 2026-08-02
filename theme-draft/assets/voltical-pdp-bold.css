@@ -418,11 +418,11 @@
    mobile keeps the original plain background it had before this
    change.
    Was #FBFBFD (barely distinguishable from --base, so the fade was
-   nearly invisible) — bumped to #F5F5F7 (Apple's usual light-grey
-   surface tone) for a fade you can actually see, same mechanic. ---------- */
+   nearly invisible), then #F5F5F7 — still too subtle, bumped again to
+   #EBEBEE for a fade that actually reads at a glance, same mechanic. ---------- */
 @media (min-width: 900px) {
   .pdp--bold {
-    background: linear-gradient(to right, #F5F5F7 0%, #F5F5F7 30%, var(--base, #FCFDFE) 68%);
+    background: linear-gradient(to right, #EBEBEE 0%, #EBEBEE 30%, var(--base, #FCFDFE) 68%);
   }
 }
 @media (max-width: 899px) {
