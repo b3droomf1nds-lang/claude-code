@@ -530,6 +530,15 @@
   color: rgba(19, 19, 22, 0.7);
 }
 
+/* ---------- cross-sell add-on toggle: more visible "on" colour ----------
+   theme.css/theme-r2.css turn the switch pale lilac (--lilac-m,
+   #DFD8F8) when checked — barely readable as "on" at a glance. Reuse
+   the bolder --accent purple (#B9A9F2, already used for the benefit
+   checkmarks above) instead, a noticeably stronger colour. */
+.pdp--bold .switch input:checked + i {
+  background: var(--accent, #B9A9F2);
+}
+
 /* ---------- mobile: drop the "bubble" card look on the top gallery photo ----------
    .gallery__main above gives the photo a shadow (and, on desktop, a
    visible background) so it reads as a raised card. On mobile the
