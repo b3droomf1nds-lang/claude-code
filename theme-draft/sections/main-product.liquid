@@ -659,6 +659,15 @@
       });
       if (gallery) {
         targets.push({ el: gallery, name: 'gallery photo + dots', xVar: '--gallery-x', yVar: '--gallery-y' });
+        /* <img> elements are natively draggable in every browser — a
+           mousedown+move on the photo itself was starting the
+           browser's own "drag this image out" gesture instead of our
+           pointermove-based one, which hijacks the pointer entirely
+           (no further pointermove events reach us once a native
+           dragstart fires). dragstart bubbles, so catching it here on
+           the shared ancestor covers the main photo and the
+           thumbnails in one place. */
+        gallery.addEventListener('dragstart', function (e) { e.preventDefault(); });
       }
       targets = targets.filter(function (t) { return t.el; });
 
