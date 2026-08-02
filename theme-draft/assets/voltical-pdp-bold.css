@@ -442,6 +442,12 @@
   padding-top: 15px;
 }
 
+/* ---------- Core product page only: push everything down an extra
+   100px ---------- */
+.pdp--core {
+  padding-top: 115px;
+}
+
 /* ---------- mobile: drop the "bubble" card look on the top gallery photo ----------
    .gallery__main above gives the photo a shadow (and, on desktop, a
    visible background) so it reads as a raised card. On mobile the

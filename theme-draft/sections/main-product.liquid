@@ -138,7 +138,7 @@
     {%- endif -%}
 {%- endcase -%}
 
-<section class="section pdp--bold">
+<section class="section pdp--bold{% if product.handle == 'voltical-core-5k-10k' %} pdp--core{% endif %}">
   <div class="wrap wrap--wide">
 
     {%- assign first_img = current_variant.featured_image | default: product.featured_image -%}
