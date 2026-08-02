@@ -23,6 +23,15 @@
     height:24px;
   }
 
+  /* ---------- product page: hide the real bar ----------
+     Visually hidden only (not removed) so it's a one-line revert if
+     we bring it back — stays in the DOM so the clone below's menu
+     button (which forwards its click to this bar's real button) keeps
+     working. ---------- */
+  .site-header--hidden{
+    display: none;
+  }
+
   /* ---------- product page: transparent copy of the bar's contents,
      sitting 100px below the real (solid) bar, overlaid on top of the
      page content already there ---------- */
@@ -35,7 +44,7 @@
     background: transparent;
   }
 </style>
-<header class="site-header">
+<header class="site-header{% if template.name == 'product' %} site-header--hidden{% endif %}">
   <div class="wrap wrap--wide site-header__inner">
     <button class="menu-toggle" data-menu-toggle aria-expanded="false" aria-label="{{ 'general.menu' | t }}">
       <span></span><span></span><span></span>
