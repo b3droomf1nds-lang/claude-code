@@ -23,35 +23,16 @@
     height:24px;
   }
 
-  /* ---------- product page: no header bar, just two floating
-     transparent icons in the top corners ---------- */
-  @media (max-width:899px){
-    .site-header--floating{ background:transparent; box-shadow:none; }
-    .site-header--floating .site-header__inner{
-      height:0; min-height:0; padding:0; overflow:visible;
-    }
-    .site-header--floating .site-header__logo,
-    .site-header--floating .site-nav,
-    .site-header--floating .site-header__search{ display:none; }
-    .site-header--floating .menu-toggle{
-      position:fixed; top:calc(env(safe-area-inset-top) + 14px); left:14px; z-index:95;
-    }
-    .site-header--floating .site-header__actions{
-      position:fixed; top:calc(env(safe-area-inset-top) + 14px); right:14px; z-index:95;
-    }
-  }
-
-  /* ---------- product page, desktop: no sticky bar, no background ----------
+  /* ---------- product page: no header bar at all ----------
      theme-r2.css makes .site-header a sticky (pinned-to-top), solid-
-     background bar. On the product page that bar is dropped entirely
-     — the same logo/nav/icons stay, just sitting in normal page flow
-     (not stuck to the top over the content) with nothing behind them. ---------- */
-  @media (min-width:900px){
-    .site-header--floating{
-      position: static;
-      background: transparent;
-      box-shadow: none;
-    }
+     background bar. On the product page that bar is dropped entirely,
+     at every width — the same logo/nav/icons stay, just sitting in
+     normal page flow right where the bar used to be (not stuck to the
+     top, nothing behind them). ---------- */
+  .site-header--floating{
+    position: static;
+    background: transparent;
+    box-shadow: none;
   }
 </style>
 <header class="site-header{% if template.name == 'product' %} site-header--floating{% endif %}">
