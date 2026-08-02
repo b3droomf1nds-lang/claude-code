@@ -453,6 +453,24 @@
   padding-top: 65px;
 }
 
+/* ---------- Core product page only: "Buy Core Pro" text link sitting
+   above the gallery photo bubble ----------
+   Plain text, no button/pill styling — sits in normal flow at the top
+   of .gallery, right before .gallery__main, so the photo naturally
+   sits lower to make room for it (no extra margin hacks needed). */
+.pdp-core-pro-upsell {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink, #131316);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.pdp-core-pro-upsell:hover {
+  color: rgba(19, 19, 22, 0.7);
+}
+
 /* ---------- mobile: drop the "bubble" card look on the top gallery photo ----------
    .gallery__main above gives the photo a shadow (and, on desktop, a
    visible background) so it reads as a raised card. On mobile the
