@@ -452,9 +452,16 @@
      .gallery__thumbs), layered on top of .gallery__main's own
      existing centring transform above — moving the whole unit doesn't
      touch that centring math, it just slides the already-centred
-     result. */
+     result.
+     !important is required here: .gallery also carries data-reveal
+     for the scroll-in animation, and theme-r2.css's
+     [data-reveal].is-in{transform:none!important} rule (same
+     specificity, but loaded before this file) forces the transform
+     back to none once that animation finishes — without matching
+     !important here, the drag/position transform gets silently wiped
+     the moment the gallery scrolls into view. */
   .pdp--bold .gallery {
-    transform: translate(var(--gallery-x, 0px), var(--gallery-y, 0px));
+    transform: translate(var(--gallery-x, 0px), var(--gallery-y, 0px)) !important;
   }
 }
 
