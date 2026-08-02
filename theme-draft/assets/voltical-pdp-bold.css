@@ -379,17 +379,16 @@
      means the photo is never cropped regardless of box ratio, and the
      padding shows the canvas-sampled --gallery-bg-color underneath as
      a border that matches the photo's own backdrop colour.
-     margin-left:auto + translateX(-520px) still anchor the RIGHT edge
+     margin-left:auto + translateX(-370px) still anchor the RIGHT edge
      at the same spot regardless of box width.
-     -520px specifically (was -370px, was -340px, was -430px): moved
-     another 150px left on its own request, independent of the buy
-     column's own nudge (see .pinfo below) — the two no longer move in
-     lockstep. */
+     -370px specifically (was -340px, was -430px; briefly -520px, moved
+     back): the gallery and buy column nudges no longer move in
+     lockstep — see .pinfo below for its own separate nudge. */
   .pdp--bold .gallery__main {
     width: 121vh;
     height: 81.675vh;
     margin-left: auto;
-    transform: translateX(-520px);
+    transform: translateX(-370px);
     padding: clamp(10px, 1.6vw, 18px);
     box-sizing: border-box;
   }
