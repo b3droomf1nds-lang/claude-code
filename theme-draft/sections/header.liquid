@@ -23,29 +23,8 @@
     height:24px;
   }
 
-  /* ---------- product page: no header bar at all ----------
-     theme-r2.css makes .site-header a sticky (pinned-to-top), solid-
-     background bar. On the product page that bar is dropped entirely,
-     at every width — the same logo/nav/icons stay, just sitting in
-     normal page flow right where the bar used to be (not stuck to the
-     top, nothing behind them). ---------- */
-  .site-header--floating{
-    position: static;
-    background: transparent;
-    box-shadow: none;
-    margin-top: 40px;
-  }
-  /* Product page: swap the full text nav links for just the hamburger
-     icon (still opens the same menu drawer with those links) — logo,
-     hamburger, search and cart icons only, no wide row of nav text. */
-  .site-header--floating .site-nav{
-    display: none;
-  }
-  .site-header--floating .menu-toggle{
-    display: flex;
-  }
 </style>
-<header class="site-header{% if template.name == 'product' %} site-header--floating{% endif %}">
+<header class="site-header">
   <div class="wrap wrap--wide site-header__inner">
     <button class="menu-toggle" data-menu-toggle aria-expanded="false" aria-label="{{ 'general.menu' | t }}">
       <span></span><span></span><span></span>
