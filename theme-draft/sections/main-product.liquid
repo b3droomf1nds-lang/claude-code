@@ -707,8 +707,8 @@
     readout.style.display = 'block';
 
     var handle = document.createElement('div');
-    handle.textContent = '✥';
-    handle.style.cssText = 'position:fixed;width:32px;height:32px;border-radius:50%;background:#131316;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:grab;z-index:10000;touch-action:none;user-select:none;-webkit-user-select:none;';
+    handle.textContent = '+';
+    handle.style.cssText = 'position:fixed !important;width:44px;height:44px;border-radius:50%;background:red;color:#fff;border:3px solid #fff;box-shadow:0 0 0 2px red, 0 4px 12px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;line-height:1;cursor:grab;z-index:2147483647;touch-action:none;user-select:none;-webkit-user-select:none;';
     document.body.appendChild(handle);
 
     var startX, startY, curX = 0, curY = 0, dragging = false;
@@ -720,10 +720,23 @@
     }
     function positionHandle(){
       var r = el.getBoundingClientRect();
-      handle.style.top = (r.top - 16) + 'px';
+      if (r.width === 0 && r.height === 0){
+        handle.style.top = '80px';
+        handle.style.left = '20px';
+        return;
+      }
+      handle.style.top = (r.top - 22) + 'px';
       handle.style.left = (r.right + 8) + 'px';
     }
     setPos(curX, curY);
+    // layout can settle after images load / animations finish — keep
+    // the handle glued to the text for the first couple seconds
+    var reposCount = 0;
+    var reposTimer = setInterval(function(){
+      positionHandle();
+      reposCount++;
+      if (reposCount > 40) clearInterval(reposTimer);
+    }, 50);
 
     handle.addEventListener('pointerdown', function(e){
       e.preventDefault();
