@@ -19,9 +19,11 @@
 
   /* Color and Capacity option positions, set via the ?drag=1 tool.
      transform, not margin, so they move visually without dragging the
-     addons/Add to bag below them down too. */
+     addons/Add to bag below them down too.
+     Color was at translate(-3px, 250px) — user asked to remember this
+     spot in case they want it back later. */
   .pdp--bold .opt--boxed:nth-of-type(1) {
-    transform: translate(-3px, 250px);
+    transform: translate(-3px, 50px);
   }
   .pdp--bold .opt--boxed:nth-of-type(2) {
     transform: translate(-3px, 379px);
