@@ -141,12 +141,20 @@
       const settleMs = 220;
       const ease = 'transform ' + settleMs + 'ms cubic-bezier(.22,.61,.36,1)';
 
+      // Match mainImg's own box exactly (desktop insets it with padding
+      // and uses object-fit:contain, not cover/edge-to-edge) — using
+      // top:0/left:0/100%/100% here ignored that padding and filled the
+      // whole box instead, which is what read as a brief "zoom" before
+      // the swap. Copying mainImg's own computed box + object-fit keeps
+      // the incoming photo pixel-identical in size/position to it.
+      const mainImgStyle = getComputedStyle(mainImg);
       const incoming = document.createElement('img');
       incoming.src = target.dataset.full;
       incoming.alt = '';
       incoming.setAttribute('aria-hidden', 'true');
-      incoming.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;' +
-        'object-fit:cover;pointer-events:none;z-index:1;' +
+      incoming.style.cssText = 'position:absolute;top:' + mainImg.offsetTop + 'px;left:' + mainImg.offsetLeft + 'px;' +
+        'width:' + mainImg.offsetWidth + 'px;height:' + mainImg.offsetHeight + 'px;' +
+        'object-fit:' + mainImgStyle.objectFit + ';pointer-events:none;z-index:1;' +
         'transform:translateX(' + (dir * containerW) + 'px)';
       mainWrap.appendChild(incoming);
 
