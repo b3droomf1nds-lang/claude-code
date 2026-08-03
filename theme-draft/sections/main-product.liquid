@@ -663,6 +663,46 @@
     }
   }
   </script>
+
+  {%- if request.query_string contains 'drag=1' -%}
+    {%- comment -%} Temporary drag-to-position tool for the Buy Core
+      text, only active with ?drag=1 in the URL — regular visitors
+      never see this. Drag it with the cursor, then read the live
+      translateX/Y readout in the bottom-left corner and report the
+      final numbers back so they can be baked into the CSS. {%- endcomment -%}
+    <div id="drag-readout" style="position:fixed;bottom:16px;left:16px;z-index:9999;background:#131316;color:#fff;font:12px/1.4 monospace;padding:8px 12px;border-radius:8px;pointer-events:none;">drag the Buy Core text</div>
+    <script>
+    (function(){
+      var el = document.querySelector('.pdp-core-buy-label');
+      var readout = document.getElementById('drag-readout');
+      if (!el) return;
+      var startX, startY, curX = -300, curY = 0, dragging = false;
+      function setPos(x, y){
+        curX = x; curY = y;
+        el.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+        readout.textContent = 'translateX(' + Math.round(x) + 'px) translateY(' + Math.round(y) + 'px)';
+      }
+      setPos(curX, curY);
+      el.style.cursor = 'grab';
+      el.style.touchAction = 'none';
+      el.addEventListener('pointerdown', function(e){
+        dragging = true;
+        el.style.cursor = 'grabbing';
+        startX = e.clientX - curX;
+        startY = e.clientY - curY;
+        el.setPointerCapture(e.pointerId);
+      });
+      el.addEventListener('pointermove', function(e){
+        if (!dragging) return;
+        setPos(e.clientX - startX, e.clientY - startY);
+      });
+      el.addEventListener('pointerup', function(){
+        dragging = false;
+        el.style.cursor = 'grab';
+      });
+    })();
+    </script>
+  {%- endif -%}
 </section>
 
 {% schema %}
