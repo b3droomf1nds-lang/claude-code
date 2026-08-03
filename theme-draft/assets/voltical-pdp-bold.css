@@ -9,7 +9,7 @@
    bubble ---------- theme-r2.css gives .gallery__thumbs a 14px
    margin-top; going negative to pull them up 20px net. */
 .pdp--bold .gallery__thumbs {
-  margin-top: -26px;
+  margin-top: -18px;
 }
 
 /* ---------- header cart icon: hidden by default, only appears while
