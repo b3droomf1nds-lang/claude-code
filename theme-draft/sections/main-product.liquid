@@ -712,83 +712,80 @@
   })();
   </script>
 
-  {%- comment -%} Temporary drag-to-position tool, only active with
-    ?drag=1 in the URL — regular visitors never see this. Gated in JS
-    (not Liquid's request object, which doesn't reliably expose the
-    query string) by checking location.search. Dragging is done via a
-    separate handle (a plain div, not the element itself) so native
+  {%- comment -%} Temporary drag-to-position tool for the Buy Core
+    text, only active with ?drag=1 in the URL — regular visitors never
+    see this. Gated in JS (not Liquid's request object, which doesn't
+    reliably expose the query string) by checking location.search.
+    Forces the element visible even on mobile (where it's normally
+    display:none) so it can be dragged at any width. Dragging is done
+    via a separate handle (a plain div, not the text itself) so native
     text-selection/long-press-callout never has a chance to compete
-    with the drag. Applies to the Buy Core text and both option
-    fieldsets (Color, Capacity) — each gets its own handle + readout. {%- endcomment -%}
+    with the drag — that's what broke it when the text itself was the
+    drag target. {%- endcomment -%}
+  <div id="drag-readout" style="display:none;position:fixed;bottom:16px;left:16px;z-index:9999;background:#131316;color:#fff;font:12px/1.4 monospace;padding:8px 12px;border-radius:8px;pointer-events:none;">drag the handle</div>
   <script>
   (function(){
     if (!/[?&]drag=1(&|$)/.test(window.location.search)) return;
-    if (!window.matchMedia('(min-width:900px)').matches) return;
-
-    // .product__grid clips overflow on mobile (used to crop the enlarged
-    // photo's edge) — that also clips anything dragged vertically past
-    // its bounds. Not relevant while just testing positions, so drop it.
-    var grid = document.querySelector('.product__grid');
-    if (grid) grid.style.overflow = 'visible';
-    var pinfoCol = document.querySelector('.pinfo');
-    if (pinfoCol) pinfoCol.style.overflow = 'visible';
-
-    function makeDraggable(el, label, readoutTop){
-      if (!el) return;
-      el.style.display = el.style.display || 'block';
-
-      var readout = document.createElement('div');
-      readout.style.cssText = 'position:fixed;top:' + readoutTop + 'px;left:16px;z-index:9999;background:#131316;color:#fff;font:12px/1.4 monospace;padding:6px 10px;border-radius:8px;pointer-events:none;';
-      document.body.appendChild(readout);
-
-      var handle = document.createElement('div');
-      handle.textContent = '+';
-      handle.style.cssText = 'position:fixed;width:36px;height:36px;border-radius:50%;background:red;color:#fff;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;line-height:1;cursor:grab;z-index:2147483647;touch-action:none;user-select:none;-webkit-user-select:none;';
-      document.body.appendChild(handle);
-
-      var startX, startY, curX = 0, curY = 0, dragging = false;
-      function setPos(x, y){
-        curX = x; curY = y;
-        el.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
-        readout.textContent = label + ': translate(' + Math.round(x) + 'px, ' + Math.round(y) + 'px)';
-        positionHandle();
-      }
-      function positionHandle(){
-        var r = el.getBoundingClientRect();
-        handle.style.top = (r.top - 18) + 'px';
-        handle.style.left = (r.right + 8) + 'px';
-      }
-      setPos(curX, curY);
-      var reposCount = 0;
-      var reposTimer = setInterval(function(){
-        positionHandle();
-        reposCount++;
-        if (reposCount > 40) clearInterval(reposTimer);
-      }, 50);
-
-      handle.addEventListener('pointerdown', function(e){
-        e.preventDefault();
-        dragging = true;
-        handle.style.cursor = 'grabbing';
-        startX = e.clientX - curX;
-        startY = e.clientY - curY;
-        handle.setPointerCapture(e.pointerId);
-      });
-      handle.addEventListener('pointermove', function(e){
-        if (!dragging) return;
-        setPos(e.clientX - startX, e.clientY - startY);
-      });
-      handle.addEventListener('pointerup', function(){
-        dragging = false;
-        handle.style.cursor = 'grab';
-      });
-      window.addEventListener('resize', positionHandle);
+    document.title = 'DRAG SCRIPT RUNNING';
+    var el = document.querySelector('.pdp-core-buy-label');
+    var readout = document.getElementById('drag-readout');
+    if (!el || !readout) {
+      alert('drag script ran but could not find the text element or readout box — el:' + !!el + ' readout:' + !!readout);
+      return;
     }
+    alert('drag script found everything, handle should appear now');
+    el.style.display = 'block';
+    readout.style.display = 'block';
 
-    makeDraggable(document.querySelector('.pdp-core-buy-label'), 'Buy Core', 16);
-    var opts = document.querySelectorAll('.pinfo .opt--boxed');
-    makeDraggable(opts[0], 'Option 1 (Color)', 60);
-    makeDraggable(opts[1], 'Option 2 (Capacity)', 104);
+    var handle = document.createElement('div');
+    handle.textContent = '+';
+    handle.style.cssText = 'position:fixed !important;width:44px;height:44px;border-radius:50%;background:red;color:#fff;border:3px solid #fff;box-shadow:0 0 0 2px red, 0 4px 12px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;line-height:1;cursor:grab;z-index:2147483647;touch-action:none;user-select:none;-webkit-user-select:none;';
+    document.body.appendChild(handle);
+
+    var startX, startY, curX = 0, curY = 0, dragging = false;
+    function setPos(x, y){
+      curX = x; curY = y;
+      el.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+      readout.textContent = 'translateX(' + Math.round(x) + 'px) translateY(' + Math.round(y) + 'px)';
+      positionHandle();
+    }
+    function positionHandle(){
+      var r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0){
+        handle.style.top = '80px';
+        handle.style.left = '20px';
+        return;
+      }
+      handle.style.top = (r.top - 22) + 'px';
+      handle.style.left = (r.right + 8) + 'px';
+    }
+    setPos(curX, curY);
+    // layout can settle after images load / animations finish — keep
+    // the handle glued to the text for the first couple seconds
+    var reposCount = 0;
+    var reposTimer = setInterval(function(){
+      positionHandle();
+      reposCount++;
+      if (reposCount > 40) clearInterval(reposTimer);
+    }, 50);
+
+    handle.addEventListener('pointerdown', function(e){
+      e.preventDefault();
+      dragging = true;
+      handle.style.cursor = 'grabbing';
+      startX = e.clientX - curX;
+      startY = e.clientY - curY;
+      handle.setPointerCapture(e.pointerId);
+    });
+    handle.addEventListener('pointermove', function(e){
+      if (!dragging) return;
+      setPos(e.clientX - startX, e.clientY - startY);
+    });
+    handle.addEventListener('pointerup', function(){
+      dragging = false;
+      handle.style.cursor = 'grab';
+    });
+    window.addEventListener('resize', positionHandle);
   })();
   </script>
 </section>
