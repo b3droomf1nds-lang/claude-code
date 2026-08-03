@@ -700,9 +700,14 @@
   <script>
   (function(){
     if (!/[?&]drag=1(&|$)/.test(window.location.search)) return;
+    document.title = 'DRAG SCRIPT RUNNING';
     var el = document.querySelector('.pdp-core-buy-label');
     var readout = document.getElementById('drag-readout');
-    if (!el || !readout) return;
+    if (!el || !readout) {
+      alert('drag script ran but could not find the text element or readout box — el:' + !!el + ' readout:' + !!readout);
+      return;
+    }
+    alert('drag script found everything, handle should appear now');
     el.style.display = 'block';
     readout.style.display = 'block';
 
