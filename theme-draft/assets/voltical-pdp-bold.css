@@ -10,7 +10,7 @@
    the first one down carries the second along with it since it
    follows in normal flow. */
 .pdp--bold .addon:first-of-type {
-  margin-top: 380px;
+  margin-top: 370px;
 }
 
 /* ---------- gallery dots: 20px up from their normal spot below the
