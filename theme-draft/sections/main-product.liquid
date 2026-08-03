@@ -680,7 +680,7 @@
     if (!el || !readout) return;
     el.style.display = 'block';
     readout.style.display = 'block';
-    var startX, startY, curX = -300, curY = 0, dragging = false;
+    var startX, startY, curX = 0, curY = 0, dragging = false;
     function setPos(x, y){
       curX = x; curY = y;
       el.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
