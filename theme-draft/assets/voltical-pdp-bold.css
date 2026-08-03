@@ -77,23 +77,6 @@
   text-transform: none;
 }
 
-/* ---------- single "You might also like" heading above BOTH product
-   suggestion cards, styled to match the option pickers' own label
-   (Color / Power Capacity) above ----------
-   Replaces each card's own repeated eyebrow line — that one's hidden
-   here so it isn't shown twice. ---------- */
-.pdp--bold .addon-group-label {
-  font-size: .78rem;
-  font-weight: 600;
-  letter-spacing: 0;
-  text-transform: capitalize;
-  color: var(--ink-60, rgba(19,19,22,.58));
-  margin-bottom: 10px;
-}
-.pdp--bold .addon__eyebrow {
-  display: none;
-}
-
 /* ---------- product title ----------
    theme-r2.css lowercases the whole .pinfo h1 ("voltical core 5k &
    10k") — keep that styling but capitalize just the brand's V. ---------- */
