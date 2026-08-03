@@ -23,7 +23,7 @@
      Color was at translate(-3px, 250px) — user asked to remember this
      spot in case they want it back later. */
   .pdp--bold .opt--boxed:nth-of-type(1) {
-    transform: translate(-3px, 50px);
+    transform: translate(-3px, 250px);
   }
   .pdp--bold .opt--boxed:nth-of-type(2) {
     transform: translate(-3px, 379px);
