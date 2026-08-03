@@ -558,7 +558,7 @@
   font-size: 2.6rem;
   font-weight: 600;
   color: var(--ink, #131316);
-  transform: translate(-243px, 23px);
+  transform: translate(-293px, 23px);
 }
 .pdp-core-buy-from {
   display: block;
@@ -566,7 +566,7 @@
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--ink-60, rgba(19,19,22,.58));
-  transform: translate(-243px, 23px);
+  transform: translate(-293px, 23px);
 }
 .pdp-core-pro-upsell {
   display: block;
