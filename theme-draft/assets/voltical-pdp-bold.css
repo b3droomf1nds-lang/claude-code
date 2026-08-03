@@ -17,7 +17,7 @@
    gallery photo swap. */
 @media (prefers-reduced-motion: reduce) {
   .pdp--bold .gallery__main img {
-    transition-duration: 380ms !important;
+    transition-duration: 550ms !important;
   }
 }
 

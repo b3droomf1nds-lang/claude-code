@@ -144,7 +144,7 @@
       // "considered"/premium than a snappy flick. A soft opacity
       // cross-fade rides along with the slide for polish; no scale
       // change, since that's what read as "zooming" before.
-      const settleMs = 380;
+      const settleMs = 550;
       const curve = 'cubic-bezier(.32,.72,0,1)';
       const ease = 'transform ' + settleMs + 'ms ' + curve + ', opacity ' + settleMs + 'ms ' + curve;
 
