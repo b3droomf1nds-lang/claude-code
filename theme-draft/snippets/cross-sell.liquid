@@ -24,6 +24,7 @@
 {%- if _ref2.handle -%}{%- assign pair2 = _ref2 -%}{%- elsif _ref2 -%}{%- assign pair2 = all_products[_ref2] -%}{%- else -%}{%- assign pair2 = nil -%}{%- endif -%}
 
 {%- if pair and pair.available and pair.handle != product.handle -%}
+<div class="addon-group-label">{{ 'products.xsell_eyebrow' | t }}</div>
 <div class="addon" data-addon data-addon-variant="{{ pair.selected_or_first_available_variant.id }}">
   <a class="addon__img" href="{{ pair.url }}" tabindex="-1" aria-hidden="true">
     {%- if pair.featured_image -%}
