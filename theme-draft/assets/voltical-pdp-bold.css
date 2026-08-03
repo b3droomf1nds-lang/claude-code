@@ -598,3 +598,13 @@
     box-shadow: none;
   }
 }
+
+/* ---------- mobile: cut the leftover space above the top image ----------
+   Placed last in the file so it wins regardless of source-order ties
+   with the earlier .pdp--bold/.pdp--core padding-top rules above. */
+@media (max-width: 899px) {
+  .pdp--bold.pdp--core,
+  .pdp--bold {
+    padding-top: 10px;
+  }
+}
