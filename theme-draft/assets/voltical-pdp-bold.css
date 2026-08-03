@@ -21,10 +21,10 @@
      transform, not margin, so they move visually without dragging the
      addons/Add to bag below them down too. */
   .pdp--bold .opt--boxed:nth-of-type(1) {
-    transform: translate(-3px, 175px);
+    transform: translate(-3px, 125px);
   }
   .pdp--bold .opt--boxed:nth-of-type(2) {
-    transform: translate(-3px, 314px);
+    transform: translate(-3px, 414px);
   }
 
   /* gallery dots: up from their normal spot below the bubble.
