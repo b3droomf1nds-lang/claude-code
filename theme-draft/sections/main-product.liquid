@@ -711,7 +711,10 @@
     setPos(curX, curY);
     el.style.cursor = 'grab';
     el.style.touchAction = 'none';
+    el.style.userSelect = 'none';
+    el.style.webkitUserSelect = 'none';
     el.addEventListener('pointerdown', function(e){
+      e.preventDefault();
       dragging = true;
       el.style.cursor = 'grabbing';
       startX = e.clientX - curX;
