@@ -9,11 +9,15 @@
    Everything in this block was unscoped before and leaking onto
    mobile — none of it was meant to apply there. */
 @media (min-width: 900px) {
-  /* 2 product suggestions (add-ons): 375px down. The two .addon
+  /* 2 product suggestions (add-ons): 475px down. The two .addon
      blocks are siblings with no shared wrapper; pushing the first one
      down carries the second along with it since it follows in normal
-     flow. */
-  .pdp--bold .addon:first-of-type {
+     flow. Also matches .addon-group-label (the "You might also like"
+     heading) when present — that sits right before the first .addon,
+     which would otherwise steal :first-of-type out from under it and
+     silently drop this push-down. */
+  .pdp--bold .addon:first-of-type,
+  .pdp--bold .addon-group-label {
     margin-top: 475px;
   }
 
@@ -75,6 +79,23 @@
 .addon__eyebrow {
   color: var(--focus, #8F7FDC);
   text-transform: none;
+}
+
+/* ---------- single "You might also like" heading above BOTH product
+   suggestion cards, styled to match the option pickers' own label
+   (Color / Power Capacity) above ----------
+   Replaces each card's own repeated eyebrow line — that one's hidden
+   here so it isn't shown twice. ---------- */
+.pdp--bold .addon-group-label {
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: capitalize;
+  color: var(--ink-60, rgba(19,19,22,.58));
+  margin-bottom: 10px;
+}
+.pdp--bold .addon__eyebrow {
+  display: none;
 }
 
 /* ---------- product title ----------
