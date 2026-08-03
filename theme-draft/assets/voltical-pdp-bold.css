@@ -466,7 +466,7 @@
      request rather than moving in lockstep with the gallery. Also
      nudged 70px down. ---------- */
   .pdp--bold .pinfo {
-    transform: translate(470px, 70px);
+    transform: translate(440px, 70px);
   }
 }
 
