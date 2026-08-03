@@ -700,7 +700,8 @@
       if (!bubble || !atc || !trustRow) return;
       atc.style.marginTop = '0px';
       var delta = bubble.getBoundingClientRect().bottom - trustRow.getBoundingClientRect().bottom;
-      atc.style.marginTop = delta + 'px';
+      // +500px extra, on top of the bubble-bottom alignment, per request
+      atc.style.marginTop = (delta + 500) + 'px';
     }
     function alignAll(){
       alignOptToBubble();
