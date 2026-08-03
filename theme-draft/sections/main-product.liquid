@@ -724,6 +724,14 @@
   (function(){
     if (!/[?&]drag=1(&|$)/.test(window.location.search)) return;
 
+    // .product__grid clips overflow on mobile (used to crop the enlarged
+    // photo's edge) — that also clips anything dragged vertically past
+    // its bounds. Not relevant while just testing positions, so drop it.
+    var grid = document.querySelector('.product__grid');
+    if (grid) grid.style.overflow = 'visible';
+    var pinfoCol = document.querySelector('.pinfo');
+    if (pinfoCol) pinfoCol.style.overflow = 'visible';
+
     function makeDraggable(el, label, readoutTop){
       if (!el) return;
       el.style.display = el.style.display || 'block';
