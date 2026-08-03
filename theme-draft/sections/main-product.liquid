@@ -691,9 +691,12 @@
     see this. Gated in JS (not Liquid's request object, which doesn't
     reliably expose the query string) by checking location.search.
     Forces the element visible even on mobile (where it's normally
-    display:none) so it can be dragged at any width, then reports the
-    final position back to be baked into the CSS. {%- endcomment -%}
-  <div id="drag-readout" style="display:none;position:fixed;bottom:16px;left:16px;z-index:9999;background:#131316;color:#fff;font:12px/1.4 monospace;padding:8px 12px;border-radius:8px;pointer-events:none;">drag the Buy Core text</div>
+    display:none) so it can be dragged at any width. Dragging is done
+    via a separate handle (a plain div, not the text itself) so native
+    text-selection/long-press-callout never has a chance to compete
+    with the drag — that's what broke it when the text itself was the
+    drag target. {%- endcomment -%}
+  <div id="drag-readout" style="display:none;position:fixed;bottom:16px;left:16px;z-index:9999;background:#131316;color:#fff;font:12px/1.4 monospace;padding:8px 12px;border-radius:8px;pointer-events:none;">drag the handle</div>
   <script>
   (function(){
     if (!/[?&]drag=1(&|$)/.test(window.location.search)) return;
@@ -702,38 +705,43 @@
     if (!el || !readout) return;
     el.style.display = 'block';
     readout.style.display = 'block';
+
+    var handle = document.createElement('div');
+    handle.textContent = '✥';
+    handle.style.cssText = 'position:fixed;width:32px;height:32px;border-radius:50%;background:#131316;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:grab;z-index:10000;touch-action:none;user-select:none;-webkit-user-select:none;';
+    document.body.appendChild(handle);
+
     var startX, startY, curX = 0, curY = 0, dragging = false;
     function setPos(x, y){
       curX = x; curY = y;
       el.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
       readout.textContent = 'translateX(' + Math.round(x) + 'px) translateY(' + Math.round(y) + 'px)';
+      positionHandle();
+    }
+    function positionHandle(){
+      var r = el.getBoundingClientRect();
+      handle.style.top = (r.top - 16) + 'px';
+      handle.style.left = (r.right + 8) + 'px';
     }
     setPos(curX, curY);
-    el.style.cursor = 'grab';
-    el.style.touchAction = 'none';
-    el.style.userSelect = 'none';
-    el.style.webkitUserSelect = 'none';
-    el.style.webkitTouchCallout = 'none';
-    el.setAttribute('draggable', 'false');
-    el.addEventListener('selectstart', function(e){ e.preventDefault(); });
-    el.addEventListener('dragstart', function(e){ e.preventDefault(); });
-    el.addEventListener('contextmenu', function(e){ e.preventDefault(); });
-    el.addEventListener('pointerdown', function(e){
+
+    handle.addEventListener('pointerdown', function(e){
       e.preventDefault();
       dragging = true;
-      el.style.cursor = 'grabbing';
+      handle.style.cursor = 'grabbing';
       startX = e.clientX - curX;
       startY = e.clientY - curY;
-      el.setPointerCapture(e.pointerId);
+      handle.setPointerCapture(e.pointerId);
     });
-    el.addEventListener('pointermove', function(e){
+    handle.addEventListener('pointermove', function(e){
       if (!dragging) return;
       setPos(e.clientX - startX, e.clientY - startY);
     });
-    el.addEventListener('pointerup', function(){
+    handle.addEventListener('pointerup', function(){
       dragging = false;
-      el.style.cursor = 'grab';
+      handle.style.cursor = 'grab';
     });
+    window.addEventListener('resize', positionHandle);
   })();
   </script>
 </section>
