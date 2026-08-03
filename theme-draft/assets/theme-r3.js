@@ -157,26 +157,42 @@
         'object-fit:' + mainImgStyle.objectFit + ';pointer-events:none;z-index:1;' +
         'transform:translateX(' + (dir * containerW) + 'px)';
       mainWrap.appendChild(incoming);
-
       mainImg.style.transition = 'none';
-      void mainImg.offsetWidth; // force reflow so the transition below actually animates
-      mainImg.style.transition = ease;
-      incoming.style.transition = ease;
-      mainImg.style.transform = 'translateX(' + (dir * -containerW) + 'px)';
-      incoming.style.transform = 'translateX(0)';
 
-      setTimeout(() => {
-        thumbs.forEach((x) => x.classList.remove('is-active'));
-        target.classList.add('is-active');
-        mainImg.style.transition = 'none';
-        mainImg.removeAttribute('srcset');
-        mainImg.removeAttribute('sizes');
-        mainImg.src = target.dataset.full;
-        mainImg.alt = $('img', target).alt;
-        mainImg.style.transform = '';
-        incoming.remove();
-        setTimeout(() => applyBgColor(target), 0);
-      }, settleMs);
+      // incoming is a BRAND NEW element — its initial (offscreen)
+      // transform hasn't been committed to a rendered frame yet, so a
+      // single forced reflow (offsetWidth) isn't reliably enough to
+      // make the browser animate FROM it; the initial and final values
+      // can get coalesced into one frame with no visible motion, which
+      // is what "still not seeing a slide" was. Two nested rAFs
+      // guarantee a real painted frame happens in between, so the
+      // transition below always has a committed starting point to
+      // animate from.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          mainImg.style.transition = ease;
+          incoming.style.transition = ease;
+          mainImg.style.transform = 'translateX(' + (dir * -containerW) + 'px)';
+          incoming.style.transform = 'translateX(0)';
+
+          // Counting settleMs from HERE (once the transition actually
+          // starts, after the two rAFs above), not from slideGallery's
+          // own call time — otherwise this cleanup could fire before
+          // the animation visually finishes and cut it short.
+          setTimeout(() => {
+            thumbs.forEach((x) => x.classList.remove('is-active'));
+            target.classList.add('is-active');
+            mainImg.style.transition = 'none';
+            mainImg.removeAttribute('srcset');
+            mainImg.removeAttribute('sizes');
+            mainImg.src = target.dataset.full;
+            mainImg.alt = $('img', target).alt;
+            mainImg.style.transform = '';
+            incoming.remove();
+            setTimeout(() => applyBgColor(target), 0);
+          }, settleMs);
+        });
+      });
     };
     const prevBtn = $('[data-gallery-prev]', gallery);
     const nextBtn = $('[data-gallery-next]', gallery);
