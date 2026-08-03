@@ -682,8 +682,29 @@
       var delta = bubble.getBoundingClientRect().top - firstOpt.getBoundingClientRect().top;
       if (delta > 0) pinfo.style.marginTop = delta + 'px';
     }
-    window.addEventListener('load', alignOptToBubble);
-    window.addEventListener('resize', alignOptToBubble);
+    {%- comment -%} Desktop only: without moving the color option itself,
+      space out everything between it and the Add to bag button so the
+      button's top lands at the bottom of the gallery bubble. Runs
+      after alignOptToBubble, since it needs the option's (and thus the
+      whole column's) final position already settled. Pushes the atc
+      wrapper down via its own margin-top, which — since it sits in
+      normal flow — carries everything after it (ship note, upsells)
+      down along with it. {%- endcomment -%}
+    function spaceOutToAtc(){
+      if (!window.matchMedia('(min-width:900px)').matches) return;
+      var bubble = document.querySelector('.gallery__main');
+      var atc = document.querySelector('.pinfo .atc');
+      if (!bubble || !atc) return;
+      atc.style.marginTop = '0px';
+      var delta = bubble.getBoundingClientRect().bottom - atc.getBoundingClientRect().top;
+      if (delta > 0) atc.style.marginTop = delta + 'px';
+    }
+    function alignAll(){
+      alignOptToBubble();
+      spaceOutToAtc();
+    }
+    window.addEventListener('load', alignAll);
+    window.addEventListener('resize', alignAll);
   })();
   </script>
 
