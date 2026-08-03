@@ -474,6 +474,7 @@
   /* remove the Buy Core / Buy Core Pro text block entirely on mobile —
      display:none collapses its space, no gap left behind */
   .pdp-core-buy-label,
+  .pdp-core-buy-from,
   .pdp-core-pro-upsell {
     display: none;
   }
@@ -526,11 +527,19 @@
 .pdp-core-buy-label {
   display: block;
   margin-top: 0;
-  margin-bottom: 50px;
+  margin-bottom: 4px;
   font-size: 2.6rem;
   font-weight: 600;
   color: var(--ink, #131316);
-  transform: translate(-355px, 25px);
+  transform: translate(-315px, 25px);
+}
+.pdp-core-buy-from {
+  display: block;
+  margin-bottom: 46px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink-60, rgba(19,19,22,.58));
+  transform: translate(-315px, 25px);
 }
 .pdp-core-pro-upsell {
   display: block;
