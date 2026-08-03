@@ -530,7 +530,7 @@
   font-size: 2.6rem;
   font-weight: 600;
   color: var(--ink, #131316);
-  transform: translateX(-300px);
+  transform: translate(-340px, 40px);
 }
 .pdp-core-pro-upsell {
   display: block;
