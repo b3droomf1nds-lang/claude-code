@@ -138,8 +138,15 @@
       const activeIdx = visible.indexOf($('.gallery__thumb.is-active', gallery));
       const target = visible[(activeIdx + dir + visible.length) % visible.length];
       const containerW = mainWrap.clientWidth || 1;
-      const settleMs = 220;
-      const ease = 'transform ' + settleMs + 'ms cubic-bezier(.22,.61,.36,1)';
+      // Longer + a proper iOS-style decelerate curve (heavy deceleration,
+      // near-zero overshoot) instead of the sharper 220ms used by the
+      // touch-swipe commit — a deliberate, unhurried glide reads as more
+      // "considered"/premium than a snappy flick. A soft opacity
+      // cross-fade rides along with the slide for polish; no scale
+      // change, since that's what read as "zooming" before.
+      const settleMs = 380;
+      const curve = 'cubic-bezier(.32,.72,0,1)';
+      const ease = 'transform ' + settleMs + 'ms ' + curve + ', opacity ' + settleMs + 'ms ' + curve;
 
       // Match mainImg's own box exactly (desktop insets it with padding
       // and uses object-fit:contain, not cover/edge-to-edge) — using
@@ -154,7 +161,7 @@
       incoming.setAttribute('aria-hidden', 'true');
       incoming.style.cssText = 'position:absolute;top:' + mainImg.offsetTop + 'px;left:' + mainImg.offsetLeft + 'px;' +
         'width:' + mainImg.offsetWidth + 'px;height:' + mainImg.offsetHeight + 'px;' +
-        'object-fit:' + mainImgStyle.objectFit + ';pointer-events:none;z-index:1;' +
+        'object-fit:' + mainImgStyle.objectFit + ';pointer-events:none;z-index:1;opacity:.6;' +
         'transform:translateX(' + (dir * containerW) + 'px)';
       mainWrap.appendChild(incoming);
       mainImg.style.transition = 'none';
@@ -173,7 +180,9 @@
           mainImg.style.transition = ease;
           incoming.style.transition = ease;
           mainImg.style.transform = 'translateX(' + (dir * -containerW) + 'px)';
+          mainImg.style.opacity = '.6';
           incoming.style.transform = 'translateX(0)';
+          incoming.style.opacity = '1';
 
           // Counting settleMs from HERE (once the transition actually
           // starts, after the two rAFs above), not from slideGallery's
@@ -188,6 +197,7 @@
             mainImg.src = target.dataset.full;
             mainImg.alt = $('img', target).alt;
             mainImg.style.transform = '';
+            mainImg.style.opacity = '';
             incoming.remove();
             setTimeout(() => applyBgColor(target), 0);
           }, settleMs);
