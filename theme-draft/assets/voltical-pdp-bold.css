@@ -5,6 +5,14 @@
    Uses the theme's own tokens (theme.css :root).
    ============================================================ */
 
+/* ---------- 2 product suggestions (add-ons): 300px down ----------
+   The two .addon blocks are siblings with no shared wrapper; pushing
+   the first one down carries the second along with it since it
+   follows in normal flow. */
+.pdp--bold .addon:first-of-type {
+  margin-top: 300px;
+}
+
 /* ---------- gallery dots: 20px up from their normal spot below the
    bubble ---------- theme-r2.css gives .gallery__thumbs a 14px
    margin-top; going negative to pull them up 20px net. */
