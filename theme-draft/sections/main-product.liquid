@@ -664,22 +664,22 @@
   }
   </script>
 
-  {%- comment -%} Desktop only: move the buy column (.pinfo) up/down
-    until the top of the color swatch pill (e.g. "Titanium Gold") lines
-    up with the top of the gallery photo bubble. Measured live via JS
-    rather than a fixed px value, since the gap depends on the Buy Core
-    text's own height above the bubble. {%- endcomment -%}
+  {%- comment -%} Desktop only: push the buy column (.pinfo) down until
+    the top of its first option picker (e.g. Color) lines up with the
+    top of the gallery photo bubble. Measured live via JS rather than a
+    fixed px value, since the gap depends on the Buy Core text's own
+    height above the bubble. {%- endcomment -%}
   <script>
   (function(){
     function alignOptToBubble(){
       if (!window.matchMedia('(min-width:900px)').matches) return;
       var bubble = document.querySelector('.gallery__main');
-      var swatchPill = document.querySelector('.pinfo .opt__pill--swatch') || document.querySelector('.pinfo .opt:not([hidden])');
+      var firstOpt = document.querySelector('.pinfo .opt:not([hidden])');
       var pinfo = document.querySelector('.pinfo');
-      if (!bubble || !swatchPill || !pinfo) return;
+      if (!bubble || !firstOpt || !pinfo) return;
       pinfo.style.marginTop = '0px';
-      var delta = bubble.getBoundingClientRect().top - swatchPill.getBoundingClientRect().top;
-      pinfo.style.marginTop = delta + 'px';
+      var delta = bubble.getBoundingClientRect().top - firstOpt.getBoundingClientRect().top;
+      if (delta > 0) pinfo.style.marginTop = delta + 'px';
     }
     window.addEventListener('load', alignOptToBubble);
     window.addEventListener('resize', alignOptToBubble);
