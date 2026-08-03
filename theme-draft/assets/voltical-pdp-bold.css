@@ -13,6 +13,12 @@
   margin-top: 375px;
 }
 
+/* ---------- second option (e.g. Power Capacity): 200px down ----------
+   First option (Color) stays put. */
+.pdp--bold .opt--boxed:nth-of-type(2) {
+  margin-top: 200px;
+}
+
 /* ---------- gallery dots: 20px up from their normal spot below the
    bubble ---------- theme-r2.css gives .gallery__thumbs a 14px
    margin-top; going negative to pull them up 20px net. */
