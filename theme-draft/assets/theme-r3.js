@@ -132,9 +132,17 @@
     // side, the incoming one slides in from the other), same look as
     // the touch swipe's "commit" animation below, not the smaller
     // fade+16px used by thumbnail clicks.
+    // Guards against a second arrow click landing mid-slide — without
+    // this, a fast click would start a new `incoming` image before the
+    // previous one's cleanup ever ran, leaving multiple photos stacked
+    // and sliding on top of each other. Ignored (not queued) while a
+    // slide's in progress, same as most carousels handle rapid clicks.
+    let gallerySliding = false;
     const slideGallery = (dir) => {
+      if (gallerySliding) return;
       const visible = visibleThumbs();
       if (visible.length < 2) return;
+      gallerySliding = true;
       const activeIdx = visible.indexOf($('.gallery__thumb.is-active', gallery));
       const target = visible[(activeIdx + dir + visible.length) % visible.length];
       const containerW = mainWrap.clientWidth || 1;
@@ -199,6 +207,7 @@
             mainImg.style.transform = '';
             mainImg.style.opacity = '';
             incoming.remove();
+            gallerySliding = false;
             setTimeout(() => applyBgColor(target), 0);
           }, settleMs);
         });
