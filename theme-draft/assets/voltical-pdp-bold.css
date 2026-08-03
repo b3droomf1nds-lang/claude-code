@@ -5,6 +5,22 @@
    Uses the theme's own tokens (theme.css :root).
    ============================================================ */
 
+/* ---------- keep the gallery slide animated even with OS-level
+   "reduce motion" on ----------
+   theme.css/theme-r2.css force `*{transition-duration:.01ms!important}`
+   under prefers-reduced-motion — a real accessibility feature, but it
+   was also silently killing the desktop arrow-click slide's JS-set
+   inline transition duration, making the photo swap look instant
+   while the (separate, JS-timed) dot update still landed ~220ms
+   later. Higher specificity than the universal `*` selector wins even
+   against another !important rule, so this carves out just the
+   gallery photo swap. */
+@media (prefers-reduced-motion: reduce) {
+  .pdp--bold .gallery__main img {
+    transition-duration: 220ms !important;
+  }
+}
+
 /* ---------- desktop-only manual spacing tweaks ----------
    Everything in this block was unscoped before and leaking onto
    mobile — none of it was meant to apply there. */
