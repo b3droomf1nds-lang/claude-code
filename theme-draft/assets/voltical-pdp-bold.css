@@ -412,7 +412,7 @@
   .pdp--bold .gallery {
     /* -20px more to compensate for the height the new "From [price]"
        line added above the bubble, bringing bubble+dots back up */
-    margin-top: calc(10vh - 105px);
+    margin-top: calc(10vh - 85px);
   }
   .pdp--bold .gallery__main {
     width: 121vh;
