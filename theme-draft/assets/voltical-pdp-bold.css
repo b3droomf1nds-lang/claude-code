@@ -5,6 +5,27 @@
    Uses the theme's own tokens (theme.css :root).
    ============================================================ */
 
+/* ---------- gallery dots: inside the bubble, not below it ----------
+   theme-r2.css puts .gallery__thumbs in normal flow right after
+   .gallery__main, i.e. below the photo. Overlaying them instead, near
+   the bottom edge of the photo itself — .gallery__main is already
+   position:relative (theme-r2.css), so this positions .gallery__thumbs
+   relative to .gallery instead (also given position:relative here);
+   with the dots taken out of flow, .gallery's own bottom edge lines
+   up with .gallery__main's bottom (the last thing left in flow),
+   which is what the dots' `bottom` offset below is measured from. */
+.pdp--bold .gallery {
+  position: relative;
+}
+.pdp--bold .gallery__thumbs {
+  position: absolute;
+  bottom: 16px;
+  left: 0;
+  right: 0;
+  margin-top: 0;
+  z-index: 5;
+}
+
 /* ---------- header cart icon: hidden by default, only appears while
    actively scrolling up ----------
    This file only loads on product pages, so no extra scoping needed.
