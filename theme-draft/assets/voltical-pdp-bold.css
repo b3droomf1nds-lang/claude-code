@@ -17,11 +17,14 @@
     margin-top: 375px;
   }
 
-  /* second option (e.g. Power Capacity): 200px down. First option
-     (Color) stays put. transform, not margin, so it moves visually
-     without dragging the addons/Add to bag below it down too. */
+  /* Color and Capacity option positions, set via the ?drag=1 tool.
+     transform, not margin, so they move visually without dragging the
+     addons/Add to bag below them down too. */
+  .pdp--bold .opt--boxed:nth-of-type(1) {
+    transform: translate(-3px, 175px);
+  }
   .pdp--bold .opt--boxed:nth-of-type(2) {
-    transform: translateY(200px);
+    transform: translate(-3px, 314px);
   }
 
   /* gallery dots: up from their normal spot below the bubble.
@@ -555,7 +558,7 @@
   font-size: 2.6rem;
   font-weight: 600;
   color: var(--ink, #131316);
-  transform: translate(-315px, 25px);
+  transform: translate(-73px, 3px);
 }
 .pdp-core-buy-from {
   display: block;
@@ -563,7 +566,7 @@
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--ink-60, rgba(19,19,22,.58));
-  transform: translate(-315px, 25px);
+  transform: translate(-73px, 3px);
 }
 .pdp-core-pro-upsell {
   display: block;
