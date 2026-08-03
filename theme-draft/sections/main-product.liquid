@@ -683,25 +683,28 @@
       if (delta > 0) pinfo.style.marginTop = delta + 'px';
     }
     {%- comment -%} Desktop only: without moving the color option itself,
-      space out everything between it and the Add to bag button so the
-      button's top lands at the bottom of the gallery bubble. Runs
-      after alignOptToBubble, since it needs the option's (and thus the
-      whole column's) final position already settled. Pushes the atc
-      wrapper down via its own margin-top, which — since it sits in
-      normal flow — carries everything after it (ship note, upsells)
-      down along with it. {%- endcomment -%}
-    function spaceOutToAtc(){
+      shift the Add to bag button + everything after it (up or down)
+      so the BOTTOM of the trust row (Warranty/Returns/Dispatch — the
+      "Dispatch 24h" item is the last of the three, same row height)
+      lands level with the BOTTOM of the gallery bubble. Runs after
+      alignOptToBubble, since it needs the option's (and thus the whole
+      column's) final position already settled. Moves the atc wrapper
+      via its own margin-top (can go negative to pull things up), which
+      — since it sits in normal flow — carries the ship note and trust
+      row after it along with it. {%- endcomment -%}
+    function alignTrustRowToBubbleBottom(){
       if (!window.matchMedia('(min-width:900px)').matches) return;
       var bubble = document.querySelector('.gallery__main');
       var atc = document.querySelector('.pinfo .atc');
-      if (!bubble || !atc) return;
+      var trustRow = document.querySelector('.pinfo .trust-row');
+      if (!bubble || !atc || !trustRow) return;
       atc.style.marginTop = '0px';
-      var delta = bubble.getBoundingClientRect().bottom - atc.getBoundingClientRect().top;
-      if (delta > 0) atc.style.marginTop = delta + 'px';
+      var delta = bubble.getBoundingClientRect().bottom - trustRow.getBoundingClientRect().bottom;
+      atc.style.marginTop = delta + 'px';
     }
     function alignAll(){
       alignOptToBubble();
-      spaceOutToAtc();
+      alignTrustRowToBubbleBottom();
     }
     window.addEventListener('load', alignAll);
     window.addEventListener('resize', alignAll);
