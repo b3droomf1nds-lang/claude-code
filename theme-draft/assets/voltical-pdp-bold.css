@@ -21,7 +21,7 @@
      transform, not margin, so they move visually without dragging the
      addons/Add to bag below them down too. */
   .pdp--bold .opt--boxed:nth-of-type(1) {
-    transform: translate(-3px, 100px);
+    transform: translate(-3px, 200px);
   }
   .pdp--bold .opt--boxed:nth-of-type(2) {
     transform: translate(-3px, 379px);
