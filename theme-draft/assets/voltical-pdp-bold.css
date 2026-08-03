@@ -410,13 +410,17 @@
      screenful on page load, instead of well above it. Pulled back up
      75px, then 20px, then another 20px, from the original 10vh. */
   .pdp--bold .gallery {
-    margin-top: calc(10vh - 85px);
+    margin-top: calc(10vh - 115px);
   }
   .pdp--bold .gallery__main {
     width: 121vh;
     height: 81.675vh;
     margin-left: auto;
-    transform: translateX(-370px);
+    /* the +30px Y here is the bubble's own down-nudge (was previously
+       done via .gallery's margin-top above, which also dragged the
+       dots down with it — moved here, as a transform, so it doesn't
+       affect the thumbs/dots that come after it in the layout) */
+    transform: translate(-370px, 30px);
     padding: clamp(10px, 1.6vw, 18px);
     box-sizing: border-box;
   }
@@ -467,9 +471,11 @@
   .pdp--bold .product__grid {
     overflow: hidden;
   }
-  /* push the gallery bubble down 50px, then up 20px (net 30px) */
-  .pdp--bold .gallery {
-    margin-top: 30px;
+  /* push the gallery bubble down 30px net, via transform (not a
+     margin on .gallery) so it doesn't drag the thumbs/dots below it
+     down too */
+  .pdp--bold .gallery__main {
+    transform: translateY(30px);
   }
   /* remove the Buy Core / Buy Core Pro text block entirely on mobile —
      display:none collapses its space, no gap left behind */
@@ -531,7 +537,9 @@
   font-size: 2.6rem;
   font-weight: 600;
   color: var(--ink, #131316);
-  transform: translate(-315px, 25px);
+  /* +30px Y here replaces the 30px .gallery used to contribute via
+     its own margin-top (removed so it stops dragging the dots down) */
+  transform: translate(-315px, 55px);
 }
 .pdp-core-buy-from {
   display: block;
@@ -539,7 +547,7 @@
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--ink-60, rgba(19,19,22,.58));
-  transform: translate(-315px, 25px);
+  transform: translate(-315px, 55px);
 }
 .pdp-core-pro-upsell {
   display: block;
@@ -549,6 +557,7 @@
   color: var(--ink, #131316);
   text-decoration: underline;
   text-underline-offset: 3px;
+  transform: translateY(30px);
 }
 .pdp-core-pro-upsell:hover {
   color: rgba(19, 19, 22, 0.7);
