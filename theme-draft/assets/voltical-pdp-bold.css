@@ -5,26 +5,30 @@
    Uses the theme's own tokens (theme.css :root).
    ============================================================ */
 
-/* ---------- 2 product suggestions (add-ons): 300px down ----------
-   The two .addon blocks are siblings with no shared wrapper; pushing
-   the first one down carries the second along with it since it
-   follows in normal flow. */
-.pdp--bold .addon:first-of-type {
-  margin-top: 375px;
-}
+/* ---------- desktop-only manual spacing tweaks ----------
+   Everything in this block was unscoped before and leaking onto
+   mobile — none of it was meant to apply there. */
+@media (min-width: 900px) {
+  /* 2 product suggestions (add-ons): 375px down. The two .addon
+     blocks are siblings with no shared wrapper; pushing the first one
+     down carries the second along with it since it follows in normal
+     flow. */
+  .pdp--bold .addon:first-of-type {
+    margin-top: 375px;
+  }
 
-/* ---------- second option (e.g. Power Capacity): 200px down ----------
-   First option (Color) stays put. transform, not margin, so it moves
-   visually without dragging the addons/Add to bag below it down too. */
-.pdp--bold .opt--boxed:nth-of-type(2) {
-  transform: translateY(200px);
-}
+  /* second option (e.g. Power Capacity): 200px down. First option
+     (Color) stays put. transform, not margin, so it moves visually
+     without dragging the addons/Add to bag below it down too. */
+  .pdp--bold .opt--boxed:nth-of-type(2) {
+    transform: translateY(200px);
+  }
 
-/* ---------- gallery dots: 20px up from their normal spot below the
-   bubble ---------- theme-r2.css gives .gallery__thumbs a 14px
-   margin-top; going negative to pull them up 20px net. */
-.pdp--bold .gallery__thumbs {
-  margin-top: -22px;
+  /* gallery dots: up from their normal spot below the bubble.
+     theme-r2.css gives .gallery__thumbs a 14px margin-top. */
+  .pdp--bold .gallery__thumbs {
+    margin-top: -22px;
+  }
 }
 
 /* ---------- header cart icon: hidden by default, only appears while
