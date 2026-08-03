@@ -468,6 +468,9 @@ h1 em,h2 em,.plp__title em{
 @media (min-width:900px){
   .site-nav{display:flex}
   .menu-toggle,.mobile-nav{display:none}
+  /* pull the logo/nav/actions in from the edges, closer together
+     toward the middle, instead of spread to the full width */
+  .site-header .site-header__inner{justify-content:center;gap:60px}
   .hero__grid{grid-template-columns:1.05fr .95fr;gap:var(--s7)}
   .flagship__grid{grid-template-columns:1fr 1fr}
   .product__grid{grid-template-columns:1.1fr .9fr;gap:var(--s7)}
