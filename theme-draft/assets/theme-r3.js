@@ -128,21 +128,55 @@
 
     // Desktop click-through arrows (hidden on mobile via CSS — swipe
     // covers that there). Step to the next/previous VISIBLE thumb,
-    // wrapping around, same setMain() slide used by thumbnail clicks.
-    const stepGallery = (dir) => {
+    // wrapping around — full-width slide (the outgoing photo exits one
+    // side, the incoming one slides in from the other), same look as
+    // the touch swipe's "commit" animation below, not the smaller
+    // fade+16px used by thumbnail clicks.
+    const slideGallery = (dir) => {
       const visible = visibleThumbs();
       if (visible.length < 2) return;
       const activeIdx = visible.indexOf($('.gallery__thumb.is-active', gallery));
-      const newIdx = (activeIdx + dir + visible.length) % visible.length;
-      setMain(visible[newIdx], dir);
+      const target = visible[(activeIdx + dir + visible.length) % visible.length];
+      const containerW = mainWrap.clientWidth || 1;
+      const settleMs = 220;
+      const ease = 'transform ' + settleMs + 'ms cubic-bezier(.22,.61,.36,1)';
+
+      const incoming = document.createElement('img');
+      incoming.src = target.dataset.full;
+      incoming.alt = '';
+      incoming.setAttribute('aria-hidden', 'true');
+      incoming.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;' +
+        'object-fit:cover;pointer-events:none;z-index:1;' +
+        'transform:translateX(' + (dir * containerW) + 'px)';
+      mainWrap.appendChild(incoming);
+
+      mainImg.style.transition = 'none';
+      void mainImg.offsetWidth; // force reflow so the transition below actually animates
+      mainImg.style.transition = ease;
+      incoming.style.transition = ease;
+      mainImg.style.transform = 'translateX(' + (dir * -containerW) + 'px)';
+      incoming.style.transform = 'translateX(0)';
+
+      setTimeout(() => {
+        thumbs.forEach((x) => x.classList.remove('is-active'));
+        target.classList.add('is-active');
+        mainImg.style.transition = 'none';
+        mainImg.removeAttribute('srcset');
+        mainImg.removeAttribute('sizes');
+        mainImg.src = target.dataset.full;
+        mainImg.alt = $('img', target).alt;
+        mainImg.style.transform = '';
+        incoming.remove();
+        setTimeout(() => applyBgColor(target), 0);
+      }, settleMs);
     };
     const prevBtn = $('[data-gallery-prev]', gallery);
     const nextBtn = $('[data-gallery-next]', gallery);
     // stopPropagation: .gallery__main itself has its own click handler
     // (opens the lightbox, wired up below) — without this, clicking an
     // arrow would also open the lightbox.
-    if (prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); stepGallery(-1); });
-    if (nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); stepGallery(1); });
+    if (prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); slideGallery(-1); });
+    if (nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); slideGallery(1); });
 
     // Swipe left/right on the main image to step through photos — iPhone
     // Photos style: the photo tracks your finger 1:1 as you drag (with
