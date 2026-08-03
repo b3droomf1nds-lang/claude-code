@@ -410,7 +410,7 @@
      screenful on page load, instead of well above it. Pulled back up
      75px, then 20px, then another 20px, from the original 10vh. */
   .pdp--bold .gallery {
-    margin-top: calc(10vh - 65px);
+    margin-top: calc(10vh - 85px);
   }
   .pdp--bold .gallery__main {
     width: 121vh;
@@ -467,9 +467,9 @@
   .pdp--bold .product__grid {
     overflow: hidden;
   }
-  /* push the gallery bubble down 50px */
+  /* push the gallery bubble down 50px, then up 20px (net 30px) */
   .pdp--bold .gallery {
-    margin-top: 50px;
+    margin-top: 30px;
   }
   /* remove the Buy Core / Buy Core Pro text block entirely on mobile —
      display:none collapses its space, no gap left behind */
