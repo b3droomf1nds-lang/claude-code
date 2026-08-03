@@ -713,6 +713,11 @@
     el.style.touchAction = 'none';
     el.style.userSelect = 'none';
     el.style.webkitUserSelect = 'none';
+    el.style.webkitTouchCallout = 'none';
+    el.setAttribute('draggable', 'false');
+    el.addEventListener('selectstart', function(e){ e.preventDefault(); });
+    el.addEventListener('dragstart', function(e){ e.preventDefault(); });
+    el.addEventListener('contextmenu', function(e){ e.preventDefault(); });
     el.addEventListener('pointerdown', function(e){
       e.preventDefault();
       dragging = true;
