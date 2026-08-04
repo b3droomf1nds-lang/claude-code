@@ -49,43 +49,34 @@
     </div>
   </div>
 
+  {%- comment -%}
+    3 of the 6 cards are live numbers driven off the iPhone dropdown
+    above (and, on products that have one, the mAh capacity variant):
+    20->80% charge time at both devices' fastest mode, how many full
+    0->100% charges the powerbank has in it, and how many quick
+    20->80% top-ups it can do instead — with a note that the latter is
+    the realistic everyday case. See the <script> below for the math +
+    the per-model battery data it's built from.
+  {%- endcomment -%}
   <div class="pdp-cmp__grid">
     <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Half the size in your pocket</div></div>
-    <div class="pdp-cmp__card"><div class="pdp-cmp__stat">3.5x</div><div class="pdp-cmp__sub">smaller footprint</div></div>
-    <div class="pdp-cmp__card"><div class="pdp-cmp__stat">42%</div><div class="pdp-cmp__sub">lighter to carry</div></div>
+    <div class="pdp-cmp__card">
+      <div class="pdp-cmp__stat" data-calc-time>&mdash;</div>
+      <div class="pdp-cmp__sub">20&rarr;80%, fastest mode</div>
+    </div>
+    <div class="pdp-cmp__card">
+      <div class="pdp-cmp__stat" data-calc-full>&mdash;</div>
+      <div class="pdp-cmp__sub">full charges, 0% to 100%</div>
+    </div>
     <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Reversible magnetic connector</div></div>
-    <div class="pdp-cmp__card"><div class="pdp-cmp__stat">18W</div><div class="pdp-cmp__sub">faster wireless output</div></div>
-    <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Charges while it charges you</div></div>
-  </div>
-
-  {%- comment -%}
-    Three numbers driven live off the iPhone dropdown above (and, on
-    products that have one, the mAh capacity variant): 20->80% charge
-    time at both devices' fastest mode, how many full 0->100% charges
-    the powerbank has in it, and how many quick 20->80% top-ups it can
-    do instead — with a note that the latter is the realistic everyday
-    case. See the <script> below for the math + the per-model battery
-    data it's built from.
-  {%- endcomment -%}
-  <div class="pdp-cmp__calc" data-cmp-calc>
-    <div class="pdp-cmp__calc-box">
-      <div class="pdp-cmp__calc-label">20&rarr;80%</div>
-      <div class="pdp-cmp__calc-stat" data-calc-time>&mdash;</div>
-      <div class="pdp-cmp__calc-sub">Fastest mode, USB-C</div>
-    </div>
-    <div class="pdp-cmp__calc-box">
-      <div class="pdp-cmp__calc-label">Full charges</div>
-      <div class="pdp-cmp__calc-stat" data-calc-full>&mdash;</div>
-      <div class="pdp-cmp__calc-sub">0% to 100%, from empty</div>
-    </div>
-    <div class="pdp-cmp__calc-box">
-      <div class="pdp-cmp__calc-label">
+    <div class="pdp-cmp__card">
+      <div class="pdp-cmp__stat" data-calc-partial>&mdash;</div>
+      <div class="pdp-cmp__sub">
         20&rarr;80% charges
         <span class="pdp-cmp__info" tabindex="0" title="Most of the time you aren't charging your phone from zero to a hundred — we expect this more often.">i</span>
       </div>
-      <div class="pdp-cmp__calc-stat" data-calc-partial>&mdash;</div>
-      <div class="pdp-cmp__calc-sub">Quick top-ups instead</div>
     </div>
+    <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Charges while it charges you</div></div>
   </div>
 </div>
 </div>

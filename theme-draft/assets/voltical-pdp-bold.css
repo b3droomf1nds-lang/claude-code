@@ -253,52 +253,8 @@
   font-weight: 600;
 }
 
-/* ---------- live charge-time / charge-count boxes, driven by the
-   iPhone dropdown + capacity variant (see the <script> in
-   pdp-compare-inline.liquid) ---------- */
-.pdp-cmp__calc {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 10px;
-}
-.pdp-cmp__calc-box {
-  background: #FFFFFF;
-  border: 1px solid rgba(19,19,22,.08);
-  border-radius: var(--r-s, 14px);
-  padding: 14px 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 5px;
-  box-shadow: 0 1px 2px rgba(19,19,22,.04);
-}
-.pdp-cmp__calc-label {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  font-size: .64rem;
-  font-weight: 600;
-  letter-spacing: .02em;
-  text-transform: uppercase;
-  color: var(--ink-60, rgba(19,19,22,.58));
-}
-.pdp-cmp__calc-stat {
-  font-family: var(--sans);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  font-size: clamp(1.1rem, 2.4vw, 1.4rem);
-  line-height: 1.05;
-  color: var(--ink, #131316);
-}
-.pdp-cmp__calc-sub {
-  font-size: .64rem;
-  color: var(--ink-60, rgba(19,19,22,.58));
-  line-height: 1.25;
-}
+/* ---------- info badge on the "20->80% charges" card, next to its
+   sub-label (see pdp-compare-inline.liquid) ---------- */
 .pdp-cmp__info {
   display: inline-flex;
   align-items: center;
@@ -313,6 +269,8 @@
   color: var(--ink-60, rgba(19,19,22,.58));
   cursor: help;
   flex: none;
+  vertical-align: middle;
+  margin-left: 2px;
 }
 
 /* ---------- stat tiles ---------- */
