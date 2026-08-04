@@ -257,7 +257,7 @@
    the base rule's margin:6px silently cancels it out). */
 @media (min-width: 900px) {
   .pdp--bold .pstats {
-    margin-top: 950px;
+    margin-top: 1250px;
   }
 }
 .pdp--bold .pstats__tile {
