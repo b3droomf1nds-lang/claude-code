@@ -685,37 +685,28 @@
       var delta = bubble.getBoundingClientRect().top - firstOpt.getBoundingClientRect().top;
       if (delta > 0) pinfo.style.marginTop = delta + 'px';
     }
-    {%- comment -%} Desktop only: without moving the color option itself,
-      shift the Add to bag button + everything after it (up or down)
-      so the BOTTOM of the trust row (Warranty/Returns/Dispatch — the
-      "Dispatch 24h" item is the last of the three, same row height)
-      lands level with the BOTTOM of the gallery bubble. Runs after
-      alignOptToBubble, since it needs the option's (and thus the whole
-      column's) final position already settled. Moves the atc wrapper
-      via its own margin-top (can go negative to pull things up), which
-      — since it sits in normal flow — carries the ship note and trust
-      row after it along with it. {%- endcomment -%}
-    function alignTrustRowToBubbleBottom(){
+    {%- comment -%} Desktop only: Add to bag sits exactly 25px below the
+      bottom of the suggested-product cards ("You Might Also Like")
+      right above it — a plain, fixed gap, not derived from the gallery
+      bubble or trust row at all (an earlier version tied this to the
+      trust row's position, which broke once the trust row itself got
+      pushed far down the page for an unrelated reason). Moves the atc
+      wrapper via its own margin-top (can go negative to pull things
+      up), which — since it sits in normal flow — carries the ship note
+      and trust row after it along with it. {%- endcomment -%}
+    function positionAtcBelowSuggestions(){
       if (!window.matchMedia('(min-width:900px)').matches) return;
-      var bubble = document.querySelector('.gallery__main');
       var atc = document.querySelector('.pinfo .atc');
-      var trustRow = document.querySelector('.pinfo .trust-row');
-      if (!bubble || !atc || !trustRow) return;
+      var addons = document.querySelectorAll('.pinfo .addon');
+      if (!atc || !addons.length) return;
+      var lastAddon = addons[addons.length - 1];
       atc.style.marginTop = '0px';
-      var delta = bubble.getBoundingClientRect().bottom - trustRow.getBoundingClientRect().bottom;
-      // +600px extra, on top of the bubble-bottom alignment, per request.
-      // +1006 more on top of THAT: trust-row itself later got pushed
-      // 1006px further down the page (see .pstats in
-      // voltical-pdp-bold.css), which this delta picks up on live since
-      // it's measured from trust-row's actual on-screen position — that
-      // was swinging this margin sharply negative and yanking Add to
-      // bag up above the options. Compensating by the same 1006px
-      // cancels that side-effect back out.
-      atc.style.marginTop = (delta + 562 + 1006) + 'px';
+      var gap = atc.getBoundingClientRect().top - lastAddon.getBoundingClientRect().bottom;
+      atc.style.marginTop = (25 - gap) + 'px';
     }
     function alignAll(){
       alignOptToBubble();
-      alignTrustRowToBubbleBottom();
+      positionAtcBelowSuggestions();
     }
     window.addEventListener('load', alignAll);
     window.addEventListener('resize', alignAll);
