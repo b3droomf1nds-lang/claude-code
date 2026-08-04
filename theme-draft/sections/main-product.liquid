@@ -378,7 +378,7 @@
           {% render 'trust-badges', section: section %}
 
           {%- if product.description != blank -%}
-            <div class="pinfo__desc" style="margin-top:1032px">
+            <div class="pinfo__desc" style="margin-top:32px">
               <span class="t-eyebrow" style="display:block;margin-bottom:10px">{{ 'products.description' | t }}</span>
               <div class="t-body">{{ product.description }}</div>
             </div>
@@ -416,6 +416,9 @@
        closes up, so the rest of the buy column shifts up to fill the
        gap and the page gets shorter for as long as it's pinned. */
     document.addEventListener('DOMContentLoaded', function () {
+      // Desktop no longer gets the sticky/pinned Add to cart bar at
+      // all — mobile keeps it untouched.
+      if (window.matchMedia('(min-width:900px)').matches) return;
       var atc = document.querySelector('.pdp--bold .atc');
       if (!atc) return;
 
