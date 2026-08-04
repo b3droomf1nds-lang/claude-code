@@ -143,6 +143,23 @@
    margin-top push below. Same select+grid interaction as the
    full-width Apple compare row, just sized to the column instead of
    breaking out. */
+@media (min-width: 900px) {
+  /* wrapper handles positioning in plain (unscaled) pixels — moved left
+     off the narrow buy column toward the middle of the blank canvas
+     area, and down to sit centred in it vertically. Kept separate from
+     the scale below so the translate amounts stay in real px instead
+     of getting multiplied by the 5x scale too. */
+  .pdp-cmp-wrap {
+    display: flex;
+    justify-content: center;
+    transform: translate(-620px, 480px);
+  }
+  .pdp-cmp {
+    width: 340px;
+    transform: scale(5);
+    transform-origin: center;
+  }
+}
 .pdp-cmp__label {
   display: block;
   font-size: .85rem;
