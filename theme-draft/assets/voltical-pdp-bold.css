@@ -677,13 +677,6 @@
   .pdp--bold .product__grid {
     overflow: hidden;
   }
-  /* remove the Buy Core / Buy Core Pro text block entirely on mobile —
-     display:none collapses its space, no gap left behind */
-  .pdp-core-buy-label,
-  .pdp-core-buy-from,
-  .pdp-core-pro-upsell {
-    display: none;
-  }
 }
 
 /* ---------- shrink the big top gap under the nav ----------
@@ -758,6 +751,23 @@
 }
 .pdp-core-pro-upsell:hover {
   color: rgba(19, 19, 22, 0.7);
+}
+
+/* remove the Buy Core / Buy Core Pro text block entirely on mobile —
+   display:none collapses its space, no gap left behind. Placed AFTER
+   the base .pdp-core-buy-label/-from/-pro-upsell rules above (same
+   selector specificity — the later rule in source order wins, same
+   cascade trap as the .pstats push-down fix earlier): with this
+   sitting BEFORE them, the base rules' own display:block silently
+   re-enabled the text on mobile, so it stayed in the DOM at full
+   size, just shoved off-screen by its desktop-only translate — still
+   taking up real vertical space above the gallery image. */
+@media (max-width: 899px) {
+  .pdp-core-buy-label,
+  .pdp-core-buy-from,
+  .pdp-core-pro-upsell {
+    display: none;
+  }
 }
 
 /* ---------- cross-sell add-on toggle: more visible "on" colour ----------
