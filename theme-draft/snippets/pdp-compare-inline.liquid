@@ -57,5 +57,104 @@
     <div class="pdp-cmp__card"><div class="pdp-cmp__stat">18W</div><div class="pdp-cmp__sub">faster wireless output</div></div>
     <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Charges while it charges you</div></div>
   </div>
+
+  {%- comment -%}
+    Three numbers driven live off the iPhone dropdown above (and, on
+    products that have one, the mAh capacity variant): 20->80% charge
+    time at both devices' fastest mode, how many full 0->100% charges
+    the powerbank has in it, and how many quick 20->80% top-ups it can
+    do instead — with a note that the latter is the realistic everyday
+    case. See the <script> below for the math + the per-model battery
+    data it's built from.
+  {%- endcomment -%}
+  <div class="pdp-cmp__calc" data-cmp-calc>
+    <div class="pdp-cmp__calc-box">
+      <div class="pdp-cmp__calc-label">20&rarr;80%</div>
+      <div class="pdp-cmp__calc-stat" data-calc-time>&mdash;</div>
+      <div class="pdp-cmp__calc-sub">Fastest mode, USB-C</div>
+    </div>
+    <div class="pdp-cmp__calc-box">
+      <div class="pdp-cmp__calc-label">Full charges</div>
+      <div class="pdp-cmp__calc-stat" data-calc-full>&mdash;</div>
+      <div class="pdp-cmp__calc-sub">0% to 100%, from empty</div>
+    </div>
+    <div class="pdp-cmp__calc-box">
+      <div class="pdp-cmp__calc-label">
+        20&rarr;80% charges
+        <span class="pdp-cmp__info" tabindex="0" title="Most of the time you aren't charging your phone from zero to a hundred — we expect this more often.">i</span>
+      </div>
+      <div class="pdp-cmp__calc-stat" data-calc-partial>&mdash;</div>
+      <div class="pdp-cmp__calc-sub">Quick top-ups instead</div>
+    </div>
+  </div>
 </div>
 </div>
+
+<script>
+(function () {
+  /* Battery capacity (Wh) + max charge input (W) per iPhone. Newest
+     few (16e / Air / 17 line) are estimated in line with the trend of
+     recent generations — Apple doesn't publish exact cell capacities. */
+  var PHONES = {
+    'iPhone X': [2.716, 18], 'iPhone XS': [2.658, 18], 'iPhone XS Max': [3.174, 18],
+    'iPhone XR': [2.942, 18], 'iPhone 11': [3.110, 18], 'iPhone 11 Pro': [3.046, 18],
+    'iPhone 11 Pro Max': [3.969, 18], 'iPhone 12 mini': [2.227, 20], 'iPhone 12': [2.815, 20],
+    'iPhone 12 Pro': [2.815, 20], 'iPhone 12 Pro Max': [3.687, 20], 'iPhone 13 mini': [2.406, 20],
+    'iPhone 13': [3.227, 20], 'iPhone 13 Pro': [3.095, 20], 'iPhone 13 Pro Max': [4.352, 20],
+    'iPhone 14': [3.279, 20], 'iPhone 14 Plus': [4.325, 20], 'iPhone 14 Pro': [3.200, 27],
+    'iPhone 14 Pro Max': [4.323, 27], 'iPhone 15': [3.349, 20], 'iPhone 15 Plus': [4.383, 20],
+    'iPhone 15 Pro': [3.274, 27], 'iPhone 15 Pro Max': [4.441, 27], 'iPhone 16': [3.561, 20],
+    'iPhone 16 Plus': [4.674, 20], 'iPhone 16 Pro': [3.582, 27], 'iPhone 16 Pro Max': [4.685, 27],
+    'iPhone 16e': [3.961, 18], 'iPhone Air': [3.100, 27], 'iPhone 17': [3.700, 27],
+    'iPhone 17 Pro': [3.800, 27], 'iPhone 17 Pro Max': [5.000, 40]
+  };
+  var POWERBANK_MAX_W = 20;   // Core / Core Pro's rated wired USB-C output
+  var DC_EFFICIENCY = 0.85;   // typical AC-DC/USB conversion loss for a powerbank
+  var TAPER_FACTOR = 0.12;    // 20->80% spends most of its time in the slow taper phase, not at peak wattage — calibrated against Apple's published "up to 50% in ~30 min" figures
+
+  var select = document.getElementById('pdp-cmp-select');
+  var timeEl = document.querySelector('[data-calc-time]');
+  var fullEl = document.querySelector('[data-calc-full]');
+  var partialEl = document.querySelector('[data-calc-partial]');
+  if (!select || !timeEl || !fullEl || !partialEl) return;
+
+  function powerbankWh() {
+    var checked = document.querySelector('input[type="radio"]:checked[value*="mAh" i]')
+      || document.querySelector('input[type="radio"][value*="mAh" i]');
+    var mah = 10000;
+    if (checked) {
+      var n = checked.value.replace(/[^0-9.]/g, '');
+      if (n) mah = parseFloat(n);
+    }
+    return mah * 3.7 / 1000;
+  }
+
+  function fmt(n) {
+    return (Math.round(n * 10) / 10).toString().replace(/\.0$/, '');
+  }
+
+  function update() {
+    var phone = PHONES[select.value] || PHONES['iPhone 15'];
+    var phoneWh = phone[0], phoneMaxW = phone[1];
+    var pbWh = powerbankWh();
+
+    var full = (pbWh * DC_EFFICIENCY) / phoneWh;
+    var partial = full / 0.6;
+
+    var effW = Math.min(phoneMaxW, POWERBANK_MAX_W) * TAPER_FACTOR;
+    var minutes = (0.6 * phoneWh) / effW * 60;
+
+    fullEl.textContent = '~' + fmt(full) + '×';
+    partialEl.textContent = '~' + fmt(partial) + '×';
+    timeEl.textContent = minutes < 60
+      ? '~' + Math.round(minutes) + ' min'
+      : '~' + fmt(minutes / 60) + ' h';
+  }
+
+  select.addEventListener('change', update);
+  document.querySelectorAll('input[type="radio"][value*="mAh" i]').forEach(function (el) {
+    el.addEventListener('change', update);
+  });
+  update();
+})();
+</script>
