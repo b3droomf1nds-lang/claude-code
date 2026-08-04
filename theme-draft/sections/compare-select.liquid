@@ -40,7 +40,7 @@
   .cmp__lede strong{ font-weight:700; }
 
   .cmp__grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:clamp(12px,1.6vw,20px); }
-  @media (min-width:900px){ .cmp__grid{ grid-template-columns:repeat(4,1fr); } }
+  @media (min-width:900px){ .cmp__grid{ grid-template-columns:repeat(3,1fr); } }
   .cmp__group{ display:contents; }
   .cmp__group[hidden]{ display:none; }
   .cmp__card{
@@ -94,7 +94,7 @@
       {%- for block in section.blocks -%}
         {%- if block.type == 'compare_target' -%}
           <div class="cmp__group" data-cmp-group="{{ forloop.index0 }}"{% unless forloop.first %} hidden{% endunless %} {{ block.shopify_attributes }}>
-            {%- for i in (1..4) -%}
+            {%- for i in (1..6) -%}
               {%- assign val_key = 'stat_' | append: i | append: '_value' -%}
               {%- assign lbl_key = 'stat_' | append: i | append: '_label' -%}
               {%- assign img_key = 'stat_' | append: i | append: '_image' -%}
@@ -160,7 +160,13 @@
         { "type": "image_picker", "id": "stat_3_image", "label": "Stat 3 image (replaces the number with a photo)" },
         { "type": "text", "id": "stat_4_value", "label": "Stat 4 value", "default": "18W" },
         { "type": "text", "id": "stat_4_label", "label": "Stat 4 label", "default": "faster wireless output" },
-        { "type": "image_picker", "id": "stat_4_image", "label": "Stat 4 image (replaces the number with a photo)" }
+        { "type": "image_picker", "id": "stat_4_image", "label": "Stat 4 image (replaces the number with a photo)" },
+        { "type": "text", "id": "stat_5_value", "label": "Stat 5 value" },
+        { "type": "text", "id": "stat_5_label", "label": "Stat 5 label" },
+        { "type": "image_picker", "id": "stat_5_image", "label": "Stat 5 image (replaces the number with a photo)" },
+        { "type": "text", "id": "stat_6_value", "label": "Stat 6 value" },
+        { "type": "text", "id": "stat_6_label", "label": "Stat 6 label" },
+        { "type": "image_picker", "id": "stat_6_image", "label": "Stat 6 image (replaces the number with a photo)" }
       ]
     }
   ],
