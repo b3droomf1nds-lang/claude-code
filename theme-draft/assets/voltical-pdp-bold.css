@@ -21,16 +21,6 @@
   }
 }
 
-/* ---------- push everything below the trust row (Warranty/Returns/
-   Dispatch 24h) down 1000px ----------
-   Adjacent-sibling combinator targets only the FIRST element right
-   after .trust-row — pushing that one down carries every element
-   after it along too since they all follow in normal flow, same as
-   the .addon:first-of-type trick above. */
-.pdp--bold .trust-row + * {
-  margin-top: 1000px;
-}
-
 /* ---------- desktop-only manual spacing tweaks ----------
    Everything in this block was unscoped before and leaking onto
    mobile — none of it was meant to apply there. */
