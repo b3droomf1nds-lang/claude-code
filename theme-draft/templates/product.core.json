@@ -101,47 +101,6 @@
         "subheading": "A few things that make Core even better."
       }
     },
-    "compare": {
-      "type": "compare-select",
-      "blocks": {
-        "c1": {
-          "type": "compare_target",
-          "settings": {
-            "label": "A generic 10,000mAh power bank",
-            "stat_1_label": "Half the size in your pocket",
-            "stat_2_value": "3.5x",
-            "stat_2_label": "smaller footprint",
-            "stat_3_value": "42%",
-            "stat_3_label": "lighter to carry",
-            "stat_4_label": "Reversible magnetic connector",
-            "stat_5_value": "18W",
-            "stat_5_label": "faster wireless output",
-            "stat_6_label": "Charges while it charges you"
-          }
-        },
-        "c2": {
-          "type": "compare_target",
-          "settings": {
-            "label": "A wired charging cable",
-            "stat_1_label": "No cable to untangle",
-            "stat_2_value": "0",
-            "stat_2_label": "cables to carry",
-            "stat_3_value": "1-tap",
-            "stat_3_label": "magnetic alignment",
-            "stat_4_label": "Slips right in your pocket",
-            "stat_5_value": "All day",
-            "stat_5_label": "power on the move",
-            "stat_6_label": "Snaps on, snaps off"
-          }
-        }
-      },
-      "block_order": ["c1", "c2"],
-      "settings": {
-        "heading": "Worth carrying? Absolutely.",
-        "select_label": "Select what you're switching from:",
-        "lede": "A few ways Core gives you more."
-      }
-    },
     "standard": {
       "type": "standard",
       "blocks": {
@@ -182,5 +141,5 @@
       "settings": {}
     }
   },
-  "order": ["main", "compare", "showcase_cables", "ftiles", "standard"]
+  "order": ["main", "showcase_cables", "ftiles", "standard"]
 }

@@ -137,6 +137,90 @@
   text-transform: uppercase;
 }
 
+/* ---------- inline "select what you're switching from" compare block
+   ---------- sits in the buy column (narrow, not full-width) right
+   above the stat tiles, in the gap opened up by .pstats' desktop
+   margin-top push below. Same select+grid interaction as the
+   full-width Apple compare row, just sized to the column instead of
+   breaking out. */
+.pdp-cmp__label {
+  display: block;
+  font-size: .85rem;
+  color: var(--ink-60, rgba(19,19,22,.58));
+  margin-bottom: 8px;
+}
+.pdp-cmp__select-wrap {
+  position: relative;
+  margin-bottom: 18px;
+}
+.pdp-cmp__select-wrap::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--ink-60, rgba(19,19,22,.58));
+  border-bottom: 2px solid var(--ink-60, rgba(19,19,22,.58));
+  transform: translateY(-65%) rotate(45deg);
+  pointer-events: none;
+}
+.pdp-cmp__select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: .95rem;
+  color: var(--ink, #131316);
+  background: #FFFFFF;
+  border: 1px solid rgba(19,19,22,.12);
+  border-radius: 14px;
+  padding: 13px 38px 13px 16px;
+  box-shadow: 0 1px 2px rgba(19,19,22,.04);
+}
+.pdp-cmp__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.pdp-cmp__group {
+  display: contents;
+}
+.pdp-cmp__group[hidden] {
+  display: none;
+}
+.pdp-cmp__card {
+  background: var(--tile, #F4F8F8);
+  border: 1px solid var(--ink-06, rgba(19,19,22,.05));
+  border-radius: var(--r-s, 14px);
+  padding: 14px 8px;
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+}
+.pdp-cmp__stat {
+  font-family: var(--sans);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-size: clamp(1rem, 2.2vw, 1.25rem);
+  line-height: 1.05;
+  color: var(--ink, #131316);
+}
+.pdp-cmp__sub,
+.pdp-cmp__label-only {
+  font-size: .72rem;
+  color: var(--ink-60, rgba(19,19,22,.58));
+  line-height: 1.25;
+}
+.pdp-cmp__label-only {
+  font-weight: 600;
+}
+
 /* ---------- stat tiles ---------- */
 .pdp--bold .pstats {
   display: grid;
@@ -156,7 +240,7 @@
    the base rule's margin:6px silently cancels it out). */
 @media (min-width: 900px) {
   .pdp--bold .pstats {
-    margin-top: 1406px;
+    margin-top: 950px;
   }
 }
 .pdp--bold .pstats__tile {

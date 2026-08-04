@@ -350,6 +350,7 @@
         </form>
 
         <div class="pinfo__below" data-reveal>
+          {% render 'pdp-compare-inline' %}
           {%- if stat_src != blank -%}
             <div class="pstats">
               {%- assign stat_items = stat_src | split: ';' -%}

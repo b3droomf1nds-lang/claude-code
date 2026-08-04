@@ -1,0 +1,49 @@
+{%- comment -%}
+  Compact "select what you're switching from, see the numbers change"
+  block — same interaction as the full-width Apple compare row, but
+  sized to sit inline in the narrow buy column (in the gap above the
+  stat tiles) instead of breaking out full-width. Two comparison
+  targets, 6 stat cards each (3 filled with text, 3 left as image
+  placeholders for photos to be dropped in later).
+{%- endcomment -%}
+<div class="pdp-cmp">
+  <label class="pdp-cmp__label" for="pdp-cmp-select">Select what you're switching from:</label>
+  <div class="pdp-cmp__select-wrap">
+    <select class="pdp-cmp__select" id="pdp-cmp-select" data-pdp-cmp-select>
+      <option value="0">A generic 10,000mAh power bank</option>
+      <option value="1">A wired charging cable</option>
+    </select>
+  </div>
+
+  <div class="pdp-cmp__grid" data-pdp-cmp-root>
+    <div class="pdp-cmp__group" data-pdp-cmp-group="0">
+      <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Half the size in your pocket</div></div>
+      <div class="pdp-cmp__card"><div class="pdp-cmp__stat">3.5x</div><div class="pdp-cmp__sub">smaller footprint</div></div>
+      <div class="pdp-cmp__card"><div class="pdp-cmp__stat">42%</div><div class="pdp-cmp__sub">lighter to carry</div></div>
+      <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Reversible magnetic connector</div></div>
+      <div class="pdp-cmp__card"><div class="pdp-cmp__stat">18W</div><div class="pdp-cmp__sub">faster wireless output</div></div>
+      <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Charges while it charges you</div></div>
+    </div>
+    <div class="pdp-cmp__group" data-pdp-cmp-group="1" hidden>
+      <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">No cable to untangle</div></div>
+      <div class="pdp-cmp__card"><div class="pdp-cmp__stat">0</div><div class="pdp-cmp__sub">cables to carry</div></div>
+      <div class="pdp-cmp__card"><div class="pdp-cmp__stat">1-tap</div><div class="pdp-cmp__sub">magnetic alignment</div></div>
+      <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Slips right in your pocket</div></div>
+      <div class="pdp-cmp__card"><div class="pdp-cmp__stat">All day</div><div class="pdp-cmp__sub">power on the move</div></div>
+      <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Snaps on, snaps off</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var select = document.querySelector('[data-pdp-cmp-select]');
+  var root = document.querySelector('[data-pdp-cmp-root]');
+  if(!select || !root) return;
+  select.addEventListener('change', function(){
+    root.querySelectorAll('[data-pdp-cmp-group]').forEach(function(g){
+      g.hidden = g.getAttribute('data-pdp-cmp-group') !== select.value;
+    });
+  });
+})();
+</script>
