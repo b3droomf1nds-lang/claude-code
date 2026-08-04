@@ -24,11 +24,15 @@
   }
 
   /* ---------- product page: hide the real bar ----------
-     Visually hidden only (not removed) so it's a one-line revert if
-     we bring it back — stays in the DOM so the clone below's menu
-     button (which forwards its click to this bar's real button) keeps
-     working. ---------- */
-  .site-header--hidden{
+     Only the top row (.site-header__inner) is hidden here, NOT the
+     whole <header> — the clone below's menu button forwards its click
+     to this bar's real button, which toggles .mobile-nav (a sibling
+     of .site-header__inner, not inside it). Hiding the whole <header>
+     made that toggle a no-op on mobile: aria-expanded/hidden still
+     flipped correctly in JS, but the entire subtree — including the
+     now-"open" mobile-nav panel — stayed display:none right along
+     with the bar, so nothing ever appeared on screen. */
+  .site-header--hidden .site-header__inner{
     display: none;
   }
 
