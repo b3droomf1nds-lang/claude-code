@@ -13,6 +13,80 @@
         "xsell_watch": "voltical-watch-charge-cable"
       }
     },
+    "showcase_accessories": {
+      "type": "pdp-showcase",
+      "blocks": {
+        "a1": {
+          "type": "item",
+          "settings": {
+            "heading": "Bump up the beauty.",
+            "text": "Slim and lightweight, the Bumper case perfectly frames and showcases Core.",
+            "link_product": "voltical-core-5k-10k"
+          }
+        },
+        "a2": {
+          "type": "item",
+          "settings": {
+            "heading": "Get carried away.",
+            "text": "Designed to match, the Crossbody Strap pairs with Core so you can carry it hands-free.",
+            "link_product": "voltical-core-5k-10k"
+          }
+        },
+        "a3": {
+          "type": "item",
+          "settings": {
+            "heading": "Go all out without plugging in.",
+            "text": "For life's busier days, snap Core on and keep going — no dangling cable, no awkward angle.",
+            "link_product": "voltical-core-5k-10k"
+          }
+        }
+      },
+      "block_order": ["a1", "a2", "a3"],
+      "settings": {
+        "eyebrow": "Accessories",
+        "heading_main": "All dressed up and",
+        "heading_accent": "everywhere to go.",
+        "link_text": "Shop all accessories",
+        "link_url": ""
+      }
+    },
+    "showcase_cables": {
+      "type": "pdp-showcase",
+      "blocks": {
+        "c1": {
+          "type": "item",
+          "settings": {
+            "heading": "Charge on the go.",
+            "text": "A USB-C cable built to keep up with Core, wherever the day takes you.",
+            "link_product": "voltical-usb-c-charge-data-cable-new"
+          }
+        },
+        "c2": {
+          "type": "item",
+          "settings": {
+            "heading": "Keep your watch topped up.",
+            "text": "A dedicated charge cable that pairs perfectly with Core.",
+            "link_product": "voltical-watch-charge-cable"
+          }
+        },
+        "c3": {
+          "type": "item",
+          "settings": {
+            "heading": "",
+            "text": "",
+            "image": ""
+          }
+        }
+      },
+      "block_order": ["c1", "c2", "c3"],
+      "settings": {
+        "eyebrow": "Cables",
+        "heading_main": "Everything you need to",
+        "heading_accent": "stay charged.",
+        "link_text": "Shop all cables",
+        "link_url": ""
+      }
+    },
     "ftiles": {
       "type": "feature-tiles",
       "blocks": {
@@ -143,5 +217,5 @@
       "settings": {}
     }
   },
-  "order": ["main", "ftiles", "compare", "standard"]
+  "order": ["main", "showcase_accessories", "showcase_cables", "ftiles", "compare", "standard"]
 }
