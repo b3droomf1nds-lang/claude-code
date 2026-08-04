@@ -1,53 +1,61 @@
 {%- comment -%}
-  Compact "select what you're switching from, see the numbers change"
-  block — same interaction as the full-width Apple compare row, but
-  sized to sit inline in the narrow buy column (in the gap above the
-  stat tiles) instead of breaking out full-width. Two comparison
-  targets, 6 stat cards each (3 filled with text, 3 left as image
-  placeholders for photos to be dropped in later).
+  Compact "select your iPhone, see the numbers" block — same visual
+  pattern as Apple's own compare row, sized to sit inline in the narrow
+  buy column (in the gap above the stat tiles) instead of breaking out
+  full-width. The dropdown lists every iPhone generation from the X
+  onward, purely for the "which phone do you have" framing — the stat
+  grid itself is Core's own numbers and doesn't change per model since
+  Core works the same across all of them.
 {%- endcomment -%}
 <div class="pdp-cmp-wrap">
 <div class="pdp-cmp">
   <div class="pdp-cmp__select-group">
-    <label class="pdp-cmp__label" for="pdp-cmp-select">Select what you're switching from:</label>
+    <label class="pdp-cmp__label" for="pdp-cmp-select">Select your iPhone:</label>
     <div class="pdp-cmp__select-wrap">
-      <select class="pdp-cmp__select" id="pdp-cmp-select" data-pdp-cmp-select>
-        <option value="0">A generic 10,000mAh power bank</option>
-        <option value="1">A wired charging cable</option>
+      <select class="pdp-cmp__select" id="pdp-cmp-select">
+        <option>iPhone X</option>
+        <option>iPhone XS</option>
+        <option>iPhone XS Max</option>
+        <option>iPhone XR</option>
+        <option>iPhone 11</option>
+        <option>iPhone 11 Pro</option>
+        <option>iPhone 11 Pro Max</option>
+        <option>iPhone 12 mini</option>
+        <option>iPhone 12</option>
+        <option>iPhone 12 Pro</option>
+        <option>iPhone 12 Pro Max</option>
+        <option>iPhone 13 mini</option>
+        <option>iPhone 13</option>
+        <option>iPhone 13 Pro</option>
+        <option>iPhone 13 Pro Max</option>
+        <option>iPhone 14</option>
+        <option>iPhone 14 Plus</option>
+        <option>iPhone 14 Pro</option>
+        <option>iPhone 14 Pro Max</option>
+        <option>iPhone 15</option>
+        <option>iPhone 15 Plus</option>
+        <option>iPhone 15 Pro</option>
+        <option>iPhone 15 Pro Max</option>
+        <option>iPhone 16</option>
+        <option>iPhone 16 Plus</option>
+        <option>iPhone 16 Pro</option>
+        <option>iPhone 16 Pro Max</option>
+        <option>iPhone 16e</option>
+        <option>iPhone Air</option>
+        <option>iPhone 17</option>
+        <option>iPhone 17 Pro</option>
+        <option>iPhone 17 Pro Max</option>
       </select>
     </div>
   </div>
 
-  <div class="pdp-cmp__grid" data-pdp-cmp-root>
-    <div class="pdp-cmp__group" data-pdp-cmp-group="0">
-      <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Half the size in your pocket</div></div>
-      <div class="pdp-cmp__card"><div class="pdp-cmp__stat">3.5x</div><div class="pdp-cmp__sub">smaller footprint</div></div>
-      <div class="pdp-cmp__card"><div class="pdp-cmp__stat">42%</div><div class="pdp-cmp__sub">lighter to carry</div></div>
-      <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Reversible magnetic connector</div></div>
-      <div class="pdp-cmp__card"><div class="pdp-cmp__stat">18W</div><div class="pdp-cmp__sub">faster wireless output</div></div>
-      <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Charges while it charges you</div></div>
-    </div>
-    <div class="pdp-cmp__group" data-pdp-cmp-group="1" hidden>
-      <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">No cable to untangle</div></div>
-      <div class="pdp-cmp__card"><div class="pdp-cmp__stat">0</div><div class="pdp-cmp__sub">cables to carry</div></div>
-      <div class="pdp-cmp__card"><div class="pdp-cmp__stat">1-tap</div><div class="pdp-cmp__sub">magnetic alignment</div></div>
-      <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Slips right in your pocket</div></div>
-      <div class="pdp-cmp__card"><div class="pdp-cmp__stat">All day</div><div class="pdp-cmp__sub">power on the move</div></div>
-      <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Snaps on, snaps off</div></div>
-    </div>
+  <div class="pdp-cmp__grid">
+    <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Half the size in your pocket</div></div>
+    <div class="pdp-cmp__card"><div class="pdp-cmp__stat">3.5x</div><div class="pdp-cmp__sub">smaller footprint</div></div>
+    <div class="pdp-cmp__card"><div class="pdp-cmp__stat">42%</div><div class="pdp-cmp__sub">lighter to carry</div></div>
+    <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Reversible magnetic connector</div></div>
+    <div class="pdp-cmp__card"><div class="pdp-cmp__stat">18W</div><div class="pdp-cmp__sub">faster wireless output</div></div>
+    <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Charges while it charges you</div></div>
   </div>
 </div>
 </div>
-
-<script>
-(function(){
-  var select = document.querySelector('[data-pdp-cmp-select]');
-  var root = document.querySelector('[data-pdp-cmp-root]');
-  if(!select || !root) return;
-  select.addEventListener('change', function(){
-    root.querySelectorAll('[data-pdp-cmp-group]').forEach(function(g){
-      g.hidden = g.getAttribute('data-pdp-cmp-group') !== select.value;
-    });
-  });
-})();
-</script>
