@@ -65,6 +65,13 @@
   product page heading and sticky bar don't need to repeat it. {%- endcomment -%}
 {%- assign display_title = product.title | replace: ' 5K & 10K', '' | replace: ' 5k & 10k', '' | strip -%}
 
+{%- comment -%} Core Pro's h1 drops the "Voltical" brand prefix too —
+  just "Core Pro" rather than "Voltical Core Pro". Only Core Pro; other
+  products keep the brand name in their heading. {%- endcomment -%}
+{%- if product.handle == 'voltical-core-pro-5k-10k' -%}
+  {%- assign display_title = display_title | replace: 'Voltical ', '' | replace: 'voltical ', '' | strip -%}
+{%- endif -%}
+
 {%- comment -%} Does this product show the capacity calculator at all? {%- endcomment -%}
 {%- assign calc_handles = 'voltical-core-5k-10k,voltical-core-pro-5k-10k,voltical-puck-5k-10k,voltical-watch-case,voltical-usb-c-charge-data-cable-new,voltical-watch-charge-cable' | split: ',' -%}
 {%- assign has_calc = false -%}
