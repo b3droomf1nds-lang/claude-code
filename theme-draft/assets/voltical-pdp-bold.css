@@ -152,7 +152,7 @@
   .pdp-cmp-wrap {
     display: flex;
     justify-content: center;
-    transform: translate(-620px, 480px);
+    transform: translate(0, 480px);
   }
   .pdp-cmp {
     width: 340px;
