@@ -703,8 +703,15 @@
       if (!bubble || !atc || !trustRow) return;
       atc.style.marginTop = '0px';
       var delta = bubble.getBoundingClientRect().bottom - trustRow.getBoundingClientRect().bottom;
-      // +600px extra, on top of the bubble-bottom alignment, per request
-      atc.style.marginTop = (delta + 562) + 'px';
+      // +600px extra, on top of the bubble-bottom alignment, per request.
+      // +1006 more on top of THAT: trust-row itself later got pushed
+      // 1006px further down the page (see .pstats in
+      // voltical-pdp-bold.css), which this delta picks up on live since
+      // it's measured from trust-row's actual on-screen position — that
+      // was swinging this margin sharply negative and yanking Add to
+      // bag up above the options. Compensating by the same 1006px
+      // cancels that side-effect back out.
+      atc.style.marginTop = (delta + 562 + 1006) + 'px';
     }
     function alignAll(){
       alignOptToBubble();
