@@ -132,17 +132,31 @@
     // side, the incoming one slides in from the other), same look as
     // the touch swipe's "commit" animation below, not the smaller
     // fade+16px used by thumbnail clicks.
-    // Guards against a second arrow click landing mid-slide — without
-    // this, a fast click would start a new `incoming` image before the
-    // previous one's cleanup ever ran, leaving multiple photos stacked
-    // and sliding on top of each other. Ignored (not queued) while a
-    // slide's in progress, same as most carousels handle rapid clicks.
-    let gallerySliding = false;
+    // A second arrow click landing mid-slide used to either stack a new
+    // `incoming` image on top of the still-animating one, or (an
+    // earlier fix) just get ignored until the current slide finished —
+    // both feel wrong for fast clicking. Instead: a click mid-slide
+    // instantly SNAPS the current slide to its finished state (no
+    // waiting for its animation), then immediately starts the next one
+    // from that clean state — every click is responsive, nothing ever
+    // stacks.
+    let gallerySlideTimeout = null;
+    let finishCurrentSlide = null;
+    let pendingIncoming = null; // set the instant `incoming` is created, cleared once its rAFs assign finishCurrentSlide — covers an interrupt landing in that brief window too
     const slideGallery = (dir) => {
-      if (gallerySliding) return;
       const visible = visibleThumbs();
       if (visible.length < 2) return;
-      gallerySliding = true;
+      clearTimeout(gallerySlideTimeout);
+      if (finishCurrentSlide) {
+        finishCurrentSlide();
+        finishCurrentSlide = null;
+      } else if (pendingIncoming) {
+        pendingIncoming.remove();
+        pendingIncoming = null;
+        mainImg.style.transition = 'none';
+        mainImg.style.transform = '';
+        mainImg.style.opacity = '';
+      }
       const activeIdx = visible.indexOf($('.gallery__thumb.is-active', gallery));
       const target = visible[(activeIdx + dir + visible.length) % visible.length];
       const containerW = mainWrap.clientWidth || 1;
@@ -172,6 +186,7 @@
         'object-fit:' + mainImgStyle.objectFit + ';pointer-events:none;z-index:1;opacity:.6;' +
         'transform:translateX(' + (dir * containerW) + 'px)';
       mainWrap.appendChild(incoming);
+      pendingIncoming = incoming;
       mainImg.style.transition = 'none';
 
       // incoming is a BRAND NEW element — its initial (offscreen)
@@ -185,6 +200,7 @@
       // animate from.
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
+          pendingIncoming = null; // now tracked via finishCurrentSlide below instead
           mainImg.style.transition = ease;
           incoming.style.transition = ease;
           mainImg.style.transform = 'translateX(' + (dir * -containerW) + 'px)';
@@ -192,11 +208,11 @@
           incoming.style.transform = 'translateX(0)';
           incoming.style.opacity = '1';
 
-          // Counting settleMs from HERE (once the transition actually
-          // starts, after the two rAFs above), not from slideGallery's
-          // own call time — otherwise this cleanup could fire before
-          // the animation visually finishes and cut it short.
-          setTimeout(() => {
+          // Same finish logic either fires normally after settleMs, OR
+          // gets called immediately (synchronously, skipping the wait)
+          // if another arrow click interrupts this slide first — see
+          // finishCurrentSlide above.
+          finishCurrentSlide = () => {
             thumbs.forEach((x) => x.classList.remove('is-active'));
             target.classList.add('is-active');
             mainImg.style.transition = 'none';
@@ -207,9 +223,14 @@
             mainImg.style.transform = '';
             mainImg.style.opacity = '';
             incoming.remove();
-            gallerySliding = false;
+            finishCurrentSlide = null;
             setTimeout(() => applyBgColor(target), 0);
-          }, settleMs);
+          };
+          // Counting settleMs from HERE (once the transition actually
+          // starts, after the two rAFs above), not from slideGallery's
+          // own call time — otherwise this could fire before the
+          // animation visually finishes and cut it short.
+          gallerySlideTimeout = setTimeout(() => { if (finishCurrentSlide) finishCurrentSlide(); }, settleMs);
         });
       });
     };
