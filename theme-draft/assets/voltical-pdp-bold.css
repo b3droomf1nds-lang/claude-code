@@ -55,21 +55,6 @@
     margin-top: -22px;
   }
 
-  /* Description + spec sheet pushed down 1000px. The 1000px lives on
-     .pinfo__desc's own inline style in main-product.liquid
-     (margin-top:32px -> 1032px) since inline styles beat any external
-     stylesheet rule at any specificity — !important is needed here to
-     scope that back down to desktop-only. .specs right after it in
-     normal flow gets carried down for free. The plain (non-!important)
-     rule below covers the rare product with NO description (so
-     .pinfo__desc never renders, and .specs would otherwise sit right
-     after the trust row, unmoved). */
-  .pdp--bold .pinfo__desc {
-    margin-top: 1032px !important;
-  }
-  .pdp--bold .trust-row + .specs {
-    margin-top: 1000px;
-  }
 }
 
 /* ---------- header cart icon: hidden by default, only appears while
@@ -146,18 +131,6 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin: 6px 0 18px;
-}
-/* Stat tiles ("3 rectangles"), the checkmark list right after them,
-   and the calculator right after THAT all sit in normal flow with no
-   shared wrapper — pushing the first of the three (.pstats) down
-   carries the other two down with it for free. Desktop only, and
-   placed AFTER the base .pstats rule above (same selector specificity
-   — the later one in source order wins, so this has to come second or
-   the base rule's margin:6px silently cancels it out). */
-@media (min-width: 900px) {
-  .pdp--bold .pstats {
-    margin-top: 1406px;
-  }
 }
 .pdp--bold .pstats__tile {
   background: var(--tile, #F4F8F8);
