@@ -21,6 +21,17 @@
   }
 }
 
+/* ---------- Description + spec sheet pushed down 1000px ----------
+   The 1000px lives on .pinfo__desc's own inline style in
+   main-product.liquid (margin-top:32px -> 1032px) since inline styles
+   beat any external stylesheet rule — .specs right after it in normal
+   flow gets carried down for free. This covers the rare product with
+   NO description (so .pinfo__desc never renders, and .specs would
+   otherwise sit right after the trust row, unmoved). */
+.pdp--bold .trust-row + .specs {
+  margin-top: 1000px;
+}
+
 /* ---------- desktop-only manual spacing tweaks ----------
    Everything in this block was unscoped before and leaking onto
    mobile — none of it was meant to apply there. */
