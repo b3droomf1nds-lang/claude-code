@@ -159,6 +159,17 @@
     transform: scale(3);
     transform-origin: center;
   }
+  /* counter-scaled relative to the 3x parent above: select group ends
+     up at an effective 1.5x (2x smaller than the 3x baseline), grid
+     ends up at an effective 6x (2x bigger). */
+  .pdp-cmp__select-group {
+    transform: scale(0.5);
+    transform-origin: top center;
+  }
+  .pdp-cmp__grid {
+    transform: scale(2);
+    transform-origin: top center;
+  }
 }
 .pdp-cmp__label {
   display: block;
