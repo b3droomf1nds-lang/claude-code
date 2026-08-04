@@ -56,6 +56,10 @@
     font-size:clamp(1.6rem,3vw,2.3rem); line-height:1.05; color:var(--ink);
   }
   .cmp__label{ font-size:.9rem; color:var(--ink-60); line-height:1.3; }
+  .cmp__card--media{ padding:12px; }
+  .cmp__card--media img{
+    max-width:100%; max-height:150px; width:auto; height:auto; object-fit:contain; display:block;
+  }
 </style>
 
 <section class="section cmp">
@@ -93,9 +97,16 @@
             {%- for i in (1..4) -%}
               {%- assign val_key = 'stat_' | append: i | append: '_value' -%}
               {%- assign lbl_key = 'stat_' | append: i | append: '_label' -%}
+              {%- assign img_key = 'stat_' | append: i | append: '_image' -%}
               {%- assign val = block.settings[val_key] -%}
               {%- assign lbl = block.settings[lbl_key] -%}
-              {%- if val != blank or lbl != blank -%}
+              {%- assign img = block.settings[img_key] -%}
+              {%- if img != blank -%}
+                <div class="cmp__card cmp__card--media">
+                  <img src="{{ img | image_url: width: 500 }}" alt="{{ lbl | default: img.alt | escape }}" loading="lazy">
+                  {%- if lbl != blank -%}<div class="cmp__label">{{ lbl }}</div>{%- endif -%}
+                </div>
+              {%- elsif val != blank or lbl != blank -%}
                 <div class="cmp__card">
                   {%- if val != blank -%}<div class="cmp__stat">{{ val }}</div>{%- endif -%}
                   {%- if lbl != blank -%}<div class="cmp__label">{{ lbl }}</div>{%- endif -%}
@@ -140,12 +151,16 @@
         { "type": "text", "id": "label", "label": "Dropdown label", "default": "A generic 10,000mAh power bank" },
         { "type": "text", "id": "stat_1_value", "label": "Stat 1 value", "default": "3.5x" },
         { "type": "text", "id": "stat_1_label", "label": "Stat 1 label", "default": "smaller footprint" },
+        { "type": "image_picker", "id": "stat_1_image", "label": "Stat 1 image (replaces the number with a photo)" },
         { "type": "text", "id": "stat_2_value", "label": "Stat 2 value", "default": "42%" },
         { "type": "text", "id": "stat_2_label", "label": "Stat 2 label", "default": "lighter to carry" },
+        { "type": "image_picker", "id": "stat_2_image", "label": "Stat 2 image (replaces the number with a photo)" },
         { "type": "text", "id": "stat_3_value", "label": "Stat 3 value", "default": "Magnetic" },
         { "type": "text", "id": "stat_3_label", "label": "Stat 3 label", "default": "no cables, ever" },
+        { "type": "image_picker", "id": "stat_3_image", "label": "Stat 3 image (replaces the number with a photo)" },
         { "type": "text", "id": "stat_4_value", "label": "Stat 4 value", "default": "18W" },
-        { "type": "text", "id": "stat_4_label", "label": "Stat 4 label", "default": "faster wireless output" }
+        { "type": "text", "id": "stat_4_label", "label": "Stat 4 label", "default": "faster wireless output" },
+        { "type": "image_picker", "id": "stat_4_image", "label": "Stat 4 image (replaces the number with a photo)" }
       ]
     }
   ],

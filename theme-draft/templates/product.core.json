@@ -13,43 +13,6 @@
         "xsell_watch": "voltical-watch-charge-cable"
       }
     },
-    "showcase_accessories": {
-      "type": "pdp-showcase",
-      "blocks": {
-        "a1": {
-          "type": "item",
-          "settings": {
-            "heading": "Bump up the beauty.",
-            "text": "Slim and lightweight, the Bumper case perfectly frames and showcases Core.",
-            "link_product": "voltical-core-5k-10k"
-          }
-        },
-        "a2": {
-          "type": "item",
-          "settings": {
-            "heading": "Get carried away.",
-            "text": "Designed to match, the Crossbody Strap pairs with Core so you can carry it hands-free.",
-            "link_product": "voltical-core-5k-10k"
-          }
-        },
-        "a3": {
-          "type": "item",
-          "settings": {
-            "heading": "Go all out without plugging in.",
-            "text": "For life's busier days, snap Core on and keep going — no dangling cable, no awkward angle.",
-            "link_product": "voltical-core-5k-10k"
-          }
-        }
-      },
-      "block_order": ["a1", "a2", "a3"],
-      "settings": {
-        "eyebrow": "Accessories",
-        "heading_main": "All geared up and",
-        "heading_accent": "ready for anywhere.",
-        "link_text": "Shop all accessories",
-        "link_url": ""
-      }
-    },
     "showcase_cables": {
       "type": "pdp-showcase",
       "blocks": {
@@ -217,5 +180,5 @@
       "settings": {}
     }
   },
-  "order": ["main", "showcase_accessories", "showcase_cables", "ftiles", "compare", "standard"]
+  "order": ["main", "compare", "showcase_cables", "ftiles", "standard"]
 }
