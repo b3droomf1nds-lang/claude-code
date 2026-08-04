@@ -135,11 +135,11 @@
     var effW = Math.min(phoneMaxW, POWERBANK_MAX_W) * TAPER_FACTOR;
     var minutes = (0.6 * phoneWh) / effW * 60;
 
-    fullEl.textContent = '~' + fmt(full) + '×';
-    partialEl.textContent = '~' + fmt(partial) + '×';
+    fullEl.textContent = fmt(full) + '×';
+    partialEl.textContent = fmt(partial) + '×';
     timeEl.textContent = minutes < 60
-      ? '~' + Math.round(minutes) + ' min'
-      : '~' + fmt(minutes / 60) + ' h';
+      ? Math.round(minutes) + ' min'
+      : fmt(minutes / 60) + ' h';
   }
 
   select.addEventListener('change', update);
