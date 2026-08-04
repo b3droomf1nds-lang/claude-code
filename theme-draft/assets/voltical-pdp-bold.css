@@ -156,7 +156,7 @@
   }
   .pdp-cmp {
     width: 340px;
-    transform: scale(5);
+    transform: scale(4);
     transform-origin: center;
   }
 }
