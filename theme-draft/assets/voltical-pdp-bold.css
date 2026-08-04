@@ -140,11 +140,7 @@
      the phone screen and cause sideways scrolling. */
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-  /* Stat tiles ("3 rectangles"), the checkmark list right after them,
-     and the calculator right after THAT all sit in normal flow with
-     no shared wrapper — pushing the first of the three (.pstats) down
-     1000px carries the other two down with it for free. */
-  margin: 1006px 0 18px;
+  margin: 6px 0 18px;
 }
 .pdp--bold .pstats__tile {
   background: var(--tile, #F4F8F8);
