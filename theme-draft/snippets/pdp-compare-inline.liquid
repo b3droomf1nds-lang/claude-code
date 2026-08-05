@@ -119,7 +119,8 @@
   };
   var POWERBANK_MAX_W = 20;   // Core / Core Pro's rated wired USB-C output
   var DC_EFFICIENCY = 0.85;   // typical AC-DC/USB conversion loss for a powerbank
-  var TAPER_FACTOR = 0.12;    // 20->80% spends most of its time in the slow taper phase, not at peak wattage — calibrated against Apple's published "up to 50% in ~30 min" figures
+  var PHONE_NOMINAL_V = 3.85; // iPhone battery cells are ~3.8-3.87V nominal — table above stores capacity as mAh/1000, this converts it to real Wh (was being used as Wh directly, which inflated every result ~3.7x)
+  var TAPER_FACTOR = 0.45;    // 20->80% spends most of its time in the slow taper phase, not at peak wattage — recalibrated against Apple's published "up to 50% in ~30 min" figures now that phoneWh is correct
 
   var select = document.getElementById('pdp-cmp-select');
   var timeEl = document.querySelector('[data-calc-time]');
@@ -145,7 +146,7 @@
 
   function update() {
     var phone = PHONES[select.value] || PHONES['iPhone 15'];
-    var phoneWh = phone[0], phoneMaxW = phone[1], phoneVideoH = phone[2];
+    var phoneWh = phone[0] * PHONE_NOMINAL_V, phoneMaxW = phone[1], phoneVideoH = phone[2];
     var pbWh = powerbankWh();
 
     var full = (pbWh * DC_EFFICIENCY) / phoneWh;
