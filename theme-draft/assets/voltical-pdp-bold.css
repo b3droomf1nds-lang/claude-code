@@ -284,22 +284,25 @@
   color: var(--ink, #131316);
 }
 
-.pdp-cmp__stat-row {
+/* ---------- text-on-top, image-below layout (matches Apple's own
+   card pattern) — reserves the lower part of the card for an image
+   to be dropped in later. ---------- */
+.pdp-cmp__card--img {
+  justify-content: flex-start;
+  padding-top: 16px;
+}
+.pdp-cmp__img-slot {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+  width: 100%;
+  flex: 1;
+  min-height: 46px;
+  margin-top: 4px;
+  border-radius: 12px;
 }
-.pdp-cmp__icon-slot {
-  width: 18px;
-  height: 18px;
-  flex: none;
-}
-.pdp-cmp__icon-slot img,
-.pdp-cmp__icon-slot svg {
+.pdp-cmp__img-slot img {
   width: 100%;
   height: 100%;
+  object-fit: contain;
   display: block;
 }
 
