@@ -280,19 +280,24 @@
 }
 
 /* ---------- text-on-top, image-below layout (matches Apple's own
-   card pattern) — reserves the lower part of the card for an image
-   to be dropped in later. ---------- */
+   card pattern) ----------
+   The image slot stays collapsed (0 height) while empty so it doesn't
+   stretch every card in the row taller than the plain text ones —
+   only grows once an actual <img> is dropped inside it. */
 .pdp-cmp__card--img {
-  justify-content: flex-start;
-  padding-top: 16px;
+  justify-content: center;
 }
 .pdp-cmp__img-slot {
   position: relative;
   width: 100%;
+  flex: none;
+  min-height: 0;
+  border-radius: 12px;
+}
+.pdp-cmp__img-slot:has(img) {
   flex: 1;
   min-height: 46px;
   margin-top: 4px;
-  border-radius: 12px;
 }
 .pdp-cmp__img-slot img {
   width: 100%;
