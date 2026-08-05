@@ -266,11 +266,7 @@
 .pdp-cmp__card--hero {
   background: #FFFFFF;
   border-color: transparent;
-  border-radius: 20px;
-  padding: 18px 10px;
-  min-height: 116px;
   box-shadow: 0 1px 4px rgba(19,19,22,.07);
-  gap: 6px;
 }
 .pdp-cmp__stat-row {
   display: flex;
@@ -278,12 +274,9 @@
   justify-content: center;
   gap: 6px;
 }
-.pdp-cmp__card--hero .pdp-cmp__stat {
-  font-size: clamp(1.5rem, 3.4vw, 1.9rem);
-}
 .pdp-cmp__icon-slot {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   flex: none;
 }
 .pdp-cmp__icon-slot img,
