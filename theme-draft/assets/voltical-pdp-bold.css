@@ -217,6 +217,15 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
+/* Mobile: 2 wide x 3 down instead of desktop's 3x2 — same card shape
+   (border-radius/padding) and same pastel colours either way since
+   those live on the unscoped .pdp-cmp__card rules above, only the
+   column count changes here. */
+@media (max-width: 899px) {
+  .pdp-cmp__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 .pdp-cmp__group {
   display: contents;
 }
