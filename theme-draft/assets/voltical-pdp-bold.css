@@ -233,14 +233,12 @@
   display: none;
 }
 
-/* Apple's clean stat-tile structure (eyebrow / big number / caption),
-   painted in Rhode's soft pastel-glaze palette instead of flat
-   grey/white — each card its own pale tint, rounded generously, with
-   a faint glossy highlight in the corner instead of a hard border. */
+/* Apple's clean stat-tile structure (eyebrow / big number / caption) —
+   flat neutral tile, same on mobile and desktop, no pastel tinting. */
 .pdp-cmp__card {
   position: relative;
   overflow: hidden;
-  background: var(--mint);
+  background: var(--tile, #F4F8F8);
   border-radius: 22px;
   padding: 18px 10px;
   min-height: 100px;
@@ -251,18 +249,6 @@
   text-align: center;
   gap: 5px;
 }
-.pdp-cmp__card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(120% 90% at 22% 12%, rgba(255,255,255,.65), rgba(255,255,255,0) 60%);
-  pointer-events: none;
-}
-.pdp-cmp__grid .pdp-cmp__card:nth-child(2) { background: var(--sky); }
-.pdp-cmp__grid .pdp-cmp__card:nth-child(3) { background: var(--lilac); }
-.pdp-cmp__grid .pdp-cmp__card:nth-child(4) { background: var(--pink); }
-.pdp-cmp__grid .pdp-cmp__card:nth-child(5) { background: var(--sky); }
-.pdp-cmp__grid .pdp-cmp__card:nth-child(6) { background: var(--lilac); }
 .pdp-cmp__eyebrow {
   display: block;
   position: relative;
