@@ -215,7 +215,7 @@
 .pdp-cmp__grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
 .pdp-cmp__group {
   display: contents;
@@ -223,50 +223,69 @@
 .pdp-cmp__group[hidden] {
   display: none;
 }
+
+/* Apple's clean stat-tile structure (eyebrow / big number / caption),
+   painted in Rhode's soft pastel-glaze palette instead of flat
+   grey/white — each card its own pale tint, rounded generously, with
+   a faint glossy highlight in the corner instead of a hard border. */
 .pdp-cmp__card {
-  background: var(--tile, #F4F8F8);
-  border: 1px solid var(--ink-06, rgba(19,19,22,.05));
-  border-radius: var(--r-s, 14px);
-  padding: 14px 8px;
-  min-height: 92px;
+  position: relative;
+  overflow: hidden;
+  background: var(--mint);
+  border-radius: 22px;
+  padding: 18px 10px;
+  min-height: 100px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 4px;
+  gap: 5px;
 }
+.pdp-cmp__card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 22% 12%, rgba(255,255,255,.65), rgba(255,255,255,0) 60%);
+  pointer-events: none;
+}
+.pdp-cmp__grid .pdp-cmp__card:nth-child(2) { background: var(--sky); }
+.pdp-cmp__grid .pdp-cmp__card:nth-child(3) { background: var(--lilac); }
+.pdp-cmp__grid .pdp-cmp__card:nth-child(4) { background: var(--pink); }
+.pdp-cmp__grid .pdp-cmp__card:nth-child(5) { background: var(--sky); }
+.pdp-cmp__grid .pdp-cmp__card:nth-child(6) { background: var(--lilac); }
 .pdp-cmp__eyebrow {
-  display: none;
+  display: block;
+  position: relative;
+  font-size: .66rem;
+  color: var(--ink-60, rgba(19,19,22,.58));
+  letter-spacing: .03em;
+  line-height: 1.2;
 }
 .pdp-cmp__stat {
+  position: relative;
   font-family: var(--sans);
   font-weight: 700;
-  letter-spacing: -0.01em;
-  font-size: clamp(1rem, 2.2vw, 1.25rem);
+  letter-spacing: -0.02em;
+  font-size: clamp(1.3rem, 2.8vw, 1.6rem);
   line-height: 1.05;
   color: var(--ink, #131316);
 }
 .pdp-cmp__sub,
 .pdp-cmp__label-only {
+  position: relative;
   font-size: .72rem;
   color: var(--ink-60, rgba(19,19,22,.58));
-  line-height: 1.25;
+  line-height: 1.3;
+  letter-spacing: .01em;
 }
 .pdp-cmp__label-only {
   font-weight: 600;
+  color: var(--ink, #131316);
 }
 
-/* ---------- "Full charges" hero card — white rounded card with an
-   icon slot beside the stat, matching Apple's own tile layout
-   (eyebrow / big bold stat + icon / caption). Only this one card, not
-   the whole grid. ---------- */
-.pdp-cmp__card--hero {
-  background: #FFFFFF;
-  border-color: transparent;
-  box-shadow: 0 1px 4px rgba(19,19,22,.07);
-}
 .pdp-cmp__stat-row {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
