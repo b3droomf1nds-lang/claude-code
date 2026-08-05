@@ -83,28 +83,39 @@
         <span class="pdp-cmp__info" tabindex="0" title="Most of the time you aren't charging your phone from zero to a hundred — we expect this more often.">i</span>
       </div>
     </div>
-    <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Charges while it charges you</div></div>
+    <div class="pdp-cmp__card pdp-cmp__card--hero">
+      <div class="pdp-cmp__eyebrow">Up to</div>
+      <div class="pdp-cmp__stat-row">
+        <div class="pdp-cmp__stat" data-calc-video>&mdash;</div>
+        {%- comment -%} icon drops in here — leave empty until it's supplied {%- endcomment -%}
+        <span class="pdp-cmp__icon-slot" aria-hidden="true"></span>
+      </div>
+      <div class="pdp-cmp__sub">more hours, video playback</div>
+    </div>
   </div>
 </div>
 </div>
 
 <script>
 (function () {
-  /* Battery capacity (Wh) + max charge input (W) per iPhone. Newest
-     few (16e / Air / 17 line) are estimated in line with the trend of
-     recent generations — Apple doesn't publish exact cell capacities. */
+  /* Battery capacity (Wh) + max charge input (W) + Apple's own
+     published "up to N hours video playback" figure, per iPhone.
+     Newest few (16e / Air / 17 line) have estimated battery/video
+     numbers in line with the trend of recent generations — Apple
+     doesn't publish exact cell capacities and these haven't shipped
+     with confirmed specs at the time this was written. */
   var PHONES = {
-    'iPhone X': [2.716, 18], 'iPhone XS': [2.658, 18], 'iPhone XS Max': [3.174, 18],
-    'iPhone XR': [2.942, 18], 'iPhone 11': [3.110, 18], 'iPhone 11 Pro': [3.046, 18],
-    'iPhone 11 Pro Max': [3.969, 18], 'iPhone 12 mini': [2.227, 20], 'iPhone 12': [2.815, 20],
-    'iPhone 12 Pro': [2.815, 20], 'iPhone 12 Pro Max': [3.687, 20], 'iPhone 13 mini': [2.406, 20],
-    'iPhone 13': [3.227, 20], 'iPhone 13 Pro': [3.095, 20], 'iPhone 13 Pro Max': [4.352, 20],
-    'iPhone 14': [3.279, 20], 'iPhone 14 Plus': [4.325, 20], 'iPhone 14 Pro': [3.200, 27],
-    'iPhone 14 Pro Max': [4.323, 27], 'iPhone 15': [3.349, 20], 'iPhone 15 Plus': [4.383, 20],
-    'iPhone 15 Pro': [3.274, 27], 'iPhone 15 Pro Max': [4.441, 27], 'iPhone 16': [3.561, 20],
-    'iPhone 16 Plus': [4.674, 20], 'iPhone 16 Pro': [3.582, 27], 'iPhone 16 Pro Max': [4.685, 27],
-    'iPhone 16e': [3.961, 18], 'iPhone Air': [3.100, 27], 'iPhone 17': [3.700, 27],
-    'iPhone 17 Pro': [3.800, 27], 'iPhone 17 Pro Max': [5.000, 40]
+    'iPhone X': [2.716, 18, 13], 'iPhone XS': [2.658, 18, 14], 'iPhone XS Max': [3.174, 18, 15],
+    'iPhone XR': [2.942, 18, 16], 'iPhone 11': [3.110, 18, 17], 'iPhone 11 Pro': [3.046, 18, 18],
+    'iPhone 11 Pro Max': [3.969, 18, 20], 'iPhone 12 mini': [2.227, 20, 15], 'iPhone 12': [2.815, 20, 17],
+    'iPhone 12 Pro': [2.815, 20, 17], 'iPhone 12 Pro Max': [3.687, 20, 20], 'iPhone 13 mini': [2.406, 20, 17],
+    'iPhone 13': [3.227, 20, 19], 'iPhone 13 Pro': [3.095, 20, 22], 'iPhone 13 Pro Max': [4.352, 20, 28],
+    'iPhone 14': [3.279, 20, 20], 'iPhone 14 Plus': [4.325, 20, 26], 'iPhone 14 Pro': [3.200, 27, 23],
+    'iPhone 14 Pro Max': [4.323, 27, 29], 'iPhone 15': [3.349, 20, 20], 'iPhone 15 Plus': [4.383, 20, 26],
+    'iPhone 15 Pro': [3.274, 27, 23], 'iPhone 15 Pro Max': [4.441, 27, 29], 'iPhone 16': [3.561, 20, 22],
+    'iPhone 16 Plus': [4.674, 20, 27], 'iPhone 16 Pro': [3.582, 27, 27], 'iPhone 16 Pro Max': [4.685, 27, 33],
+    'iPhone 16e': [3.961, 18, 26], 'iPhone Air': [3.100, 27, 27], 'iPhone 17': [3.700, 27, 30],
+    'iPhone 17 Pro': [3.800, 27, 31], 'iPhone 17 Pro Max': [5.000, 40, 39]
   };
   var POWERBANK_MAX_W = 20;   // Core / Core Pro's rated wired USB-C output
   var DC_EFFICIENCY = 0.85;   // typical AC-DC/USB conversion loss for a powerbank
@@ -114,7 +125,8 @@
   var timeEl = document.querySelector('[data-calc-time]');
   var fullEl = document.querySelector('[data-calc-full]');
   var partialEl = document.querySelector('[data-calc-partial]');
-  if (!select || !timeEl || !fullEl || !partialEl) return;
+  var videoEl = document.querySelector('[data-calc-video]');
+  if (!select || !timeEl || !fullEl || !partialEl || !videoEl) return;
 
   function powerbankWh() {
     var checked = document.querySelector('input[type="radio"]:checked[value*="mAh" i]')
@@ -133,17 +145,22 @@
 
   function update() {
     var phone = PHONES[select.value] || PHONES['iPhone 15'];
-    var phoneWh = phone[0], phoneMaxW = phone[1];
+    var phoneWh = phone[0], phoneMaxW = phone[1], phoneVideoH = phone[2];
     var pbWh = powerbankWh();
 
     var full = (pbWh * DC_EFFICIENCY) / phoneWh;
     var partial = full / 0.6;
+    // extra video-playback hours = (how many full charges the
+    // powerbank holds) x (that phone's own published video-playback
+    // battery life), since both scale off the same battery capacity.
+    var videoHours = full * phoneVideoH;
 
     var effW = Math.min(phoneMaxW, POWERBANK_MAX_W) * TAPER_FACTOR;
     var minutes = (0.6 * phoneWh) / effW * 60;
 
     fullEl.textContent = fmt(full) + '×';
     partialEl.textContent = fmt(partial) + '×';
+    videoEl.textContent = Math.round(videoHours) + ' more hours';
     timeEl.textContent = minutes < 60
       ? Math.round(minutes) + ' min'
       : fmt(minutes / 60) + ' h';
