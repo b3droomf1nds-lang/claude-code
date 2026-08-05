@@ -74,7 +74,7 @@
       </div>
       <div class="pdp-cmp__sub">full charges, 0% to 100%</div>
     </div>
-    <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Reversible magnetic connector</div></div>
+    <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Reversible magnetic fit</div></div>
     <div class="pdp-cmp__card">
       <div class="pdp-cmp__eyebrow">Up to</div>
       <div class="pdp-cmp__stat" data-calc-partial>&mdash;</div>
@@ -90,7 +90,7 @@
         {%- comment -%} icon drops in here — leave empty until it's supplied {%- endcomment -%}
         <span class="pdp-cmp__icon-slot" aria-hidden="true"></span>
       </div>
-      <div class="pdp-cmp__sub">more hours, video playback</div>
+      <div class="pdp-cmp__sub">extra video playback</div>
     </div>
   </div>
 </div>
@@ -161,7 +161,7 @@
 
     fullEl.textContent = fmt(full) + '×';
     partialEl.textContent = fmt(partial) + '×';
-    videoEl.textContent = Math.round(videoHours) + ' more hours';
+    videoEl.textContent = Math.round(videoHours) + 'h more';
     timeEl.textContent = minutes < 60
       ? Math.round(minutes) + ' min'
       : fmt(minutes / 60) + ' h';
