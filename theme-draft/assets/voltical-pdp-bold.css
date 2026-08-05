@@ -166,8 +166,9 @@
     /* select-group's effective on-screen scale is 1.5x (0.5 here x 3x
        parent .pdp-cmp scale) — translateY has to be written BEFORE the
        scale in the function list so it gets scaled down with it, then
-       the parent's 3x scales it back up: 166.67 * 0.5 * 3 = 250px. */
-    transform: scale(0.5) translateY(166.67px);
+       the parent's 3x scales it back up: 66.67 * 0.5 * 3 = 100px
+       (was 166.67 / 250px, moved up 150px). */
+    transform: scale(0.5) translateY(66.67px);
     transform-origin: top center;
   }
   .pdp-cmp__grid {
