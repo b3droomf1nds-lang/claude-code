@@ -736,11 +736,11 @@
   position: absolute;
   left: 50% !important;
   top: 50% !important;
-  width: 205px !important;
+  width: 225px !important;
   height: auto !important;
   max-height: none !important;
   object-fit: contain !important;
-  transform: translate(calc(-50% + 13px), -50%) !important;
+  transform: translate(calc(-50% + 23px), -50%) !important;
 }
 .template-product .pdp-cmp__card--partial-image .pdp-cmp__sub--partial-range {
   position: absolute;
