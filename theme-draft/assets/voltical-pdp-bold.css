@@ -761,7 +761,7 @@
   width: 100% !important;
   height: 100% !important;
   object-fit: contain !important;
-  transform: scale(2);
+  transform: scale(4);
   transform-origin: center center;
 }
 .template-product .pdp-cmp__card--partial-image .pdp-cmp__sub--partial-range {
