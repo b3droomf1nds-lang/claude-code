@@ -120,11 +120,11 @@
     flex: 0 0 auto;
   }
   .pdp-cmp__select {
-    width: auto;
-    white-space: nowrap;
+    width: 200px;
   }
   .pdp-cmp__select-heading {
     margin-bottom: 0;
+    flex: 1 1 auto;
   }
   .pdp-cmp__grid {
     transform: scale(1.449);
@@ -141,10 +141,11 @@
 }
 .pdp-cmp__select-heading {
   margin: 0 0 8px;
-  font-size: .85rem;
-  font-weight: 600;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--ink, #131316);
-  line-height: 1.3;
+  line-height: 1.2;
 }
 .pdp-cmp__select-wrap {
   position: relative;
