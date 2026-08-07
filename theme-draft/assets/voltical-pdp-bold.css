@@ -838,6 +838,7 @@
   .template-product .pdp-cmp__card--partial-image .pdp-cmp__img--partial-hand {
     width: 110px !important;
     left: 50% !important;
+    transform: translate(-50%, -50%) !important;
   }
 
   .template-product .pdp-cmp__card--partial-image .pdp-cmp__sub--partial-range {
