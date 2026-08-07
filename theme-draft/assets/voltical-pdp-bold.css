@@ -748,7 +748,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 6px;
+  top: 26px;
   bottom: 6px;
   width: auto;
   height: auto;
@@ -852,7 +852,7 @@
   .template-product .pdp-cmp__card--partial-image .pdp-cmp__img-slot {
     left: 0;
     right: 0;
-    top: 40px;
+    top: 60px;
     bottom: 6px;
     width: auto;
     height: auto;
