@@ -740,7 +740,7 @@
   height: auto !important;
   max-height: none !important;
   object-fit: contain !important;
-  transform: translate(calc(-50% + 23px), -50%) !important;
+  transform: translate(calc(-50% + 36px), -50%) !important;
 }
 .template-product .pdp-cmp__card--partial-image .pdp-cmp__sub--partial-range {
   position: absolute;
