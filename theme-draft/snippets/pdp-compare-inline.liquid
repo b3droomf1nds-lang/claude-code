@@ -60,37 +60,32 @@
   {%- endcomment -%}
   <div class="pdp-cmp__grid">
     <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Half the size in your pocket</div></div>
-    <div class="pdp-cmp__card pdp-cmp__card--img">
+    <div class="pdp-cmp__card pdp-cmp__card--img pdp-cmp__card--charge">
       <div class="pdp-cmp__eyebrow">Up to</div>
-      <div class="pdp-cmp__stat" data-calc-time>&mdash;</div>
-      <div class="pdp-cmp__sub">20&mdash;80%, fastest mode</div>
-      {%- comment -%} image drops in here — leave empty until it's supplied {%- endcomment -%}
-      <div class="pdp-cmp__img-slot" aria-hidden="true"></div>
+      <div class="pdp-cmp__stat-row"><div class="pdp-cmp__stat" data-calc-time>&mdash;</div><svg class="pdp-cmp__battery-icon" viewBox="0 0 54 28" aria-hidden="true" style="color:#16c76a;"><rect x="1.5" y="2.5" width="45" height="23" rx="6" fill="none" stroke="currentColor" stroke-width="3"/><rect x="49" y="9" width="4" height="10" rx="2" fill="currentColor"/><rect x="6" y="7" width="36" height="14" rx="3.5" fill="currentColor"/></svg></div>
+      <div class="pdp-cmp__sub pdp-cmp__sub--unit">minutes</div>
+      <div class="pdp-cmp__sub pdp-cmp__sub--range">20% to 80%</div>
     </div>
     <div class="pdp-cmp__card pdp-cmp__card--hero pdp-cmp__card--img">
       <div class="pdp-cmp__eyebrow">Up to</div>
       <div class="pdp-cmp__stat" data-calc-full>&mdash;</div>
-      <div class="pdp-cmp__sub">full charges, 0% to 100%</div>
+      <div class="pdp-cmp__sub">full charges</div>
       {%- comment -%} image drops in here — leave empty until it's supplied {%- endcomment -%}
-      <div class="pdp-cmp__img-slot" aria-hidden="true"></div>
+      <div class="pdp-cmp__img-slot" aria-hidden="true"><img class="pdp-cmp__img--full-upright" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/codex-clipboard-5e95bf51-c6f8-4649-9be6-c27b11322ff3.webp?v=1785972162" alt="Core powerbank and phone side profile"></div>
     </div>
     <div class="pdp-cmp__card"><div class="pdp-cmp__label-only">Reversible magnetic fit</div></div>
-    <div class="pdp-cmp__card pdp-cmp__card--img">
+    <div class="pdp-cmp__card pdp-cmp__card--img pdp-cmp__card--partial-image">
       <div class="pdp-cmp__eyebrow">Up to</div>
-      <div class="pdp-cmp__stat" data-calc-partial>&mdash;</div>
-      <div class="pdp-cmp__sub">
-        20&mdash;80% charges
-        <span class="pdp-cmp__info" tabindex="0" title="Most of the time you aren't charging your phone from zero to a hundred — we expect this more often.">i</span>
-      </div>
-      {%- comment -%} image drops in here — leave empty until it's supplied {%- endcomment -%}
-      <div class="pdp-cmp__img-slot" aria-hidden="true"></div>
+      <div class="pdp-cmp__stat" data-calc-partial style="top: 24px;">&mdash;</div>
+      <div class="pdp-cmp__img-slot" aria-hidden="true"><img class="pdp-cmp__img--partial-hand" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/core-side-hand-extended.png?v=1786047771" alt="Core powerbank held at the side"></div>
+      <div class="pdp-cmp__sub pdp-cmp__sub--partial-range" style="bottom: 8px;">20 to 80</div>
     </div>
     <div class="pdp-cmp__card pdp-cmp__card--hero pdp-cmp__card--img">
       <div class="pdp-cmp__eyebrow">Up to</div>
       <div class="pdp-cmp__stat" data-calc-video>&mdash;</div>
       <div class="pdp-cmp__sub">extra video playback</div>
       {%- comment -%} image drops in here — leave empty until it's supplied {%- endcomment -%}
-      <div class="pdp-cmp__img-slot" aria-hidden="true"></div>
+      <div class="pdp-cmp__img-slot" aria-hidden="true"><img src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/codex-clipboard-904961ef-2688-431c-97da-b2a8053027c1.webp?v=1785972162" alt="Core powerbank front view"></div>
     </div>
   </div>
 </div>
@@ -98,12 +93,6 @@
 
 <script>
 (function () {
-  /* Battery capacity (Wh) + max charge input (W) + Apple's own
-     published "up to N hours video playback" figure, per iPhone.
-     Newest few (16e / Air / 17 line) have estimated battery/video
-     numbers in line with the trend of recent generations — Apple
-     doesn't publish exact cell capacities and these haven't shipped
-     with confirmed specs at the time this was written. */
   var PHONES = {
     'iPhone X': [2.716, 18, 13], 'iPhone XS': [2.658, 18, 14], 'iPhone XS Max': [3.174, 18, 15],
     'iPhone XR': [2.942, 18, 16], 'iPhone 11': [3.110, 18, 17], 'iPhone 11 Pro': [3.046, 18, 18],
@@ -117,10 +106,10 @@
     'iPhone 16e': [3.961, 18, 26], 'iPhone Air': [3.100, 27, 27], 'iPhone 17': [3.700, 27, 30],
     'iPhone 17 Pro': [3.800, 27, 31], 'iPhone 17 Pro Max': [5.000, 40, 39]
   };
-  var POWERBANK_MAX_W = 20;   // Core / Core Pro's rated wired USB-C output
-  var DC_EFFICIENCY = 0.85;   // typical AC-DC/USB conversion loss for a powerbank
-  var PHONE_NOMINAL_V = 3.85; // iPhone battery cells are ~3.8-3.87V nominal — table above stores capacity as mAh/1000, this converts it to real Wh (was being used as Wh directly, which inflated every result ~3.7x)
-  var TAPER_FACTOR = 0.45;    // 20->80% spends most of its time in the slow taper phase, not at peak wattage — recalibrated against Apple's published "up to 50% in ~30 min" figures now that phoneWh is correct
+  var POWERBANK_MAX_W = 20;
+  var DC_EFFICIENCY = 0.85;
+  var PHONE_NOMINAL_V = 3.85;
+  var TAPER_FACTOR = 0.45;
 
   var select = document.getElementById('pdp-cmp-select');
   var timeEl = document.querySelector('[data-calc-time]');
@@ -151,9 +140,6 @@
 
     var full = (pbWh * DC_EFFICIENCY) / phoneWh;
     var partial = full / 0.6;
-    // extra video-playback hours = (how many full charges the
-    // powerbank holds) x (that phone's own published video-playback
-    // battery life), since both scale off the same battery capacity.
     var videoHours = full * phoneVideoH;
 
     var effW = Math.min(phoneMaxW, POWERBANK_MAX_W) * TAPER_FACTOR;
@@ -162,9 +148,7 @@
     fullEl.textContent = fmt(full) + '×';
     partialEl.textContent = fmt(partial) + '×';
     videoEl.textContent = Math.round(videoHours) + 'h more';
-    timeEl.textContent = minutes < 60
-      ? Math.round(minutes) + ' min'
-      : fmt(minutes / 60) + ' h';
+    timeEl.textContent = Math.round(minutes);
   }
 
   select.addEventListener('change', update);

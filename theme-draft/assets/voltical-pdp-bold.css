@@ -25,23 +25,11 @@
    Everything in this block was unscoped before and leaking onto
    mobile — none of it was meant to apply there. */
 @media (min-width: 900px) {
-  /* 2 product suggestions (add-ons): 475px down. The two .addon
-     blocks are siblings with no shared wrapper; pushing the first one
-     down carries the second along with it since it follows in normal
-     flow. Also matches .addon-group-label (the "You might also like"
-     heading) when present — that sits right before the first .addon,
-     which would otherwise steal :first-of-type out from under it and
-     silently drop this push-down. */
   .pdp--bold .addon:first-of-type,
   .pdp--bold .addon-group-label {
     margin-top: 475px;
   }
 
-  /* Color and Capacity option positions, set via the ?drag=1 tool.
-     transform, not margin, so they move visually without dragging the
-     addons/Add to bag below them down too.
-     Color was at translate(-3px, 250px) — user asked to remember this
-     spot in case they want it back later. */
   .pdp--bold .opt--boxed:nth-of-type(1) {
     transform: translate(-3px, 250px);
   }
@@ -49,21 +37,10 @@
     transform: translate(-3px, 379px);
   }
 
-  /* gallery dots: up from their normal spot below the bubble.
-     theme-r2.css gives .gallery__thumbs a 14px margin-top. */
   .pdp--bold .gallery__thumbs {
     margin-top: -22px;
   }
 
-  /* Description + spec sheet pushed down 1000px. The 1000px lives on
-     .pinfo__desc's own inline style in main-product.liquid
-     (margin-top:32px -> 1032px) since inline styles beat any external
-     stylesheet rule at any specificity — !important is needed here to
-     scope that back down to desktop-only. .specs right after it in
-     normal flow gets carried down for free. The plain (non-!important)
-     rule below covers the rare product with NO description (so
-     .pinfo__desc never renders, and .specs would otherwise sit right
-     after the trust row, unmoved). */
   .pdp--bold .pinfo__desc {
     margin-top: 1032px !important;
   }
@@ -72,13 +49,6 @@
   }
 }
 
-/* ---------- header cart icon: hidden by default, only appears while
-   actively scrolling up ----------
-   This file only loads on product pages, so no extra scoping needed.
-   Direction is tracked in JS (see the script near the end of
-   main-product.liquid) via a .is-hidden class toggle — this just
-   defines what that class (and its absence) look like, with a
-   transition so it fades/slides rather than popping. */
 .cart-btn {
   transition: opacity .25s ease, transform .25s ease;
 }
@@ -88,7 +58,6 @@
   transform: translateY(-10px);
 }
 
-/* ---------- paler pastel palette (product pages only) ---------- */
 :root {
   --mint: #F1F8F5;
   --sky: #EDF6FB;
@@ -101,8 +70,6 @@
   --tile: #F7FAFA;
 }
 
-/* Pastels used as TEXT need to stay readable on the paler
-   backgrounds — re-ink them. */
 .calc__fig .t-mono b,
 .calc__fig b {
   color: var(--ink, #131316);
@@ -113,11 +80,6 @@
   text-transform: none;
 }
 
-/* ---------- single "You might also like" heading above BOTH product
-   suggestion cards, styled to match the option pickers' own label
-   (Color / Power Capacity) above ----------
-   Replaces each card's own repeated eyebrow line — that one's hidden
-   here so it isn't shown twice. ---------- */
 .pdp--bold .addon-group-label {
   font-size: .78rem;
   font-weight: 600;
@@ -130,25 +92,11 @@
   display: none;
 }
 
-/* ---------- product title ----------
-   theme-r2.css lowercases the whole .pinfo h1 ("voltical core 5k &
-   10k") — keep that styling but capitalize just the brand's V. ---------- */
 .pdp--bold .pinfo h1::first-letter {
   text-transform: uppercase;
 }
 
-/* ---------- inline "select what you're switching from" compare block
-   ---------- sits in the buy column (narrow, not full-width) right
-   above the stat tiles, in the gap opened up by .pstats' desktop
-   margin-top push below. Same select+grid interaction as the
-   full-width Apple compare row, just sized to the column instead of
-   breaking out. */
 @media (min-width: 900px) {
-  /* wrapper handles positioning in plain (unscaled) pixels — moved left
-     off the narrow buy column toward the middle of the blank canvas
-     area, and down to sit centred in it vertically. Kept separate from
-     the scale below so the translate amounts stay in real px instead
-     of getting multiplied by the 5x scale too. */
   .pdp-cmp-wrap {
     display: flex;
     justify-content: center;
@@ -159,15 +107,7 @@
     transform: scale(3);
     transform-origin: center;
   }
-  /* counter-scaled relative to the 3x parent above: select group ends
-     up at an effective 1.5x (2x smaller than the 3x baseline), grid
-     ends up at an effective 6x (2x bigger). */
   .pdp-cmp__select-group {
-    /* select-group's effective on-screen scale is 1.5x (0.5 here x 3x
-       parent .pdp-cmp scale) — translateY has to be written BEFORE the
-       scale in the function list so it gets scaled down with it, then
-       the parent's 3x scales it back up: 66.67 * 0.5 * 3 = 100px
-       (was 166.67 / 250px, moved up 150px). */
     transform: scale(0.5) translateY(66.67px);
     transform-origin: top center;
   }
@@ -217,10 +157,6 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
-/* Mobile: 2 wide x 3 down instead of desktop's 3x2 — same card shape
-   (border-radius/padding) and same pastel colours either way since
-   those live on the unscoped .pdp-cmp__card rules above, only the
-   column count changes here. */
 @media (max-width: 899px) {
   .pdp-cmp__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -233,18 +169,12 @@
   display: none;
 }
 
-/* Apple's clean stat-tile structure (eyebrow / big number / caption) —
-   flat neutral tile, same on mobile and desktop, no pastel tinting. */
 .pdp-cmp__card {
   position: relative;
   overflow: hidden;
   background: var(--tile, #F4F8F8);
   border-radius: var(--r-s, 14px);
   padding: 14px 8px;
-  /* fixed height (not min-height) so every card in the grid is locked
-     to the exact same size no matter how its own text wraps — a
-     min-height lets CSS Grid's row-stretch make the whole row match
-     whichever card's content happens to be tallest that render. */
   height: 92px;
   display: flex;
   flex-direction: column;
@@ -276,11 +206,6 @@
   font-weight: 600;
 }
 
-/* ---------- text-on-top, image-below layout (matches Apple's own
-   card pattern) ----------
-   The image slot stays collapsed (0 height) while empty so it doesn't
-   stretch every card in the row taller than the plain text ones —
-   only grows once an actual <img> is dropped inside it. */
 .pdp-cmp__card--img {
   justify-content: center;
 }
@@ -303,8 +228,6 @@
   display: block;
 }
 
-/* ---------- info badge on the "20->80% charges" card, next to its
-   sub-label (see pdp-compare-inline.liquid) ---------- */
 .pdp-cmp__info {
   display: inline-flex;
   align-items: center;
@@ -323,23 +246,12 @@
   margin-left: 2px;
 }
 
-/* ---------- stat tiles ---------- */
 .pdp--bold .pstats {
   display: grid;
-  /* minmax(0,1fr) lets tiles shrink below their text's min width —
-     without it, values like "10,000 mAh" force the page wider than
-     the phone screen and cause sideways scrolling. */
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin: 6px 0 18px;
 }
-/* Stat tiles ("3 rectangles"), the checkmark list right after them,
-   and the calculator right after THAT all sit in normal flow with no
-   shared wrapper — pushing the first of the three (.pstats) down
-   carries the other two down with it for free. Desktop only, and
-   placed AFTER the base .pstats rule above (same selector specificity
-   — the later one in source order wins, so this has to come second or
-   the base rule's margin:6px silently cancels it out). */
 @media (min-width: 900px) {
   .pdp--bold .pstats {
     margin-top: 1250px;
@@ -370,7 +282,6 @@
   font-weight: 500;
 }
 
-/* ---------- checkmark benefits ---------- */
 .pdp--bold .pchecks {
   list-style: none;
   margin: 0 0 22px;
@@ -401,7 +312,6 @@
   font-weight: 700;
 }
 
-/* ---------- bold price row ---------- */
 .pdp--bold .price-row {
   display: flex;
   align-items: center;
@@ -428,13 +338,6 @@
   letter-spacing: 0.06em;
 }
 
-/* ---------- remove the price row from the top of the buy column ----------
-   Plain display:none, not just a visual hide — collapses its box
-   (including margins) out of normal flow, so the form/options right
-   below it move up to close the gap on their own with no extra
-   spacing math needed. The price still exists in the DOM (theme.js
-   reads it via .pinfo__price [data-price] to sync the Add to cart
-   button's own price label), just not shown up here. */
 .pdp--bold .pinfo__price {
   display: none;
 }
@@ -442,13 +345,11 @@
   margin-top: 20px;
 }
 
-/* ---------- bolder option pills ---------- */
 .pdp--bold .opt__pill {
   font-weight: 600;
   border: 1.5px solid var(--ink-12, rgba(19,19,22,.1));
 }
 
-/* ---------- bold add-to-cart ---------- */
 .pdp--bold .atc__btn {
   background: var(--ink, #131316);
   color: var(--base, #FAFAF8);
@@ -488,37 +389,10 @@
   opacity: 0;
 }
 
-/* ---------- Add to cart catches at the bottom while scrolling ----------
-   theme.css already makes the WHOLE .pinfo buy column sticky at
-   width >=900px (title, price, options — all of it as one rigid
-   block, top:98px). That's a different, pre-existing feature, and it
-   conflicts with sticking just the button on its own — turning it off
-   here (scoped to the product page only — .pinfo isn't used anywhere
-   else) so only the Add to cart button catches.
-
-   The reveal-in animation on [data-reveal] elements (see theme-r2.css)
-   normally slides up 36px on top of fading in. Any transform at all
-   on an ancestor turns a descendant's position:fixed into "fixed
-   relative to that ancestor" instead of the viewport — so .pinfo
-   (an ancestor of .atc) only fades in here, no slide, keeping the
-   button's own position:fixed genuinely fixed to the viewport once
-   it's pinned. */
 .pdp--bold .pinfo[data-reveal] {
   transform: none !important;
 }
 
-/* The button itself is pinned via JS (see main-product.liquid), not
-   plain CSS position:sticky — layering an independent position:sticky
-   element on this page turned out to be unreliable in testing
-   (Chrome silently failed to stick it at all). A small
-   IntersectionObserver toggles this ".is-pinned" class on the SAME
-   button (no clone, no separate element) once its normal spot in the
-   buy column scrolls out of view, switching it from normal flow to
-   position:fixed at the bottom of the screen. Nothing holds its
-   layout space open while pinned — that gap in the buy column closes
-   up on purpose, shortening the page for as long as it's pinned.
-   Scrolling back up to where the button naturally sits releases it
-   again, and the gap reopens. */
 .pdp--bold .pinfo {
   position: static;
 }
@@ -530,8 +404,6 @@
   padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
 }
 
-/* ---------- calculator, inline in the buy column just below the
-   "in stock" line ---------- */
 .pdp--bold .pdp-calc-inline {
   margin: var(--s4, 24px) 0 0;
 }
@@ -539,21 +411,10 @@
   margin: 0;
 }
 
-/* ---------- centre the thumbnail row when it doesn't fill the
-   gallery's width (e.g. products with only 2-3 photos) ---------- */
 .pdp--bold .gallery__thumbs {
   justify-content: center;
 }
 
-/* ---------- desktop: centre the thumbnail dots under the top photo
-   bubble itself, not under the (wider, differently-offset) gallery
-   column ----------
-   .gallery__main is sized/positioned independently of its grid column
-   (own width + margin-left:auto + translateX(-370px) — see that rule
-   below), so centering .gallery__thumbs on the *column* via flex
-   justify-content:center lands it off-center from the bubble. Giving
-   the thumbs row the exact same width + margin + transform as the
-   bubble makes their centres match exactly, at any viewport width. ---------- */
 @media (min-width: 900px) {
   .pdp--bold .gallery__thumbs {
     width: 121vh;
@@ -562,45 +423,20 @@
   }
 }
 
-/* ---------- main photo frame: portrait 2:3 instead of the theme's
-   default square (1:1) — and the same white rounded "bubble" card
-   (background + radius + shadow) used by the .ftiles__tile cards
-   further down the page, so the top gallery photo and the tile grid
-   photos read as one consistent style. ---------- */
 .pdp--bold .gallery__main {
   position: relative;
   overflow: hidden;
   aspect-ratio: 2 / 3;
-  /* Average colour of the photo's own white studio backdrop — sampled
-     ONCE per photo change from its (already-loaded) thumbnail via a
-     tiny offscreen canvas read in theme-r3.js, not a live CSS filter.
-     Only actually visible on desktop below (mobile's img is back to a
-     flush, edge-to-edge fill — see the note on the img rule). */
   background: var(--gallery-bg-color, #FFFFFF);
   border-radius: clamp(22px, 2.4vw, 32px);
-  /* Same shadow as .ftiles__tile below — no hairline border, no extra
-     glow, just the one consistent bubble shadow everywhere. */
   box-shadow: 0 1px 2px rgba(19, 19, 22, .04), 0 18px 44px -22px rgba(19, 19, 22, .14);
 }
-/* Reverted back to the theme's original edge-to-edge width:100%/
-   height:100%/object-fit:cover (no padding, no letterboxing) — this
-   is byte-for-byte what the swipe/peek image in theme-r3.js is styled
-   as too. An earlier "bubble" version padding-inset this photo with
-   object-fit:contain to avoid ever cropping it, but no combination of
-   matching box sizes ever fully eliminated a jump partway through a
-   completed swipe — reverting both sides back to this simpler,
-   known-good shared sizing removes the mismatch at its root instead
-   of chasing it. */
 .pdp--bold .gallery__main img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* ---------- desktop click-through arrows ----------
-   Hidden by default (and hidden entirely on mobile, where swipe
-   already covers this) — shown only on hover/focus of the photo
-   itself so they don't clutter a static image. */
 .pdp--bold .gallery__arrow {
   display: none;
 }
@@ -636,64 +472,12 @@
   .pdp--bold .gallery__arrow--next { right: 18px; }
 }
 
-/* ---------- desktop: gallery column gets a larger share of the row,
-   buy column (title/options/ATC) narrows to compensate ----------
-   The base theme's .product__grid splits 1.1fr/.9fr (theme-r2.css).
-   Was an even 50/50 split (so the gallery's right edge landed on
-   page-center) — bumped to 55/45, then 59/41 to keep pace with the
-   gallery bubble getting wider still (4:2.7, was 4:2.9, was 5:4; see
-   .gallery__main below), so the buy column keeps narrowing to
-   compensate instead of the bubble just overflowing past an
-   unchanged column. Grid gap (var(--s7)) still eaten out of the buy
-   column's share so the two columns add up to 100% without
-   overflowing the row. */
 @media (min-width: 900px) {
   .pdp--bold .product__grid {
     grid-template-columns: 59% calc(41% - var(--s7));
   }
 
-  /* ---------- desktop: photo takes up roughly 2/3+ of the viewport's
-     vertical space instead of being sized off the column's width ----
-     Height-driven instead of width-driven — aspect-ratio then derives
-     the true, uncropped 2:3 width from that height. No max-width cap:
-     capping the width here would squeeze the box narrower than 2:3
-     and force object-fit:cover to crop extra off the sides, which is
-     exactly what NOT to do. Instead margin-left:auto is left to go
-     negative when the image is wider than its column — that's normal
-     CSS constraint solving, not a bug — which slides the whole box
-     left (overflowing into the gutter to the left of the column) so
-     its right edge still lands exactly on the column's right edge
-     (the page center from the rule above) without ever crossing it,
-     and without cropping anything.
-
-     4:2.7 here (width = height * 4/2.7, was 4:2.9, was 5:4) — the
-     extra width doesn't crop or stretch the photo (still true 2:3 via
-     object-fit:contain below), it just widens the padding-inset
-     "bubble" border around it, with the padding-inset "bubble"
-     border restored — DESKTOP ONLY. The padding+object-fit:contain
-     combo was reverted everywhere for the mobile swipe bug, but that
-     bug only ever happened on touch (the drag/peek code only runs on
-     touchstart/touchmove/touchend, never on desktop clicks), so
-     there's no swipe risk in bringing it back here. object-fit:contain
-     means the photo is never cropped regardless of box ratio, and the
-     padding shows the canvas-sampled --gallery-bg-color underneath as
-     a border that matches the photo's own backdrop colour.
-     margin-left:auto + translateX(-370px) still anchor the RIGHT edge
-     at the same spot regardless of box width.
-     -370px specifically (was -400px, was -385px, was -420px, was
-     -340px, was -430px; briefly -520px, moved back): the gallery and buy column
-     nudges no longer move in lockstep — see .pinfo below for its own
-     separate nudge. .gallery__thumbs below is kept at the same
-     translateX so the dots stay centred under the bubble.
-
-     .gallery (the parent of both .gallery__main and .gallery__thumbs)
-     also gets a top margin here so the bubble+dots drop down as one
-     unit — far enough that the dots sit near the bottom of the first
-     screenful on page load, instead of well above it. Pulled back up
-     75px, then 20px, then another 20px, from the original 10vh. */
   .pdp--bold .gallery {
-    /* -20px more to compensate for the height the new "From [price]"
-       line added above the bubble, bringing bubble+dots back up */
     margin-top: calc(10vh - 85px);
   }
   .pdp--bold .gallery__main {
@@ -710,93 +494,35 @@
     object-fit: contain;
   }
 
-  /* ---------- desktop: nudge the buy column (title/price/options/ATC)
-     470px right of where the grid puts it (was 420px, was 370px, was
-     340px) — this one's independent of the gallery's own -370px nudge
-     (see .gallery__main above), pushed further right on its own per
-     request rather than moving in lockstep with the gallery. Also
-     nudged 70px down. ---------- */
   .pdp--bold .pinfo {
     transform: translate(455px, 70px);
   }
 }
 
-/* ---------- top of the product page (gallery + buy box) — Apple
-   grey-white right around the gallery photo, fading out very
-   gradually to the site's normal homepage white (--base) by the time
-   you reach the buy column (title/price/ATC), so the two feel like
-   one continuous surface instead of a hard-edged card. Desktop only —
-   mobile keeps the original plain background it had before this
-   change.
-   Was #FBFBFD (barely distinguishable from --base, so the fade was
-   nearly invisible), then #F5F5F7, then #EBEBEE (too strong) —
-   settled on #F0F0F3, halfway between the two. Color stops also
-   reworked: the solid tone now holds through ~60% of the row (past
-   the gallery bubble's right edge, since the gallery column itself is
-   59% of the row — see grid-template-columns above) instead of
-   starting to fade at 30%, so it only actually starts getting lighter
-   once you're past the bubble, then fades out gradually across the
-   buy column. ---------- */
 @media (min-width: 900px) {
   .pdp--bold {
     background: linear-gradient(to right, #F0F0F3 0%, #F0F0F3 60%, var(--base, #FCFDFE) 92%);
   }
 }
 @media (max-width: 899px) {
-  /* overflow:hidden lives here (mobile only) to clip to the rounded
-     corners — desktop deliberately lets .gallery__main overflow this
-     box's LEFT edge (negative margin-left, see the desktop rule
-     below), so overflow:hidden up in the shared rule was clipping off
-     the left side of the enlarged photo bubble there. */
   .pdp--bold .product__grid {
     overflow: hidden;
   }
 }
 
-/* ---------- shrink the big top gap under the nav ----------
-   .section (theme.css) adds clamp(80px,11vw,150px) of padding on
-   BOTH top and bottom — that spacing is meant to separate stacked
-   homepage sections from each other, but on the product page it's
-   the very first thing under the sticky header. Cut the top down to
-   a small fixed 15px breathing gap; leave the bottom padding alone
-   so spacing above the footer/next section is unchanged. */
 .pdp--bold {
   padding-top: 15px;
 }
 
-/* ---------- Core product page only: gap above the "Buy Core" text /
-   bubble ----------
-   Went 50px down, 30px up, 40px up, +100px, then pulled back down to
-   35px net — still too much after the double-counted margin fix
-   below, so trimmed again. ---------- */
 .pdp--core {
   padding-top: 35px;
   margin-top: 0;
 }
 
-/* ---------- Core product page only: hide the "Voltical Core" title ----------
-   The h1 up in .pinfo is replaced by the "Buy Core" label above the
-   gallery bubble instead (see .pdp-core-buy-label below). */
 .pdp--core .pinfo h1 {
   display: none;
 }
 
-/* ---------- Core product page only: "Buy Core" label + "Buy Core Pro"
-   text link sitting above the gallery photo bubble ----------
-   Both plain text, no button/pill styling — sit in normal flow at the
-   top of .gallery, right before .gallery__main, so the photo
-   naturally sits lower to make room for them (no extra margin hacks
-   needed). "Buy Core" stands in for the now-hidden h1 title, so it's
-   plain (not a link). Font size bumped up from 0.8rem to 1.3rem, then
-   way up again to 2.6rem. Bottom margins on both this and
-   .pdp-core-pro-upsell below trimmed (6px->0, 14px->0) to pull the
-   bubble+dots up 20px by shortening the space above them, instead of
-   moving .gallery itself — then trimmed another 20px via a negative
-   margin-bottom on .pdp-core-pro-upsell (the last of the two, right
-   before the bubble), since both margins were already at 0. Now given
-   50px below on its own — no margin-top added on top of that, since
-   the +100px bar padding above already covers the "above" spacing and
-   stacking both was too much. */
 .pdp-core-buy-label {
   display: block;
   margin-top: 0;
@@ -827,15 +553,6 @@
   color: rgba(19, 19, 22, 0.7);
 }
 
-/* remove the Buy Core / Buy Core Pro text block entirely on mobile —
-   display:none collapses its space, no gap left behind. Placed AFTER
-   the base .pdp-core-buy-label/-from/-pro-upsell rules above (same
-   selector specificity — the later rule in source order wins, same
-   cascade trap as the .pstats push-down fix earlier): with this
-   sitting BEFORE them, the base rules' own display:block silently
-   re-enabled the text on mobile, so it stayed in the DOM at full
-   size, just shoved off-screen by its desktop-only translate — still
-   taking up real vertical space above the gallery image. */
 @media (max-width: 899px) {
   .pdp-core-buy-label,
   .pdp-core-buy-from,
@@ -844,24 +561,287 @@
   }
 }
 
-/* ---------- cross-sell add-on toggle: more visible "on" colour ----------
-   theme.css/theme-r2.css turn the switch pale lilac (--lilac-m,
-   #DFD8F8) when checked — barely readable as "on" at a glance. Reuse
-   the --focus purple (#8F7FDC, the same purple .addon__eyebrow used
-   for its "You might also like" text) instead, a noticeably stronger
-   colour. */
 .pdp--bold .switch input:checked + i {
   background: var(--focus, #8F7FDC);
 }
 
-/* ---------- mobile: drop the "bubble" card look on the top gallery photo ----------
-   .gallery__main above gives the photo a shadow (and, on desktop, a
-   visible background) so it reads as a raised card. On mobile the
-   photo is already edge-to-edge (object-fit:cover, no padding), so
-   the shadow was the only thing left implying a bubble/card — kill
-   it here so the photo just sits flat against the page. */
 @media (max-width: 899px) {
   .pdp--bold .gallery__main {
     box-shadow: none;
+  }
+}
+
+/* Core comparison squares: restore consistent tile layout */
+.template-product .pdp-cmp__card {
+  text-align: center;
+}
+.template-product .pdp-cmp__label-only,
+.template-product .pdp-cmp__eyebrow,
+.template-product .pdp-cmp__sub {
+  color: rgba(19, 19, 22, .58);
+  font-size: 10px;
+  line-height: 1.08;
+  font-weight: 400;
+  text-align: center;
+}
+.template-product .pdp-cmp__eyebrow {
+  display: block;
+}
+.template-product .pdp-cmp__stat {
+  color: #131316;
+  font-size: 17px;
+  line-height: 1.02;
+  font-weight: 500;
+  text-align: center;
+}
+.template-product .pdp-cmp__card:not(.pdp-cmp__card--img) {
+  justify-content: center;
+}
+.template-product .pdp-cmp__card--img {
+  gap: 2px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.template-product .pdp-cmp__img-slot:has(img) {
+  flex-basis: 18px;
+  min-height: 18px;
+  height: 18px;
+  margin-top: 2px;
+  overflow: hidden;
+}
+.template-product .pdp-cmp__img-slot img:not(.pdp-cmp__img--full-upright):not(.pdp-cmp__img--partial-hand) {
+  transform: scale(3.3);
+}
+.template-product .pdp-cmp__card--charge {
+  justify-content: center;
+  gap: 1px;
+}
+.template-product .pdp-cmp__card--charge .pdp-cmp__stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+}
+.template-product .pdp-cmp__card--charge .pdp-cmp__stat {
+  font-size: 30px;
+  line-height: 1;
+}
+.template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
+  width: 31px;
+  height: auto;
+  color: #16c76a;
+  flex: 0 0 auto;
+}
+.template-product .pdp-cmp__card--charge .pdp-cmp__sub--unit {
+  color: #1d1d1f;
+  font-size: 11px;
+}
+.template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
+  font-size: 9.5px;
+  margin-top: 3px;
+}
+.template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) {
+  position: relative;
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
+  overflow: hidden;
+  padding: 0 !important;
+}
+.template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__eyebrow {
+  position: absolute;
+  top: 14px;
+  left: 32px;
+  z-index: 2;
+}
+.template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__stat {
+  position: absolute;
+  top: 34px;
+  left: 32px;
+  z-index: 2;
+  font-size: 30px;
+  line-height: 1;
+}
+.template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__sub {
+  position: absolute;
+  left: 32px;
+  bottom: 14px;
+  z-index: 2;
+  max-width: 96px;
+  font-size: 11px;
+}
+.template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__img-slot {
+  position: absolute;
+  top: 6px;
+  left: -20px;
+  bottom: 6px;
+  width: 72px;
+  height: auto !important;
+  min-height: 0;
+  margin: 0;
+  z-index: 1;
+  display: block;
+  overflow: hidden;
+  pointer-events: none;
+}
+.template-product .pdp-cmp__img-slot img.pdp-cmp__img--full-upright {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  height: 100% !important;
+  max-height: none;
+  width: auto;
+  transform: translate(-50%, -50%) scale(1.14);
+  transform-origin: center center;
+}
+.template-product .pdp-cmp__card--partial-image {
+  position: relative;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+  padding: 0 !important;
+}
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__eyebrow {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__stat {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-size: 30px;
+  line-height: 1;
+}
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__img-slot {
+  position: absolute;
+  left: 50%;
+  top: 52px;
+  width: 118px;
+  height: 28px;
+  transform: translateX(-50%);
+  margin: 0;
+  min-height: 0;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__img--partial-hand {
+  position: absolute;
+  left: 50% !important;
+  top: 50% !important;
+  width: 118px !important;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  transform: translate(calc(-50% + 20px), -50%) !important;
+}
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__sub--partial-range {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+/* Mobile: keep desktop card proportions while using 2 across x 3 down */
+@media (max-width: 899px) {
+  .template-product .pdp-cmp__card {
+    height: auto;
+    aspect-ratio: 1.16 / 1;
+  }
+
+  .template-product .pdp-cmp__label-only,
+  .template-product .pdp-cmp__eyebrow,
+  .template-product .pdp-cmp__sub {
+    font-size: 10px;
+    line-height: 1.08;
+  }
+
+  .template-product .pdp-cmp__label-only {
+    max-width: 68%;
+  }
+
+  .template-product .pdp-cmp__stat {
+    font-size: 18px;
+    line-height: 1.02;
+  }
+
+  .template-product .pdp-cmp__card--charge {
+    gap: 1px;
+  }
+
+  .template-product .pdp-cmp__card--charge .pdp-cmp__stat {
+    font-size: 34px;
+  }
+
+  .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
+    width: 28px;
+  }
+
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--unit {
+    font-size: 11px;
+  }
+
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
+    font-size: 10px;
+    margin-top: 2px;
+  }
+
+  .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__eyebrow {
+    top: 14px;
+    left: 28px;
+  }
+
+  .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__stat {
+    top: 34px;
+    left: 28px;
+    font-size: 30px;
+  }
+
+  .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__sub {
+    left: 28px;
+    bottom: 14px;
+    max-width: 82px;
+    font-size: 11px;
+  }
+
+  .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__img-slot {
+    top: 8px;
+    bottom: 8px;
+    width: 64px;
+  }
+
+  .template-product .pdp-cmp__card--partial-image .pdp-cmp__eyebrow {
+    top: 14px;
+  }
+
+  .template-product .pdp-cmp__card--partial-image .pdp-cmp__stat {
+    top: 32px;
+    font-size: 30px;
+  }
+
+  .template-product .pdp-cmp__card--partial-image .pdp-cmp__img-slot {
+    left: 50%;
+    top: 78px;
+    width: 112px;
+    height: 22px;
+    overflow: visible;
+  }
+
+  .template-product .pdp-cmp__card--partial-image .pdp-cmp__img--partial-hand {
+    width: 110px !important;
+    left: 50% !important;
+  }
+
+  .template-product .pdp-cmp__card--partial-image .pdp-cmp__sub--partial-range {
+    bottom: 12px;
+    font-size: 10px;
   }
 }
