@@ -733,14 +733,9 @@
   pointer-events: none;
 }
 .template-product .pdp-cmp__card--partial-image .pdp-cmp__img--partial-hand {
-  position: absolute;
-  left: 50% !important;
-  top: 50% !important;
-  width: 271px !important;
-  height: auto !important;
-  max-height: none !important;
+  width: 100% !important;
+  height: 100% !important;
   object-fit: contain !important;
-  transform: translate(calc(-50% + 86px), -50%) !important;
 }
 .template-product .pdp-cmp__card--partial-image .pdp-cmp__sub--partial-range {
   position: absolute;
@@ -835,11 +830,6 @@
     overflow: hidden;
   }
 
-  .template-product .pdp-cmp__card--partial-image .pdp-cmp__img--partial-hand {
-    width: 271px !important;
-    left: 50% !important;
-    transform: translate(calc(-50% + 86px), -50%) !important;
-  }
 
   .template-product .pdp-cmp__card--partial-image .pdp-cmp__sub--partial-range {
     bottom: 12px;
