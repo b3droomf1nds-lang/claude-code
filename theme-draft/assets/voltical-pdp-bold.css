@@ -795,6 +795,7 @@
   z-index: 2;
   font-size: 18px;
   line-height: 1;
+  white-space: nowrap;
 }
 .template-product .pdp-cmp__card--video .pdp-cmp__sub {
   position: absolute;
@@ -925,6 +926,7 @@
   .template-product .pdp-cmp__card--video .pdp-cmp__stat {
     top: 18px;
     font-size: 18px;
+    white-space: nowrap;
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__sub {
