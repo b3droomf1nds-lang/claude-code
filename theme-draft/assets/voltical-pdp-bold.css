@@ -737,7 +737,7 @@
 }
 .template-product .pdp-cmp__card--partial-image .pdp-cmp__stat {
   position: absolute;
-  top: 60px;
+  top: 32px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
@@ -846,7 +846,7 @@
   }
 
   .template-product .pdp-cmp__card--partial-image .pdp-cmp__stat {
-    top: 68px;
+    top: 40px;
     font-size: 30px;
   }
 
