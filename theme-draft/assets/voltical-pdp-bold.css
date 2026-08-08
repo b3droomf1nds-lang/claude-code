@@ -749,7 +749,7 @@
   left: 0;
   right: 0;
   top: 26px;
-  bottom: 6px;
+  bottom: 26px;
   width: auto;
   height: auto;
   transform: translateY(10px);
@@ -853,7 +853,7 @@
     left: 0;
     right: 0;
     top: 60px;
-    bottom: 6px;
+    bottom: 34px;
     width: auto;
     height: auto;
     overflow: hidden;
