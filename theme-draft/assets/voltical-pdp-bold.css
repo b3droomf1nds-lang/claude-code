@@ -634,7 +634,7 @@
   margin-top: 2px;
   overflow: hidden;
 }
-.template-product .pdp-cmp__img-slot img:not(.pdp-cmp__img--full-upright):not(.pdp-cmp__img--partial-hand) {
+.template-product .pdp-cmp__img-slot img:not(.pdp-cmp__img--full-upright):not(.pdp-cmp__img--partial-hand):not(.pdp-cmp__img--video-crop) {
   transform: scale(3.3);
 }
 .template-product .pdp-cmp__card--charge {
@@ -772,6 +772,56 @@
   z-index: 2;
   white-space: nowrap;
 }
+.template-product .pdp-cmp__card--video {
+  position: relative;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+  padding: 0 !important;
+}
+.template-product .pdp-cmp__card--video .pdp-cmp__eyebrow {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+.template-product .pdp-cmp__card--video .pdp-cmp__stat {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-size: 18px;
+  line-height: 1;
+}
+.template-product .pdp-cmp__card--video .pdp-cmp__sub {
+  position: absolute;
+  top: 33px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  white-space: nowrap;
+  font-size: 9px;
+}
+.template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  min-height: 0;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+.template-product .pdp-cmp__card--video .pdp-cmp__img--video-crop {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: top !important;
+}
 
 /* Mobile: keep desktop card proportions while using 2 across x 3 down */
 @media (max-width: 899px) {
@@ -866,5 +916,19 @@
     bottom: 12px;
     font-size: 10px;
     white-space: nowrap;
+  }
+
+  .template-product .pdp-cmp__card--video .pdp-cmp__eyebrow {
+    top: 8px;
+  }
+
+  .template-product .pdp-cmp__card--video .pdp-cmp__stat {
+    top: 18px;
+    font-size: 18px;
+  }
+
+  .template-product .pdp-cmp__card--video .pdp-cmp__sub {
+    top: 39px;
+    font-size: 9px;
   }
 }
