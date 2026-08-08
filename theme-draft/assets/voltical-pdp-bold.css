@@ -749,7 +749,7 @@
   left: 0;
   right: 0;
   top: 26px;
-  bottom: 26px;
+  bottom: 6px;
   width: auto;
   height: auto;
   transform: translateY(10px);
@@ -770,6 +770,7 @@
   bottom: 8px;
   transform: translateX(-50%);
   z-index: 2;
+  white-space: nowrap;
 }
 
 /* Mobile: keep desktop card proportions while using 2 across x 3 down */
@@ -853,7 +854,7 @@
     left: 0;
     right: 0;
     top: 60px;
-    bottom: 34px;
+    bottom: 6px;
     width: auto;
     height: auto;
     overflow: hidden;
@@ -864,5 +865,6 @@
   .template-product .pdp-cmp__card--partial-image .pdp-cmp__sub--partial-range {
     bottom: 12px;
     font-size: 10px;
+    white-space: nowrap;
   }
 }
