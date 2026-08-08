@@ -789,7 +789,7 @@
 }
 .template-product .pdp-cmp__card--video .pdp-cmp__stat {
   position: absolute;
-  top: 6px;
+  top: 11px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
@@ -799,7 +799,7 @@
 }
 .template-product .pdp-cmp__card--video .pdp-cmp__sub {
   position: absolute;
-  top: 24px;
+  top: 29px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
@@ -924,13 +924,13 @@
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__stat {
-    top: 10px;
+    top: 15px;
     font-size: 18px;
     white-space: nowrap;
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__sub {
-    top: 28px;
+    top: 33px;
     font-size: 6px;
   }
 }
