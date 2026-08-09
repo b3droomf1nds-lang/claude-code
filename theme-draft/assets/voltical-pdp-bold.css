@@ -799,7 +799,7 @@
 }
 .template-product .pdp-cmp__card--video .pdp-cmp__sub {
   position: absolute;
-  top: 6px;
+  top: 8px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
@@ -807,7 +807,7 @@
   font-size: 4.8px;
 }
 .template-product .pdp-cmp__card--video .pdp-cmp__sub--alloy {
-  top: 12px;
+  top: 14px;
 }
 .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
   position: absolute;
@@ -819,7 +819,7 @@
   height: auto;
   margin: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   z-index: 1;
   pointer-events: none;
 }
@@ -827,6 +827,7 @@
   width: 100% !important;
   height: 100% !important;
   object-fit: contain !important;
+  transform: translateY(-10px) !important;
   object-position: center bottom !important;
 }
 
@@ -936,12 +937,12 @@
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__sub {
-    top: 8px;
+    top: 10px;
     font-size: 4.8px;
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__sub--alloy {
-    top: 14px;
+    top: 16px;
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
@@ -949,5 +950,9 @@
     right: 14px;
     top: 29px;
     bottom: 0;
+  }
+
+  .template-product .pdp-cmp__card--video .pdp-cmp__img--video-crop {
+    transform: translateY(-10px) !important;
   }
 }
