@@ -622,6 +622,16 @@
 .template-product .pdp-cmp__card:not(.pdp-cmp__card--img) {
   justify-content: center;
 }
+.template-product .pdp-cmp__card:not(.pdp-cmp__card--img),
+.template-product .pdp-cmp__card--video {
+  background: var(--tile, #F4F8F8);
+}
+.template-product .pdp-cmp__card--fade .pdp-cmp__stat {
+  background: linear-gradient(180deg, #131316 0%, rgba(19, 19, 22, 0.35) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 .template-product .pdp-cmp__card--img {
   gap: 2px;
   padding-top: 10px;
