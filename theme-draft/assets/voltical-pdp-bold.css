@@ -811,10 +811,10 @@
 }
 .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
   position: absolute;
-  left: 15px;
-  right: 15px;
-  top: 30px;
-  bottom: 9px;
+  left: 17px;
+  right: 17px;
+  top: 31px;
+  bottom: 10px;
   width: auto;
   height: auto;
   margin: 0;
@@ -945,9 +945,9 @@
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
-    left: 14px;
-    right: 14px;
-    top: 29px;
-    bottom: 8px;
+    left: 16px;
+    right: 16px;
+    top: 30px;
+    bottom: 9px;
   }
 }
