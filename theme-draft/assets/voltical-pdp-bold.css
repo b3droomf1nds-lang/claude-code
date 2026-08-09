@@ -622,6 +622,9 @@
 .template-product .pdp-cmp__card:not(.pdp-cmp__card--img) {
   justify-content: center;
 }
+.template-product .pdp-cmp__card--fade {
+  background: radial-gradient(120% 100% at 50% 0%, #ffffff 0%, #f8fafb 55%, var(--tile, #F4F8F8) 100%);
+}
 .template-product .pdp-cmp__card--img {
   gap: 2px;
   padding-top: 10px;
