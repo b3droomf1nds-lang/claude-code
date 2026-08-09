@@ -813,7 +813,7 @@
   position: absolute;
   left: 15px;
   right: 15px;
-  top: 25px;
+  top: 30px;
   bottom: 0;
   width: auto;
   height: auto;
@@ -828,7 +828,7 @@
   height: 100% !important;
   object-fit: contain !important;
   transform: translateY(-10px) !important;
-  object-position: center bottom !important;
+  object-position: center top !important;
 }
 
 /* Mobile: keep desktop card proportions while using 2 across x 3 down */
@@ -948,11 +948,12 @@
   .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
     left: 14px;
     right: 14px;
-    top: 24px;
+    top: 29px;
     bottom: 0;
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__img--video-crop {
     transform: translateY(-10px) !important;
+    object-position: center top !important;
   }
 }
