@@ -813,7 +813,7 @@
   position: absolute;
   left: 15px;
   right: 15px;
-  top: 30px;
+  top: 25px;
   bottom: 0;
   width: auto;
   height: auto;
@@ -948,7 +948,7 @@
   .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
     left: 14px;
     right: 14px;
-    top: 29px;
+    top: 24px;
     bottom: 0;
   }
 
