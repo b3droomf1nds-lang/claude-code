@@ -827,7 +827,6 @@
   width: 100% !important;
   height: 100% !important;
   object-fit: contain !important;
-  transform: translateY(-10px) !important;
   object-position: center bottom !important;
 }
 
@@ -950,9 +949,5 @@
     right: 14px;
     top: 29px;
     bottom: 0;
-  }
-
-  .template-product .pdp-cmp__card--video .pdp-cmp__img--video-crop {
-    transform: translateY(-10px) !important;
   }
 }
