@@ -819,15 +819,15 @@
   height: auto;
   margin: 0;
   min-height: 0;
-  overflow: visible;
+  overflow: hidden;
+  transform: translateY(-10px);
   z-index: 1;
   pointer-events: none;
 }
 .template-product .pdp-cmp__card--video .pdp-cmp__img--video-crop {
   width: 100% !important;
   height: 100% !important;
-  object-fit: contain !important;
-  transform: translateY(-10px) !important;
+  object-fit: cover !important;
   object-position: center top !important;
 }
 
@@ -950,10 +950,10 @@
     right: 14px;
     top: 29px;
     bottom: 0;
+    transform: translateY(-10px);
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__img--video-crop {
-    transform: translateY(-10px) !important;
     object-position: center top !important;
   }
 }
