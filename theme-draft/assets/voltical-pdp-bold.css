@@ -814,7 +814,7 @@
   left: 15px;
   right: 15px;
   top: 30px;
-  bottom: 4px;
+  bottom: 0;
   width: auto;
   height: auto;
   margin: 0;
@@ -948,6 +948,6 @@
     left: 14px;
     right: 14px;
     top: 29px;
-    bottom: 3px;
+    bottom: 0;
   }
 }
