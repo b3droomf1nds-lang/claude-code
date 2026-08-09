@@ -799,7 +799,7 @@
 }
 .template-product .pdp-cmp__card--video .pdp-cmp__sub {
   position: absolute;
-  top: 6px;
+  top: 8px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
@@ -807,14 +807,14 @@
   font-size: 4.8px;
 }
 .template-product .pdp-cmp__card--video .pdp-cmp__sub--alloy {
-  top: 12px;
+  top: 14px;
 }
 .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
   position: absolute;
   left: 15px;
   right: 15px;
   top: 30px;
-  bottom: 0;
+  bottom: 10px;
   width: auto;
   height: auto;
   margin: 0;
@@ -936,18 +936,18 @@
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__sub {
-    top: 8px;
+    top: 10px;
     font-size: 4.8px;
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__sub--alloy {
-    top: 14px;
+    top: 16px;
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
     left: 14px;
     right: 14px;
     top: 29px;
-    bottom: 0;
+    bottom: 10px;
   }
 }
