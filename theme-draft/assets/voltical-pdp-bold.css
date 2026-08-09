@@ -197,7 +197,7 @@
 .pdp-cmp__card {
   position: relative;
   overflow: hidden;
-  background: radial-gradient(150% 130% at 50% -10%, #ffffff 0%, #ffffff 30%, #e7ecef 100%);
+  background: var(--tile, #F4F8F8);
   border-radius: var(--r-s, 14px);
   padding: 14px 8px;
   height: 92px;
@@ -622,9 +622,9 @@
 .template-product .pdp-cmp__card:not(.pdp-cmp__card--img) {
   justify-content: center;
 }
-.template-product .pdp-cmp__card:not(.pdp-cmp__card--img),
-.template-product .pdp-cmp__card--video {
-  background: var(--tile, #F4F8F8);
+.template-product .pdp-cmp__card--partial-image,
+.template-product .pdp-cmp__card--fade {
+  background: radial-gradient(150% 130% at 50% -10%, #ffffff 0%, #ffffff 30%, #e7ecef 100%);
 }
 .template-product .pdp-cmp__card--fade .pdp-cmp__stat {
   background: linear-gradient(180deg, #131316 0%, rgba(19, 19, 22, 0.35) 100%);
