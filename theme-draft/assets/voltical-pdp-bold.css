@@ -799,16 +799,22 @@
 }
 .template-product .pdp-cmp__card--video .pdp-cmp__sub {
   position: absolute;
-  top: 24px;
+  top: 6px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
   white-space: nowrap;
   font-size: 6px;
 }
+.template-product .pdp-cmp__card--video .pdp-cmp__sub--alloy {
+  top: 14px;
+}
 .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
   position: absolute;
-  inset: 0;
+  left: 14px;
+  right: 14px;
+  top: 32px;
+  bottom: 8px;
   width: auto;
   height: auto;
   margin: 0;
@@ -820,8 +826,8 @@
 .template-product .pdp-cmp__card--video .pdp-cmp__img--video-crop {
   width: 100% !important;
   height: 100% !important;
-  object-fit: cover !important;
-  object-position: top !important;
+  object-fit: contain !important;
+  object-position: center !important;
 }
 
 /* Mobile: keep desktop card proportions while using 2 across x 3 down */
@@ -930,7 +936,18 @@
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__sub {
-    top: 28px;
+    top: 8px;
     font-size: 6px;
+  }
+
+  .template-product .pdp-cmp__card--video .pdp-cmp__sub--alloy {
+    top: 16px;
+  }
+
+  .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
+    left: 12px;
+    right: 12px;
+    top: 34px;
+    bottom: 8px;
   }
 }
