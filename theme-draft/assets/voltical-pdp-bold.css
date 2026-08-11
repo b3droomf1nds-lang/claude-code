@@ -528,6 +528,12 @@
   .pdp--bold {
     background: linear-gradient(to right, #F0F0F3 0%, #F0F0F3 60%, var(--base, #FCFDFE) 92%);
   }
+  .pdp--bold.pdp--core {
+    background-color: #F0F0F3;
+    background-image: linear-gradient(to right, #F0F0F3 0%, #F0F0F3 60%, var(--base, #FCFDFE) 92%);
+    background-repeat: no-repeat;
+    background-size: 100% calc(81.675vh + 335px);
+  }
 }
 @media (max-width: 899px) {
   .pdp--bold .product__grid {
