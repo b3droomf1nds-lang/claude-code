@@ -622,6 +622,14 @@
 .template-product .pdp-cmp__card:not(.pdp-cmp__card--img) {
   justify-content: center;
 }
+.template-product .pdp-cmp__card--magnet {
+  gap: 6px;
+}
+.template-product .pdp-cmp__magnet-icon {
+  width: 26px;
+  height: 26px;
+  color: #131316;
+}
 .template-product .pdp-cmp__card--partial-image,
 .template-product .pdp-cmp__card--fade {
   background: radial-gradient(150% 130% at 50% -10%, #ffffff 0%, #ffffff 30%, #e7ecef 100%);
