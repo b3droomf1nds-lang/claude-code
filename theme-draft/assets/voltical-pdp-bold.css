@@ -385,16 +385,13 @@
   font-size: 1.05rem;
   letter-spacing: -0.01em;
   cursor: pointer;
-  box-shadow: 0 10px 28px rgba(19, 19, 22, 0.16);
-  transition: transform 0.25s var(--ease, ease), box-shadow 0.25s var(--ease, ease);
+  transition: transform 0.25s var(--ease, ease);
 }
 .pdp--bold .atc__btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 14px 34px rgba(19, 19, 22, 0.22);
 }
 .pdp--bold .atc__btn:disabled {
   opacity: 0.45;
-  box-shadow: none;
   cursor: not-allowed;
 }
 .pdp--bold .atc__inner {
