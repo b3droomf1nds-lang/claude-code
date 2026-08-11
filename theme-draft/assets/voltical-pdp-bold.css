@@ -528,6 +528,7 @@
   .pdp--bold.pdp--core {
     background-color: #F0F0F3;
     background-image:
+      radial-gradient(ellipse at top right, rgba(252, 253, 254, 0.65) 0%, rgba(252, 253, 254, 0.3) 45%, rgba(252, 253, 254, 0) 75%),
       linear-gradient(to bottom, rgba(240, 240, 243, 0) 0, rgba(240, 240, 243, 0) calc(81.675vh + 285px), #F0F0F3 calc(81.675vh + 435px)),
       linear-gradient(to right,
         #F0F0F3 0%,
@@ -542,6 +543,9 @@
         #FBFCFD 79%,
         #FCFDFE 80%,
         #FCFDFE 100%);
+    background-size: 55% 420px, auto, auto;
+    background-position: top right, 0 0, 0 0;
+    background-repeat: no-repeat, no-repeat, no-repeat;
   }
 }
 @media (max-width: 899px) {
