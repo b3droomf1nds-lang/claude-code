@@ -413,6 +413,34 @@
       sync();
     })();
 
+    /* The side background fade (.pdp--bold.pdp--core in
+       voltical-pdp-bold.css) has to line up with two actual rendered
+       elements — the image bubble's right edge and the variant
+       selector's left edge — not fixed percentages of page width.
+       The bubble's own width is set in vh (viewport-height) units, so
+       how far across the page it reaches drifts with the window's
+       height-to-width ratio, not just its width. These two custom
+       properties give the CSS gradient the real measured px position
+       of each edge so the fade tracks wherever they actually land. */
+    (function () {
+      var section = document.querySelector('.pdp--bold.pdp--core');
+      var bubble = section && section.querySelector('.gallery__main');
+      var selector = section && section.querySelector('.opt__values--boxed');
+      if (!section || !bubble || !selector) return;
+
+      function update() {
+        var sectionLeft = section.getBoundingClientRect().left;
+        var bubbleRight = bubble.getBoundingClientRect().right;
+        var selectorLeft = selector.getBoundingClientRect().left;
+        section.style.setProperty('--fade-bubble-right', (bubbleRight - sectionLeft) + 'px');
+        section.style.setProperty('--fade-selector-left', (selectorLeft - sectionLeft) + 'px');
+      }
+
+      update();
+      window.addEventListener('resize', update);
+      window.addEventListener('load', update);
+    })();
+
     /* Add to cart only ever catches at the bottom of the screen while
        actively scrolling UP and below its normal spot in the buy
        column — scrolling down never shows it, it only ever appears
