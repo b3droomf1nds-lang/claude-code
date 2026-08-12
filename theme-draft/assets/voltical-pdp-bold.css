@@ -534,7 +534,7 @@
        just collapses flat) instead of degrading into a jumbled ramp
        on those window shapes. */
     --fade-a: min(var(--fade-bubble-right, 918px), calc(var(--fade-selector-left, 969px) - 40px));
-    /* The 40%-shade target lands just inside the selector box's own
+    /* The 20%-shade target lands just inside the selector box's own
        left edge (past its border + padding) rather than right at the
        outer edge, so it's the box's actual visible interior that
        reaches that shade, not the empty page background beside it. */
@@ -551,17 +551,16 @@
         #F1F2F4 calc(var(--fade-a) - 24px),
         #F2F3F5 calc(var(--fade-a) - 12px),
         #F2F3F5 var(--fade-a),
-        #F2F3F5 calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.1667),
-        #F3F4F6 calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.3333),
-        #F4F6F8 calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.5),
-        #F6F7F9 calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.6667),
-        #F7F8FA calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.8333),
-        #F7F8FA var(--fade-b),
-        #F7F8FA calc(var(--fade-b) + (100% - var(--fade-b)) * 0.1667),
-        #F8F9FB calc(var(--fade-b) + (100% - var(--fade-b)) * 0.3333),
-        #FAFAFC calc(var(--fade-b) + (100% - var(--fade-b)) * 0.5),
-        #FBFCFD calc(var(--fade-b) + (100% - var(--fade-b)) * 0.6667),
-        #FCFDFE calc(var(--fade-b) + (100% - var(--fade-b)) * 0.8333),
+        #F3F4F6 calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.1667),
+        #F4F5F7 calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.3333),
+        #F6F7F8 calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.5),
+        #F8F9FA calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.6667),
+        #F9FAFB calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.8333),
+        #FAFBFC var(--fade-b),
+        #FAFBFC calc(var(--fade-b) + (100% - var(--fade-b)) * 0.2),
+        #FAFBFC calc(var(--fade-b) + (100% - var(--fade-b)) * 0.4),
+        #FCFDFE calc(var(--fade-b) + (100% - var(--fade-b)) * 0.6),
+        #FCFDFE calc(var(--fade-b) + (100% - var(--fade-b)) * 0.8),
         #FCFDFE 100%);
     background-size: 55% 420px, auto, auto;
     background-position: top right, 0 0, 0 0;
