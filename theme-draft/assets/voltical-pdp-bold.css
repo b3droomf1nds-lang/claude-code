@@ -541,6 +541,15 @@
     --fade-b: calc(var(--fade-selector-left, 969px) + 20px);
     background-color: #F0F0F3;
     background-image:
+      /* The three bulges: sit in the gaps BETWEEN the buy-column
+         blocks (Color/Capacity, the cross-sell addons, Add to cart),
+         each sized to roughly match its own gap so it recedes again
+         before touching the neighboring block — turns the fade's
+         edge into an uneven line instead of a dead-straight one,
+         which reads as far less deliberate/noticeable. */
+      radial-gradient(ellipse calc(var(--fade-gap1-h, 161px) * 1.05) calc(var(--fade-gap1-h, 161px) * 0.72) at var(--fade-a) var(--fade-gap1-y, 542px), rgba(240, 240, 243, 0.95) 0%, rgba(240, 240, 243, 0) 100%),
+      radial-gradient(ellipse calc(var(--fade-gap2-h, 96px) * 1.2) calc(var(--fade-gap2-h, 96px) * 0.72) at var(--fade-a) var(--fade-gap2-y, 826px), rgba(240, 240, 243, 0.9) 0%, rgba(240, 240, 243, 0) 100%),
+      radial-gradient(ellipse calc(var(--fade-gap3-h, 24px) * 2) calc(var(--fade-gap3-h, 24px) * 0.8) at var(--fade-a) var(--fade-gap3-y, 1123px), rgba(240, 240, 243, 0.75) 0%, rgba(240, 240, 243, 0) 100%),
       radial-gradient(ellipse at top right, rgba(252, 253, 254, 0.65) 0%, rgba(252, 253, 254, 0.3) 45%, rgba(252, 253, 254, 0) 75%),
       linear-gradient(to bottom, rgba(240, 240, 243, 0) 0, rgba(240, 240, 243, 0) calc(81.675vh + 285px), #F0F0F3 calc(81.675vh + 435px)),
       linear-gradient(to right,
@@ -562,9 +571,9 @@
         #FCFDFE calc(var(--fade-b) + (100% - var(--fade-b)) * 0.6),
         #FCFDFE calc(var(--fade-b) + (100% - var(--fade-b)) * 0.8),
         #FCFDFE 100%);
-    background-size: 55% 420px, auto, auto;
-    background-position: top right, 0 0, 0 0;
-    background-repeat: no-repeat, no-repeat, no-repeat;
+    background-size: auto, auto, auto, 55% 420px, auto, auto;
+    background-position: 0 0, 0 0, 0 0, top right, 0 0, 0 0;
+    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
   }
 }
 @media (max-width: 899px) {

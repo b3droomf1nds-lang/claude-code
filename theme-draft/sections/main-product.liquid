@@ -428,12 +428,39 @@
       var selector = section && section.querySelector('.opt__values--boxed');
       if (!section || !bubble || !selector) return;
 
+      /* The fade also bulges a little further out into the gaps
+         BETWEEN the buy-column blocks (option pickers, the cross-sell
+         addons, Add to cart) and recedes right beside each block
+         itself — an uneven edge reads far less like a deliberate,
+         noticeable line than a dead-straight one does. These three
+         gap centers (and how tall each gap is, so a bigger gap gets a
+         bigger bulge) come from the actual rendered blocks so it
+         still lines up if any of them wrap to another line. */
+      var optBoxes = section.querySelectorAll('.opt--boxed');
+      var addons = section.querySelectorAll('.addon');
+      var atc = section.querySelector('.atc');
+
+      function gapVars(topEl, bottomEl, sectionTop, index) {
+        if (!topEl || !bottomEl) return;
+        var a = topEl.getBoundingClientRect();
+        var b = bottomEl.getBoundingClientRect();
+        var center = ((a.bottom + b.top) / 2) - sectionTop;
+        var height = Math.max(b.top - a.bottom, 0);
+        section.style.setProperty('--fade-gap' + index + '-y', center + 'px');
+        section.style.setProperty('--fade-gap' + index + '-h', height + 'px');
+      }
+
       function update() {
         var sectionLeft = section.getBoundingClientRect().left;
+        var sectionTop = section.getBoundingClientRect().top;
         var bubbleRight = bubble.getBoundingClientRect().right;
         var selectorLeft = selector.getBoundingClientRect().left;
         section.style.setProperty('--fade-bubble-right', (bubbleRight - sectionLeft) + 'px');
         section.style.setProperty('--fade-selector-left', (selectorLeft - sectionLeft) + 'px');
+
+        if (optBoxes.length >= 2) gapVars(optBoxes[0], optBoxes[1], sectionTop, 1);
+        if (optBoxes.length >= 2 && addons.length >= 1) gapVars(optBoxes[1], addons[0], sectionTop, 2);
+        if (addons.length >= 1 && atc) gapVars(addons[addons.length - 1], atc, sectionTop, 3);
       }
 
       update();
