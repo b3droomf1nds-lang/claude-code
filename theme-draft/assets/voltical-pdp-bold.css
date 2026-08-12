@@ -534,6 +534,11 @@
        just collapses flat) instead of degrading into a jumbled ramp
        on those window shapes. */
     --fade-a: min(var(--fade-bubble-right, 918px), calc(var(--fade-selector-left, 969px) - 40px));
+    /* The 5%-shade target lands just inside the selector box's own
+       left edge (past its border + padding) rather than right at the
+       outer edge, so it's the box's actual visible interior that
+       reaches that shade, not the empty page background beside it. */
+    --fade-b: calc(var(--fade-selector-left, 969px) + 20px);
     background-color: #F0F0F3;
     background-image:
       radial-gradient(ellipse at top right, rgba(252, 253, 254, 0.65) 0%, rgba(252, 253, 254, 0.3) 45%, rgba(252, 253, 254, 0) 75%),
@@ -546,16 +551,16 @@
         #F1F2F4 calc(var(--fade-a) - 24px),
         #F2F3F5 calc(var(--fade-a) - 12px),
         #F2F3F5 var(--fade-a),
-        #F3F4F6 calc(var(--fade-a) + (var(--fade-selector-left, 969px) - var(--fade-a)) * 0.1667),
-        #F5F5F7 calc(var(--fade-a) + (var(--fade-selector-left, 969px) - var(--fade-a)) * 0.3333),
-        #F7F8FA calc(var(--fade-a) + (var(--fade-selector-left, 969px) - var(--fade-a)) * 0.5),
-        #F9FAFC calc(var(--fade-a) + (var(--fade-selector-left, 969px) - var(--fade-a)) * 0.6667),
-        #FBFBFD calc(var(--fade-a) + (var(--fade-selector-left, 969px) - var(--fade-a)) * 0.8333),
-        #FCFCFE var(--fade-selector-left, 969px),
-        #FCFCFE calc(var(--fade-selector-left, 969px) + (100% - var(--fade-selector-left, 969px)) * 0.2),
-        #FCFCFE calc(var(--fade-selector-left, 969px) + (100% - var(--fade-selector-left, 969px)) * 0.4),
-        #FCFDFE calc(var(--fade-selector-left, 969px) + (100% - var(--fade-selector-left, 969px)) * 0.6),
-        #FCFDFE calc(var(--fade-selector-left, 969px) + (100% - var(--fade-selector-left, 969px)) * 0.8),
+        #F3F4F6 calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.1667),
+        #F5F5F7 calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.3333),
+        #F7F8FA calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.5),
+        #F9FAFC calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.6667),
+        #FBFBFD calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.8333),
+        #FCFCFE var(--fade-b),
+        #FCFCFE calc(var(--fade-b) + (100% - var(--fade-b)) * 0.2),
+        #FCFCFE calc(var(--fade-b) + (100% - var(--fade-b)) * 0.4),
+        #FCFDFE calc(var(--fade-b) + (100% - var(--fade-b)) * 0.6),
+        #FCFDFE calc(var(--fade-b) + (100% - var(--fade-b)) * 0.8),
         #FCFDFE 100%);
     background-size: 55% 420px, auto, auto;
     background-position: top right, 0 0, 0 0;
