@@ -428,16 +428,15 @@
       var selector = section && section.querySelector('.opt__values--boxed');
       if (!section || !bubble || !selector) return;
 
-      /* The fade's boundary also runs as one continuous wavy line
-         down past the buy-column blocks (option pickers, the
-         cross-sell addons) instead of a dead-straight one — small
-         ripples the whole way down, with bigger swings out into the
-         open gaps between blocks and a gentler ripple right beside
-         each block itself. An uneven, hand-drawn-feeling edge reads
-         far less like a deliberate line than a perfectly straight one
-         does. It stops after the addons — nothing wavy behind Add to
-         cart, which is solid black anyway. Built from the actual
-         rendered block positions so it still lines up if content
+      /* The fade's boundary runs as one continuous wavy line for the
+         section's full height (not just down the buy column) instead
+         of a dead-straight one — small ripples the whole way down,
+         with bigger swings out into the open gaps between blocks and
+         a gentler ripple right beside each block itself, and up in
+         the empty area above Color too. An uneven, hand-drawn-feeling
+         edge reads far less like a deliberate line than a perfectly
+         straight one does. Built from the actual rendered block
+         positions so it still lines up if content
          wraps to another line or a block is missing. */
       var optBoxes = section.querySelectorAll('.opt--boxed');
       var addons = section.querySelectorAll('.addon');
@@ -486,7 +485,7 @@
           return best;
         }
 
-        var topY = color.top, bottomY = endBox.bottom;
+        var topY = 0, bottomY = endBox.bottom;
         var step = 10, rippleAmp = 3, ripplePeriod = 78;
         // Drawn in a small self-contained coordinate space (local x=0
         // is the "receded" baseline, local y=0 is topY) rather than in
