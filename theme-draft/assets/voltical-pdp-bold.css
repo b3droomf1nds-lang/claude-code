@@ -541,15 +541,6 @@
     --fade-b: calc(var(--fade-selector-left, 969px) + 20px);
     background-color: #F0F0F3;
     background-image:
-      /* Guarantees the far-right column stays on the light tone for
-         the section's FULL height, painted on top of every other
-         layer — including the one below that goes flat gray further
-         down the page. Sizing that other layer's width to stop short
-         of the selector isn't reliable on its own (same issue as the
-         bubble-edge tracking earlier: a percentage/width guess drifts
-         on different window shapes), so this instead makes the
-         far-right zone unconditionally win regardless of y. */
-      linear-gradient(to right, transparent 0%, transparent var(--fade-b, 969px), #FCFDFE var(--fade-b, 969px), #FCFDFE 100%),
       /* One continuous wavy line down past the buy-column blocks
          (Color/Capacity, the cross-sell addons) instead of a
          dead-straight edge: small ripples the whole way down, bigger
@@ -559,6 +550,10 @@
          real block positions to work from. */
       var(--fade-wave-svg, none),
       radial-gradient(ellipse at top right, rgba(252, 253, 254, 0.65) 0%, rgba(252, 253, 254, 0.3) 45%, rgba(252, 253, 254, 0) 75%),
+      /* Only reaches from the bubble out to just past the selector —
+         sized so it never reaches the far-right column, which should
+         stay on the light tone all the way down the page instead of
+         reverting to gray past this point too. */
       linear-gradient(to bottom, rgba(240, 240, 243, 0) 0, rgba(240, 240, 243, 0) calc(81.675vh + 285px), #F0F0F3 calc(81.675vh + 435px)),
       linear-gradient(to right,
         #F0F0F3 0%,
@@ -579,9 +574,9 @@
         #FCFDFE calc(var(--fade-b) + (100% - var(--fade-b)) * 0.6),
         #FCFDFE calc(var(--fade-b) + (100% - var(--fade-b)) * 0.8),
         #FCFDFE 100%);
-    background-size: auto, auto, 55% 420px, auto, auto;
-    background-position: 0 0, var(--fade-wave-x, 0) var(--fade-wave-y, 0), top right, 0 0, 0 0;
-    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+    background-size: auto, 55% 420px, calc(var(--fade-b, 969px) + 40px) auto, auto;
+    background-position: var(--fade-wave-x, 0) var(--fade-wave-y, 0), top right, 0 0, 0 0;
+    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
   }
 }
 @media (max-width: 899px) {
