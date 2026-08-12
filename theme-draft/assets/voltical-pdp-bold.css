@@ -541,6 +541,14 @@
     --fade-b: calc(var(--fade-selector-left, 969px) + 20px);
     background-color: #F0F0F3;
     background-image:
+      /* Guarantees the far-right column (beside the selectors, buy
+         button, etc.) stays on the light tone for the section's FULL
+         height, painted on top of every other layer — including the
+         one below that goes flat gray further down the page once
+         you scroll past the bubble. Unconditional (not sized/guessed
+         to stop short of this zone) so it can't be reached by the
+         darkening below it regardless of aspect ratio. */
+      linear-gradient(to right, transparent 0%, transparent var(--fade-b, 969px), #FCFDFE var(--fade-b, 969px), #FCFDFE 100%),
       /* One continuous wavy line down past the buy-column blocks
          (Color/Capacity, the cross-sell addons) instead of a
          dead-straight edge: small ripples the whole way down, bigger
@@ -570,9 +578,9 @@
         #FCFDFE calc(var(--fade-b) + (100% - var(--fade-b)) * 0.6),
         #FCFDFE calc(var(--fade-b) + (100% - var(--fade-b)) * 0.8),
         #FCFDFE 100%);
-    background-size: auto, 55% 420px, auto, auto;
-    background-position: var(--fade-wave-x, 0) var(--fade-wave-y, 0), top right, 0 0, 0 0;
-    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+    background-size: auto, auto, 55% 420px, auto, auto;
+    background-position: 0 0, var(--fade-wave-x, 0) var(--fade-wave-y, 0), top right, 0 0, 0 0;
+    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
   }
 }
 @media (max-width: 899px) {
