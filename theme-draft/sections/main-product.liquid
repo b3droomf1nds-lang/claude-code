@@ -441,9 +441,11 @@
          wraps to another line or a block is missing. */
       var optBoxes = section.querySelectorAll('.opt--boxed');
       var addons = section.querySelectorAll('.addon');
+      var atc = section.querySelector('.atc');
+      var shipNote = section.querySelector('.ship-note');
 
       function buildWave() {
-        if (optBoxes.length < 2 || addons.length < 1) {
+        if (optBoxes.length < 2 || addons.length < 1 || !atc) {
           section.style.removeProperty('--fade-wave-svg');
           return;
         }
@@ -454,26 +456,37 @@
         var capacity = rel(optBoxes[1].getBoundingClientRect());
         var lastAddon = rel(addons[addons.length - 1].getBoundingClientRect());
         var addonsBlock = { top: rel(addons[0].getBoundingClientRect()).top, bottom: lastAddon.bottom };
+        var atcBox = rel(atc.getBoundingClientRect());
+        var endBox = shipNote ? rel(shipNote.getBoundingClientRect()) : atcBox;
 
         // Content zones recede to the baseline (plus a small ripple);
-        // the two gaps between them bulge out, peak at the gap's own
+        // the gaps between them bulge out, peak at the gap's own
         // center, tapering to zero (matching the content zones on
         // either side) by the gap's own edges — a bigger gap gets a
-        // bigger, wider bulge.
+        // bigger, wider bulge. Runs all the way past Add to cart now,
+        // not just down to the addons.
         var gap1 = { center: (color.bottom + capacity.top) / 2, half: (capacity.top - color.bottom) / 2 };
         var gap2 = { center: (capacity.bottom + addonsBlock.top) / 2, half: (addonsBlock.top - capacity.bottom) / 2 };
+        var gap3 = { center: (addonsBlock.bottom + atcBox.top) / 2, half: (atcBox.top - addonsBlock.bottom) / 2 };
         var gap1Peak = Math.min(gap1.half * 0.55, 45);
         var gap2Peak = Math.min(gap2.half * 0.55, 45);
+        var gap3Peak = Math.min(gap3.half * 0.55, 45);
 
         function boost(y) {
-          var d1 = Math.abs(y - gap1.center);
-          var b1 = d1 < gap1.half ? gap1Peak * 0.5 * (1 + Math.cos(Math.PI * d1 / gap1.half)) : 0;
-          var d2 = Math.abs(y - gap2.center);
-          var b2 = d2 < gap2.half ? gap2Peak * 0.5 * (1 + Math.cos(Math.PI * d2 / gap2.half)) : 0;
-          return Math.max(b1, b2);
+          var gaps = [gap1, gap2, gap3];
+          var peaks = [gap1Peak, gap2Peak, gap3Peak];
+          var best = 0;
+          for (var i = 0; i < gaps.length; i++) {
+            var d = Math.abs(y - gaps[i].center);
+            if (d < gaps[i].half) {
+              var b = peaks[i] * 0.5 * (1 + Math.cos(Math.PI * d / gaps[i].half));
+              if (b > best) best = b;
+            }
+          }
+          return best;
         }
 
-        var topY = color.top, bottomY = addonsBlock.bottom;
+        var topY = color.top, bottomY = endBox.bottom;
         var step = 10, rippleAmp = 3, ripplePeriod = 78;
         // Drawn in a small self-contained coordinate space (local x=0
         // is the "receded" baseline, local y=0 is topY) rather than in
@@ -492,7 +505,7 @@
           points.push([y - topY, PAD + offset]);
         }
 
-        var svgW = PAD + 40 + Math.max(gap1Peak, gap2Peak, 40);
+        var svgW = PAD + 40 + Math.max(gap1Peak, gap2Peak, gap3Peak, 40);
         var svgH = bottomY - topY;
         var d = 'M ' + points[0][1].toFixed(1) + ',' + points[0][0].toFixed(1);
         for (var i = 1; i < points.length; i++) {
