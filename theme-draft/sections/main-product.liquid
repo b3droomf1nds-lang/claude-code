@@ -428,39 +428,93 @@
       var selector = section && section.querySelector('.opt__values--boxed');
       if (!section || !bubble || !selector) return;
 
-      /* The fade also bulges a little further out into the gaps
-         BETWEEN the buy-column blocks (option pickers, the cross-sell
-         addons, Add to cart) and recedes right beside each block
-         itself — an uneven edge reads far less like a deliberate,
-         noticeable line than a dead-straight one does. These three
-         gap centers (and how tall each gap is, so a bigger gap gets a
-         bigger bulge) come from the actual rendered blocks so it
-         still lines up if any of them wrap to another line. */
+      /* The fade's boundary also runs as one continuous wavy line
+         down past the buy-column blocks (option pickers, the
+         cross-sell addons) instead of a dead-straight one — small
+         ripples the whole way down, with bigger swings out into the
+         open gaps between blocks and a gentler ripple right beside
+         each block itself. An uneven, hand-drawn-feeling edge reads
+         far less like a deliberate line than a perfectly straight one
+         does. It stops after the addons — nothing wavy behind Add to
+         cart, which is solid black anyway. Built from the actual
+         rendered block positions so it still lines up if content
+         wraps to another line or a block is missing. */
       var optBoxes = section.querySelectorAll('.opt--boxed');
       var addons = section.querySelectorAll('.addon');
-      var atc = section.querySelector('.atc');
 
-      function gapVars(topEl, bottomEl, sectionTop, index) {
-        if (!topEl || !bottomEl) return;
-        var a = topEl.getBoundingClientRect();
-        var b = bottomEl.getBoundingClientRect();
-        var center = ((a.bottom + b.top) / 2) - sectionTop;
-        var height = Math.max(b.top - a.bottom, 0);
-        section.style.setProperty('--fade-gap' + index + '-y', center + 'px');
-        section.style.setProperty('--fade-gap' + index + '-h', height + 'px');
+      function buildWave() {
+        if (optBoxes.length < 2 || addons.length < 1) {
+          section.style.removeProperty('--fade-wave-svg');
+          return;
+        }
+        var sectionBox = section.getBoundingClientRect();
+        var sectionLeft = sectionBox.left, sectionTop = sectionBox.top;
+        var rel = function (r) { return { top: r.top - sectionTop, bottom: r.bottom - sectionTop }; };
+        var color = rel(optBoxes[0].getBoundingClientRect());
+        var capacity = rel(optBoxes[1].getBoundingClientRect());
+        var lastAddon = rel(addons[addons.length - 1].getBoundingClientRect());
+        var addonsBlock = { top: rel(addons[0].getBoundingClientRect()).top, bottom: lastAddon.bottom };
+
+        // Content zones recede to the baseline (plus a small ripple);
+        // the two gaps between them bulge out, peak at the gap's own
+        // center, tapering to zero (matching the content zones on
+        // either side) by the gap's own edges — a bigger gap gets a
+        // bigger, wider bulge.
+        var gap1 = { center: (color.bottom + capacity.top) / 2, half: (capacity.top - color.bottom) / 2 };
+        var gap2 = { center: (capacity.bottom + addonsBlock.top) / 2, half: (addonsBlock.top - capacity.bottom) / 2 };
+        var gap1Peak = Math.min(gap1.half * 1.1, 95);
+        var gap2Peak = Math.min(gap2.half * 1.1, 95);
+
+        function boost(y) {
+          var d1 = Math.abs(y - gap1.center);
+          var b1 = d1 < gap1.half ? gap1Peak * 0.5 * (1 + Math.cos(Math.PI * d1 / gap1.half)) : 0;
+          var d2 = Math.abs(y - gap2.center);
+          var b2 = d2 < gap2.half ? gap2Peak * 0.5 * (1 + Math.cos(Math.PI * d2 / gap2.half)) : 0;
+          return Math.max(b1, b2);
+        }
+
+        var topY = color.top, bottomY = addonsBlock.bottom;
+        var step = 10, rippleAmp = 7, ripplePeriod = 78;
+        // Drawn in a small self-contained coordinate space (local x=0
+        // is the "receded" baseline, local y=0 is topY) rather than in
+        // real page coordinates — --fade-a is a min()/calc()
+        // expression the browser resolves at paint time, not a plain
+        // number JS can read back out, so this whole layer gets
+        // shifted into place afterwards via background-position:
+        // var(--fade-a) topYpx, with PAD absorbing the ripple's small
+        // negative dips so nothing gets clipped.
+        var PAD = 20;
+        var points = [];
+        for (var y = topY; y <= bottomY; y += step) {
+          var ripple = rippleAmp * Math.sin((2 * Math.PI * (y - topY)) / ripplePeriod);
+          var offset = ripple + boost(y);
+          if (offset < -14) offset = -14;
+          points.push([y - topY, PAD + offset]);
+        }
+
+        var svgW = PAD + 20 + Math.max(gap1Peak, gap2Peak, 40);
+        var svgH = bottomY - topY;
+        var d = 'M ' + points[0][1].toFixed(1) + ',' + points[0][0].toFixed(1);
+        for (var i = 1; i < points.length; i++) {
+          d += ' L ' + points[i][1].toFixed(1) + ',' + points[i][0].toFixed(1);
+        }
+        var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + svgW.toFixed(0) + '" height="' + svgH.toFixed(0) + '">' +
+          '<path d="' + d + '" fill="none" stroke="rgba(240,240,243,0.85)" stroke-width="15" ' +
+          'stroke-linecap="round" stroke-linejoin="round" style="filter:blur(5px)"/>' +
+          '</svg>';
+        var url = 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
+        section.style.setProperty('--fade-wave-svg', url);
+        section.style.setProperty('--fade-wave-x', 'calc(var(--fade-a) - ' + PAD + 'px)');
+        section.style.setProperty('--fade-wave-y', topY.toFixed(1) + 'px');
       }
 
       function update() {
         var sectionLeft = section.getBoundingClientRect().left;
-        var sectionTop = section.getBoundingClientRect().top;
         var bubbleRight = bubble.getBoundingClientRect().right;
         var selectorLeft = selector.getBoundingClientRect().left;
         section.style.setProperty('--fade-bubble-right', (bubbleRight - sectionLeft) + 'px');
         section.style.setProperty('--fade-selector-left', (selectorLeft - sectionLeft) + 'px');
-
-        if (optBoxes.length >= 2) gapVars(optBoxes[0], optBoxes[1], sectionTop, 1);
-        if (optBoxes.length >= 2 && addons.length >= 1) gapVars(optBoxes[1], addons[0], sectionTop, 2);
-        if (addons.length >= 1 && atc) gapVars(addons[addons.length - 1], atc, sectionTop, 3);
+        buildWave();
       }
 
       update();
