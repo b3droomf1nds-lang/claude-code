@@ -520,13 +520,18 @@
         // line all but disappears at this size. Trace that span again
         // as its own path (bolder, less blur) so just the sweep gets
         // more visible while the ripple further down stays as subtle
-        // as it was.
-        var gap0Points = points.filter(function (pt) { return pt[0] <= color.top; });
+        // as it was. Built from the plain boost curve with no ripple
+        // riding on top of it — that small high-frequency wobble is
+        // what was making a sweep this large look jittery instead of
+        // one clean curve.
         var d0 = '';
-        if (gap0Points.length > 1) {
-          d0 = 'M ' + gap0Points[0][1].toFixed(1) + ',' + gap0Points[0][0].toFixed(1);
-          for (var j = 1; j < gap0Points.length; j++) {
-            d0 += ' L ' + gap0Points[j][1].toFixed(1) + ',' + gap0Points[j][0].toFixed(1);
+        var gap0PointCount = 0;
+        for (var y0 = topY; y0 <= color.top; y0 += step) gap0PointCount++;
+        if (gap0PointCount > 1) {
+          var y0first = topY;
+          d0 = 'M ' + (PAD + boost(y0first)).toFixed(1) + ',' + (y0first - topY).toFixed(1);
+          for (var y0v = topY + step; y0v <= color.top; y0v += step) {
+            d0 += ' L ' + (PAD + boost(y0v)).toFixed(1) + ',' + (y0v - topY).toFixed(1);
           }
         }
         var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + svgW.toFixed(0) + '" height="' + svgH.toFixed(0) + '">' +
