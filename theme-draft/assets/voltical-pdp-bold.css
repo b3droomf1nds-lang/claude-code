@@ -109,9 +109,9 @@
   }
   .pdp-cmp__select-group {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
     transform: scale(0.5) translateY(66.67px);
     transform-origin: top center;
   }
@@ -124,7 +124,12 @@
   }
   .pdp-cmp__select-heading {
     margin-bottom: 0;
-    flex: 1 1 auto;
+    /* Sized (and forced onto one line) to fit the full width of the
+       box now that it sits on its own row above the dropdown instead
+       of squeezed beside it — at the original 1.6rem it wrapped
+       across 2-3 lines in that narrow leftover space. */
+    font-size: 1.1rem;
+    white-space: nowrap;
   }
   .pdp-cmp__grid {
     transform: scale(1.449);
