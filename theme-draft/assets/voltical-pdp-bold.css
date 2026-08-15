@@ -954,6 +954,7 @@
   height: 100% !important;
   object-fit: contain !important;
   object-position: center bottom !important;
+  transform: scaleX(-1);
 }
 
 /* Mobile: keep desktop's card proportions exactly — 1 column now
