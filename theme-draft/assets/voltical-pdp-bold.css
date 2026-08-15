@@ -186,12 +186,16 @@
   padding: 13px 38px 13px 20px;
   box-shadow: 0 1px 2px rgba(19,19,22,.04);
 }
-.pdp-cmp__select:focus {
-  outline: none;
-}
+.pdp-cmp__select,
+.pdp-cmp__select:focus,
 .pdp-cmp__select:focus-visible {
-  outline: 2px solid var(--ink, #131316);
-  outline-offset: 2px;
+  outline: none !important;
+  box-shadow: 0 1px 2px rgba(19,19,22,.04) !important;
+  -webkit-tap-highlight-color: transparent;
+}
+.pdp-cmp__select:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 var(--ink, #131316);
 }
 .pdp-cmp__grid {
   display: grid;
