@@ -730,12 +730,12 @@
   justify-content: center;
 }
 .template-product .pdp-cmp__card--magnet {
-  gap: 6px;
+  gap: 8px;
 }
 .template-product .pdp-cmp__magnet-icon {
-  width: 26px;
-  height: 26px;
-  color: #131316;
+  width: auto;
+  height: 32px;
+  display: block;
 }
 .template-product .pdp-cmp__card--fade .pdp-cmp__stat {
   background: linear-gradient(180deg, #131316 0%, rgba(19, 19, 22, 0.35) 100%);
@@ -988,12 +988,12 @@
   }
 
   .template-product .pdp-cmp__card--magnet {
-    gap: 19.69px;
+    gap: 26.25px;
   }
 
   .template-product .pdp-cmp__magnet-icon {
-    width: 85.32px;
-    height: 85.32px;
+    width: auto;
+    height: 105.01px;
   }
 
   .template-product .pdp-cmp__card--img {
