@@ -45,6 +45,12 @@
   .cv-btn--go:hover{background:#0a74e0;}
 
   .cv-hover{outline:1.5px dashed rgba(10,132,255,.55) !important;outline-offset:1px;cursor:grab;}
+  /* The image wrappers are normally pointer-events:none (they're decorative,
+     aria-hidden) so clicks pass through to the tile behind them. While
+     editing, re-enable pointer events on them so the image itself is
+     clickable/double-clickable like everything else. */
+  .cv-editing .pdp-cmp__img-slot,
+  .cv-editing .pdp-cmp__img-slot img{pointer-events:auto !important;}
   .cv-box{position:fixed;z-index:2147482000;border:1.5px solid #0a84ff;pointer-events:none;
     box-shadow:0 0 0 1px rgba(255,255,255,.6);}
   .cv-h{position:absolute;width:12px;height:12px;background:#fff;border:1.5px solid #0a84ff;
