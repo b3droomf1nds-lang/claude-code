@@ -29,6 +29,14 @@
     (or every tile, if nothing is selected) back to its perfect grid
     position — up to 14px of drift. Shift+click "Align" for a bigger
     correction (up to 40px). Deliberate larger moves are left alone.
+
+  EDITING TEXT
+    Double-click any caption/heading (not the live numbers, which are
+    computed by JS) to start typing into it, in its own font — the
+    cursor lands at the end of the existing text so you can add more.
+    Press Enter to start a new line lower in the same box. Click
+    anywhere else (or press Escape) to stop typing; the edit is saved
+    live like everything else and included in "Copy layout".
 {%- endcomment -%}
 <style>
   .cv-tb{position:fixed;top:14px;left:14px;z-index:2147483000;display:flex;gap:6px;align-items:center;
@@ -62,6 +70,7 @@
   .cv-tag{position:absolute;top:-22px;left:-1px;background:#0a84ff;color:#fff;font:11px/1 -apple-system,
     BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:3px 6px;border-radius:5px;white-space:nowrap;
     pointer-events:none;}
+  .cv-editing-text{outline:2px solid #0a84ff !important;outline-offset:2px;cursor:text !important;}
 
   .cv-panel{position:fixed;inset:0;z-index:2147483100;background:rgba(0,0,0,.55);display:none;
     align-items:center;justify-content:center;padding:24px;}
@@ -113,19 +122,47 @@
       }
       return parts.join('>');
     }
-    function stateOf(el){ var s = layout[el.__cvKey]; return s ? {dx:s.dx||0, dy:s.dy||0, s:s.s||1} : {dx:0,dy:0,s:1}; }
+    // Only literal captions are safe to type into — the stat numbers
+    // (data-calc-*) are computed live by the compare script, so editing
+    // them by hand would just get overwritten on the next recalculation.
+    function isTextEditable(el){
+      return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading');
+    }
+
+    var editingEl = null;
+
+    function stateOf(el){
+      var s = layout[el.__cvKey];
+      return s ? {dx:s.dx||0, dy:s.dy||0, s:s.s||1, text:(s.text!=null ? s.text : null)} : {dx:0,dy:0,s:1,text:null};
+    }
     function applyState(el){
       var st = stateOf(el);
       var extra = '';
       if (st.dx || st.dy) extra += 'translate(' + st.dx + 'px,' + st.dy + 'px) ';
       if (st.s && st.s !== 1) extra += 'scale(' + st.s + ') ';
       el.style.transform = (extra + el.__cvBase).trim();
+      // Never touch innerHTML of the box currently being typed into —
+      // that would reset the cursor mid-keystroke.
+      if (el.__cvTextEditable && st.text != null && el !== editingEl && el.innerHTML !== st.text){
+        el.innerHTML = st.text;
+      }
     }
     function saveState(el, st){
-      if (!st.dx && !st.dy && (!st.s || st.s === 1)) delete layout[el.__cvKey];
-      else layout[el.__cvKey] = {dx:Math.round(st.dx*100)/100, dy:Math.round(st.dy*100)/100, s:Math.round(st.s*10000)/10000};
+      var noTransform = !st.dx && !st.dy && (!st.s || st.s === 1);
+      var noText = st.text == null || (el.__cvTextEditable && st.text === el.__cvOrigText);
+      if (noTransform && noText) delete layout[el.__cvKey];
+      else {
+        var entry = {dx:Math.round(st.dx*100)/100, dy:Math.round(st.dy*100)/100, s:Math.round(st.s*10000)/10000};
+        if (!noText) entry.text = st.text;
+        layout[el.__cvKey] = entry;
+      }
       ls(false, LKEY, JSON.stringify(layout));
       applyState(el);
+    }
+    function saveText(el){
+      var st = stateOf(el);
+      st.text = el.innerHTML;
+      saveState(el, st);
     }
 
     // Register every editable element: record its base transform + stable key,
@@ -135,6 +172,8 @@
       var cs = getComputedStyle(el).transform;
       el.__cvBase = (cs && cs !== 'none') ? cs : '';
       el.__cvKey  = pathFor(el);
+      el.__cvTextEditable = isTextEditable(el);
+      el.__cvOrigText = el.__cvTextEditable ? el.innerHTML : null;
       applyState(el);
     });
 
@@ -186,9 +225,44 @@
     function select(el){ sel = el; tag.textContent = label(el); positionBox(); }
     function deselect(){ sel = null; positionBox(); }
 
+    // ---- inline text editing ----
+    function enterTextEdit(el){
+      editingEl = el;
+      el.contentEditable = 'true';
+      el.spellcheck = false;
+      el.classList.add('cv-editing-text');
+      el.focus();
+      // Cursor starts at the end of the existing text, so typing adds on
+      // rather than replacing what's already there.
+      var range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      var s = window.getSelection();
+      s.removeAllRanges();
+      s.addRange(range);
+    }
+    function exitTextEdit(){
+      if (!editingEl) return;
+      var el = editingEl;
+      editingEl = null;
+      el.contentEditable = 'false';
+      el.classList.remove('cv-editing-text');
+      saveText(el);
+    }
+    function insertLineBreak(){
+      // Not a hand-rolled Range insertion: browsers get ambiguous about
+      // caret placement when a <br> ends up as the last child (the next
+      // typed character can land BEFORE it instead of after) — the native
+      // command already handles that quirk correctly, since browsers use
+      // this same routine internally for shift+Enter in real editors.
+      if (!document.execCommand('insertLineBreak')){
+        document.execCommand('insertHTML', false, '<br>');
+      }
+    }
+
     // ---- hover outline (shows the whole tile — what a single click grabs) ----
     root.addEventListener('mousemove', function(e){
-      if (dragging) return;
+      if (dragging || editingEl) return;
       var hit = e.target.closest(EDITABLE);
       var t = hit ? (hit.closest('.pdp-cmp__card') || hit) : null;
       if (lastHover && lastHover !== t) lastHover.classList.remove('cv-hover');
@@ -204,7 +278,13 @@
     // ---- drag: move ----
     var dragging = null;
     function onDown(e){
+      // A field is currently being typed into: clicks inside it just place
+      // the cursor (native behavior); clicks anywhere else save + close it
+      // before doing anything else, so a click on the toolbar or another
+      // tile never loses an in-progress edit.
+      if (editingEl && !editingEl.contains(e.target)) exitTextEdit();
       if (e.target.closest('.cv-tb, .cv-panel')) return;
+      if (editingEl) return;
       var handle = e.target.closest('.cv-h');
       if (handle && sel){ startResize(e, handle.dataset.corner); return; }
       var hit = e.target.closest(EDITABLE);
@@ -220,6 +300,17 @@
       else if (e.detail >= 2) t = hit; // double-click drills to the exact element
       else if (drilledOnSel) t = sel;  // keep a drilled child selected so it can be dragged
       else t = card;                   // single click grabs the whole tile
+
+      // Double-clicking a caption/heading starts typing into it instead of
+      // dragging it.
+      if (e.detail >= 2 && isTextEditable(t)){
+        e.preventDefault();
+        select(t);
+        if (lastHover){ lastHover.classList.remove('cv-hover'); lastHover = null; }
+        enterTextEdit(t);
+        return;
+      }
+
       e.preventDefault();
       select(t);
       if (lastHover){ lastHover.classList.remove('cv-hover'); lastHover = null; }
@@ -256,7 +347,7 @@
 
     // ---- wheel to resize the selected element ----
     document.addEventListener('wheel', function(e){
-      if (!sel) return;
+      if (!sel || editingEl) return;
       var r = sel.getBoundingClientRect();
       if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
       e.preventDefault();
@@ -265,8 +356,19 @@
       saveState(sel, st); positionBox();
     }, {passive:false});
 
-    // ---- arrow-key nudge ----
+    // ---- arrow-key nudge (and typing, when a caption is being edited) ----
     document.addEventListener('keydown', function(e){
+      if (editingEl){
+        if (e.key === 'Enter'){
+          e.preventDefault();
+          insertLineBreak();
+          saveText(editingEl);
+        } else if (e.key === 'Escape'){
+          e.preventDefault();
+          exitTextEdit();
+        }
+        return; // every other key (letters, backspace, arrow-to-move-cursor...) behaves natively
+      }
       if (!sel) return;
       var step = e.shiftKey ? 10 : 1, st = stateOf(sel), moved = true;
       if (e.key === 'ArrowLeft') st.dx -= step; else if (e.key === 'ArrowRight') st.dx += step;
@@ -274,6 +376,13 @@
       else if (e.key === 'Escape'){ deselect(); return; }
       else moved = false;
       if (moved){ e.preventDefault(); saveState(sel, st); positionBox(); }
+    });
+
+    // Live-save while typing (covers the case where a click elsewhere is
+    // the very first event caught, so nothing is lost between keystrokes
+    // and the eventual exit-save).
+    root.addEventListener('input', function(e){
+      if (editingEl && e.target === editingEl) saveText(editingEl);
     });
 
     // ---- align: snap small accidental drift back to perfect (0,0 / scale 1) ----
@@ -302,8 +411,13 @@
       var out = [];
       els.forEach(function(el){
         var s = layout[el.__cvKey];
-        if (!s || (!s.dx && !s.dy && (!s.s || s.s === 1))) return;
-        out.push({ sel: '.pdp-cmp>' + el.__cvKey, kind: label(el), dx: s.dx||0, dy: s.dy||0, s: s.s||1, base: el.__cvBase || 'none' });
+        if (!s) return;
+        var hasTransform = s.dx || s.dy || (s.s && s.s !== 1);
+        var hasText = s.text != null;
+        if (!hasTransform && !hasText) return;
+        var item = { sel: '.pdp-cmp>' + el.__cvKey, kind: label(el), dx: s.dx||0, dy: s.dy||0, s: s.s||1, base: el.__cvBase || 'none' };
+        if (hasText) item.text = s.text;
+        out.push(item);
       });
       return JSON.stringify({ v:1, note:'Voltical compare-grid layout — desktop', items: out }, null, 2);
     }
@@ -312,7 +426,7 @@
     var tb = document.createElement('div'); tb.className = 'cv-tb';
     tb.innerHTML =
       '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
-      '<span class="cv-tb__hint">Click a tile · double-click to grab what’s inside · drag to move · corner or scroll to resize · arrows nudge</span>' +
+      '<span class="cv-tb__hint">Click a tile · double-click to grab what’s inside, or to type into a caption · drag to move · corner or scroll to resize · arrows nudge</span>' +
       '<button class="cv-btn" data-cv="align" title="Snap small drift back to perfect. Shift+click for a bigger correction.">Align</button>' +
       '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
       '<button class="cv-btn" data-cv="reset-all">Reset all</button>' +
@@ -338,10 +452,20 @@
       var b = e.target.closest('[data-cv]'); if (!b) return;
       var a = b.dataset.cv;
       if (a === 'align'){ align(e.shiftKey ? 40 : 14); }
-      else if (a === 'reset-sel' && sel){ saveState(sel, {dx:0,dy:0,s:1}); positionBox(); }
+      else if (a === 'reset-sel' && sel){
+        var keepText = stateOf(sel).text;
+        saveState(sel, {dx:0, dy:0, s:1, text:keepText});
+        positionBox();
+      }
       else if (a === 'reset-all'){
-        if (confirm('Reset every tile, image and text back to its original position?')){
-          layout = {}; ls(false, LKEY, '{}'); els.forEach(applyState); deselect();
+        if (confirm('Reset every tile, image and text back to its original position? (typed caption edits are kept)')){
+          Object.keys(layout).forEach(function(k){
+            layout[k] = layout[k].text != null ? {dx:0, dy:0, s:1, text:layout[k].text} : undefined;
+            if (layout[k] === undefined) delete layout[k];
+          });
+          ls(false, LKEY, JSON.stringify(layout));
+          els.forEach(applyState);
+          deselect();
         }
       }
       else if (a === 'copy'){ ta.value = exportCode(); copyToClipboard(ta.value); panel.classList.add('is-open'); }
