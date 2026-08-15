@@ -1,0 +1,330 @@
+{%- comment -%}
+  Canva-style live layout editor for the compare tile section.
+
+  It turns the "See how Core upgrades your experience" block into a
+  drag-and-drop canvas: click any tile / image / text / icon to select
+  it, drag to move it, and drag a corner (or scroll the wheel) to make
+  it bigger or smaller — just like moving elements around a Canva page.
+
+  HOW IT TURNS ON
+    Add ?edit=1 to the product-page URL in the theme preview. That flips
+    the section into edit mode AND remembers it (so it stays on across
+    reloads while you fine-tune). Add ?edit=0 (or hit "Done") to leave.
+    Normal visitors never see any of this — with no flag, the script only
+    re-applies a saved layout and adds zero controls.
+
+  HOW "LOCK IT" WORKS
+    Your moves are saved live in the browser (localStorage) so nothing is
+    lost on reload and the preview always shows your work-in-progress.
+    When it's positioned how you want, click "Copy layout" (or just tell
+    Claude "lock it") and hand Claude the copied code — Claude bakes those
+    exact positions/sizes permanently into the desktop CSS and clears the
+    temporary browser copy.
+
+  This is a desktop tool: the compare grid only uses its big scaled
+  layout at >=900px, so the editor's handles only appear there.
+{%- endcomment -%}
+<style>
+  .cv-tb{position:fixed;top:14px;left:14px;z-index:2147483000;display:flex;gap:6px;align-items:center;
+    background:#111;color:#fff;border:1px solid #2c2c2c;border-radius:12px;padding:8px 10px;
+    font:13px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    box-shadow:0 8px 30px rgba(0,0,0,.35);user-select:none;}
+  .cv-tb__dot{width:8px;height:8px;border-radius:50%;background:#16c76a;box-shadow:0 0 8px #16c76a;flex:none;}
+  .cv-tb__title{font-weight:600;letter-spacing:.02em;margin-right:4px;}
+  .cv-tb__hint{opacity:.55;font-size:11px;max-width:280px;line-height:1.35;}
+  .cv-btn{appearance:none;border:1px solid #333;background:#1d1d1f;color:#fff;border-radius:8px;
+    padding:6px 10px;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap;}
+  .cv-btn:hover{background:#2a2a2c;}
+  .cv-btn--go{background:#0a84ff;border-color:#0a84ff;}
+  .cv-btn--go:hover{background:#0a74e0;}
+
+  .cv-hover{outline:1.5px dashed rgba(10,132,255,.55) !important;outline-offset:1px;cursor:grab;}
+  .cv-box{position:fixed;z-index:2147482000;border:1.5px solid #0a84ff;pointer-events:none;
+    box-shadow:0 0 0 1px rgba(255,255,255,.6);}
+  .cv-h{position:absolute;width:12px;height:12px;background:#fff;border:1.5px solid #0a84ff;
+    border-radius:50%;pointer-events:auto;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+  .cv-h--tl{top:-7px;left:-7px;cursor:nwse-resize;}
+  .cv-h--tr{top:-7px;right:-7px;cursor:nesw-resize;}
+  .cv-h--bl{bottom:-7px;left:-7px;cursor:nesw-resize;}
+  .cv-h--br{bottom:-7px;right:-7px;cursor:nwse-resize;}
+  .cv-tag{position:absolute;top:-22px;left:-1px;background:#0a84ff;color:#fff;font:11px/1 -apple-system,
+    BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:3px 6px;border-radius:5px;white-space:nowrap;
+    pointer-events:none;}
+
+  .cv-panel{position:fixed;inset:0;z-index:2147483100;background:rgba(0,0,0,.55);display:none;
+    align-items:center;justify-content:center;padding:24px;}
+  .cv-panel.is-open{display:flex;}
+  .cv-panel__card{background:#161617;color:#fff;border:1px solid #2c2c2c;border-radius:14px;
+    width:min(640px,100%);max-height:80vh;display:flex;flex-direction:column;overflow:hidden;
+    font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+  .cv-panel__head{padding:14px 16px;border-bottom:1px solid #262628;display:flex;justify-content:space-between;align-items:center;}
+  .cv-panel__head b{font-size:14px;}
+  .cv-panel textarea{width:100%;flex:1;min-height:220px;border:0;background:#0d0d0e;color:#d6d6d8;
+    font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:14px 16px;resize:none;box-sizing:border-box;}
+  .cv-panel__foot{padding:12px 16px;border-top:1px solid #262628;display:flex;gap:8px;justify-content:flex-end;align-items:center;}
+  .cv-panel__note{margin-right:auto;opacity:.6;font-size:11px;max-width:340px;}
+</style>
+<script>
+(function(){
+  if (window.__cvCanvaInit) return;
+  window.__cvCanvaInit = true;
+
+  var qs = location.search || '';
+  var wantOn  = /[?&]edit=1(?:&|$)/.test(qs);
+  var wantOff = /[?&]edit=0(?:&|$)/.test(qs);
+  function ls(get, k, v){ try { return get ? localStorage.getItem(k) : localStorage.setItem(k, v); } catch(e){ return null; } }
+  function rm(k){ try { localStorage.removeItem(k); } catch(e){} }
+
+  if (wantOn)  ls(false, 'volt-canva-on', '1');
+  if (wantOff) rm('volt-canva-on');
+  var ON = ls(true, 'volt-canva-on') === '1' && !wantOff;
+
+  var LKEY = 'volt-canva-layout';
+  var layout = {};
+  try { layout = JSON.parse(ls(true, LKEY) || '{}') || {}; } catch(e){ layout = {}; }
+
+  var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__eyebrow, ' +
+    '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__sub, .pdp-cmp__magnet-icon, ' +
+    '.pdp-cmp__battery-icon, .pdp-cmp__select-heading, .pdp-cmp__select-wrap';
+
+  function start(){
+    var root = document.querySelector('.pdp-cmp');
+    if (!root) return;
+
+    function pathFor(el){
+      var parts = [], cur = el;
+      while (cur && cur !== root && cur.parentNode){
+        var p = cur.parentNode;
+        var idx = Array.prototype.indexOf.call(p.children, cur) + 1;
+        parts.unshift(':nth-child(' + idx + ')');
+        cur = p;
+      }
+      return parts.join('>');
+    }
+    function stateOf(el){ var s = layout[el.__cvKey]; return s ? {dx:s.dx||0, dy:s.dy||0, s:s.s||1} : {dx:0,dy:0,s:1}; }
+    function applyState(el){
+      var st = stateOf(el);
+      var extra = '';
+      if (st.dx || st.dy) extra += 'translate(' + st.dx + 'px,' + st.dy + 'px) ';
+      if (st.s && st.s !== 1) extra += 'scale(' + st.s + ') ';
+      el.style.transform = (extra + el.__cvBase).trim();
+    }
+    function saveState(el, st){
+      if (!st.dx && !st.dy && (!st.s || st.s === 1)) delete layout[el.__cvKey];
+      else layout[el.__cvKey] = {dx:Math.round(st.dx*100)/100, dy:Math.round(st.dy*100)/100, s:Math.round(st.s*10000)/10000};
+      ls(false, LKEY, JSON.stringify(layout));
+      applyState(el);
+    }
+
+    // Register every editable element: record its base transform + stable key,
+    // then re-apply any saved layout (this runs even when NOT editing).
+    var els = [].slice.call(root.querySelectorAll(EDITABLE));
+    els.forEach(function(el){
+      var cs = getComputedStyle(el).transform;
+      el.__cvBase = (cs && cs !== 'none') ? cs : '';
+      el.__cvKey  = pathFor(el);
+      applyState(el);
+    });
+
+    if (!ON) return;                 // viewer with a saved layout — no controls
+    if (!window.matchMedia('(min-width:900px)').matches) return; // desktop tool only
+
+    document.documentElement.classList.add('cv-editing');
+
+    // Cumulative scale of an element's ANCESTOR chain (excludes the element's
+    // own transform). A screen-pixel drag delta divided by this gives the
+    // delta in the element's own local coordinate units.
+    function cumScale(el){
+      var sx = 1, sy = 1, n = el.parentNode;
+      while (n && n.nodeType === 1){
+        var t = getComputedStyle(n).transform;
+        if (t && t !== 'none'){
+          try { var m = new DOMMatrixReadOnly(t); sx *= m.a; sy *= m.d; } catch(e){}
+        }
+        n = n.parentNode;
+      }
+      return {sx: sx || 1, sy: sy || 1};
+    }
+    function centerOf(el){ var r = el.getBoundingClientRect(); return {x:r.left+r.width/2, y:r.top+r.height/2}; }
+
+    // ---- selection overlay ----
+    var box = document.createElement('div'); box.className = 'cv-box'; box.style.display = 'none';
+    var tag = document.createElement('div'); tag.className = 'cv-tag'; box.appendChild(tag);
+    ['tl','tr','bl','br'].forEach(function(c){
+      var h = document.createElement('div'); h.className = 'cv-h cv-h--' + c; h.dataset.corner = c; box.appendChild(h);
+    });
+    document.body.appendChild(box);
+
+    var sel = null;
+    function label(el){
+      if (el.matches('.pdp-cmp__card')) return 'tile';
+      if (el.tagName === 'IMG') return 'image';
+      if (el.matches('.pdp-cmp__select-heading')) return 'heading';
+      if (el.matches('.pdp-cmp__select-wrap')) return 'selector';
+      if (el.matches('.pdp-cmp__magnet-icon,.pdp-cmp__battery-icon')) return 'icon';
+      return 'text';
+    }
+    function positionBox(){
+      if (!sel){ box.style.display = 'none'; return; }
+      var r = sel.getBoundingClientRect();
+      box.style.display = 'block';
+      box.style.left = r.left + 'px'; box.style.top = r.top + 'px';
+      box.style.width = r.width + 'px'; box.style.height = r.height + 'px';
+    }
+    function select(el){ sel = el; tag.textContent = label(el); positionBox(); }
+    function deselect(){ sel = null; positionBox(); }
+
+    // ---- hover outline (shows the whole tile — what a single click grabs) ----
+    root.addEventListener('mousemove', function(e){
+      if (dragging) return;
+      var hit = e.target.closest(EDITABLE);
+      var t = hit ? (hit.closest('.pdp-cmp__card') || hit) : null;
+      if (lastHover && lastHover !== t) lastHover.classList.remove('cv-hover');
+      if (t && t !== sel) t.classList.add('cv-hover');
+      lastHover = t;
+    });
+    var lastHover = null;
+    root.addEventListener('mouseleave', function(){ if (lastHover){ lastHover.classList.remove('cv-hover'); lastHover = null; } });
+
+    // Swallow native clicks (links, the <select> dropdown, etc.) while editing.
+    root.addEventListener('click', function(e){ if (e.target.closest(EDITABLE)){ e.preventDefault(); e.stopPropagation(); } }, true);
+
+    // ---- drag: move ----
+    var dragging = null;
+    function onDown(e){
+      if (e.target.closest('.cv-tb, .cv-panel')) return;
+      var handle = e.target.closest('.cv-h');
+      if (handle && sel){ startResize(e, handle.dataset.corner); return; }
+      var hit = e.target.closest(EDITABLE);
+      if (!hit || !root.contains(hit)){ deselect(); return; }
+      // Canva model: single click grabs the whole tile; double-click drills
+      // into the exact element under the cursor (text / image / icon); and once
+      // something is drilled into, pressing on it again keeps it selected so it
+      // can be dragged (instead of snapping back to the whole tile).
+      var card = hit.closest('.pdp-cmp__card');
+      var drilledOnSel = sel && sel !== card && (sel === hit || sel.contains(hit));
+      var t;
+      if (!card) t = hit;              // heading / selector — direct
+      else if (e.detail >= 2) t = hit; // double-click drills to the exact element
+      else if (drilledOnSel) t = sel;  // keep a drilled child selected so it can be dragged
+      else t = card;                   // single click grabs the whole tile
+      e.preventDefault();
+      select(t);
+      if (lastHover){ lastHover.classList.remove('cv-hover'); lastHover = null; }
+      var sc = cumScale(t), st = stateOf(t);
+      dragging = {el:t, mode:'move', sx:e.clientX, sy:e.clientY, dx0:st.dx, dy0:st.dy, s0:st.s, scx:sc.sx, scy:sc.sy};
+    }
+    function startResize(e, corner){
+      e.preventDefault(); e.stopPropagation();
+      var c = centerOf(sel), st = stateOf(sel);
+      var d0 = Math.hypot(e.clientX - c.x, e.clientY - c.y) || 1;
+      dragging = {el:sel, mode:'scale', d0:d0, s0:st.s, dx0:st.dx, dy0:st.dy, cx:c.x, cy:c.y};
+    }
+    function onMove(e){
+      if (!dragging) return;
+      var d = dragging, st = stateOf(d.el);
+      if (d.mode === 'move'){
+        st.dx = d.dx0 + (e.clientX - d.sx) / d.scx;
+        st.dy = d.dy0 + (e.clientY - d.sy) / d.scy;
+      } else {
+        var dist = Math.hypot(e.clientX - d.cx, e.clientY - d.cy);
+        var ns = d.s0 * (dist / d.d0);
+        st.s = Math.max(0.15, Math.min(10, ns));
+      }
+      saveState(d.el, st);
+      positionBox();
+    }
+    function onUp(){ dragging = null; }
+
+    document.addEventListener('mousedown', onDown, true);
+    document.addEventListener('mousemove', onMove, true);
+    document.addEventListener('mouseup', onUp, true);
+    window.addEventListener('scroll', positionBox, true);
+    window.addEventListener('resize', positionBox);
+
+    // ---- wheel to resize the selected element ----
+    document.addEventListener('wheel', function(e){
+      if (!sel) return;
+      var r = sel.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
+      e.preventDefault();
+      var st = stateOf(sel);
+      st.s = Math.max(0.15, Math.min(10, st.s * (e.deltaY < 0 ? 1.05 : 0.9524)));
+      saveState(sel, st); positionBox();
+    }, {passive:false});
+
+    // ---- arrow-key nudge ----
+    document.addEventListener('keydown', function(e){
+      if (!sel) return;
+      var step = e.shiftKey ? 10 : 1, st = stateOf(sel), moved = true;
+      if (e.key === 'ArrowLeft') st.dx -= step; else if (e.key === 'ArrowRight') st.dx += step;
+      else if (e.key === 'ArrowUp') st.dy -= step; else if (e.key === 'ArrowDown') st.dy += step;
+      else if (e.key === 'Escape'){ deselect(); return; }
+      else moved = false;
+      if (moved){ e.preventDefault(); saveState(sel, st); positionBox(); }
+    });
+
+    // ---- export payload for "lock it" ----
+    function exportCode(){
+      var out = [];
+      els.forEach(function(el){
+        var s = layout[el.__cvKey];
+        if (!s || (!s.dx && !s.dy && (!s.s || s.s === 1))) return;
+        out.push({ sel: '.pdp-cmp>' + el.__cvKey, kind: label(el), dx: s.dx||0, dy: s.dy||0, s: s.s||1, base: el.__cvBase || 'none' });
+      });
+      return JSON.stringify({ v:1, note:'Voltical compare-grid layout — desktop', items: out }, null, 2);
+    }
+
+    // ---- toolbar ----
+    var tb = document.createElement('div'); tb.className = 'cv-tb';
+    tb.innerHTML =
+      '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
+      '<span class="cv-tb__hint">Click a tile · double-click to grab what’s inside · drag to move · corner or scroll to resize · arrows nudge</span>' +
+      '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
+      '<button class="cv-btn" data-cv="reset-all">Reset all</button>' +
+      '<button class="cv-btn cv-btn--go" data-cv="copy">Copy layout</button>' +
+      '<button class="cv-btn" data-cv="done">Done</button>';
+    document.body.appendChild(tb);
+
+    // ---- export panel ----
+    var panel = document.createElement('div'); panel.className = 'cv-panel';
+    panel.innerHTML =
+      '<div class="cv-panel__card">' +
+        '<div class="cv-panel__head"><b>Layout code</b><button class="cv-btn" data-cv="close">Close</button></div>' +
+        '<textarea readonly spellcheck="false"></textarea>' +
+        '<div class="cv-panel__foot"><span class="cv-panel__note">Copied to your clipboard. Paste this to Claude and say “lock it”.</span>' +
+        '<button class="cv-btn cv-btn--go" data-cv="copy2">Copy again</button></div>' +
+      '</div>';
+    document.body.appendChild(panel);
+    var ta = panel.querySelector('textarea');
+
+    function copyToClipboard(text){ try { navigator.clipboard.writeText(text); } catch(e){ try { ta.focus(); ta.select(); document.execCommand('copy'); } catch(_){} } }
+
+    tb.addEventListener('click', function(e){
+      var b = e.target.closest('[data-cv]'); if (!b) return;
+      var a = b.dataset.cv;
+      if (a === 'reset-sel' && sel){ saveState(sel, {dx:0,dy:0,s:1}); positionBox(); }
+      else if (a === 'reset-all'){
+        if (confirm('Reset every tile, image and text back to its original position?')){
+          layout = {}; ls(false, LKEY, '{}'); els.forEach(applyState); deselect();
+        }
+      }
+      else if (a === 'copy'){ ta.value = exportCode(); copyToClipboard(ta.value); panel.classList.add('is-open'); }
+      else if (a === 'done'){
+        rm('volt-canva-on');
+        var search = location.search.replace(/([?&])edit=\d+/g, '').replace(/^&/, '?').replace(/^\?$/, '');
+        location.href = location.pathname + search + location.hash;
+      }
+    });
+    panel.addEventListener('click', function(e){
+      var b = e.target.closest('[data-cv]');
+      if (b && b.dataset.cv === 'close'){ panel.classList.remove('is-open'); return; }
+      if (b && b.dataset.cv === 'copy2'){ copyToClipboard(ta.value); return; }
+      if (e.target === panel) panel.classList.remove('is-open');
+    });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+</script>

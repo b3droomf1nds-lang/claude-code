@@ -358,6 +358,7 @@
 
         <div class="pinfo__below" data-reveal>
           {% render 'pdp-compare-inline' %}
+          {% render 'pdp-canva-editor' %}
           {%- if stat_src != blank -%}
             <div class="pstats">
               {%- assign stat_items = stat_src | split: ';' -%}
