@@ -889,6 +889,7 @@
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
+  transform: scaleX(-1);
 }
 .template-product .pdp-cmp__card--partial-image .pdp-cmp__sub--partial-range {
   position: absolute;
@@ -954,7 +955,6 @@
   height: 100% !important;
   object-fit: contain !important;
   object-position: center bottom !important;
-  transform: scaleX(-1);
 }
 
 /* Mobile: keep desktop's card proportions exactly — 1 column now
