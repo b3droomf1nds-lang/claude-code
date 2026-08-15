@@ -25,10 +25,13 @@
   layout at >=900px, so the editor's handles only appear there.
 
   ALIGN
-    Click "Align" to snap small accidental drift on the selected tile
-    (or every tile, if nothing is selected) back to its perfect grid
-    position — up to 14px of drift. Shift+click "Align" for a bigger
-    correction (up to 40px). Deliberate larger moves are left alone.
+    Click "Align" to snap small accidental drift on the selected
+    element back to its perfect position — or, if nothing is selected,
+    across every tile, image, icon and text box at once: tiles return
+    to the grid, text/images/icons re-center relative to their tile,
+    and anything slightly resized returns to its regular size — up to
+    14px of drift. Shift+click "Align" for a bigger correction (up to
+    40px). Deliberate larger moves are left alone.
 
   EDITING TEXT
     Double-click a caption/heading (not the live numbers, which are
@@ -404,14 +407,16 @@
     });
 
     // ---- align: snap small accidental drift back to perfect (0,0 / scale 1) ----
-    // A tile's un-nudged position (dx=0, dy=0) IS the perfectly aligned grid
-    // position — the CSS Grid already lines everything up. So "line things up"
-    // just means: any offset small enough to be accidental drift from a drag
-    // (not a deliberate move) gets snapped back to zero. Click "Align" for a
-    // normal-size correction (up to 14px of drift); hold Shift and click for a
-    // bigger correction (up to 40px) if things drifted more than that.
+    // Every element's un-nudged position (dx=0, dy=0, s=1) IS its perfectly
+    // aligned spot — the CSS Grid/flex layout already lines everything up
+    // (tiles to the grid, text/images/icons centered in their tile). So
+    // "line things up" just means: any offset small enough to be accidental
+    // drift from a drag (not a deliberate move) gets snapped back to zero —
+    // across every tile, image, icon and text box, not just tiles. Click
+    // "Align" for a normal-size correction (up to 14px of drift); hold Shift
+    // and click for a bigger correction (up to 40px) if things drifted more.
     function align(threshold){
-      var targets = sel ? [sel] : els.filter(function(el){ return el.matches('.pdp-cmp__card'); });
+      var targets = sel ? [sel] : els;
       var n = 0;
       targets.forEach(function(el){
         var st = stateOf(el), changed = false;
