@@ -444,6 +444,16 @@
   opacity: 0.45;
   cursor: not-allowed;
 }
+/* Brief highlight when the "Reversible magnetic fit" card's Buy
+   button scrolls the page down here, so it's obvious this is where
+   that tap landed. */
+.pdp--bold .atc__btn.atc__btn--pulse {
+  animation: atc-pulse 0.9s var(--ease, ease);
+}
+@keyframes atc-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(19,19,22,0); }
+  30% { box-shadow: 0 0 0 8px rgba(19,19,22,0.12); }
+}
 .pdp--bold .atc__inner {
   position: relative;
   display: flex;
@@ -882,62 +892,95 @@
   z-index: 2;
   white-space: nowrap;
 }
-.template-product .pdp-cmp__card--video {
-  position: relative;
+/* Reversible magnetic fit / Ultra compact alloy shell: a taller
+   "hero" card (image on top, title/subtitle below, footer bar with a
+   line + Buy button) — the same longer card pattern Apple uses on
+   its own product pages, standing out from the other square stat
+   tiles by design. */
+.pdp-cmp__card--hero-long {
+  /* Fixed, not auto: with this card sitting inside .pdp-cmp's huge
+     compound scale(3)*scale(1.449) transform, Chromium's paint layer
+     for an auto-height flex column doesn't always resize to match
+     content — layout/hit-testing reports the correct (taller) height
+     but the painted box stays stuck at the old pre-content size.
+     Content below adds up to ~190px raw, so give it that directly
+     instead of asking the browser to work it out. */
+  height: 190px;
+  flex-direction: column;
+  align-items: stretch;
   justify-content: flex-start;
-  align-items: center;
-  text-align: center;
+  text-align: left;
+  padding: 0;
+  gap: 0;
   overflow: hidden;
-  padding: 0 !important;
 }
-.template-product .pdp-cmp__card--video .pdp-cmp__eyebrow {
-  position: absolute;
-  top: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
+.pdp-cmp__hero-img-slot {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
 }
-.template-product .pdp-cmp__card--video .pdp-cmp__stat {
-  position: absolute;
-  top: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
-  font-size: 18px;
-  line-height: 1;
-  white-space: nowrap;
+.pdp-cmp__hero-img-slot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
-.template-product .pdp-cmp__card--video .pdp-cmp__sub {
-  position: absolute;
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
-  white-space: nowrap;
-  font-size: 4.8px;
+.pdp-cmp__hero-body {
+  display: flex;
+  flex-direction: column;
 }
-.template-product .pdp-cmp__card--video .pdp-cmp__sub--alloy {
-  top: 14px;
+.pdp-cmp__hero-title {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink, #131316);
 }
-.template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
-  position: absolute;
-  left: 15px;
-  right: 15px;
-  top: 20px;
-  bottom: 0;
-  width: auto;
-  height: auto;
-  margin: 0;
-  min-height: 0;
-  overflow: visible;
-  z-index: 1;
-  pointer-events: none;
+.pdp-cmp__hero-sub {
+  color: var(--ink-60, rgba(19,19,22,.58));
 }
-.template-product .pdp-cmp__card--video .pdp-cmp__img--video-crop {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: contain !important;
-  object-position: center bottom !important;
+.pdp-cmp__hero-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(19,19,22,.04);
+}
+.pdp-cmp__hero-line {
+  color: var(--ink-60, rgba(19,19,22,.58));
+}
+.pdp-cmp__hero-btn {
+  flex: none;
+  font-weight: 600;
+  color: #FFFFFF;
+  background: var(--ink, #131316);
+  border-radius: 999px;
+  cursor: pointer;
+}
+@media (min-width: 900px) {
+  .pdp-cmp__hero-img-slot {
+    height: 100px;
+  }
+  .pdp-cmp__hero-body {
+    padding: 8px 10px 6px;
+    gap: 2px;
+  }
+  .pdp-cmp__hero-title {
+    font-size: 10px;
+    line-height: 1.15;
+  }
+  .pdp-cmp__hero-sub {
+    font-size: 8px;
+    line-height: 1.2;
+  }
+  .pdp-cmp__hero-footer {
+    padding: 7px 10px;
+  }
+  .pdp-cmp__hero-line {
+    font-size: 6.5px;
+    line-height: 1.2;
+  }
+  .pdp-cmp__hero-btn {
+    font-size: 6.5px;
+    padding: 4px 10px;
+  }
 }
 
 /* Mobile: keep desktop's card proportions exactly — 1 column now
@@ -1070,29 +1113,47 @@
     white-space: nowrap;
   }
 
-  .template-product .pdp-cmp__card--video .pdp-cmp__eyebrow {
-    top: 19.69px;
+  /* The general .template-product .pdp-cmp__card rule forces every
+     tile to a 1.16:1 aspect-ratio and auto height — two classes, so
+     it outranks .pdp-cmp__card--hero-long alone. Without overriding
+     it here specifically, the hero card gets squeezed back down to
+     that same square-ish ratio and flexbox shrinks its image/body/
+     footer to fit, instead of it actually being the taller card it's
+     meant to be. */
+  .template-product .pdp-cmp__card--hero-long {
+    aspect-ratio: auto;
+    height: auto;
+  }
+  .pdp-cmp__hero-img-slot {
+    height: 328.16px;
   }
 
-  .template-product .pdp-cmp__card--video .pdp-cmp__stat {
-    top: 19.69px;
-    font-size: 59.07px;
-    white-space: nowrap;
+  .pdp-cmp__hero-body {
+    padding: 26.25px 32.82px 19.69px;
+    gap: 6.56px;
   }
 
-  .template-product .pdp-cmp__card--video .pdp-cmp__sub {
-    top: 26.25px;
-    font-size: 15.75px;
+  .pdp-cmp__hero-title {
+    font-size: 32.82px;
+    line-height: 1.15;
   }
 
-  .template-product .pdp-cmp__card--video .pdp-cmp__sub--alloy {
-    top: 45.94px;
+  .pdp-cmp__hero-sub {
+    font-size: 26.25px;
+    line-height: 1.2;
   }
 
-  .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
-    left: 49.22px;
-    right: 49.22px;
-    top: 65.63px;
-    bottom: 0;
+  .pdp-cmp__hero-footer {
+    padding: 22.97px 32.82px;
+  }
+
+  .pdp-cmp__hero-line {
+    font-size: 21.33px;
+    line-height: 1.2;
+  }
+
+  .pdp-cmp__hero-btn {
+    font-size: 21.33px;
+    padding: 13.13px 32.82px;
   }
 }
