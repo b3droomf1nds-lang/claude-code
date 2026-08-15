@@ -784,7 +784,7 @@
   font-size: 11px;
 }
 .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
-  font-size: 10px;
+  font-size: 4.8px;
   margin-top: 3px;
 }
 .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) {
@@ -898,6 +898,7 @@
   transform: translateX(-50%);
   z-index: 2;
   white-space: nowrap;
+  font-size: 4.8px;
 }
 .template-product .pdp-cmp__card--video {
   position: relative;
@@ -1031,7 +1032,7 @@
   }
 
   .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
-    font-size: 32.82px;
+    font-size: 15.75px;
     margin-top: 9.84px;
   }
 
@@ -1083,7 +1084,7 @@
 
   .template-product .pdp-cmp__card--partial-image .pdp-cmp__sub--partial-range {
     bottom: 26.25px;
-    font-size: 32.82px;
+    font-size: 15.75px;
     white-space: nowrap;
   }
 
