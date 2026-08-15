@@ -146,10 +146,21 @@
       if (st.dx || st.dy) extra += 'translate(' + st.dx + 'px,' + st.dy + 'px) ';
       if (st.s && st.s !== 1) extra += 'scale(' + st.s + ') ';
       el.style.transform = (extra + el.__cvBase).trim();
-      // Never touch innerHTML of the box currently being typed into —
-      // that would reset the cursor mid-keystroke.
-      if (el.__cvTextEditable && st.text != null && el !== editingEl && el.innerHTML !== st.text){
-        el.innerHTML = st.text;
+      if (el.__cvTextEditable){
+        // Never touch innerHTML of the box currently being typed into —
+        // that would reset the cursor mid-keystroke.
+        if (st.text != null && el !== editingEl && el.innerHTML !== st.text){
+          el.innerHTML = st.text;
+        }
+        // Once a caption has been retyped, it should ONLY break where an
+        // explicit Enter placed a <br> — never on its own just because the
+        // line got long. Without this, editing was WYSIWYG only while the
+        // box was focused; the instant you clicked away, the box fell back
+        // to normal word-wrap and text you never broke could still jump to
+        // a new line. Keep this on permanently (not just while editing)
+        // for any box that's actually been retyped; leave untouched boxes
+        // exactly as designed.
+        el.style.whiteSpace = st.text != null ? 'nowrap' : '';
       }
     }
     function saveState(el, st){

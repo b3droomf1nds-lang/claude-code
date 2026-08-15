@@ -122,6 +122,14 @@ literal HTML (plain text plus `<br>` line breaks exactly where the user placed
 them), so no reformatting or Liquid-escaping is needed beyond what the rest of
 the file already does for static copy.
 
+Also add `style="white-space:nowrap"` to that same tag (or fold `white-space:
+nowrap` into an existing `style` attribute if it already has one). The editor
+applies this live to any box that's been retyped, specifically so the line
+only ever breaks where the user put an explicit `<br>` — without it, normal
+word-wrap can still kick in on its own once the box is narrower than the text
+(e.g. on an actual mobile viewport, or if the tile gets resized later), which
+would silently defeat the manual line breaks the user placed on purpose.
+
 Do **not** apply this to elements carrying `data-calc-*` attributes — those
 are computed live by the compare script and are never text-editable in the
 editor in the first place, so a `text` field should never appear for them; if
