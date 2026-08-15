@@ -784,7 +784,7 @@
   font-size: 11px;
 }
 .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
-  font-size: 9.5px;
+  font-size: 10px;
   margin-top: 3px;
 }
 .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) {
@@ -1031,7 +1031,7 @@
   }
 
   .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
-    font-size: 31.17px;
+    font-size: 32.82px;
     margin-top: 9.84px;
   }
 
