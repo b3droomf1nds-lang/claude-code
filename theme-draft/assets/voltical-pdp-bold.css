@@ -204,6 +204,15 @@
        takes ~32.82px here. */
     gap: 32.82px;
   }
+  /* Push the heading (and, since it's the next element in flow, the
+     selector along with it) down 50px, and push the tile grid down a
+     further 100px below the selector on top of that. */
+  .pdp-cmp__select-heading {
+    margin-top: 50px;
+  }
+  .pdp-cmp__select-wrap {
+    margin-bottom: 114px;
+  }
 }
 .pdp-cmp__group {
   display: contents;
