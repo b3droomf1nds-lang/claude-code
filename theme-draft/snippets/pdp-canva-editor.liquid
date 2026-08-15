@@ -27,18 +27,19 @@
   ALIGN
     Click "Align" to snap small accidental drift on the selected
     element back to its perfect position — or, if nothing is selected,
-    across every tile, image, icon and text box at once: tiles return
-    to the grid, images/icons re-center on both axes relative to their
-    tile, and anything slightly resized returns to its regular size —
-    up to 14px of drift. Shift+click "Align" for a bigger correction
-    (up to 40px). Deliberate larger moves are left alone.
+    across every tile, image, icon and text box at once. Only a tile's
+    own position snaps on both axes (back to its grid spot, up to 14px
+    of drift, or 40px with Shift+click) and only a tile's own size
+    resets to regular. Everything a tile contains — its images, icons,
+    and text — is positioned vertically by its own CSS on purpose (a
+    gap, a pin to the bottom of an image, etc.), so Align never
+    touches dy for anything but a tile itself.
 
-    Text boxes are the one exception to "small drift only": their
-    horizontal position always snaps to dead-center, no matter how far
-    off it drifted (there's no such thing as deliberately a bit left
-    or right), while their vertical position is never touched at all,
-    since several are pinned to a spot (like the bottom of an image)
-    on purpose.
+    Horizontally, text is the exception: a text box always snaps to
+    dead-center no matter how far off it drifted (there's no such
+    thing as deliberately a bit left or right), while an image/icon's
+    horizontal position only snaps back when the drift is small, same
+    as a tile.
 
   EDITING TEXT
     Double-click a caption/heading (not the live numbers, which are
@@ -422,21 +423,23 @@
     // across every tile, image, icon and text box, not just tiles. Click
     // "Align" for a normal-size correction (up to 14px of drift); hold Shift
     // and click for a bigger correction (up to 40px) if things drifted more.
-    // Text boxes are special in two ways: (1) several are deliberately
-    // anchored off the tile's vertical center by their own CSS (e.g. a
-    // caption pinned to the bottom of an image), so a vertical snap would
-    // fight that intended position — Align never touches a text box's dy.
-    // (2) horizontally, a text box should ALWAYS read as dead-centered on
-    // its tile — there's no such thing as "deliberately" a bit left or
-    // right — so Align resets a text box's dx to 0 outright, not just when
-    // the drift is small like it does for everything else.
+    // Only tiles get their vertical position snapped — everything that
+    // lives INSIDE a tile (text, images, icons) is anchored vertically by
+    // its own CSS on purpose (e.g. a caption pinned to the bottom of an
+    // image, an icon sitting a fixed gap above its caption), so Align never
+    // touches dy for anything but a tile itself. Horizontally, a text box
+    // is different from an image/icon: text should ALWAYS read as
+    // dead-centered on its tile — there's no such thing as "deliberately"
+    // a bit left or right — so Align resets a text box's dx to 0 outright,
+    // not just when the drift is small like it does for everything else.
     function align(threshold){
       var targets = sel ? [sel] : els;
       var n = 0;
       targets.forEach(function(el){
         var st = stateOf(el), changed = false, isText = el.__cvTextEditable;
+        var isTile = el.matches('.pdp-cmp__card');
         if (st.dx !== 0 && (isText || Math.abs(st.dx) <= threshold)){ st.dx = 0; changed = true; }
-        if (!isText && st.dy !== 0 && Math.abs(st.dy) <= threshold){ st.dy = 0; changed = true; }
+        if (isTile && st.dy !== 0 && Math.abs(st.dy) <= threshold){ st.dy = 0; changed = true; }
         if (st.s !== 1 && Math.abs(st.s - 1) <= threshold / 400){ st.s = 1; changed = true; }
         if (changed){ saveState(el, st); n++; }
       });
