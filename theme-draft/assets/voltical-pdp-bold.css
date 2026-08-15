@@ -189,14 +189,16 @@
 }
 @media (max-width: 899px) {
   .pdp-cmp__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* 1 column, all 6 tiles stacked — not 2 columns. */
+    grid-template-columns: repeat(1, minmax(0, 1fr));
     /* Desktop's tiles sit inside a block that's scaled up 4.347x
        (scale(3) on .pdp-cmp times scale(1.449) on this grid), so its
-       10px gap actually renders at ~43.5px against a ~463px-wide
-       tile — a ~9.4% gap-to-tile ratio. Mobile isn't scaled at all,
-       so matching that same ratio against mobile's own (much
-       narrower) tile width takes a bigger raw gap than 10px. */
-    gap: 15.67px;
+       10px gap actually renders at ~43.5px against a ~463.6px-wide
+       tile — a ~9.38% gap-to-tile-width ratio. Mobile isn't scaled at
+       all, and with a single column each tile is now the full grid
+       width (~350px @390px viewport), so matching that same ratio
+       takes ~32.82px here. */
+    gap: 32.82px;
   }
 }
 .pdp-cmp__group {
@@ -221,12 +223,17 @@
   gap: 4px;
 }
 @media (max-width: 899px) {
-  /* Same absolute corner radius as the tiles render at on desktop
-     (14px × the 4.347x scale from .pdp-cmp's scale(3) and this
-     grid's own scale(1.449)), not just the same 14px CSS value
-     mobile would otherwise inherit unscaled. */
+  /* Matches desktop's own radius-to-tile-width ratio (rendered
+     radius ~60.86px against a ~463.6px-wide tile there, ~13.13%)
+     rather than reusing desktop's raw px radius — mobile's tile is a
+     different width (now the full grid width, since it's 1 column:
+     ~350px @390px viewport), so the radius is recalculated against
+     that width rather than copied as-is. A literal px value (not a
+     CSS % — that would use the tile's height too, and this tile
+     isn't square, so it'd draw an ellipse instead of matching
+     desktop's circular corner). */
   .pdp-cmp__card {
-    border-radius: 60.86px;
+    border-radius: 45.95px;
   }
 }
 .pdp-cmp__eyebrow {
