@@ -31,10 +31,12 @@
     correction (up to 40px). Deliberate larger moves are left alone.
 
   EDITING TEXT
-    Double-click any caption/heading (not the live numbers, which are
-    computed by JS) to start typing into it, in its own font — the
+    Double-click a caption/heading (not the live numbers, which are
+    computed by JS) to drill into it — same as any image or icon, and
+    still draggable with a single click-hold from there. With it
+    selected, press Enter to start typing into it, in its own font; the
     cursor lands at the end of the existing text so you can add more.
-    Press Enter to start a new line lower in the same box. Click
+    Press Enter again to start a new line lower in the same box. Click
     anywhere else (or press Escape) to stop typing; the edit is saved
     live like everything else and included in "Copy layout".
 {%- endcomment -%}
@@ -317,16 +319,6 @@
       else if (drilledOnSel) t = sel;  // keep a drilled child selected so it can be dragged
       else t = card;                   // single click grabs the whole tile
 
-      // Double-clicking a caption/heading starts typing into it instead of
-      // dragging it.
-      if (e.detail >= 2 && isTextEditable(t)){
-        e.preventDefault();
-        select(t);
-        if (lastHover){ lastHover.classList.remove('cv-hover'); lastHover = null; }
-        enterTextEdit(t);
-        return;
-      }
-
       e.preventDefault();
       select(t);
       if (lastHover){ lastHover.classList.remove('cv-hover'); lastHover = null; }
@@ -386,6 +378,10 @@
         return; // every other key (letters, backspace, arrow-to-move-cursor...) behaves natively
       }
       if (!sel) return;
+      // A selected caption is still draggable by holding the mouse on it
+      // (same as any other selected element) — Enter is what switches it
+      // into typing, so the two never compete for the same click.
+      if (e.key === 'Enter' && isTextEditable(sel)){ e.preventDefault(); enterTextEdit(sel); return; }
       var step = e.shiftKey ? 10 : 1, st = stateOf(sel), moved = true;
       if (e.key === 'ArrowLeft') st.dx -= step; else if (e.key === 'ArrowRight') st.dx += step;
       else if (e.key === 'ArrowUp') st.dy -= step; else if (e.key === 'ArrowDown') st.dy += step;
@@ -442,7 +438,7 @@
     var tb = document.createElement('div'); tb.className = 'cv-tb';
     tb.innerHTML =
       '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
-      '<span class="cv-tb__hint">Click a tile · double-click to grab what’s inside, or to type into a caption · drag to move · corner or scroll to resize · arrows nudge</span>' +
+      '<span class="cv-tb__hint">Click a tile · double-click to grab what’s inside · drag to move · corner or scroll to resize · arrows nudge · Enter types into a selected caption</span>' +
       '<button class="cv-btn" data-cv="align" title="Snap small drift back to perfect. Shift+click for a bigger correction.">Align</button>' +
       '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
       '<button class="cv-btn" data-cv="reset-all">Reset all</button>' +
