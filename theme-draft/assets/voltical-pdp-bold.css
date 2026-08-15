@@ -205,13 +205,13 @@
     gap: 32.82px;
   }
   /* Push the heading (and, since it's the next element in flow, the
-     selector along with it) down 50px, and push the tile grid down a
-     further 100px below the selector on top of that. */
+     selector along with it) down 50px + 20px, and push the tile grid
+     down 100px below the selector on top of that, minus 50px. */
   .pdp-cmp__select-heading {
-    margin-top: 50px;
+    margin-top: 70px;
   }
   .pdp-cmp__select-wrap {
-    margin-bottom: 114px;
+    margin-bottom: 64px;
   }
 }
 .pdp-cmp__group {
