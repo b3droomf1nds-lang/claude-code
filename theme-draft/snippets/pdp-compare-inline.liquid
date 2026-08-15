@@ -87,16 +87,10 @@
       {%- comment -%} image drops in here — leave empty until it's supplied {%- endcomment -%}
       <div class="pdp-cmp__img-slot" aria-hidden="true"><img class="pdp-cmp__img--full-upright" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/Untitled_design_5.webp?v=1786195688" alt="Core powerbank and phone side profile"></div>
     </div>
-    <div class="pdp-cmp__card pdp-cmp__card--hero-long">
-      <div class="pdp-cmp__hero-img-slot" aria-hidden="true"><img class="pdp-cmp__img--video-crop" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/core-pro-black-transparent-crop-v5.png?v=1786281736" alt="Core Pro black case camera detail"></div>
-      <div class="pdp-cmp__hero-body">
-        <div class="pdp-cmp__hero-title">Reversible magnetic fit</div>
-        <div class="pdp-cmp__hero-sub">Ultra compact alloy shell</div>
-      </div>
-      <div class="pdp-cmp__hero-footer">
-        <span class="pdp-cmp__hero-line">{{ "PLACEHOLDER - tell Claude the real line" }}</span>
-        <button type="button" class="pdp-cmp__hero-btn" data-scroll-to-buy>Buy</button>
-      </div>
+    <div class="pdp-cmp__card pdp-cmp__card--img pdp-cmp__card--video">
+      <div class="pdp-cmp__sub">Reversible magnetic fit</div>
+      <div class="pdp-cmp__sub pdp-cmp__sub--alloy">Ultra compact alloy shell</div>
+      <div class="pdp-cmp__img-slot" aria-hidden="true"><img class="pdp-cmp__img--video-crop" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/core-pro-black-transparent-crop-v5.png?v=1786281736" alt="Core Pro black case camera detail"></div>
     </div>
     <div class="pdp-cmp__card pdp-cmp__card--img pdp-cmp__card--partial-image">
       <div class="pdp-cmp__eyebrow">Up to</div>
@@ -178,17 +172,5 @@
     el.addEventListener('change', update);
   });
   update();
-
-  var buyBtn = document.querySelector('[data-scroll-to-buy]');
-  var atcBtn = document.querySelector('.atc__btn');
-  if (buyBtn && atcBtn) {
-    buyBtn.addEventListener('click', function () {
-      atcBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      atcBtn.classList.add('atc__btn--pulse');
-      atcBtn.addEventListener('animationend', function () {
-        atcBtn.classList.remove('atc__btn--pulse');
-      }, { once: true });
-    });
-  }
 })();
 </script>
