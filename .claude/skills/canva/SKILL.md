@@ -9,8 +9,9 @@ description: >-
   drag, resize, or reposition the compare tiles / calculator tiles / their
   images or text on the product page by hand instead of by pixel nudges, or
   says "lock it" / "lock in the layout" to bake the dragged layout permanently
-  into the theme CSS. Also use it if they ask to re-enter, adjust, reset, or
-  remove that editor.
+  into the theme CSS, or says "line things up" / "align" / "straighten" /
+  "snap it into place" to clean up small drift after dragging tiles around.
+  Also use it if they ask to re-enter, adjust, reset, or remove that editor.
 ---
 
 # Canva editor for the compare tile section
@@ -48,6 +49,7 @@ The editor ships inside the theme already. Entering edit mode is just a URL flag
    - **Double-click** inside a tile → grabs the exact image / text / icon under the cursor (then drag it, or press-drag again — the selection is sticky).
    - **Resize:** drag a corner handle, or scroll the mouse wheel over the selected element.
    - **Nudge:** arrow keys (Shift = 10px steps). **Esc** deselects.
+   - **Align:** snaps small accidental drift (up to 14px) on the selected tile — or every tile, if nothing is selected — back to its perfect grid position. Shift+click Align for a bigger correction (up to 40px). Deliberate larger moves are left alone, so this is safe to click any time something looks slightly off after dragging.
    - **Reset one / Reset all** buttons in the toolbar; **Done** exits edit mode.
 3. Tell them: drag everything into place, then say **"lock it"** (pasting the "Copy layout" code, or I'll ask for it).
 
