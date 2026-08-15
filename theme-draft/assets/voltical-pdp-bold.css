@@ -234,6 +234,15 @@
      desktop's circular corner). */
   .pdp-cmp__card {
     border-radius: 45.95px;
+    /* Same scaling as everything else in this file's mobile compare
+       block: raw desktop px value × 3.2816 (desktop's tile renders
+       at 463.6px via a 4.347x transform; mobile's tile is 350px with
+       no transform at all, so this single factor converts any
+       desktop-authored px value into its mobile equivalent). */
+    padding: 45.94px 26.25px;
+  }
+  .pdp-cmp__img-slot {
+    border-radius: 39.38px;
   }
 }
 .pdp-cmp__eyebrow {
@@ -918,7 +927,15 @@
   object-position: center bottom !important;
 }
 
-/* Mobile: keep desktop card proportions while using 2 across x 3 down */
+/* Mobile: keep desktop's card proportions exactly — 1 column now
+   (not 2), so every px value below is the desktop-authored raw value
+   × 3.2816 rather than a separately-eyeballed mobile number. That
+   factor is: (mobile tile width ÷ desktop's rendered tile width) ×
+   desktop's own transform scale — i.e. desktop renders its tile at
+   463.6px via a 4.347x transform (scale(3) on .pdp-cmp, scale(1.449)
+   on .pdp-cmp__grid) off a 106.7px raw box; mobile has no transform
+   at all and its tile is 350px, so 350/463.6 × 4.347 = 3.2816 is what
+   converts any desktop raw px into its mobile equivalent. */
 @media (max-width: 899px) {
   .template-product .pdp-cmp__card {
     height: auto;
@@ -928,7 +945,7 @@
   .template-product .pdp-cmp__label-only,
   .template-product .pdp-cmp__eyebrow,
   .template-product .pdp-cmp__sub {
-    font-size: 10px;
+    font-size: 32.82px;
     line-height: 1.08;
   }
 
@@ -937,105 +954,132 @@
   }
 
   .template-product .pdp-cmp__stat {
-    font-size: 18px;
+    font-size: 55.79px;
     line-height: 1.02;
   }
 
+  .template-product .pdp-cmp__card--magnet {
+    gap: 19.69px;
+  }
+
+  .template-product .pdp-cmp__magnet-icon {
+    width: 85.32px;
+    height: 85.32px;
+  }
+
+  .template-product .pdp-cmp__card--img {
+    gap: 6.56px;
+    padding-top: 32.82px;
+    padding-bottom: 32.82px;
+  }
+
+  .template-product .pdp-cmp__img-slot:has(img) {
+    flex-basis: 59.07px;
+    min-height: 59.07px;
+    height: 59.07px;
+    margin-top: 6.56px;
+  }
+
   .template-product .pdp-cmp__card--charge {
-    gap: 1px;
+    gap: 3.28px;
+  }
+
+  .template-product .pdp-cmp__card--charge .pdp-cmp__stat-row {
+    gap: 19.69px;
   }
 
   .template-product .pdp-cmp__card--charge .pdp-cmp__stat {
-    font-size: 34px;
+    font-size: 98.45px;
   }
 
   .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
-    width: 28px;
+    width: 101.73px;
   }
 
   .template-product .pdp-cmp__card--charge .pdp-cmp__sub--unit {
-    font-size: 11px;
+    font-size: 36.1px;
   }
 
   .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
-    font-size: 10px;
-    margin-top: 2px;
+    font-size: 31.17px;
+    margin-top: 9.84px;
   }
 
   .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__eyebrow {
-    top: 14px;
-    left: 28px;
+    top: 45.94px;
+    left: 105.01px;
   }
 
   .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__stat {
-    top: 34px;
-    left: 28px;
-    font-size: 30px;
+    top: 111.57px;
+    left: 105.01px;
+    font-size: 98.45px;
   }
 
   .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__sub {
-    left: 28px;
-    bottom: 14px;
-    max-width: 82px;
-    font-size: 11px;
+    left: 105.01px;
+    bottom: 45.94px;
+    max-width: 315.03px;
+    font-size: 36.1px;
   }
 
   .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__img-slot {
-    top: 8px;
-    bottom: 8px;
-    width: 64px;
+    top: 19.69px;
+    left: -65.63px;
+    bottom: 19.69px;
+    width: 236.27px;
   }
 
   .template-product .pdp-cmp__card--partial-image .pdp-cmp__eyebrow {
-    top: 14px;
+    top: 45.94px;
   }
 
   .template-product .pdp-cmp__card--partial-image .pdp-cmp__stat {
-    top: 37px;
-    font-size: 30px;
+    top: 95.17px;
+    font-size: 98.45px;
   }
 
   .template-product .pdp-cmp__card--partial-image .pdp-cmp__img-slot {
     left: 0;
     right: 0;
-    top: 60px;
-    bottom: 6px;
+    top: 85.32px;
+    bottom: 19.69px;
     width: auto;
     height: auto;
     overflow: hidden;
-    transform: translateY(10px);
+    transform: translateY(32.82px);
   }
 
 
   .template-product .pdp-cmp__card--partial-image .pdp-cmp__sub--partial-range {
-    bottom: 12px;
-    font-size: 10px;
+    bottom: 26.25px;
+    font-size: 32.82px;
     white-space: nowrap;
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__eyebrow {
-    top: 8px;
+    top: 19.69px;
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__stat {
-    top: 10px;
-    font-size: 18px;
+    top: 19.69px;
+    font-size: 59.07px;
     white-space: nowrap;
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__sub {
-    top: 10px;
-    font-size: 4.8px;
+    top: 26.25px;
+    font-size: 15.75px;
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__sub--alloy {
-    top: 16px;
+    top: 45.94px;
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
-    left: 14px;
-    right: 14px;
-    top: 19px;
+    left: 49.22px;
+    right: 49.22px;
+    top: 65.63px;
     bottom: 0;
   }
 }
