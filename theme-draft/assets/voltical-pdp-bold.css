@@ -190,6 +190,13 @@
 @media (max-width: 899px) {
   .pdp-cmp__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* Desktop's tiles sit inside a block that's scaled up 4.347x
+       (scale(3) on .pdp-cmp times scale(1.449) on this grid), so its
+       10px gap actually renders at ~43.5px against a ~463px-wide
+       tile — a ~9.4% gap-to-tile ratio. Mobile isn't scaled at all,
+       so matching that same ratio against mobile's own (much
+       narrower) tile width takes a bigger raw gap than 10px. */
+    gap: 15.67px;
   }
 }
 .pdp-cmp__group {
@@ -212,6 +219,15 @@
   justify-content: center;
   text-align: center;
   gap: 4px;
+}
+@media (max-width: 899px) {
+  /* Same absolute corner radius as the tiles render at on desktop
+     (14px × the 4.347x scale from .pdp-cmp's scale(3) and this
+     grid's own scale(1.449)), not just the same 14px CSS value
+     mobile would otherwise inherit unscaled. */
+  .pdp-cmp__card {
+    border-radius: 60.86px;
+  }
 }
 .pdp-cmp__eyebrow {
   display: none;
