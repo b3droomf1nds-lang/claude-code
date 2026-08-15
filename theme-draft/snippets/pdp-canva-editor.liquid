@@ -163,7 +163,13 @@
       var extra = '';
       if (st.dx || st.dy) extra += 'translate(' + st.dx + 'px,' + st.dy + 'px) ';
       if (st.s && st.s !== 1) extra += 'scale(' + st.s + ') ';
-      el.style.transform = (extra + el.__cvBase).trim();
+      // Base must come FIRST (outermost-applied last, i.e. leftmost in the
+      // CSS list is applied outermost... concretely: composing as
+      // "base extra" rather than "extra base" keeps a translate-type base
+      // (e.g. a centering translateX(-50%) baked in from the element's own
+      // CSS) from getting multiplied by the user's own scale(s) — which is
+      // what silently drags an element off-center the more it's resized.
+      el.style.transform = (el.__cvBase + ' ' + extra).trim();
       if (el.__cvTextEditable){
         // Never touch innerHTML of the box currently being typed into —
         // that would reset the cursor mid-keystroke.
