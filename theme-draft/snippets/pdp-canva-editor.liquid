@@ -113,7 +113,12 @@
 
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__sub, .pdp-cmp__magnet-icon, ' +
-    '.pdp-cmp__battery-icon, .pdp-cmp__select-heading, .pdp-cmp__select-wrap';
+    '.pdp-cmp__battery-icon, .pdp-cmp__select-heading, .pdp-cmp__select-wrap, ' +
+    // The visible "×" on the partial-charges tile ("Up to 3.6× / 20% to
+    // 80%") is its own span so it can be grabbed on its own, separate from
+    // the number — but its hidden mirror twin (used to balance the
+    // centering) is aria-hidden and must stay out of reach.
+    '.pdp-cmp__stat-x:not(.pdp-cmp__stat-x--mirror)';
 
   function start(){
     var root = document.querySelector('.pdp-cmp');
@@ -231,6 +236,7 @@
       if (el.matches('.pdp-cmp__select-heading')) return 'heading';
       if (el.matches('.pdp-cmp__select-wrap')) return 'selector';
       if (el.matches('.pdp-cmp__magnet-icon,.pdp-cmp__battery-icon')) return 'icon';
+      if (el.matches('.pdp-cmp__stat-x')) return '×';
       return 'text';
     }
     function positionBox(){
