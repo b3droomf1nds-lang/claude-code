@@ -145,7 +145,11 @@
   white-space: nowrap;
 }
 .pdp-cmp__select-heading {
-  margin: 0 0 8px;
+  /* More breathing room above the selector than below it — matching
+     the reference layout's rhythm (generous gap between the caption
+     and the selector, then the nearest tile sitting close under the
+     selector) rather than the reverse, which is what this had before. */
+  margin: 0 0 28px;
   font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -154,7 +158,7 @@
 }
 .pdp-cmp__select-wrap {
   position: relative;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 .pdp-cmp__select-wrap::after {
   content: "";
