@@ -25,21 +25,21 @@
   layout at >=900px, so the editor's handles only appear there.
 
   ALIGN
-    Click "Align" to snap small accidental drift on the selected
-    element back to its perfect position — or, if nothing is selected,
-    across every tile, image, icon and text box at once. Only a tile's
-    own position snaps on both axes (back to its grid spot, up to 14px
-    of drift, or 40px with Shift+click) and only a tile's own size
-    resets to regular. Everything a tile contains — its images, icons,
-    and text — is positioned vertically by its own CSS on purpose (a
-    gap, a pin to the bottom of an image, etc.), so Align never
-    touches dy for anything but a tile itself.
+    Click "Align" to snap small accidental drift (up to 14px, or 40px
+    with Shift+click) on the selected element back to its perfect
+    position — or, if nothing is selected, across every tile, image,
+    icon and text box at once: horizontal position and size snap back
+    on anything that's only drifted a little. Deliberate larger moves
+    are left alone on every axis, including a text box's left/right
+    position — Align was previously forcing text to dead-center
+    unconditionally, which also wiped out intentionally-offset
+    captions; it no longer does that.
 
-    Horizontally, text is the exception: a text box always snaps to
-    dead-center no matter how far off it drifted (there's no such
-    thing as deliberately a bit left or right), while an image/icon's
-    horizontal position only snaps back when the drift is small, same
-    as a tile.
+    Vertically, only a tile's own position snaps back to its grid
+    spot. Everything a tile contains — its images, icons, and text —
+    is positioned vertically by its own CSS on purpose (a gap, a pin
+    to the bottom of an image, etc.), so Align never touches dy for
+    anything but a tile itself.
 
   EDITING TEXT
     Double-click a caption/heading (not the live numbers, which are
@@ -442,9 +442,9 @@
       var targets = sel ? [sel] : els;
       var n = 0;
       targets.forEach(function(el){
-        var st = stateOf(el), changed = false, isText = el.__cvTextEditable;
+        var st = stateOf(el), changed = false;
         var isTile = el.matches('.pdp-cmp__card');
-        if (st.dx !== 0 && (isText || Math.abs(st.dx) <= threshold)){ st.dx = 0; changed = true; }
+        if (st.dx !== 0 && Math.abs(st.dx) <= threshold){ st.dx = 0; changed = true; }
         if (isTile && st.dy !== 0 && Math.abs(st.dy) <= threshold){ st.dy = 0; changed = true; }
         if (st.s !== 1 && Math.abs(st.s - 1) <= threshold / 400){ st.s = 1; changed = true; }
         if (changed){ saveState(el, st); n++; }
