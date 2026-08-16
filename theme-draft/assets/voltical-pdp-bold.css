@@ -898,6 +898,9 @@
   line-height: 1;
   display: flex;
   align-items: baseline;
+}
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__stat-num,
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__stat-x:not(.pdp-cmp__stat-x--mirror) {
   background: linear-gradient(180deg, #131316 0%, rgba(19, 19, 22, 0.35) 100%);
   -webkit-background-clip: text;
   background-clip: text;
