@@ -26,9 +26,9 @@
 
   ALIGN
     Click "Align" to snap small accidental drift (up to 14px, or 40px
-    with Shift+click) on the selected element back to its perfect
-    position — or, if nothing is selected, across every tile, image,
-    icon and text box at once. Deliberate larger moves are left alone.
+    with Shift+click) on a tile back to its perfect grid position —
+    or, if nothing is selected, straightens every tile at once.
+    Deliberate larger moves are left alone.
 
     Tiles snap to whichever of the 6 grid slots they're now CLOSEST
     to, on both axes — not just back to their own original slot. So
@@ -38,11 +38,11 @@
     when it's dragged — only its on-screen transform does — so all 6
     real slots are always known and available to snap to.
 
-    Everything a tile contains (images, icons, text) only ever gets
-    its horizontal position snapped back to zero, i.e. dead-center in
-    its tile — vertical position is left alone, since it's anchored by
-    its own CSS on purpose (a gap, a pin to the bottom of an image,
-    etc.), so Align never touches dy for anything but a tile itself.
+    Align ONLY ever touches a tile's own position/size — it never
+    touches anything INSIDE a tile (an image, icon, or text box).
+    Once something is placed inside a tile, it stays exactly where
+    it's put; clicking Align (with that thing selected, or with
+    nothing selected) does nothing to it.
 
   EDITING TEXT
     Double-click a caption/heading (not the live numbers, which are
@@ -526,23 +526,25 @@
       if (editingEl && e.target === editingEl) saveText(editingEl);
     });
 
-    // ---- align: snap small accidental drift back to perfect ----
-    // Tiles: `offsetLeft`/`offsetTop` reflect a tile's actual CSS Grid cell
-    // and are untouched by our own transform, no matter how far it's been
-    // dragged — so the 6 tiles' own offsetLeft/offsetTop are always exactly
-    // the 6 real grid slots, even mid-rearrange. That means Align can snap a
-    // dragged tile to whichever slot it's now CLOSEST to (not just back to
-    // its own original slot) — so swapping two tiles by roughly dragging
-    // them into each other's spot, then clicking Align, locks them exactly
-    // into place instead of only correcting drift from their old spot.
-    // Everything else (images, icons, text) works like before: any small
-    // offset gets snapped back to zero (dx only — vertical position inside
-    // a tile is anchored by its own CSS on purpose, e.g. a caption pinned
-    // to the bottom of an image, so Align never touches dy for anything but
-    // a tile itself). Click "Align" for a normal-size correction (up to
-    // 14px of drift); hold Shift and click for a bigger correction (up to
-    // 40px). Anything drifted further than that is left alone as a
-    // deliberate move.
+    // ---- align: snap small accidental drift back to perfect (tiles only) ----
+    // `offsetLeft`/`offsetTop` reflect a tile's actual CSS Grid cell and are
+    // untouched by our own transform, no matter how far it's been dragged —
+    // so the 6 tiles' own offsetLeft/offsetTop are always exactly the 6 real
+    // grid slots, even mid-rearrange. That means Align can snap a dragged
+    // tile to whichever slot it's now CLOSEST to (not just back to its own
+    // original slot) — so swapping two tiles by roughly dragging them into
+    // each other's spot, then clicking Align, locks them exactly into
+    // place instead of only correcting drift from their old spot.
+    //
+    // Align ONLY ever touches a tile's own position/size — never anything
+    // INSIDE a tile (images, icons, text). It used to also snap small
+    // horizontal drift on those, but that meant a deliberate small nudge
+    // (e.g. a photo shifted 6px on purpose) kept getting silently reverted
+    // every time Align ran. Once something is placed inside a tile, it
+    // stays exactly where it's put — only the tile itself gets straightened.
+    // Click "Align" for a normal-size correction (up to 14px of drift);
+    // hold Shift and click for a bigger correction (up to 40px). Anything
+    // drifted further than that is left alone as a deliberate move.
     function nearestTileSlot(x, y, tiles){
       var best = null, bestDist = Infinity;
       tiles.forEach(function(t){
@@ -552,23 +554,22 @@
       return best;
     }
     function align(threshold){
-      var targets = sel ? [sel] : els;
+      var wantedTargets = sel ? [sel] : els;
+      var targets = wantedTargets.filter(function(el){ return el.matches('.pdp-cmp__card'); });
       var tiles = els.filter(function(el){ return el.matches('.pdp-cmp__card'); });
       var batch = captureBatch(targets);
       var n = 0;
       targets.forEach(function(el){
         var st = stateOf(el), changed = false;
-        if (el.matches('.pdp-cmp__card')){
-          var curX = el.offsetLeft + st.dx, curY = el.offsetTop + st.dy;
-          var slot = nearestTileSlot(curX, curY, tiles);
-          if (slot){
-            var wantDx = slot.offsetLeft - el.offsetLeft, wantDy = slot.offsetTop - el.offsetTop;
-            var errX = curX - slot.offsetLeft, errY = curY - slot.offsetTop;
-            if ((st.dx !== wantDx || st.dy !== wantDy) && Math.abs(errX) <= threshold && Math.abs(errY) <= threshold){
-              st.dx = wantDx; st.dy = wantDy; changed = true;
-            }
+        var curX = el.offsetLeft + st.dx, curY = el.offsetTop + st.dy;
+        var slot = nearestTileSlot(curX, curY, tiles);
+        if (slot){
+          var wantDx = slot.offsetLeft - el.offsetLeft, wantDy = slot.offsetTop - el.offsetTop;
+          var errX = curX - slot.offsetLeft, errY = curY - slot.offsetTop;
+          if ((st.dx !== wantDx || st.dy !== wantDy) && Math.abs(errX) <= threshold && Math.abs(errY) <= threshold){
+            st.dx = wantDx; st.dy = wantDy; changed = true;
           }
-        } else if (st.dx !== 0 && Math.abs(st.dx) <= threshold){ st.dx = 0; changed = true; }
+        }
         if (st.s !== 1 && Math.abs(st.s - 1) <= threshold / 400){ st.s = 1; changed = true; }
         if (changed){ saveState(el, st); n++; }
       });
@@ -599,7 +600,7 @@
       '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
       '<span class="cv-tb__hint">Click a tile · double-click to grab what’s inside · drag to move · corner or scroll to resize · arrows nudge · Enter types into a selected caption · Backspace deletes selected text</span>' +
       '<button class="cv-btn" data-cv="undo" title="Undo the last move, resize, type, delete, Align, or Reset.">Undo</button>' +
-      '<button class="cv-btn" data-cv="align" title="Snap small drift back to perfect. Shift+click for a bigger correction.">Align</button>' +
+      '<button class="cv-btn" data-cv="align" title="Straighten tiles back onto the grid (never touches whats inside a tile). Shift+click for a bigger correction.">Align</button>' +
       '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
       '<button class="cv-btn" data-cv="reset-all">Reset all</button>' +
       '<button class="cv-btn cv-btn--go" data-cv="copy">Copy layout</button>' +
