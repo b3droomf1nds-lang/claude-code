@@ -28,18 +28,21 @@
     Click "Align" to snap small accidental drift (up to 14px, or 40px
     with Shift+click) on the selected element back to its perfect
     position — or, if nothing is selected, across every tile, image,
-    icon and text box at once: horizontal position and size snap back
-    on anything that's only drifted a little. Deliberate larger moves
-    are left alone on every axis, including a text box's left/right
-    position — Align was previously forcing text to dead-center
-    unconditionally, which also wiped out intentionally-offset
-    captions; it no longer does that.
+    icon and text box at once. Deliberate larger moves are left alone.
 
-    Vertically, only a tile's own position snaps back to its grid
-    spot. Everything a tile contains — its images, icons, and text —
-    is positioned vertically by its own CSS on purpose (a gap, a pin
-    to the bottom of an image, etc.), so Align never touches dy for
-    anything but a tile itself.
+    Tiles snap to whichever of the 6 grid slots they're now CLOSEST
+    to, on both axes — not just back to their own original slot. So
+    to swap two tiles: drag each roughly into the other's spot, then
+    click Align, and both lock exactly into place. This works because
+    a tile's real grid cell (its layout position) never actually moves
+    when it's dragged — only its on-screen transform does — so all 6
+    real slots are always known and available to snap to.
+
+    Everything a tile contains (images, icons, text) only ever gets
+    its horizontal position snapped back to zero, i.e. dead-center in
+    its tile — vertical position is left alone, since it's anchored by
+    its own CSS on purpose (a gap, a pin to the bottom of an image,
+    etc.), so Align never touches dy for anything but a tile itself.
 
   EDITING TEXT
     Double-click a caption/heading (not the live numbers, which are
@@ -420,32 +423,48 @@
       if (editingEl && e.target === editingEl) saveText(editingEl);
     });
 
-    // ---- align: snap small accidental drift back to perfect (0,0 / scale 1) ----
-    // Every element's un-nudged position (dx=0, dy=0, s=1) IS its perfectly
-    // aligned spot — the CSS Grid/flex layout already lines everything up
-    // (tiles to the grid, text/images/icons centered in their tile). So
-    // "line things up" just means: any offset small enough to be accidental
-    // drift from a drag (not a deliberate move) gets snapped back to zero —
-    // across every tile, image, icon and text box, not just tiles. Click
-    // "Align" for a normal-size correction (up to 14px of drift); hold Shift
-    // and click for a bigger correction (up to 40px) if things drifted more.
-    // Only tiles get their vertical position snapped — everything that
-    // lives INSIDE a tile (text, images, icons) is anchored vertically by
-    // its own CSS on purpose (e.g. a caption pinned to the bottom of an
-    // image, an icon sitting a fixed gap above its caption), so Align never
-    // touches dy for anything but a tile itself. Horizontally, a text box
-    // is different from an image/icon: text should ALWAYS read as
-    // dead-centered on its tile — there's no such thing as "deliberately"
-    // a bit left or right — so Align resets a text box's dx to 0 outright,
-    // not just when the drift is small like it does for everything else.
+    // ---- align: snap small accidental drift back to perfect ----
+    // Tiles: `offsetLeft`/`offsetTop` reflect a tile's actual CSS Grid cell
+    // and are untouched by our own transform, no matter how far it's been
+    // dragged — so the 6 tiles' own offsetLeft/offsetTop are always exactly
+    // the 6 real grid slots, even mid-rearrange. That means Align can snap a
+    // dragged tile to whichever slot it's now CLOSEST to (not just back to
+    // its own original slot) — so swapping two tiles by roughly dragging
+    // them into each other's spot, then clicking Align, locks them exactly
+    // into place instead of only correcting drift from their old spot.
+    // Everything else (images, icons, text) works like before: any small
+    // offset gets snapped back to zero (dx only — vertical position inside
+    // a tile is anchored by its own CSS on purpose, e.g. a caption pinned
+    // to the bottom of an image, so Align never touches dy for anything but
+    // a tile itself). Click "Align" for a normal-size correction (up to
+    // 14px of drift); hold Shift and click for a bigger correction (up to
+    // 40px). Anything drifted further than that is left alone as a
+    // deliberate move.
+    function nearestTileSlot(x, y, tiles){
+      var best = null, bestDist = Infinity;
+      tiles.forEach(function(t){
+        var d = Math.hypot(x - t.offsetLeft, y - t.offsetTop);
+        if (d < bestDist){ bestDist = d; best = t; }
+      });
+      return best;
+    }
     function align(threshold){
       var targets = sel ? [sel] : els;
+      var tiles = els.filter(function(el){ return el.matches('.pdp-cmp__card'); });
       var n = 0;
       targets.forEach(function(el){
         var st = stateOf(el), changed = false;
-        var isTile = el.matches('.pdp-cmp__card');
-        if (st.dx !== 0 && Math.abs(st.dx) <= threshold){ st.dx = 0; changed = true; }
-        if (isTile && st.dy !== 0 && Math.abs(st.dy) <= threshold){ st.dy = 0; changed = true; }
+        if (el.matches('.pdp-cmp__card')){
+          var curX = el.offsetLeft + st.dx, curY = el.offsetTop + st.dy;
+          var slot = nearestTileSlot(curX, curY, tiles);
+          if (slot){
+            var wantDx = slot.offsetLeft - el.offsetLeft, wantDy = slot.offsetTop - el.offsetTop;
+            var errX = curX - slot.offsetLeft, errY = curY - slot.offsetTop;
+            if ((st.dx !== wantDx || st.dy !== wantDy) && Math.abs(errX) <= threshold && Math.abs(errY) <= threshold){
+              st.dx = wantDx; st.dy = wantDy; changed = true;
+            }
+          }
+        } else if (st.dx !== 0 && Math.abs(st.dx) <= threshold){ st.dx = 0; changed = true; }
         if (st.s !== 1 && Math.abs(st.s - 1) <= threshold / 400){ st.s = 1; changed = true; }
         if (changed){ saveState(el, st); n++; }
       });
