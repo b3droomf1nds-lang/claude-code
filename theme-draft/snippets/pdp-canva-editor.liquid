@@ -47,12 +47,19 @@
   EDITING TEXT
     Double-click a caption/heading (not the live numbers, which are
     computed by JS) to drill into it — same as any image or icon, and
-    still draggable with a single click-hold from there. With it
-    selected, press Enter to start typing into it, in its own font; the
-    cursor lands at the end of the existing text so you can add more.
-    Press Enter again to start a new line lower in the same box. Click
-    anywhere else (or press Escape) to stop typing; the edit is saved
-    live like everything else and included in "Copy layout".
+    still draggable with a single click-hold from there. Once it's
+    selected, either press Enter or just click it again (a plain click
+    that doesn't turn into a drag) to start typing into it, in its own
+    font; the cursor lands at the end of the existing text so you can
+    add more. Press Enter again to start a new line lower in the same
+    box. Click anywhere else (or press Escape) to stop typing; the
+    edit is saved live like everything else and included in "Copy
+    layout".
+
+    Click-to-type only fires on a SECOND click, once the text is
+    already selected — the double-click that first drills into/selects
+    it always just selects, so it's still possible to double-click and
+    immediately drag without getting hijacked into typing.
 {%- endcomment -%}
 <style>
   .cv-tb{position:fixed;top:14px;left:14px;z-index:2147483000;display:flex;gap:6px;align-items:center;
@@ -345,11 +352,20 @@
       else if (drilledOnSel) t = sel;  // keep a drilled child selected so it can be dragged
       else t = card;                   // single click grabs the whole tile
 
+      // A click that doesn't turn into a drag, landing on a text box that's
+      // ALREADY selected (i.e. this is a repeat click on it, not the click
+      // that first drilled into it), starts typing — same effect as
+      // pressing Enter. This has to be a *second* click on an already-
+      // selected text box rather than any click, or double-clicking to
+      // drill/select a caption for dragging would get hijacked into typing
+      // every time, same bug as before.
+      var wasSelected = (sel === t);
+
       e.preventDefault();
       select(t);
       if (lastHover){ lastHover.classList.remove('cv-hover'); lastHover = null; }
       var sc = cumScale(t), st = stateOf(t);
-      dragging = {el:t, mode:'move', sx:e.clientX, sy:e.clientY, dx0:st.dx, dy0:st.dy, s0:st.s, scx:sc.sx, scy:sc.sy};
+      dragging = {el:t, mode:'move', sx:e.clientX, sy:e.clientY, dx0:st.dx, dy0:st.dy, s0:st.s, scx:sc.sx, scy:sc.sy, moved:false, wasSelected:wasSelected};
     }
     function startResize(e, corner){
       e.preventDefault(); e.stopPropagation();
@@ -361,6 +377,7 @@
       if (!dragging) return;
       var d = dragging, st = stateOf(d.el);
       if (d.mode === 'move'){
+        if (Math.abs(e.clientX - d.sx) > 3 || Math.abs(e.clientY - d.sy) > 3) d.moved = true;
         st.dx = d.dx0 + (e.clientX - d.sx) / d.scx;
         st.dy = d.dy0 + (e.clientY - d.sy) / d.scy;
       } else {
@@ -371,7 +388,12 @@
       saveState(d.el, st);
       positionBox();
     }
-    function onUp(){ dragging = null; }
+    function onUp(){
+      if (dragging && !dragging.moved && dragging.wasSelected && dragging.el.__cvTextEditable && dragging.el !== editingEl){
+        enterTextEdit(dragging.el);
+      }
+      dragging = null;
+    }
 
     document.addEventListener('mousedown', onDown, true);
     document.addEventListener('mousemove', onMove, true);
