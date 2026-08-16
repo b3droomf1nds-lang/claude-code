@@ -133,7 +133,7 @@
   try { layout = JSON.parse(ls(true, LKEY) || '{}') || {}; } catch(e){ layout = {}; }
 
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__eyebrow, ' +
-    '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__sub, .pdp-cmp__magnet-icon, ' +
+    '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__sub, ' +
     '.pdp-cmp__battery-icon, .pdp-cmp__select-heading, .pdp-cmp__select-wrap, ' +
     // The visible "×" on the partial-charges tile ("Up to 3.6× / 20% to
     // 80%") is its own span so it can be grabbed on its own, separate from
@@ -262,7 +262,7 @@
       if (el.tagName === 'IMG') return 'image';
       if (el.matches('.pdp-cmp__select-heading')) return 'heading';
       if (el.matches('.pdp-cmp__select-wrap')) return 'selector';
-      if (el.matches('.pdp-cmp__magnet-icon,.pdp-cmp__battery-icon')) return 'icon';
+      if (el.matches('.pdp-cmp__battery-icon')) return 'icon';
       if (el.matches('.pdp-cmp__stat-x')) return '×';
       return 'text';
     }
