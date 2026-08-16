@@ -60,6 +60,15 @@
     already selected — the double-click that first drills into/selects
     it always just selects, so it's still possible to double-click and
     immediately drag without getting hijacked into typing.
+
+    With a text box selected (not currently being typed into), press
+    Backspace or Delete to clear it out.
+
+  UNDO
+    Click "Undo" in the toolbar to step back one action at a time —
+    a move, a resize, typing/deleting a caption, or a whole Align /
+    Reset click. Holding an arrow key or scrolling to resize counts as
+    ONE action (the whole hold/scroll), not one per tick.
 {%- endcomment -%}
 <style>
   .cv-tb{position:fixed;top:14px;left:14px;z-index:2147483000;display:flex;gap:6px;align-items:center;
@@ -182,9 +191,14 @@
       el.style.transform = (el.__cvBase + ' ' + extra).trim();
       if (el.__cvTextEditable){
         // Never touch innerHTML of the box currently being typed into —
-        // that would reset the cursor mid-keystroke.
-        if (st.text != null && el !== editingEl && el.innerHTML !== st.text){
-          el.innerHTML = st.text;
+        // that would reset the cursor mid-keystroke. Otherwise it should
+        // always show whatever's saved, OR its original text if nothing
+        // is — that "OR" matters for undo: undoing a delete (or a typed
+        // edit) clears the saved text, and the box needs to actively come
+        // back to its original content, not just sit however it was left.
+        var wantText = st.text != null ? st.text : el.__cvOrigText;
+        if (el !== editingEl && el.innerHTML !== wantText){
+          el.innerHTML = wantText;
         }
         // Once a caption has been retyped, it should ONLY break where an
         // explicit Enter placed a <br> — never on its own just because the
@@ -213,6 +227,37 @@
       var st = stateOf(el);
       st.text = el.innerHTML;
       saveState(el, st);
+    }
+
+    // ---- undo: one entry per user action (a drag, a resize, a type, an
+    // Align/Reset click, a delete) — NOT one per intermediate saveState
+    // call, or a single drag would take dozens of undos to unwind. Call
+    // captureBatch() with the element(s) about to change BEFORE changing
+    // them, do the change(s), then commitBatch() — it only pushes to
+    // history if something in the batch actually ended up different.
+    var history = [];
+    var HISTORY_MAX = 50;
+    function cloneEntry(e){ return e ? JSON.parse(JSON.stringify(e)) : null; }
+    function captureBatch(elsArr){
+      return elsArr.map(function(el){ return { el: el, prev: cloneEntry(layout[el.__cvKey]) }; });
+    }
+    function commitBatch(batch){
+      var changed = batch.filter(function(b){
+        return JSON.stringify(b.prev) !== JSON.stringify(layout[b.el.__cvKey] || null);
+      });
+      if (!changed.length) return;
+      history.push(changed);
+      if (history.length > HISTORY_MAX) history.shift();
+    }
+    function undo(){
+      if (!history.length) return;
+      var batch = history.pop();
+      batch.forEach(function(b){
+        if (b.prev) layout[b.el.__cvKey] = b.prev; else delete layout[b.el.__cvKey];
+        applyState(b.el);
+      });
+      ls(false, LKEY, JSON.stringify(layout));
+      positionBox();
     }
 
     // Register every editable element: record its base transform + stable key,
@@ -277,8 +322,10 @@
     function deselect(){ sel = null; positionBox(); }
 
     // ---- inline text editing ----
+    var textEditBatch = null;
     function enterTextEdit(el){
       editingEl = el;
+      textEditBatch = captureBatch([el]);
       el.contentEditable = 'true';
       el.spellcheck = false;
       el.classList.add('cv-editing-text');
@@ -299,6 +346,7 @@
       el.contentEditable = 'false';
       el.classList.remove('cv-editing-text');
       saveText(el);
+      if (textEditBatch){ commitBatch(textEditBatch); textEditBatch = null; }
     }
     function insertLineBreak(){
       // Not a hand-rolled Range insertion: browsers get ambiguous about
@@ -365,13 +413,13 @@
       select(t);
       if (lastHover){ lastHover.classList.remove('cv-hover'); lastHover = null; }
       var sc = cumScale(t), st = stateOf(t);
-      dragging = {el:t, mode:'move', sx:e.clientX, sy:e.clientY, dx0:st.dx, dy0:st.dy, s0:st.s, scx:sc.sx, scy:sc.sy, moved:false, wasSelected:wasSelected};
+      dragging = {el:t, mode:'move', sx:e.clientX, sy:e.clientY, dx0:st.dx, dy0:st.dy, s0:st.s, scx:sc.sx, scy:sc.sy, moved:false, wasSelected:wasSelected, batch:captureBatch([t])};
     }
     function startResize(e, corner){
       e.preventDefault(); e.stopPropagation();
       var c = centerOf(sel), st = stateOf(sel);
       var d0 = Math.hypot(e.clientX - c.x, e.clientY - c.y) || 1;
-      dragging = {el:sel, mode:'scale', d0:d0, s0:st.s, dx0:st.dx, dy0:st.dy, cx:c.x, cy:c.y};
+      dragging = {el:sel, mode:'scale', d0:d0, s0:st.s, dx0:st.dx, dy0:st.dy, cx:c.x, cy:c.y, batch:captureBatch([sel])};
     }
     function onMove(e){
       if (!dragging) return;
@@ -392,6 +440,7 @@
       if (dragging && !dragging.moved && dragging.wasSelected && dragging.el.__cvTextEditable && dragging.el !== editingEl){
         enterTextEdit(dragging.el);
       }
+      if (dragging && dragging.batch) commitBatch(dragging.batch);
       dragging = null;
     }
 
@@ -402,11 +451,18 @@
     window.addEventListener('resize', positionBox);
 
     // ---- wheel to resize the selected element ----
+    // A scroll gesture fires many wheel events in a burst — treat the whole
+    // burst as one undo step (capture once at the start, commit once
+    // ~400ms after the wheel goes quiet) instead of one per tick.
+    var wheelBatch = null, wheelIdleTimer = null;
     document.addEventListener('wheel', function(e){
       if (!sel || editingEl) return;
       var r = sel.getBoundingClientRect();
       if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
       e.preventDefault();
+      if (!wheelBatch) wheelBatch = captureBatch([sel]);
+      clearTimeout(wheelIdleTimer);
+      wheelIdleTimer = setTimeout(function(){ commitBatch(wheelBatch); wheelBatch = null; }, 400);
       var st = stateOf(sel);
       st.s = Math.max(0.15, Math.min(10, st.s * (e.deltaY < 0 ? 1.05 : 0.9524)));
       saveState(sel, st); positionBox();
@@ -430,13 +486,38 @@
       // (same as any other selected element) — Enter is what switches it
       // into typing, so the two never compete for the same click.
       if (e.key === 'Enter' && isTextEditable(sel)){ e.preventDefault(); enterTextEdit(sel); return; }
+      // Backspace/Delete on a SELECTED (not currently-typed-into) text box
+      // clears it — same idea as pressing Enter to type, just the opposite:
+      // one keypress, not held down, no confirm dialog, because it's a
+      // single undo-able step either way.
+      if ((e.key === 'Backspace' || e.key === 'Delete') && isTextEditable(sel)){
+        e.preventDefault();
+        var delBatch = captureBatch([sel]);
+        sel.innerHTML = '';
+        var delSt = stateOf(sel);
+        delSt.text = '';
+        saveState(sel, delSt);
+        commitBatch(delBatch);
+        positionBox();
+        return;
+      }
+      if (e.key === 'Escape'){ deselect(); return; }
+      // Holding an arrow key fires many keydown events — coalesce a whole
+      // hold into one undo step the same way the wheel-resize burst does.
       var step = e.shiftKey ? 10 : 1, st = stateOf(sel), moved = true;
       if (e.key === 'ArrowLeft') st.dx -= step; else if (e.key === 'ArrowRight') st.dx += step;
       else if (e.key === 'ArrowUp') st.dy -= step; else if (e.key === 'ArrowDown') st.dy += step;
-      else if (e.key === 'Escape'){ deselect(); return; }
       else moved = false;
-      if (moved){ e.preventDefault(); saveState(sel, st); positionBox(); }
+      if (moved){
+        e.preventDefault();
+        if (!nudgeBatch) nudgeBatch = captureBatch([sel]);
+        clearTimeout(nudgeIdleTimer);
+        nudgeIdleTimer = setTimeout(function(){ commitBatch(nudgeBatch); nudgeBatch = null; }, 400);
+        saveState(sel, st);
+        positionBox();
+      }
     });
+    var nudgeBatch = null, nudgeIdleTimer = null;
 
     // Live-save while typing (covers the case where a click elsewhere is
     // the very first event caught, so nothing is lost between keystrokes
@@ -473,6 +554,7 @@
     function align(threshold){
       var targets = sel ? [sel] : els;
       var tiles = els.filter(function(el){ return el.matches('.pdp-cmp__card'); });
+      var batch = captureBatch(targets);
       var n = 0;
       targets.forEach(function(el){
         var st = stateOf(el), changed = false;
@@ -490,6 +572,7 @@
         if (st.s !== 1 && Math.abs(st.s - 1) <= threshold / 400){ st.s = 1; changed = true; }
         if (changed){ saveState(el, st); n++; }
       });
+      commitBatch(batch);
       positionBox();
       return n;
     }
@@ -514,7 +597,8 @@
     var tb = document.createElement('div'); tb.className = 'cv-tb';
     tb.innerHTML =
       '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
-      '<span class="cv-tb__hint">Click a tile · double-click to grab what’s inside · drag to move · corner or scroll to resize · arrows nudge · Enter types into a selected caption</span>' +
+      '<span class="cv-tb__hint">Click a tile · double-click to grab what’s inside · drag to move · corner or scroll to resize · arrows nudge · Enter types into a selected caption · Backspace deletes selected text</span>' +
+      '<button class="cv-btn" data-cv="undo" title="Undo the last move, resize, type, delete, Align, or Reset.">Undo</button>' +
       '<button class="cv-btn" data-cv="align" title="Snap small drift back to perfect. Shift+click for a bigger correction.">Align</button>' +
       '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
       '<button class="cv-btn" data-cv="reset-all">Reset all</button>' +
@@ -539,19 +623,24 @@
     tb.addEventListener('click', function(e){
       var b = e.target.closest('[data-cv]'); if (!b) return;
       var a = b.dataset.cv;
-      if (a === 'align'){ align(e.shiftKey ? 40 : 14); }
+      if (a === 'undo'){ undo(); }
+      else if (a === 'align'){ align(e.shiftKey ? 40 : 14); }
       else if (a === 'reset-sel' && sel){
+        var resetBatch = captureBatch([sel]);
         var keepText = stateOf(sel).text;
         saveState(sel, {dx:0, dy:0, s:1, text:keepText});
+        commitBatch(resetBatch);
         positionBox();
       }
       else if (a === 'reset-all'){
         if (confirm('Reset every tile, image and text back to its original position? (typed caption edits are kept)')){
+          var resetAllBatch = captureBatch(els.filter(function(el){ return layout[el.__cvKey]; }));
           Object.keys(layout).forEach(function(k){
             layout[k] = layout[k].text != null ? {dx:0, dy:0, s:1, text:layout[k].text} : undefined;
             if (layout[k] === undefined) delete layout[k];
           });
           ls(false, LKEY, JSON.stringify(layout));
+          commitBatch(resetAllBatch);
           els.forEach(applyState);
           deselect();
         }
