@@ -38,11 +38,14 @@
     when it's dragged — only its on-screen transform does — so all 6
     real slots are always known and available to snap to.
 
-    Align ONLY ever touches a tile's own position/size — it never
-    touches anything INSIDE a tile (an image, icon, or text box).
-    Once something is placed inside a tile, it stays exactly where
-    it's put; clicking Align (with that thing selected, or with
-    nothing selected) does nothing to it.
+    Align touches a tile's own position/size, and a text box's (a
+    caption or heading) horizontal position — small drift only, up to
+    the same threshold, and text is never moved vertically or resized
+    by Align (its vertical spot is set by its own CSS on purpose).
+    Everything else that lives inside a tile — an image or an icon —
+    is left alone entirely: once placed, it stays exactly where it's
+    put, since a deliberate small nudge on a photo shouldn't keep
+    getting silently reverted just because Align ran.
 
   EDITING TEXT
     Double-click a caption/heading (not the live numbers, which are
@@ -555,11 +558,12 @@
     }
     function align(threshold){
       var wantedTargets = sel ? [sel] : els;
-      var targets = wantedTargets.filter(function(el){ return el.matches('.pdp-cmp__card'); });
+      var tileTargets = wantedTargets.filter(function(el){ return el.matches('.pdp-cmp__card'); });
+      var textTargets = wantedTargets.filter(function(el){ return el.__cvTextEditable; });
       var tiles = els.filter(function(el){ return el.matches('.pdp-cmp__card'); });
-      var batch = captureBatch(targets);
+      var batch = captureBatch(tileTargets.concat(textTargets));
       var n = 0;
-      targets.forEach(function(el){
+      tileTargets.forEach(function(el){
         var st = stateOf(el), changed = false;
         var curX = el.offsetLeft + st.dx, curY = el.offsetTop + st.dy;
         var slot = nearestTileSlot(curX, curY, tiles);
@@ -571,6 +575,14 @@
           }
         }
         if (st.s !== 1 && Math.abs(st.s - 1) <= threshold / 400){ st.s = 1; changed = true; }
+        if (changed){ saveState(el, st); n++; }
+      });
+      // Text boxes only ever get straightened left/right — small drift
+      // only, same rule as a tile — never resized or moved vertically by
+      // Align (their vertical spot is set by their own CSS on purpose).
+      textTargets.forEach(function(el){
+        var st = stateOf(el), changed = false;
+        if (st.dx !== 0 && Math.abs(st.dx) <= threshold){ st.dx = 0; changed = true; }
         if (changed){ saveState(el, st); n++; }
       });
       commitBatch(batch);
@@ -600,7 +612,7 @@
       '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
       '<span class="cv-tb__hint">Click a tile · double-click to grab what’s inside · drag to move · corner or scroll to resize · arrows nudge · Enter types into a selected caption · Backspace deletes selected text</span>' +
       '<button class="cv-btn" data-cv="undo" title="Undo the last move, resize, type, delete, Align, or Reset.">Undo</button>' +
-      '<button class="cv-btn" data-cv="align" title="Straighten tiles back onto the grid (never touches whats inside a tile). Shift+click for a bigger correction.">Align</button>' +
+      '<button class="cv-btn" data-cv="align" title="Straighten tiles onto the grid and text boxes left/right. Leaves images and icons alone. Shift+click for a bigger correction.">Align</button>' +
       '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
       '<button class="cv-btn" data-cv="reset-all">Reset all</button>' +
       '<button class="cv-btn cv-btn--go" data-cv="copy">Copy layout</button>' +
