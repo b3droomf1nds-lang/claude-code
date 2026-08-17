@@ -245,7 +245,10 @@
   position: relative;
   overflow: hidden;
   background: var(--tile, #F4F8F8);
-  border-radius: var(--r-s, 14px);
+  /* Half of the theme's --r-s (14px) — a deliberately tighter corner
+     than the rest of the theme's tiles, not tied to the shared
+     variable so changing --r-s elsewhere doesn't drag this along. */
+  border-radius: 7px;
   padding: 14px 8px;
   height: 92px;
   display: flex;
@@ -266,7 +269,7 @@
      isn't square, so it'd draw an ellipse instead of matching
      desktop's circular corner). */
   .pdp-cmp__card {
-    border-radius: 45.95px;
+    border-radius: 22.97px;
     /* Same scaling as everything else in this file's mobile compare
        block: raw desktop px value × 3.2816 (desktop's tile renders
        at 463.6px via a 4.347x transform; mobile's tile is 350px with
