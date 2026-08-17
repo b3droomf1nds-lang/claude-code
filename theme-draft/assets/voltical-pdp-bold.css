@@ -146,10 +146,11 @@
      selector) rather than the reverse, which is what this had before. */
   margin: 0 0 28px;
   font-size: 1.85rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--ink, #131316);
   line-height: 1.2;
+  white-space: nowrap;
 }
 .pdp-cmp__select-wrap {
   position: relative;
