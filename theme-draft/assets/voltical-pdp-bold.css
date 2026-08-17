@@ -166,7 +166,7 @@
   height: 8px;
   border-right: 2px solid var(--ink-60, rgba(19,19,22,.58));
   border-bottom: 2px solid var(--ink-60, rgba(19,19,22,.58));
-  transform: translateY(-65%) rotate(45deg);
+  transform: translateY(-50%) rotate(45deg);
   pointer-events: none;
 }
 .pdp-cmp__select {
@@ -180,7 +180,7 @@
   background: #FFFFFF;
   border: 1px solid rgba(19,19,22,.12);
   border-radius: 999px;
-  padding: 9px 38px 9px 22px;
+  padding: 6px 34px 6px 20px;
   box-shadow: 0 1px 2px rgba(19,19,22,.04);
 }
 .pdp-cmp__select,
