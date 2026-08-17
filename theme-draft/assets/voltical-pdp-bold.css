@@ -164,9 +164,9 @@
   top: 50%;
   width: 8px;
   height: 8px;
-  border-right: 2px solid var(--ink-60, rgba(19,19,22,.58));
-  border-bottom: 2px solid var(--ink-60, rgba(19,19,22,.58));
-  transform: translateY(-50%) rotate(45deg);
+  border-right: 1.25px solid var(--ink-60, rgba(19,19,22,.58));
+  border-bottom: 1.25px solid var(--ink-60, rgba(19,19,22,.58));
+  transform: translateY(-65%) rotate(45deg);
   pointer-events: none;
 }
 .pdp-cmp__select {
