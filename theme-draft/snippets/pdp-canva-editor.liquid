@@ -147,7 +147,7 @@
 
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__sub, ' +
-    '.pdp-cmp__battery-icon, .pdp-cmp__select-heading, .pdp-cmp__select-wrap, ' +
+    '.pdp-cmp__battery-icon, .pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__select-wrap, ' +
     // The visible "×" on the partial-charges tile ("Up to 3.6× / 20% to
     // 80%") is its own span so it can be grabbed on its own, separate from
     // the number — but its hidden mirror twin (used to balance the
@@ -172,7 +172,7 @@
     // (data-calc-*) are computed live by the compare script, so editing
     // them by hand would just get overwritten on the next recalculation.
     function isTextEditable(el){
-      return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading');
+      return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading, .pdp-cmp__label');
     }
     // Wider than isTextEditable: also covers the big live-computed stat
     // numbers (e.g. "67h"), which must NOT be made typeable (they're
