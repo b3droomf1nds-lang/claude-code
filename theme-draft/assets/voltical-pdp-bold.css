@@ -990,25 +990,11 @@
   z-index: 1;
   pointer-events: none;
 }
-.template-product .pdp-cmp__card--video .pdp-cmp__img-crop {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  height: 100%;
-  width: auto;
-  aspect-ratio: 647 / 1329;
-  transform: translateX(-50%);
-  overflow: hidden;
-}
-.template-product .pdp-cmp__card--video .pdp-cmp__img-crop .pdp-cmp__img--video-crop {
-  position: absolute !important;
-  left: -55.0232% !important;
-  top: -21.2189% !important;
-  width: 211.1283% !important;
-  height: 154.1009% !important;
-  max-width: none !important;
-  object-fit: fill !important;
+.template-product .pdp-cmp__card--video .pdp-cmp__img--video-crop {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center bottom !important;
 }
 
 /* Mobile: keep desktop's card proportions exactly — 1 column now
