@@ -221,6 +221,18 @@
   .pdp-cmp__select-wrap {
     margin-bottom: 54px;
   }
+  /* The canva-baked desktop layout above moves each tile onto a
+     different visual grid cell (row 1 <-> row 2, and the last two
+     tiles swap columns) rather than just nudging it — desktop's 2D
+     grid has no direct mobile equivalent, but the resulting reading
+     order does, so mobile's single-column stack is reordered to match
+     it: video, fade, partial-image, magnet, charge, full-charges. */
+  .pdp-cmp>:nth-child(2)>:nth-child(4) { order: 1; } /* video */
+  .pdp-cmp>:nth-child(2)>:nth-child(6) { order: 2; } /* fade */
+  .pdp-cmp>:nth-child(2)>:nth-child(5) { order: 3; } /* partial-image */
+  .pdp-cmp>:nth-child(2)>:nth-child(1) { order: 4; } /* magnet */
+  .pdp-cmp>:nth-child(2)>:nth-child(2) { order: 5; } /* charge */
+  .pdp-cmp>:nth-child(2)>:nth-child(3) { order: 6; } /* full-charges */
 }
 .pdp-cmp__group {
   display: contents;
