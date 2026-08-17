@@ -39,13 +39,14 @@
     real slots are always known and available to snap to.
 
     Align touches a tile's own position/size, and a text box's (a
-    caption or heading) horizontal position — small drift only, up to
-    the same threshold, and text is never moved vertically or resized
-    by Align (its vertical spot is set by its own CSS on purpose).
-    Everything else that lives inside a tile — an image or an icon —
-    is left alone entirely: once placed, it stays exactly where it's
-    put, since a deliberate small nudge on a photo shouldn't keep
-    getting silently reverted just because Align ran.
+    caption, heading, or the big stat number) horizontal position —
+    small drift only, up to the same threshold, and text is never
+    moved vertically or resized by Align (its vertical spot is set by
+    its own CSS on purpose). Everything else that lives inside a tile
+    — an image or an icon — is left alone entirely: once placed, it
+    stays exactly where it's put, since a deliberate small nudge on a
+    photo shouldn't keep getting silently reverted just because Align
+    ran.
 
   EDITING TEXT
     Double-click a caption/heading (not the live numbers, which are
@@ -173,6 +174,14 @@
     function isTextEditable(el){
       return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading');
     }
+    // Wider than isTextEditable: also covers the big live-computed stat
+    // numbers (e.g. "67h"), which must NOT be made typeable (they're
+    // overwritten by the compare script on recalculation) but still
+    // deserve the same "Align only ever straightens left/right, never
+    // moves vertically" treatment as a caption.
+    function isAlignHoriz(el){
+      return isTextEditable(el) || el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row');
+    }
 
     var editingEl = null;
 
@@ -271,6 +280,7 @@
       el.__cvBase = (cs && cs !== 'none') ? cs : '';
       el.__cvKey  = pathFor(el);
       el.__cvTextEditable = isTextEditable(el);
+      el.__cvAlignH = isAlignHoriz(el);
       el.__cvOrigText = el.__cvTextEditable ? el.innerHTML : null;
       applyState(el);
     });
@@ -559,7 +569,7 @@
     function align(threshold){
       var wantedTargets = sel ? [sel] : els;
       var tileTargets = wantedTargets.filter(function(el){ return el.matches('.pdp-cmp__card'); });
-      var textTargets = wantedTargets.filter(function(el){ return el.__cvTextEditable; });
+      var textTargets = wantedTargets.filter(function(el){ return el.__cvAlignH; });
       var tiles = els.filter(function(el){ return el.matches('.pdp-cmp__card'); });
       var batch = captureBatch(tileTargets.concat(textTargets));
       var n = 0;
