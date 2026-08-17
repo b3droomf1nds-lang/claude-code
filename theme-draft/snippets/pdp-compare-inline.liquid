@@ -73,7 +73,7 @@
     </div>
     <div class="pdp-cmp__card pdp-cmp__card--hero pdp-cmp__card--img">
       <div class="pdp-cmp__eyebrow">Up to</div>
-      <div class="pdp-cmp__stat" data-calc-full>&mdash;</div>
+      <div class="pdp-cmp__stat" data-calc-full><span data-calc-full-num>&mdash;</span><span class="pdp-cmp__stat-x"><svg class="pdp-cmp__stat-x-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" transform="rotate(45 12 12)"/></svg></span></div>
       <div class="pdp-cmp__sub">full charges</div>
       {%- comment -%} image drops in here — leave empty until it's supplied {%- endcomment -%}
       <div class="pdp-cmp__img-slot" aria-hidden="true"><img class="pdp-cmp__img--full-upright" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/Untitled_design_5.webp?v=1786195688" alt="Core powerbank and phone side profile"></div>
@@ -127,10 +127,10 @@
 
   var select = document.getElementById('pdp-cmp-select');
   var timeEl = document.querySelector('[data-calc-time]');
-  var fullEl = document.querySelector('[data-calc-full]');
+  var fullNumEl = document.querySelector('[data-calc-full-num]');
   var partialNumEl = document.querySelector('[data-calc-partial-num]');
   var videoEl = document.querySelector('[data-calc-video]');
-  if (!select || !timeEl || !fullEl || !partialNumEl || !videoEl) return;
+  if (!select || !timeEl || !fullNumEl || !partialNumEl || !videoEl) return;
 
   function powerbankWh() {
     var checked = document.querySelector('input[type="radio"]:checked[value*="mAh" i]')
@@ -159,7 +159,7 @@
     var effW = Math.min(phoneMaxW, POWERBANK_MAX_W) * TAPER_FACTOR;
     var minutes = (0.6 * phoneWh) / effW * 60;
 
-    fullEl.textContent = fmt(full) + '×';
+    fullNumEl.textContent = fmt(full);
     partialNumEl.textContent = fmt(partial);
     videoEl.textContent = Math.round(videoHours) + 'h';
     timeEl.textContent = Math.round(minutes);
