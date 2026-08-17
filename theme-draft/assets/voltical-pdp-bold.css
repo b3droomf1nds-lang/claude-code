@@ -804,7 +804,6 @@
 .template-product .pdp-cmp__card--charge .pdp-cmp__stat {
   font-size: 30px;
   line-height: 1;
-  color: var(--ink-60, rgba(19,19,22,.58));
 }
 .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
   width: 31px;
@@ -843,7 +842,6 @@
   line-height: 1;
   display: flex;
   align-items: baseline;
-  color: var(--ink-60, rgba(19,19,22,.58));
 }
 .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__stat-x {
   display: inline-flex;
