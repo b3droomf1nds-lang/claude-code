@@ -189,10 +189,51 @@
       var s = layout[el.__cvKey];
       return s ? {dx:s.dx||0, dy:s.dy||0, s:s.s||1, text:(s.text!=null ? s.text : null)} : {dx:0,dy:0,s:1,text:null};
     }
+
+    // ---- carry a desktop-authored move onto whatever viewport is showing ----
+    // Every drag is authored on desktop (the editor's controls only appear at
+    // >=900px), so dx/dy are stored in the element's DESKTOP local pixels —
+    // where a tile's untransformed box is DESK_REF_W wide. Mobile lays the
+    // same tile out at its full column width (no scale transform), so a raw
+    // desktop offset would land a caption/image in completely the wrong spot.
+    // Since dx/tileWidth is the move as a fraction of its tile — and that
+    // fraction is exactly what should look identical on both — we re-express
+    // the offset for the current viewport as dx * (thisTileWidth / DESK_REF_W).
+    // offsetWidth ignores transforms, so this measures true local box widths
+    // and self-corrects to any phone width, not just one hard-coded size.
+    // scale(s) is a unitless ratio and needs no conversion; the element's own
+    // base transform is read per-viewport already, so it's right on each.
+    var desktopMQ = window.matchMedia('(min-width:900px)');
+    // Desktop's tile box width is fixed regardless of window size (its scale
+    // transform does the sizing), so measure it once on desktop and cache it;
+    // on a phone (no editor, only a restored layout) fall back to the cached
+    // value, or the known baked default if this browser never saw desktop.
+    var REFKEY = 'volt-canva-refw';
+    var DESK_REF_W = (function(){
+      if (desktopMQ.matches){
+        var t = document.querySelector('.pdp-cmp__card');
+        if (t && t.offsetWidth){ ls(false, REFKEY, String(t.offsetWidth)); return t.offsetWidth; }
+      }
+      var cached = parseFloat(ls(true, REFKEY));
+      return cached > 0 ? cached : 107;
+    })();
+    function effTranslate(el, st){
+      if (desktopMQ.matches) return {dx: st.dx, dy: st.dy};   // author viewport: verbatim
+      // A whole tile moved onto a different desktop grid cell has no meaning
+      // in mobile's single-column stack (that reordering is handled in CSS),
+      // so don't fling the tile across the screen — only its contents move.
+      if (el.matches('.pdp-cmp__card')) return {dx: 0, dy: 0};
+      var tile = el.closest('.pdp-cmp__card');
+      if (!tile || !tile.offsetWidth || !DESK_REF_W) return {dx: st.dx, dy: st.dy};
+      var f = tile.offsetWidth / DESK_REF_W;
+      return {dx: st.dx * f, dy: st.dy * f};
+    }
+
     function applyState(el){
       var st = stateOf(el);
+      var mv = effTranslate(el, st);
       var extra = '';
-      if (st.dx || st.dy) extra += 'translate(' + st.dx + 'px,' + st.dy + 'px) ';
+      if (mv.dx || mv.dy) extra += 'translate(' + mv.dx + 'px,' + mv.dy + 'px) ';
       if (st.s && st.s !== 1) extra += 'scale(' + st.s + ') ';
       // Base must come FIRST (outermost-applied last, i.e. leftmost in the
       // CSS list is applied outermost... concretely: composing as
@@ -284,6 +325,25 @@
       el.__cvOrigText = el.__cvTextEditable ? el.innerHTML : null;
       applyState(el);
     });
+
+    // Crossing the 900px line (e.g. dragging the window narrow to check the
+    // phone layout, or a device rotating) swaps every element's base
+    // transform and its tile width, so re-apply the saved moves against the
+    // new viewport — otherwise a desktop-scaled offset would linger on the
+    // mobile layout until a full reload.
+    (desktopMQ.addEventListener ? desktopMQ.addEventListener('change', reapplyAll)
+                                : desktopMQ.addListener(reapplyAll));
+    function reapplyAll(){
+      els.forEach(function(el){
+        // el.style.transform is our own inline output; strip it first so the
+        // freshly-read base is the element's real CSS for this viewport, not
+        // last viewport's composed result.
+        el.style.transform = '';
+        var cs = getComputedStyle(el).transform;
+        el.__cvBase = (cs && cs !== 'none') ? cs : '';
+        applyState(el);
+      });
+    }
 
     if (!ON) return;                 // viewer with a saved layout — no controls
     if (!window.matchMedia('(min-width:900px)').matches) return; // desktop tool only
