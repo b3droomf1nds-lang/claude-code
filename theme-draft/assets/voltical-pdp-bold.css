@@ -197,16 +197,23 @@
 .pdp-cmp__grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  /* 35% smaller than the previous 6.5px. */
-  gap: 4.225px;
+  /* ~6.1% of a tile's width, matching a reference (Apple-style)
+     compare grid's gap-to-tile-width ratio, tighter than the
+     previous ~9.38%. */
+  gap: 6.5px;
 }
 @media (max-width: 899px) {
   .pdp-cmp__grid {
     /* 1 column, all 6 tiles stacked — not 2 columns. */
     grid-template-columns: repeat(1, minmax(0, 1fr));
-    /* 35% smaller than the previous 21.33px, matching desktop's 4.225px
-       raw gap at the file's 3.2816 desktop-to-mobile factor. */
-    gap: 13.86px;
+    /* Desktop's tiles sit inside a block that's scaled up 4.347x
+       (scale(3) on .pdp-cmp times scale(1.449) on this grid), so its
+       6.5px gap actually renders at ~28.3px against a ~463.6px-wide
+       tile — the same ~6.1% gap-to-tile-width ratio. Mobile isn't
+       scaled at all, and with a single column each tile is now the
+       full grid width (~350px @390px viewport), so matching that same
+       ratio takes ~21.33px here. */
+    gap: 21.33px;
   }
   /* Push the heading (and, since it's the next element in flow, the
      selector along with it) down 50px + 20px, and push the tile grid
@@ -1223,28 +1230,28 @@
   .pdp-cmp>:nth-child(1)>:nth-child(1) { transform: matrix(1, 0, 0, 1, -322.66, 84.66) translate(30.64px, 132.01px) !important; }
   .pdp-cmp>:nth-child(1)>:nth-child(2) { transform: translate(397.34px, 77.35px) scale(0.8687) !important; }
   .pdp-cmp>:nth-child(1)>:nth-child(3) { transform: translate(389.99px, 68.68px) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(1) { transform: translate(0px, 96.23px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(1) { transform: translate(0px, 98.5px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(1) { transform: matrix(1, 0, 0, 1, -16.7188, 0) translate(37.7px, 11.23px) scale(1.0936) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(2) { transform: matrix(1, 0, 0, 1, -24.9635, 0) translate(0px, -10.12px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1) { transform: matrix(3.3, 0, 0, 3.3, 0, 0) translate(0px, 10.35px) scale(0.8088) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(2) { transform: translate(0px, 96.23px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2) { transform: translate(0px, 98.5px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: translate(2.53px, 0px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2) { transform: translate(-2.53px, 1.15px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(4) { transform: translate(0px, -2.07px) scale(0.9817) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(3) { transform: translate(0px, 96.23px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(3) { transform: translate(0px, 98.5px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(1) { transform: translate(1.15px, -2.07px) scale(1.3079) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(2) { transform: translate(0px, -5.52px) scale(1.3061) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(3) { transform: translate(-3.22px, 0.23px) scale(1.0277) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(4)>:nth-child(1) { transform: matrix(1.39342, 0, 0, 1.39342, -31.2274, -47.972) translate(5.52px, 5.75px) scale(0.9065) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(4) { transform: translate(0px, -96.23px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(4) { transform: translate(0px, -98.5px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(1) { transform: matrix(1, 0, 0, 1, -25.849, 0) translate(0px, -1.61px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(2) { transform: matrix(1, 0, 0, 1, -27.875, 0) translate(0px, -2.3px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(3)>:nth-child(1) { transform: matrix(1.06, 0, 0, 1.06, 0, 0) translate(0.92px, 30.83px) scale(2.6511) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(5) { transform: translate(114.75px, -96.23px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(5) { transform: translate(115.5px, -98.5px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(1) { transform: matrix(1, 0, 0, 1, -15.686, -2.07) translate(1.61px, 0px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(2) { transform: matrix(1.3558, 0, 0, 1.3558, -30.1451, -3.68) translate(5.52px, 0px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(4) { transform: matrix(1, 0, 0, 1, -14.2448, 0) translate(-10.35px, -6.21px) scale(0.9843) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(6) { transform: translate(-114.75px, -96.23px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(6) { transform: translate(-115.5px, -98.5px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(1) { transform: translate(0px, -7.36px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(2) { transform: translate(0px, 1.61px) scale(2.4085) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(3) { transform: translate(0px, 9.66px) scale(0.9519) !important; }
