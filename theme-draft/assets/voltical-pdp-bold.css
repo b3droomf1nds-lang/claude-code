@@ -834,6 +834,10 @@
 .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
   font-size: 4.8px;
   margin-top: 3px;
+  /* iOS's own system font (SF Pro), not the theme's Instrument Sans,
+     to match the battery-percentage reference look. */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) {
   position: relative;
@@ -980,6 +984,10 @@
   z-index: 2;
   white-space: nowrap;
   font-size: 4.8px;
+  /* iOS's own system font (SF Pro), not the theme's Instrument Sans,
+     to match the battery-percentage reference look. */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 .template-product .pdp-cmp__card--video {
   position: relative;
@@ -1122,6 +1130,8 @@
   .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
     font-size: 15.75px;
     margin-top: 9.84px;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    font-variant-numeric: tabular-nums;
   }
 
   .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__eyebrow {
@@ -1184,6 +1194,8 @@
     bottom: 26.25px;
     font-size: 15.75px;
     white-space: nowrap;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    font-variant-numeric: tabular-nums;
   }
 
   .template-product .pdp-cmp__card--video .pdp-cmp__eyebrow {
