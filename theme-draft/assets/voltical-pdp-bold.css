@@ -1236,7 +1236,7 @@
   .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1) { transform: matrix(3.3, 0, 0, 3.3, 0, 0) translate(0px, 10.35px) scale(0.8088) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(2) { transform: translate(0px, 98.5px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: translate(2.53px, 0px) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2) { transform: translate(-2.53px, 1.15px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2) { transform: matrix(1, 0, 0, 1, -2.53, 1.15) translate(0.69px, -0.23px) scale(1.4456) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(4) { transform: translate(0px, -2.07px) scale(0.9817) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(3) { transform: translate(0px, 98.5px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(1) { transform: translate(1.15px, -2.07px) scale(1.3079) !important; }
@@ -1270,7 +1270,7 @@
   .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(2) { transform: matrix(1, 0, 0, 1, -81.92, 0) translate(0px, -33.21px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1) { transform: matrix(3.3, 0, 0, 3.3, 0, 0) translate(0px, 33.96px) scale(0.8088) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: translate(8.3px, 0px) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2) { transform: translate(-8.3px, 3.77px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2) { transform: matrix(1, 0, 0, 1, -8.3, 3.77) translate(2.26px, -0.75px) scale(1.4456) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(4) { transform: translate(0px, -6.79px) scale(0.9817) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(1) { transform: translate(3.77px, -6.79px) scale(1.3079) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(2) { transform: translate(0px, -18.11px) scale(1.3061) !important; }

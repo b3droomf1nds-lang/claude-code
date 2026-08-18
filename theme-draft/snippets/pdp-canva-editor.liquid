@@ -141,7 +141,7 @@
   if (wantOff) rm('volt-canva-on');
   var ON = ls(true, 'volt-canva-on') === '1' && !wantOff;
 
-  var LKEY = 'volt-canva-layout-3';
+  var LKEY = 'volt-canva-layout-4';
   var layout = {};
   try { layout = JSON.parse(ls(true, LKEY) || '{}') || {}; } catch(e){ layout = {}; }
 
