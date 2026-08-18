@@ -77,7 +77,6 @@
     </nav>
 
     <div class="site-header__actions">
-      <a href="{{ routes.search_url }}" class="site-header__search" aria-label="{{ 'general.search' | t }}">{% render 'icon', icon: 'search' %}</a>
       <button class="cart-btn" data-cart-open aria-label="{{ 'cart.title' | t }}">
         {% render 'icon', icon: 'bag' %}
         <span class="cart-btn__count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
@@ -117,8 +116,7 @@
         </nav>
 
         <div class="site-header__actions">
-          <a href="{{ routes.search_url }}" class="site-header__search" aria-label="{{ 'general.search' | t }}">{% render 'icon', icon: 'search' %}</a>
-          <button class="cart-btn" data-cart-open aria-label="{{ 'cart.title' | t }}">
+              <button class="cart-btn" data-cart-open aria-label="{{ 'cart.title' | t }}">
             {% render 'icon', icon: 'bag' %}
             <span class="cart-btn__count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
           </button>
