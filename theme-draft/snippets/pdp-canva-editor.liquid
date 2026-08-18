@@ -241,7 +241,13 @@
       // (e.g. a centering translateX(-50%) baked in from the element's own
       // CSS) from getting multiplied by the user's own scale(s) — which is
       // what silently drags an element off-center the more it's resized.
-      el.style.transform = (el.__cvBase + ' ' + extra).trim();
+      // !important: once something's been baked (lock it), its position
+      // lives in the stylesheet as an !important rule (needed there to
+      // beat other, unrelated !important rules on some elements) — a
+      // plain inline style can never outrank that, so dragging/resizing
+      // anything already baked would silently do nothing. An inline
+      // !important is the one thing that outranks an external !important.
+      el.style.setProperty('transform', (el.__cvBase + ' ' + extra).trim(), 'important');
       if (el.__cvTextEditable){
         // Never touch innerHTML of the box currently being typed into —
         // that would reset the cursor mid-keystroke. Otherwise it should
