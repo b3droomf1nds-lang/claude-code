@@ -261,20 +261,6 @@
   justify-content: center;
   text-align: center;
   gap: 4px;
-  transition: transform .35s var(--ease), box-shadow .35s var(--ease);
-}
-@media (min-width: 900px) {
-  /* Same hover shadow the catalogue's .product-card gets, scaled down
-     by the grid's 4.347x display transform (raw px here x 4.347 =
-     that many screen px) so it reads as the same size on screen.
-     Desktop only, to match where .product-card's own hover is felt.
-     (.product-card also lifts with translateY+scale on hover, but
-     every tile here already carries a canva-baked !important position
-     transform that would silently win over a hover transform, so only
-     the shadow is replicated.) */
-  .pdp-cmp__card:hover {
-    box-shadow: 0 5.52px 11.96px rgba(19, 19, 22, .08);
-  }
 }
 @media (max-width: 899px) {
   /* Matches desktop's own radius-to-tile-width ratio (rendered
