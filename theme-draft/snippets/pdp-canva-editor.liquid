@@ -95,6 +95,15 @@
      clickable/double-clickable like everything else. */
   .cv-editing .pdp-cmp__img-slot,
   .cv-editing .pdp-cmp__img-slot img{pointer-events:auto !important;}
+  /* Kill the browser's OWN pinch-zoom and double-tap-zoom document-wide
+     while editing — without this, a two-finger pinch (meant to resize the
+     selected element) and a double-tap (meant to drill into it) both also
+     trigger the browser's native page-zoom at the same time, and once that
+     kicks in its own momentum/rubber-band settling is what actually reads
+     as an image "flying off" after you let go — our JS was never adding
+     any drift of its own. pan-y keeps normal one-finger vertical page
+     scroll working everywhere; it only removes zoom gestures. */
+  html.cv-editing{touch-action:pan-y;}
   .cv-box{position:fixed;z-index:2147482000;border:1.5px solid #0a84ff;pointer-events:none;
     box-shadow:0 0 0 1px rgba(255,255,255,.6);}
   .cv-h{position:absolute;width:12px;height:12px;background:#fff;border:1.5px solid #0a84ff;
@@ -579,15 +588,36 @@
     // mouse path — it's the same state, just a different input.
     var pendingTap = null; // a touch that may become a tap (select) or a scroll
     var lastTap = null;    // {el, t} for double-tap detection
-    function makeMoveT(el, cx, cy, wasSelected){
+    var pinch = null;      // an active two-finger resize gesture
+    function findTouch(list, id){
+      for (var i = 0; i < list.length; i++) if (list[i].identifier === id) return list[i];
+      return null;
+    }
+    function makeMoveT(el, cx, cy, wasSelected, id){
       var sc = cumScale(el), st = stateOf(el);
-      return {el:el, mode:'move', sx:cx, sy:cy, dx0:st.dx, dy0:st.dy, s0:st.s,
+      return {el:el, mode:'move', id:id, sx:cx, sy:cy, dx0:st.dx, dy0:st.dy, s0:st.s,
               scx:sc.sx, scy:sc.sy, moved:false, wasSelected:wasSelected, batch:captureBatch([el])};
     }
-    function startResizeT(cx, cy, corner){
+    function startResizeT(cx, cy, corner, id){
       var c = centerOf(sel), st = stateOf(sel);
       var d0 = Math.hypot(cx - c.x, cy - c.y) || 1;
-      dragging = {el:sel, mode:'scale', d0:d0, s0:st.s, dx0:st.dx, dy0:st.dy, cx:c.x, cy:c.y, batch:captureBatch([sel])};
+      dragging = {el:sel, mode:'scale', id:id, d0:d0, s0:st.s, dx0:st.dx, dy0:st.dy, cx:c.x, cy:c.y, batch:captureBatch([sel])};
+    }
+    function endDragging(){
+      if (dragging && !dragging.moved && dragging.wasSelected && dragging.el.__cvTextEditable && dragging.el !== editingEl){
+        enterTextEdit(dragging.el);
+      }
+      if (dragging && dragging.batch) commitBatch(dragging.batch);
+      dragging = null;
+    }
+    function startPinch(t0, t1){
+      pinch = {id1:t0.identifier, id2:t1.identifier,
+               d0: Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY) || 1,
+               s0: stateOf(sel).s, batch: captureBatch([sel])};
+    }
+    function endPinch(){
+      if (pinch && pinch.batch) commitBatch(pinch.batch);
+      pinch = null;
     }
     function resolveTap(p){
       var hit = p.el, card = p.card, now = Date.now();
@@ -607,54 +637,79 @@
       select(t);
     }
     function onTouchStart(e){
-      if (e.touches.length > 1){ pendingTap = null; return; } // let pinch-zoom through
+      if (e.touches.length > 1){
+        // A second finger landing — whatever single-finger gesture was in
+        // progress ends cleanly right here (committed, not abandoned mid-
+        // motion) and a fresh two-finger pinch-resize takes over. Without
+        // this, a stray extra finger (e.g. a resting thumb) mid-drag would
+        // leave touches[0] pointing at a DIFFERENT finger than the one
+        // actually being tracked, which is what made a dragged image
+        // suddenly jump/"fly" — every gesture below is now tracked by its
+        // own touch identifier instead of always trusting touches[0].
+        pendingTap = null;
+        endDragging();
+        if (sel) { e.preventDefault(); startPinch(e.touches[0], e.touches[1]); }
+        return;
+      }
       var pt = e.touches[0];
       var target = document.elementFromPoint(pt.clientX, pt.clientY) || e.target;
       if (editingEl && !editingEl.contains(target)) exitTextEdit();
       if (target.closest('.cv-tb, .cv-panel')) return; // toolbar taps behave natively
       if (editingEl) return;
       var handle = target.closest('.cv-h');
-      if (handle && sel){ e.preventDefault(); startResizeT(pt.clientX, pt.clientY, handle.dataset.corner); return; }
+      if (handle && sel){ e.preventDefault(); startResizeT(pt.clientX, pt.clientY, handle.dataset.corner, pt.identifier); return; }
       var hit = target.closest(EDITABLE);
       if (!hit || !root.contains(hit)){ pendingTap = null; deselect(); return; }
-      pendingTap = {el:hit, card:hit.closest('.pdp-cmp__card'), x:pt.clientX, y:pt.clientY};
+      pendingTap = {el:hit, card:hit.closest('.pdp-cmp__card'), x:pt.clientX, y:pt.clientY, id:pt.identifier};
     }
     function onTouchMove(e){
+      if (pinch){
+        var pt0 = findTouch(e.touches, pinch.id1), pt1 = findTouch(e.touches, pinch.id2);
+        if (!pt0 || !pt1) return; // one of the two tracked fingers isn't in this event — ignore, wait for touchend
+        var dist = Math.hypot(pt1.clientX - pt0.clientX, pt1.clientY - pt0.clientY);
+        var st = stateOf(sel);
+        st.s = Math.max(0.15, Math.min(10, pinch.s0 * (dist / pinch.d0)));
+        saveState(sel, st); positionBox();
+        e.preventDefault();
+        return;
+      }
       if (dragging){
-        var p = e.touches[0]; if (!p) return;
-        var d = dragging, st = stateOf(d.el);
+        var p = findTouch(e.touches, dragging.id); if (!p) return; // not the tracked finger
+        var d = dragging, st2 = stateOf(d.el);
         if (d.mode === 'move'){
           if (Math.abs(p.clientX - d.sx) > 3 || Math.abs(p.clientY - d.sy) > 3) d.moved = true;
-          st.dx = d.dx0 + (p.clientX - d.sx) / d.scx;
-          st.dy = d.dy0 + (p.clientY - d.sy) / d.scy;
+          st2.dx = d.dx0 + (p.clientX - d.sx) / d.scx;
+          st2.dy = d.dy0 + (p.clientY - d.sy) / d.scy;
         } else {
-          var dist = Math.hypot(p.clientX - d.cx, p.clientY - d.cy);
-          st.s = Math.max(0.15, Math.min(10, d.s0 * (dist / d.d0)));
+          var dist2 = Math.hypot(p.clientX - d.cx, p.clientY - d.cy);
+          st2.s = Math.max(0.15, Math.min(10, d.s0 * (dist2 / d.d0)));
         }
-        saveState(d.el, st); positionBox();
+        saveState(d.el, st2); positionBox();
         e.preventDefault();
         return;
       }
       if (pendingTap){
-        var q = e.touches[0]; if (!q) return;
+        var q = findTouch(e.touches, pendingTap.id); if (!q) return;
         if (Math.abs(q.clientX - pendingTap.x) > 8 || Math.abs(q.clientY - pendingTap.y) > 8){
           // moved past the tap threshold: if it's on the current selection,
           // this is a move-drag; otherwise it's a page scroll — let it go.
           if (sel && (sel === pendingTap.el || sel.contains(pendingTap.el))){
-            dragging = makeMoveT(sel, q.clientX, q.clientY, true);
+            dragging = makeMoveT(sel, q.clientX, q.clientY, true, pendingTap.id);
             e.preventDefault();
           }
           pendingTap = null;
         }
       }
     }
-    function onTouchEnd(){
-      if (pendingTap){ resolveTap(pendingTap); pendingTap = null; }
-      if (dragging && !dragging.moved && dragging.wasSelected && dragging.el.__cvTextEditable && dragging.el !== editingEl){
-        enterTextEdit(dragging.el);
+    function onTouchEnd(e){
+      if (pinch){
+        // Below two fingers again — done, whether that's this ending touch
+        // or a third finger that was never tracked lifting.
+        if (e.touches.length < 2) endPinch();
+        return;
       }
-      if (dragging && dragging.batch) commitBatch(dragging.batch);
-      dragging = null;
+      if (pendingTap){ resolveTap(pendingTap); pendingTap = null; }
+      if (dragging && !findTouch(e.touches, dragging.id)) endDragging();
     }
     document.addEventListener('touchstart', onTouchStart, {passive:false, capture:true});
     document.addEventListener('touchmove', onTouchMove, {passive:false, capture:true});
@@ -820,7 +875,7 @@
     // ---- toolbar ----
     var tb = document.createElement('div'); tb.className = 'cv-tb';
     var hintText = coarse
-      ? 'Tap a tile to select · drag the selected tile to move · double-tap what’s inside to grab it (or a caption to type) · drag a corner to resize · drag elsewhere to scroll'
+      ? 'Tap a tile to select · drag the selected tile to move · double-tap what’s inside to grab it (or a caption to type) · pinch or drag a corner to resize · drag elsewhere to scroll'
       : 'Click a tile · double-click to grab what’s inside · drag to move · corner or scroll to resize · arrows nudge · Enter types into a selected caption · Backspace deletes selected text';
     tb.innerHTML =
       '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
