@@ -1428,24 +1428,4 @@
     top: 217.02px !important;
     bottom: auto !important;
   }
-
-  /* zoom-in reveal as each tile scrolls into view (mobile only — see
-     theme-r3.js, which observes [data-reveal-zoom] the same way it
-     already observes the theme's [data-reveal] fade-up elements, just
-     with its own scale-based animation here instead of that one's
-     translateY). Each tile has its own observer entry (set on the
-     <div class="pdp-cmp__card…" data-reveal-zoom> markup in
-     pdp-compare-inline.liquid), so they each animate independently as
-     they individually cross into view while scrolling — not all at
-     once the way the shared .pinfo__below [data-reveal] wrapper does
-     for the section as a whole. */
-  [data-reveal-zoom] {
-    opacity: 0;
-    transform: scale(.88);
-    transition: opacity .6s var(--ease), transform .6s var(--ease);
-  }
-  [data-reveal-zoom].is-in {
-    opacity: 1;
-    transform: scale(1);
-  }
 }

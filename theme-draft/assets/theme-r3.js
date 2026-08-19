@@ -29,7 +29,6 @@
     });
   }, { threshold: 0.12 });
   $$('[data-reveal]').forEach((el) => io.observe(el));
-  $$('[data-reveal-zoom]').forEach((el) => io.observe(el));
 
   /* ---------- header / mobile nav ---------- */
   const menuBtn = $('[data-menu-toggle]');
