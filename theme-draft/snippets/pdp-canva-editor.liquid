@@ -622,6 +622,7 @@
     // arrow keys, so it can't be identical):
     //   • tap a tile                → select it (whole tile)
     //   • tap again / double-tap    → drill into the image/icon/caption under it
+    //   • tap that drilled item     → deselect it
     //   • double-tap a caption      → start typing (on-screen keyboard)
     //   • drag a selected child     → move it (it alone is touch-action:none)
     //   • swipe a card / elsewhere  → the page scrolls normally
@@ -779,6 +780,16 @@
     }
     function resolveTap(p){
       var hit = p.el, card = p.card, now = Date.now();
+      // A clean tap on the same drilled child toggles its selection off.
+      // This runs only after touchend, so pressing and moving still starts a
+      // drag; whole tiles keep their normal one-tap selection behaviour.
+      // Forget the previous tap as well, otherwise the next fresh tap could
+      // be mistaken for the second half of the old double-tap.
+      if (card && sel && sel !== card && (sel === hit || sel.contains(hit))){
+        lastTap = null;
+        deselect();
+        return;
+      }
       var dbl = lastTap && lastTap.el === hit && (now - lastTap.t) < 340;
       lastTap = {el:hit, t:now};
       var t;
@@ -1096,7 +1107,7 @@
     // ---- toolbar ----
     var tb = document.createElement('div'); tb.className = 'cv-tb';
     var hintText = coarse
-      ? 'Tap a tile to select · double-tap what’s inside to grab it (or a caption to type) · drag the grabbed item to move · pinch or drag a corner to resize · swipe a card or elsewhere to scroll'
+      ? 'Tap a tile to select · double-tap what’s inside to grab it (or a caption to type) · tap a grabbed item again to deselect · drag to move · pinch or drag a corner to resize · swipe a card or elsewhere to scroll'
       : 'Click a tile · double-click to grab what’s inside · drag to move · corner or scroll to resize · arrows nudge · Enter types into a selected caption · Backspace deletes selected text';
     tb.innerHTML =
       '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
