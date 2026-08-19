@@ -1299,16 +1299,21 @@
   /* backdrop behind the tiles reuses the existing --tile design token
      (also the tile's own default background elsewhere in this file)
      rather than a new one-off value. Full-bleed to the true screen
-     edges rather than stopping at .wrap's own left/right padding —
-     negative margin breaks out to the viewport edge, matching padding
-     added back inside keeps .pdp-cmp itself (and everything in it) at
-     the exact same width/position as before. */
+     edges rather than stopping at .wrap's own left/right padding.
+     Mirrors .wrap's own padding formula (clamp(20px,4vw,44px), see
+     .wrap in theme-r2.css) as a matching negative margin, rather than
+     a 100vw-based bleed trick — 100vw includes the scrollbar's width
+     wherever one is reserved, which makes that approach render a few
+     px wider on one side than the other; this doesn't touch vw at all
+     so it can't be lopsided. Padding added back inside keeps .pdp-cmp
+     itself (and everything in it) at the exact same width/position as
+     before. */
   .pdp-cmp-wrap {
     background: var(--tile, #F7FAFA);
-    margin-left: calc(50% - 50vw);
-    margin-right: calc(50% - 50vw);
-    padding-left: calc(50vw - 50%);
-    padding-right: calc(50vw - 50%);
+    margin-left: calc(-1 * clamp(20px, 4vw, 44px));
+    margin-right: calc(-1 * clamp(20px, 4vw, 44px));
+    padding-left: clamp(20px, 4vw, 44px);
+    padding-right: clamp(20px, 4vw, 44px);
   }
 
   /* neutralize only the baked CAPTION-position transforms for these two
