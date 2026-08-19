@@ -1296,17 +1296,21 @@
    CANVA-BAKED block on purpose so a future "lock it" re-bake doesn't
    clobber it. ==== */
 @media (max-width: 899px) {
-  /* gray backdrop behind the tiles, matching the reference screenshot */
-  .pdp-cmp-wrap { background: #F5F5F7; }
+  /* backdrop behind the tiles reuses the existing --tile design token
+     (also the tile's own default background elsewhere in this file)
+     rather than a new one-off value. */
+  .pdp-cmp-wrap { background: var(--tile, #F7FAFA); }
 
-  /* neutralize the baked within-tile transforms (captions + image) for
-     these two tiles — (0,6-7,0) beats the baked (0,5,0) !important. */
+  /* neutralize only the baked CAPTION-position transforms for these two
+     tiles — (0,6-7,0) beats the baked (0,5,0) !important. The image's
+     OWN transform (…>:nth-child(3)>:nth-child(1)) is deliberately left
+     alone: that's the canva-baked zoom level, and the taller card below
+     reveals more of the image at that same zoom via the taller
+     overflow:hidden box, not by changing the zoom itself. */
   .template-product .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(1),
   .template-product .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(2),
-  .template-product .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1),
   .template-product .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(1),
-  .template-product .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(2),
-  .template-product .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(3)>:nth-child(1) {
+  .template-product .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(2) {
     transform: none !important;
   }
 
@@ -1338,28 +1342,22 @@
     z-index: 2;
   }
 
-  /* image slot fills the lower part of the card, edge to edge. Kept
-     absolutely positioned (out of flow) so the tall image can't blow
-     out the grid item's width. */
+  /* image slot: frozen at its ORIGINAL top offset + height (65.63px /
+     236.09px, same as the pre-tall-card mobile layout) rather than
+     stretched to fill the new taller card. That keeps the image's own
+     box — and so the baked zoom transform applied to it — rendering at
+     the exact same size/position as before (same zoom). The card
+     itself is now taller with overflow:hidden as the only thing that
+     changed around it, so the extra ~168px of room below the frozen
+     slot reveals more of the already-zoomed image that used to be
+     clipped off by the old, shorter card edge — instead of changing
+     the zoom itself. */
   .template-product .pdp-cmp__card--magnet .pdp-cmp__img-slot,
   .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
-    position: absolute !important;
-    top: 84px;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: auto !important;
-    height: auto !important;
+    top: 65.63px !important;
+    bottom: auto !important;
+    height: 236.09px !important;
     min-height: 0;
-    margin: 0 !important;
     border-radius: 0;
-    overflow: hidden;
-  }
-  .template-product .pdp-cmp__card--magnet .pdp-cmp__img-slot img,
-  .template-product .pdp-cmp__card--video .pdp-cmp__img-slot img {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    object-position: top center !important;
   }
 }
