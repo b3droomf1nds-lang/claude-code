@@ -1375,4 +1375,57 @@
     min-height: 0;
     border-radius: 0;
   }
+
+  /* ---- the other four tiles get the same tall white rounded shape ---- */
+
+  /* charge + fade: plain flex-column, no absolutely-positioned children
+     (confirmed by measuring — nothing to freeze), so growing the card
+     just re-centers the existing content in the taller box. */
+  .template-product .pdp-cmp__card--charge,
+  .template-product .pdp-cmp__card--fade {
+    background: #FFFFFF;
+    width: 100%;
+    height: 470px;
+    border-radius: 28px;
+    min-width: 0;
+  }
+
+  /* partial-image: its image has no canva-baked zoom transform (checked
+     the CANVA-BAKED block — no entry for this tile's img-slot/img), so
+     letting its slot's top+bottom insets stretch with the taller card
+     is safe and simply shows more of the image, same as the caption
+     staying bottom-anchored to the new, lower bottom edge. */
+  .template-product .pdp-cmp__card--partial-image {
+    background: #FFFFFF;
+    width: 100%;
+    height: 470px;
+    border-radius: 28px;
+    min-width: 0;
+  }
+
+  /* full-charges: its image DOES have a canva-baked zoom transform
+     (…nth-child(3)>:nth-child(4)>:nth-child(1), matrix(1.39342…)
+     scale(0.9065)), so — same reasoning as the magnet/video tiles —
+     the image slot is frozen at its original top offset + height
+     rather than stretched, keeping that zoom exact. The "full charges"
+     caption used bottom-anchoring (bottom:45.94px) to hug the OLD,
+     shorter card's bottom edge; frozen to the same top offset it
+     already rendered at (217.02px, measured) so it doesn't slide down
+     to the new bottom and leave a gap under the stat number. */
+  .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) {
+    background: #FFFFFF;
+    width: 100%;
+    height: 470px;
+    border-radius: 28px;
+    min-width: 0;
+  }
+  .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__img-slot {
+    top: 19.69px !important;
+    bottom: auto !important;
+    height: 262.34px !important;
+  }
+  .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__sub {
+    top: 217.02px !important;
+    bottom: auto !important;
+  }
 }
