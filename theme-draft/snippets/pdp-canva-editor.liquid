@@ -21,8 +21,9 @@
     exact positions/sizes permanently into the desktop CSS and clears the
     temporary browser copy.
 
-  This is a desktop tool: the compare grid only uses its big scaled
-  layout at >=900px, so the editor's handles only appear there.
+  The same controls work on desktop and phone. Desktop keeps its mouse,
+  wheel, keyboard, and compact handles; phone adds tap/double-tap,
+  one-finger move, pinch resize, and larger touch handles.
 
   ALIGN
     Click "Align" to snap small accidental drift (up to 14px, or 40px
@@ -99,15 +100,30 @@
      while editing — without this, a two-finger pinch (meant to resize the
      selected element) and a double-tap (meant to drill into it) both also
      trigger the browser's native page-zoom at the same time, and once that
-     kicks in its own momentum/rubber-band settling is what actually reads
-     as an image "flying off" after you let go — our JS was never adding
-     any drift of its own. pan-y keeps normal one-finger vertical page
-     scroll working everywhere; it only removes zoom gestures. */
-  html.cv-editing{touch-action:pan-y;}
+     kicks in its own momentum/rubber-band settling and can make an image
+     look like it "flies off" after release. pan-y keeps one-finger page
+     scroll working everywhere; it only removes zoom gestures. Put it on
+     both roots because iOS and Chromium do not always choose the same one
+     as the document's gesture owner. */
+  html.cv-editing,
+  html.cv-editing body{touch-action:pan-y;}
+  /* The whole compare block lives inside [data-reveal], whose global image
+     rule eases transform for a full second. That is desirable for the
+     storefront reveal, but disastrous for an editor: each new drag sample
+     retargets the transition, so an image trails the finger and keeps
+     moving after release. Editing must always render transforms exactly. */
+  .cv-editing .pdp-cmp,
+  .cv-editing .pdp-cmp *{transition:none !important;}
+  /* Pre-warm only the one selected phone element, then suppress selection /
+     callouts while its gesture is active. Promoting every tile permanently
+     costs a surprising amount of phone memory. */
+  .cv-touch-ready,
+  .cv-touch-active{will-change:transform;}
+  .cv-touch-active{-webkit-touch-callout:none;user-select:none;}
   .cv-box{position:fixed;z-index:2147482000;border:1.5px solid #0a84ff;pointer-events:none;
     box-shadow:0 0 0 1px rgba(255,255,255,.6);}
   .cv-h{position:absolute;width:12px;height:12px;background:#fff;border:1.5px solid #0a84ff;
-    border-radius:50%;pointer-events:auto;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+    border-radius:50%;pointer-events:auto;touch-action:none;box-shadow:0 1px 3px rgba(0,0,0,.3);}
   .cv-h--tl{top:-7px;left:-7px;cursor:nwse-resize;}
   .cv-h--tr{top:-7px;right:-7px;cursor:nesw-resize;}
   .cv-h--bl{bottom:-7px;left:-7px;cursor:nesw-resize;}
@@ -140,6 +156,8 @@
      small to grab with a fingertip). Kept to coarse pointers so a
      touchscreen laptop with a mouse still gets the compact desktop UI. */
   @media (max-width:899px) and (pointer:coarse){
+    html.cv-editing,
+    html.cv-editing body{overscroll-behavior-y:none;}
     .cv-tb{top:auto;bottom:calc(10px + env(safe-area-inset-bottom));left:8px;right:8px;
       flex-wrap:wrap;justify-content:center;padding:10px;gap:8px;}
     .cv-tb__title{margin-right:0;}
@@ -215,9 +233,10 @@
       return s ? {dx:s.dx||0, dy:s.dy||0, s:s.s||1, text:(s.text!=null ? s.text : null)} : {dx:0,dy:0,s:1,text:null};
     }
 
-    // ---- carry a desktop-authored move onto whatever viewport is showing ----
-    // Every drag is authored on desktop (the editor's controls only appear at
-    // >=900px), so dx/dy are stored in the element's DESKTOP local pixels —
+    // ---- carry canonical editor moves onto whatever viewport is showing ----
+    // dx/dy stay stored in the editor's established DESKTOP local-pixel
+    // coordinate system (including when a phone authors the move), because
+    // that is what existing saved layouts and the lock/export workflow use —
     // where a tile's untransformed box is DESK_REF_W wide. Mobile lays the
     // same tile out at its full column width (no scale transform), so a raw
     // desktop offset would land a caption/image in completely the wrong spot.
@@ -242,15 +261,18 @@
       var cached = parseFloat(ls(true, REFKEY));
       return cached > 0 ? cached : 107;
     })();
-    function effTranslate(el, st){
-      if (desktopMQ.matches) return {dx: st.dx, dy: st.dy};   // author viewport: verbatim
+    function translateFactor(el){
+      if (desktopMQ.matches) return 1; // desktop-authored state is already local
       // A whole tile moved onto a different desktop grid cell has no meaning
       // in mobile's single-column stack (that reordering is handled in CSS),
       // so don't fling the tile across the screen — only its contents move.
-      if (el.matches('.pdp-cmp__card')) return {dx: 0, dy: 0};
+      if (el.matches('.pdp-cmp__card')) return 0;
       var tile = el.closest('.pdp-cmp__card');
-      if (!tile || !tile.offsetWidth || !DESK_REF_W) return {dx: st.dx, dy: st.dy};
-      var f = tile.offsetWidth / DESK_REF_W;
+      if (!tile || !tile.offsetWidth || !DESK_REF_W) return 1;
+      return tile.offsetWidth / DESK_REF_W;
+    }
+    function effTranslate(el, st){
+      var f = translateFactor(el);
       return {dx: st.dx * f, dy: st.dy * f};
     }
 
@@ -295,18 +317,25 @@
         el.style.whiteSpace = st.text != null ? 'nowrap' : '';
       }
     }
-    function saveState(el, st){
+    function writeState(el, st, persist){
       var noTransform = !st.dx && !st.dy && (!st.s || st.s === 1);
       var noText = st.text == null || (el.__cvTextEditable && st.text === el.__cvOrigText);
       if (noTransform && noText) delete layout[el.__cvKey];
       else {
-        var entry = {dx:Math.round(st.dx*100)/100, dy:Math.round(st.dy*100)/100, s:Math.round(st.s*10000)/10000};
+        // Keep full sub-pixel precision during an active touch. The final
+        // persisted value still uses the established export precision, so
+        // desktop output and Copy layout stay byte-for-byte compatible.
+        var entry = persist
+          ? {dx:Math.round(st.dx*100)/100, dy:Math.round(st.dy*100)/100, s:Math.round(st.s*10000)/10000}
+          : {dx:st.dx, dy:st.dy, s:st.s};
         if (!noText) entry.text = st.text;
         layout[el.__cvKey] = entry;
       }
-      ls(false, LKEY, JSON.stringify(layout));
+      if (persist) ls(false, LKEY, JSON.stringify(layout));
       applyState(el);
     }
+    function saveState(el, st){ writeState(el, st, true); }
+    function previewState(el, st){ writeState(el, st, false); }
     function saveText(el){
       var st = stateOf(el);
       st.text = el.innerHTML;
@@ -374,16 +403,19 @@
         el.__cvBase = (cs && cs !== 'none') ? cs : '';
         applyState(el);
       });
+      if (sel && sel.style){
+        sel.style.touchAction = touchCanMove(sel) ? 'none' : 'pan-y';
+        sel.classList.toggle('cv-touch-ready', coarse && touchCanMove(sel));
+      }
+      if (ON) positionBox();
     }
 
     if (!ON) return;                 // viewer with a saved layout — no controls
 
     // Editor controls run on phones too now (touch handlers added below).
-    // Whether the compare block is in its big scaled desktop layout or the
-    // stacked mobile one, all the drag/resize math is viewport-agnostic:
-    // it divides screen-pixel deltas by the element's cumulative ancestor
-    // scale (cumScale), which is ~4.35x on desktop and ~1x on mobile, so a
-    // drag lands 1:1 either way.
+    // The mouse path uses cumScale(); the touch path additionally inverts the
+    // selected element's baked matrix and the mobile translation factor so a
+    // phone drag remains exactly 1:1 in screen pixels.
     var coarse = window.matchMedia('(pointer:coarse)').matches;
 
     document.documentElement.classList.add('cv-editing');
@@ -422,26 +454,36 @@
       if (el.matches('.pdp-cmp__stat-x')) return '×';
       return 'text';
     }
+    function paintBox(left, top, width, height){
+      box.style.display = 'block';
+      box.style.left = left + 'px'; box.style.top = top + 'px';
+      box.style.width = width + 'px'; box.style.height = height + 'px';
+    }
     function positionBox(){
       if (!sel){ box.style.display = 'none'; return; }
       var r = sel.getBoundingClientRect();
-      box.style.display = 'block';
-      box.style.left = r.left + 'px'; box.style.top = r.top + 'px';
-      box.style.width = r.width + 'px'; box.style.height = r.height + 'px';
+      paintBox(r.left, r.top, r.width, r.height);
     }
-    // On touch, the selected element gets touch-action:none so a finger
-    // drag ON it moves it instead of scrolling the page — every OTHER
-    // element keeps normal touch-action, so you can still scroll the tall
-    // tile stack by dragging anywhere that isn't the current selection.
-    // (Inline touch-action is inert for mouse, so this is a no-op on
-    // desktop.)
+    // On touch, a selected movable element gets touch-action:none so a
+    // finger drag ON it moves it instead of scrolling the page. Whole-card
+    // offsets are deliberately desktop-only (the phone layout is a fixed
+    // reading-order stack), so a selected card keeps pan-y: swiping the card
+    // scrolls instead of silently saving an invisible desktop offset.
+    // Inline touch-action is inert for mouse, so this does not alter desktop.
+    function touchCanMove(el){ return !!el && translateFactor(el) !== 0; }
     function select(el){
-      if (sel && sel !== el && sel.style) sel.style.touchAction = '';
+      if (sel && sel !== el && sel.style){ sel.style.touchAction = ''; sel.classList.remove('cv-touch-ready'); }
       sel = el;
-      if (el && el.style) el.style.touchAction = 'none';
+      if (el && el.style){
+        el.style.touchAction = touchCanMove(el) ? 'none' : 'pan-y';
+        el.classList.toggle('cv-touch-ready', coarse && touchCanMove(el));
+      }
       tag.textContent = label(el); positionBox();
     }
-    function deselect(){ if (sel && sel.style) sel.style.touchAction = ''; sel = null; positionBox(); }
+    function deselect(){
+      if (sel && sel.style){ sel.style.touchAction = ''; sel.classList.remove('cv-touch-ready'); }
+      sel = null; positionBox();
+    }
 
     // ---- inline text editing ----
     var textEditBatch = null;
@@ -581,43 +623,159 @@
     //   • tap a tile                → select it (whole tile)
     //   • tap again / double-tap    → drill into the image/icon/caption under it
     //   • double-tap a caption      → start typing (on-screen keyboard)
-    //   • drag the SELECTED element → move it (it alone is touch-action:none)
-    //   • drag anywhere else        → the page scrolls normally
-    //   • drag a corner handle      → resize
+    //   • drag a selected child     → move it (it alone is touch-action:none)
+    //   • swipe a card / elsewhere  → the page scrolls normally
+    //   • pinch / drag a corner     → resize the selected element
     // Everything commits to the same undo/localStorage/"Copy layout" as the
     // mouse path — it's the same state, just a different input.
     var pendingTap = null; // a touch that may become a tap (select) or a scroll
     var lastTap = null;    // {el, t} for double-tap detection
     var pinch = null;      // an active two-finger resize gesture
+    var touchFrame = 0;    // at most one visual update per painted frame
+    var touchSample = null;
+    var touchActiveEl = null;
     function findTouch(list, id){
       for (var i = 0; i < list.length; i++) if (list[i].identifier === id) return list[i];
       return null;
     }
+
+    // A saved dx/dy is inserted AFTER the element's baked base transform,
+    // so the base matrix (including a zoom or scaleX(-1)), every ancestor
+    // transform, and mobile's desktop-to-phone factor all project that saved
+    // delta into screen pixels. Invert that exact 2D linear projection so one
+    // finger pixel always produces one visual pixel — even for a zoomed or
+    // mirrored image. This is touch-only; the established mouse math is left
+    // unchanged.
+    function linearOf(transform){
+      if (!transform || transform === 'none') return {a:1,b:0,c:0,d:1};
+      try {
+        var m = new DOMMatrixReadOnly(transform);
+        return {a:m.a,b:m.b,c:m.c,d:m.d};
+      } catch(e){ return {a:1,b:0,c:0,d:1}; }
+    }
+    function multiplyLinear(left, right){
+      return {
+        a:left.a*right.a + left.c*right.b,
+        b:left.b*right.a + left.d*right.b,
+        c:left.a*right.c + left.c*right.d,
+        d:left.b*right.c + left.d*right.d
+      };
+    }
+    function touchDeltaInverse(el){
+      var projected = linearOf(el.__cvBase);
+      var n = el.parentNode;
+      while (n && n.nodeType === 1){
+        projected = multiplyLinear(linearOf(getComputedStyle(n).transform), projected);
+        n = n.parentNode;
+      }
+      var f = translateFactor(el);
+      if (!f) return null; // whole-card movement is intentionally desktop-only
+      projected.a *= f; projected.b *= f; projected.c *= f; projected.d *= f;
+      var det = projected.a*projected.d - projected.b*projected.c;
+      if (!isFinite(det) || Math.abs(det) < 0.000001) return null;
+      return {
+        xx: projected.d/det, xy: -projected.c/det,
+        yx: -projected.b/det, yy: projected.a/det
+      };
+    }
+    function setTouchActive(el){
+      if (touchActiveEl === el) return;
+      if (touchActiveEl) touchActiveEl.classList.remove('cv-touch-active');
+      touchActiveEl = el || null;
+      if (touchActiveEl) touchActiveEl.classList.add('cv-touch-active');
+    }
+    function renderTouchSample(){
+      var sample = touchSample;
+      touchSample = null;
+      if (!sample) return;
+      if (sample.kind === 'pinch'){
+        if (pinch !== sample.gesture) return;
+        var pst = stateOf(pinch.el);
+        pst.s = Math.max(0.15, Math.min(10, pinch.s0 * (sample.dist / pinch.d0)));
+        previewState(pinch.el, pst);
+        positionBox();
+        return;
+      }
+      if (sample.kind !== 'drag' || dragging !== sample.gesture) return;
+      var d = dragging, st = stateOf(d.el);
+      var moveX = 0, moveY = 0;
+      if (d.mode === 'move'){
+        var screenX = sample.x - d.sx, screenY = sample.y - d.sy;
+        if (Math.hypot(screenX, screenY) > 3) d.moved = true;
+        st.dx = d.dx0 + d.inv.xx*screenX + d.inv.xy*screenY;
+        st.dy = d.dy0 + d.inv.yx*screenX + d.inv.yy*screenY;
+        moveX = screenX; moveY = screenY;
+      } else {
+        var dist = Math.hypot(sample.x - d.cx, sample.y - d.cy);
+        st.s = Math.max(0.15, Math.min(10, d.s0 * (dist / d.d0)));
+      }
+      previewState(d.el, st);
+      // A move is guaranteed to project to this exact screen delta, so move
+      // the already-measured overlay directly. Avoiding getBoundingClientRect
+      // after the transform write removes a forced style/layout sync from the
+      // hottest phone path. Scale gestures still measure because their box
+      // dimensions change.
+      if (d.mode === 'move' && d.box0){
+        paintBox(d.box0.left + moveX, d.box0.top + moveY, d.box0.width, d.box0.height);
+      } else positionBox();
+    }
+    function queueTouchSample(sample){
+      touchSample = sample; // a burst only needs its newest finger position
+      if (!touchFrame){
+        touchFrame = requestAnimationFrame(function(){ touchFrame = 0; renderTouchSample(); });
+      }
+    }
+    function flushTouchSample(){
+      if (touchFrame){ cancelAnimationFrame(touchFrame); touchFrame = 0; }
+      renderTouchSample();
+    }
+    function discardTouchSample(){
+      if (touchFrame){ cancelAnimationFrame(touchFrame); touchFrame = 0; }
+      touchSample = null;
+    }
     function makeMoveT(el, cx, cy, wasSelected, id){
-      var sc = cumScale(el), st = stateOf(el);
+      var inv = touchDeltaInverse(el);
+      if (!inv) return null;
+      var st = stateOf(el);
+      var r = el.getBoundingClientRect();
       return {el:el, mode:'move', id:id, sx:cx, sy:cy, dx0:st.dx, dy0:st.dy, s0:st.s,
-              scx:sc.sx, scy:sc.sy, moved:false, wasSelected:wasSelected, batch:captureBatch([el])};
+              inv:inv, box0:{left:r.left,top:r.top,width:r.width,height:r.height},
+              moved:false, wasSelected:wasSelected, batch:captureBatch([el])};
     }
     function startResizeT(cx, cy, corner, id){
       var c = centerOf(sel), st = stateOf(sel);
       var d0 = Math.hypot(cx - c.x, cy - c.y) || 1;
       dragging = {el:sel, mode:'scale', id:id, d0:d0, s0:st.s, dx0:st.dx, dy0:st.dy, cx:c.x, cy:c.y, batch:captureBatch([sel])};
+      setTouchActive(sel);
     }
-    function endDragging(){
-      if (dragging && !dragging.moved && dragging.wasSelected && dragging.el.__cvTextEditable && dragging.el !== editingEl){
-        enterTextEdit(dragging.el);
+    function endDragging(cancelled){
+      flushTouchSample();
+      if (!dragging){ setTouchActive(null); return; }
+      var ended = dragging;
+      saveState(ended.el, stateOf(ended.el));
+      positionBox();
+      if (!cancelled && !ended.moved && ended.wasSelected && ended.el.__cvTextEditable && ended.el !== editingEl){
+        enterTextEdit(ended.el);
       }
-      if (dragging && dragging.batch) commitBatch(dragging.batch);
+      if (ended.batch) commitBatch(ended.batch);
       dragging = null;
+      setTouchActive(null);
     }
     function startPinch(t0, t1){
-      pinch = {id1:t0.identifier, id2:t1.identifier,
+      pinch = {el:sel, id1:t0.identifier, id2:t1.identifier,
                d0: Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY) || 1,
                s0: stateOf(sel).s, batch: captureBatch([sel])};
+      setTouchActive(sel);
     }
     function endPinch(){
-      if (pinch && pinch.batch) commitBatch(pinch.batch);
+      flushTouchSample();
+      if (!pinch){ setTouchActive(null); return; }
+      var ended = pinch;
+      saveState(ended.el, stateOf(ended.el));
+      positionBox();
+      if (ended.batch) commitBatch(ended.batch);
       pinch = null;
+      setTouchActive(null);
     }
     function resolveTap(p){
       var hit = p.el, card = p.card, now = Date.now();
@@ -638,6 +796,10 @@
     }
     function onTouchStart(e){
       if (e.touches.length > 1){
+        // Once an editor pinch exists, suppress native handling before any
+        // reads/writes. A third finger does not restart the tracked pair.
+        if (sel) e.preventDefault();
+        if (pinch) return;
         // A second finger landing — whatever single-finger gesture was in
         // progress ends cleanly right here (committed, not abandoned mid-
         // motion) and a fresh two-finger pinch-resize takes over. Without
@@ -647,8 +809,12 @@
         // suddenly jump/"fly" — every gesture below is now tracked by its
         // own touch identifier instead of always trusting touches[0].
         pendingTap = null;
+        if (dragging){
+          var handoff = findTouch(e.touches, dragging.id);
+          if (handoff) queueTouchSample({kind:'drag', gesture:dragging, x:handoff.clientX, y:handoff.clientY});
+        }
         endDragging();
-        if (sel) { e.preventDefault(); startPinch(e.touches[0], e.touches[1]); }
+        if (sel) startPinch(e.touches[0], e.touches[1]);
         return;
       }
       var pt = e.touches[0];
@@ -660,42 +826,45 @@
       if (handle && sel){ e.preventDefault(); startResizeT(pt.clientX, pt.clientY, handle.dataset.corner, pt.identifier); return; }
       var hit = target.closest(EDITABLE);
       if (!hit || !root.contains(hit)){ pendingTap = null; deselect(); return; }
+      var touchingSelection = sel && (sel === hit || sel.contains(hit));
+      // Claim a selected movable element at touchstart, before Safari can
+      // begin a scroll chain. Unselected content stays native so it scrolls.
+      if (touchingSelection && touchCanMove(sel)){
+        e.preventDefault();
+        setTouchActive(sel);
+      }
       pendingTap = {el:hit, card:hit.closest('.pdp-cmp__card'), x:pt.clientX, y:pt.clientY, id:pt.identifier};
     }
     function onTouchMove(e){
       if (pinch){
+        e.preventDefault();
         var pt0 = findTouch(e.touches, pinch.id1), pt1 = findTouch(e.touches, pinch.id2);
         if (!pt0 || !pt1) return; // one of the two tracked fingers isn't in this event — ignore, wait for touchend
         var dist = Math.hypot(pt1.clientX - pt0.clientX, pt1.clientY - pt0.clientY);
-        var st = stateOf(sel);
-        st.s = Math.max(0.15, Math.min(10, pinch.s0 * (dist / pinch.d0)));
-        saveState(sel, st); positionBox();
-        e.preventDefault();
+        queueTouchSample({kind:'pinch', gesture:pinch, dist:dist});
         return;
       }
       if (dragging){
-        var p = findTouch(e.touches, dragging.id); if (!p) return; // not the tracked finger
-        var d = dragging, st2 = stateOf(d.el);
-        if (d.mode === 'move'){
-          if (Math.abs(p.clientX - d.sx) > 3 || Math.abs(p.clientY - d.sy) > 3) d.moved = true;
-          st2.dx = d.dx0 + (p.clientX - d.sx) / d.scx;
-          st2.dy = d.dy0 + (p.clientY - d.sy) / d.scy;
-        } else {
-          var dist2 = Math.hypot(p.clientX - d.cx, p.clientY - d.cy);
-          st2.s = Math.max(0.15, Math.min(10, d.s0 * (dist2 / d.d0)));
-        }
-        saveState(d.el, st2); positionBox();
         e.preventDefault();
+        var p = findTouch(e.touches, dragging.id); if (!p) return; // not the tracked finger
+        queueTouchSample({kind:'drag', gesture:dragging, x:p.clientX, y:p.clientY});
         return;
       }
       if (pendingTap){
         var q = findTouch(e.touches, pendingTap.id); if (!q) return;
-        if (Math.abs(q.clientX - pendingTap.x) > 8 || Math.abs(q.clientY - pendingTap.y) > 8){
+        if (Math.hypot(q.clientX - pendingTap.x, q.clientY - pendingTap.y) > 4){
           // moved past the tap threshold: if it's on the current selection,
           // this is a move-drag; otherwise it's a page scroll — let it go.
-          if (sel && (sel === pendingTap.el || sel.contains(pendingTap.el))){
-            dragging = makeMoveT(sel, q.clientX, q.clientY, true, pendingTap.id);
+          if (sel && touchCanMove(sel) && (sel === pendingTap.el || sel.contains(pendingTap.el))){
             e.preventDefault();
+            // Start from the original finger-down point, not this threshold-
+            // crossing sample. Replaying the full delta removes the old
+            // permanent 8px finger/element offset.
+            dragging = makeMoveT(sel, pendingTap.x, pendingTap.y, true, pendingTap.id);
+            if (dragging){
+              setTouchActive(sel);
+              queueTouchSample({kind:'drag', gesture:dragging, x:q.clientX, y:q.clientY});
+            }
           }
           pendingTap = null;
         }
@@ -703,18 +872,70 @@
     }
     function onTouchEnd(e){
       if (pinch){
-        // Below two fingers again — done, whether that's this ending touch
-        // or a third finger that was never tracked lifting.
-        if (e.touches.length < 2) endPinch();
+        e.preventDefault();
+        var live0 = findTouch(e.touches, pinch.id1);
+        var live1 = findTouch(e.touches, pinch.id2);
+        // End as soon as either tracked finger lifts. Two unrelated fingers
+        // may still be down, but silently switching the tracked pair would
+        // introduce a scale jump.
+        if (!live0 || !live1){
+          var p0 = live0 || findTouch(e.changedTouches, pinch.id1);
+          var p1 = live1 || findTouch(e.changedTouches, pinch.id2);
+          if (p0 && p1){
+            queueTouchSample({kind:'pinch', gesture:pinch,
+              dist:Math.hypot(p1.clientX - p0.clientX, p1.clientY - p0.clientY)});
+          }
+          endPinch();
+        }
         return;
       }
-      if (pendingTap){ resolveTap(pendingTap); pendingTap = null; }
-      if (dragging && !findTouch(e.touches, dragging.id)) endDragging();
+      if (pendingTap){
+        // Suppress the compatibility mouse/click sequence; without this a
+        // phone tap also runs the desktop handlers after resolveTap().
+        e.preventDefault();
+        var tapped = pendingTap;
+        pendingTap = null;
+        resolveTap(tapped);
+        setTouchActive(null);
+      }
+      if (dragging && !findTouch(e.touches, dragging.id)){
+        e.preventDefault();
+        var last = findTouch(e.changedTouches, dragging.id);
+        if (last) queueTouchSample({kind:'drag', gesture:dragging, x:last.clientX, y:last.clientY});
+        endDragging(false);
+      }
+    }
+    function onTouchCancel(e){
+      pendingTap = null; // a cancelled touch is never a tap/double-tap
+      if (pinch){
+        var live0 = findTouch(e.touches, pinch.id1);
+        var live1 = findTouch(e.touches, pinch.id2);
+        if (live0 && live1) return; // only an untracked third touch cancelled
+        e.preventDefault();
+        var p0 = live0 || findTouch(e.changedTouches, pinch.id1);
+        var p1 = live1 || findTouch(e.changedTouches, pinch.id2);
+        if (p0 && p1){
+          queueTouchSample({kind:'pinch', gesture:pinch,
+            dist:Math.hypot(p1.clientX - p0.clientX, p1.clientY - p0.clientY)});
+        }
+        endPinch();
+        return;
+      }
+      if (dragging){
+        if (findTouch(e.touches, dragging.id)) return; // unrelated touch cancelled
+        e.preventDefault();
+        var last = findTouch(e.changedTouches, dragging.id);
+        if (last) queueTouchSample({kind:'drag', gesture:dragging, x:last.clientX, y:last.clientY});
+        endDragging(true);
+        return;
+      }
+      discardTouchSample();
+      setTouchActive(null);
     }
     document.addEventListener('touchstart', onTouchStart, {passive:false, capture:true});
     document.addEventListener('touchmove', onTouchMove, {passive:false, capture:true});
     document.addEventListener('touchend', onTouchEnd, {passive:false, capture:true});
-    document.addEventListener('touchcancel', onTouchEnd, {passive:false, capture:true});
+    document.addEventListener('touchcancel', onTouchCancel, {passive:false, capture:true});
 
     window.addEventListener('scroll', positionBox, true);
     window.addEventListener('resize', positionBox);
@@ -875,7 +1096,7 @@
     // ---- toolbar ----
     var tb = document.createElement('div'); tb.className = 'cv-tb';
     var hintText = coarse
-      ? 'Tap a tile to select · drag the selected tile to move · double-tap what’s inside to grab it (or a caption to type) · pinch or drag a corner to resize · drag elsewhere to scroll'
+      ? 'Tap a tile to select · double-tap what’s inside to grab it (or a caption to type) · drag the grabbed item to move · pinch or drag a corner to resize · swipe a card or elsewhere to scroll'
       : 'Click a tile · double-click to grab what’s inside · drag to move · corner or scroll to resize · arrows nudge · Enter types into a selected caption · Backspace deletes selected text';
     tb.innerHTML =
       '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
