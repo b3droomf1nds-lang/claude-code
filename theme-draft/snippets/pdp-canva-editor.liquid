@@ -18,36 +18,23 @@
     lost on reload and the preview always shows your work-in-progress.
     When it's positioned how you want, click "Copy layout" (or just tell
     Claude "lock it") and hand Claude the copied code — Claude bakes those
-    exact positions/sizes permanently into the desktop CSS and clears the
-    temporary browser copy.
+    exact positions/sizes permanently into the matching desktop/mobile CSS
+    and clears the temporary browser copy.
 
   The same controls work on desktop and phone. Desktop keeps its mouse,
   wheel, keyboard, and compact handles; phone adds tap/double-tap,
   one-finger move, pinch resize, and larger touch handles.
 
   ALIGN
-    Click "Align" to snap small accidental drift (up to 14px, or 40px
-    with Shift+click) on a tile back to its perfect grid position —
-    or, if nothing is selected, straightens every tile at once.
-    Deliberate larger moves are left alone.
+    Click "Align" to repair the WHOLE section, regardless of what is
+    selected. Every tile returns to its normal size and the exact
+    authored position it has now, on both desktop and phone.
 
-    Tiles snap to whichever of the 6 grid slots they're now CLOSEST
-    to, on both axes — not just back to their own original slot. So
-    to swap two tiles: drag each roughly into the other's spot, then
-    click Align, and both lock exactly into place. This works because
-    a tile's real grid cell (its layout position) never actually moves
-    when it's dragged — only its on-screen transform does — so all 6
-    real slots are always known and available to snap to.
-
-    Align touches a tile's own position/size, and a text box's (a
-    caption, heading, or the big stat number) horizontal position —
-    small drift only, up to the same threshold, and text is never
-    moved vertically or resized by Align (its vertical spot is set by
-    its own CSS on purpose). Everything else that lives inside a tile
-    — an image or an icon — is left alone entirely: once placed, it
-    stays exactly where it's put, since a deliberate small nudge on a
-    photo shouldn't keep getting silently reverted just because Align
-    ran.
+    Every visible text group inside every tile is centered horizontally
+    while keeping its vertical position, size, and wording. Images and
+    standalone icons are left exactly where you put them. The entire
+    repair is one Undo step. Phone and desktop centering corrections are
+    kept separate, so aligning one layout cannot knock the other off-centre.
 
   EDITING TEXT
     Double-click a caption/heading (not the live numbers, which are
@@ -65,6 +52,12 @@
     already selected — the double-click that first drills into/selects
     it always just selects, so it's still possible to double-click and
     immediately drag without getting hijacked into typing.
+
+    On phone, double-tapping text also only selects it, so it can be
+    dragged immediately like an image. A contextual "Edit text" button
+    appears in the toolbar for a selected editable caption; tap that
+    button to open the keyboard. Taps inside active text editing keep
+    their normal caret-placement behaviour.
 
     With a text box selected (not currently being typed into), press
     Backspace or Delete to clear it out.
@@ -223,14 +216,18 @@
     // deserve the same "Align only ever straightens left/right, never
     // moves vertically" treatment as a caption.
     function isAlignHoriz(el){
-      return isTextEditable(el) || el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row');
+      return isTextEditable(el) || el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__stat-x');
     }
 
     var editingEl = null;
 
     function stateOf(el){
       var s = layout[el.__cvKey];
-      return s ? {dx:s.dx||0, dy:s.dy||0, s:s.s||1, text:(s.text!=null ? s.text : null)} : {dx:0,dy:0,s:1,text:null};
+      return s ? {
+        dx:s.dx||0, dy:s.dy||0, s:s.s||1,
+        axd:s.axd||0, ayd:s.ayd||0, axm:s.axm||0, aym:s.aym||0,
+        text:(s.text!=null ? s.text : null)
+      } : {dx:0,dy:0,s:1,axd:0,ayd:0,axm:0,aym:0,text:null};
     }
 
     // ---- carry canonical editor moves onto whatever viewport is showing ----
@@ -273,7 +270,14 @@
     }
     function effTranslate(el, st){
       var f = translateFactor(el);
-      return {dx: st.dx * f, dy: st.dy * f};
+      // Align's horizontal correction is viewport-specific. The compare CSS
+      // deliberately gives a few captions different desktop/mobile bases
+      // (notably the tall phone cards), so sharing one correction would make
+      // Align on a phone move that caption off-centre on desktop, or vice
+      // versa. Ordinary hand-authored movement remains shared/canonical.
+      var ax = desktopMQ.matches ? st.axd : st.axm;
+      var ay = desktopMQ.matches ? st.ayd : st.aym;
+      return {dx: (st.dx + ax) * f, dy: (st.dy + ay) * f};
     }
 
     function applyState(el){
@@ -318,7 +322,7 @@
       }
     }
     function writeState(el, st, persist){
-      var noTransform = !st.dx && !st.dy && (!st.s || st.s === 1);
+      var noTransform = !st.dx && !st.dy && !st.axd && !st.ayd && !st.axm && !st.aym && (!st.s || st.s === 1);
       var noText = st.text == null || (el.__cvTextEditable && st.text === el.__cvOrigText);
       if (noTransform && noText) delete layout[el.__cvKey];
       else {
@@ -328,6 +332,12 @@
         var entry = persist
           ? {dx:Math.round(st.dx*100)/100, dy:Math.round(st.dy*100)/100, s:Math.round(st.s*10000)/10000}
           : {dx:st.dx, dy:st.dy, s:st.s};
+        // Keep these optional so old payloads stay valid and untouched
+        // elements keep the same compact/export-friendly shape.
+        if (st.axd) entry.axd = persist ? Math.round(st.axd*100)/100 : st.axd;
+        if (st.ayd) entry.ayd = persist ? Math.round(st.ayd*100)/100 : st.ayd;
+        if (st.axm) entry.axm = persist ? Math.round(st.axm*100)/100 : st.axm;
+        if (st.aym) entry.aym = persist ? Math.round(st.aym*100)/100 : st.aym;
         if (!noText) entry.text = st.text;
         layout[el.__cvKey] = entry;
       }
@@ -445,6 +455,8 @@
     document.body.appendChild(box);
 
     var sel = null;
+    var editTextBtn = null;
+    var touchInputSeen = false;
     function label(el){
       if (el.matches('.pdp-cmp__card')) return 'tile';
       if (el.tagName === 'IMG') return 'image';
@@ -471,6 +483,10 @@
     // scrolls instead of silently saving an invisible desktop offset.
     // Inline touch-action is inert for mouse, so this does not alter desktop.
     function touchCanMove(el){ return !!el && translateFactor(el) !== 0; }
+    function updateEditTextButton(){
+      if (!editTextBtn) return;
+      editTextBtn.hidden = !(touchInputSeen && sel && isTextEditable(sel) && !editingEl);
+    }
     function select(el){
       if (sel && sel !== el && sel.style){ sel.style.touchAction = ''; sel.classList.remove('cv-touch-ready'); }
       sel = el;
@@ -478,16 +494,17 @@
         el.style.touchAction = touchCanMove(el) ? 'none' : 'pan-y';
         el.classList.toggle('cv-touch-ready', coarse && touchCanMove(el));
       }
-      tag.textContent = label(el); positionBox();
+      tag.textContent = label(el); positionBox(); updateEditTextButton();
     }
     function deselect(){
       if (sel && sel.style){ sel.style.touchAction = ''; sel.classList.remove('cv-touch-ready'); }
-      sel = null; positionBox();
+      sel = null; positionBox(); updateEditTextButton();
     }
 
     // ---- inline text editing ----
     var textEditBatch = null;
     function enterTextEdit(el){
+      lastTap = null;
       editingEl = el;
       textEditBatch = captureBatch([el]);
       el.contentEditable = 'true';
@@ -502,6 +519,7 @@
       var s = window.getSelection();
       s.removeAllRanges();
       s.addRange(range);
+      updateEditTextButton();
     }
     function exitTextEdit(){
       if (!editingEl) return;
@@ -511,6 +529,7 @@
       el.classList.remove('cv-editing-text');
       saveText(el);
       if (textEditBatch){ commitBatch(textEditBatch); textEditBatch = null; }
+      updateEditTextButton();
     }
     function insertLineBreak(){
       // Not a hand-rolled Range insertion: browsers get ambiguous about
@@ -621,16 +640,17 @@
     // Model (a finger can't hover, right-click, scroll-wheel, or press
     // arrow keys, so it can't be identical):
     //   • tap a tile                → select it (whole tile)
-    //   • tap again / double-tap    → drill into the image/icon/caption under it
-    //   • tap that drilled item     → deselect it
-    //   • double-tap a caption      → start typing (on-screen keyboard)
+    //   • tap the selected tile      → deselect it
+    //   • double-tap inside a tile   → drill into that image/icon/text
+    //   • tap that drilled item      → deselect it
+    //   • tap Edit text              → type into a selected caption
     //   • drag a selected child     → move it (it alone is touch-action:none)
     //   • swipe a card / elsewhere  → the page scrolls normally
     //   • pinch / drag a corner     → resize the selected element
     // Everything commits to the same undo/localStorage/"Copy layout" as the
     // mouse path — it's the same state, just a different input.
     var pendingTap = null; // a touch that may become a tap (select) or a scroll
-    var lastTap = null;    // {el, t} for double-tap detection
+    var lastTap = null;    // {el, card, x, y, t} for double-tap detection
     var pinch = null;      // an active two-finger resize gesture
     var touchFrame = 0;    // at most one visual update per painted frame
     var touchSample = null;
@@ -645,8 +665,8 @@
     // transform, and mobile's desktop-to-phone factor all project that saved
     // delta into screen pixels. Invert that exact 2D linear projection so one
     // finger pixel always produces one visual pixel — even for a zoomed or
-    // mirrored image. This is touch-only; the established mouse math is left
-    // unchanged.
+    // mirrored image. Touch drags and full-section text centering share this
+    // inverse; the established mouse drag math is left unchanged.
     function linearOf(transform){
       if (!transform || transform === 'none') return {a:1,b:0,c:0,d:1};
       try {
@@ -662,7 +682,7 @@
         d:left.b*right.c + left.d*right.d
       };
     }
-    function touchDeltaInverse(el){
+    function screenDeltaInverse(el){
       var projected = linearOf(el.__cvBase);
       var n = el.parentNode;
       while (n && n.nodeType === 1){
@@ -735,7 +755,7 @@
       touchSample = null;
     }
     function makeMoveT(el, cx, cy, wasSelected, id){
-      var inv = touchDeltaInverse(el);
+      var inv = screenDeltaInverse(el);
       if (!inv) return null;
       var st = stateOf(el);
       var r = el.getBoundingClientRect();
@@ -755,9 +775,6 @@
       var ended = dragging;
       saveState(ended.el, stateOf(ended.el));
       positionBox();
-      if (!cancelled && !ended.moved && ended.wasSelected && ended.el.__cvTextEditable && ended.el !== editingEl){
-        enterTextEdit(ended.el);
-      }
       if (ended.batch) commitBatch(ended.batch);
       dragging = null;
       setTouchActive(null);
@@ -790,27 +807,44 @@
         deselect();
         return;
       }
-      var dbl = lastTap && lastTap.el === hit && (now - lastTap.t) < 340;
-      lastTap = {el:hit, t:now};
+      // Treat two nearby taps in the same tile as a double even if finger
+      // jitter lands on a neighbouring nested node. A whole-tile tap can
+      // optimistically deselect immediately; retaining this tap record lets
+      // a fast second tap still drill into the intended child.
+      var sameArea = lastTap && (card ? lastTap.card === card : lastTap.el === hit);
+      var closeEnough = lastTap && Math.hypot(p.x - lastTap.x, p.y - lastTap.y) < 48;
+      var dbl = !!(sameArea && closeEnough && (now - lastTap.t) < 340);
+      lastTap = {el:hit, card:card, x:p.x, y:p.y, t:now};
+      if (card && sel === card && !dbl){
+        deselect();
+        return;
+      }
+      // A rapid second tap on blank card space has nothing deeper to drill
+      // into, so it is still a tile toggle rather than a no-op double-tap.
+      if (card && sel === card && dbl && hit === card){
+        lastTap = null;
+        deselect();
+        return;
+      }
       var t;
       if (!card) t = hit;                       // heading / selector
-      else if (dbl){
-        // double-tap a caption → straight into typing; anything else → drill
-        if (isTextEditable(hit)){ select(hit); enterTextEdit(hit); return; }
-        t = hit;
-      }
+      else if (dbl) t = hit;                    // double-tap drills any child, including text
       else if (sel && sel !== card && (sel === hit || sel.contains(hit))) t = sel; // keep drilled child
       else t = card;                            // single tap → whole tile
-      // a plain repeat tap on an already-selected caption → type
-      if (sel === t && isTextEditable(t) && !dbl){ enterTextEdit(t); return; }
       select(t);
     }
     function onTouchStart(e){
+      if (!touchInputSeen){ touchInputSeen = true; updateEditTextButton(); }
       if (e.touches.length > 1){
+        lastTap = null;
         // Once an editor pinch exists, suppress native handling before any
         // reads/writes. A third finger does not restart the tracked pair.
         if (sel) e.preventDefault();
         if (pinch) return;
+        // Commit an active caption edit before opening the pinch undo batch.
+        // Otherwise the two histories overlap and a later text undo can also
+        // roll back the scale change made by this gesture.
+        if (editingEl) exitTextEdit();
         // A second finger landing — whatever single-finger gesture was in
         // progress ends cleanly right here (committed, not abandoned mid-
         // motion) and a fresh two-finger pinch-resize takes over. Without
@@ -831,12 +865,12 @@
       var pt = e.touches[0];
       var target = document.elementFromPoint(pt.clientX, pt.clientY) || e.target;
       if (editingEl && !editingEl.contains(target)) exitTextEdit();
-      if (target.closest('.cv-tb, .cv-panel')) return; // toolbar taps behave natively
+      if (target.closest('.cv-tb, .cv-panel')){ lastTap = null; return; } // toolbar taps behave natively
       if (editingEl) return;
       var handle = target.closest('.cv-h');
-      if (handle && sel){ e.preventDefault(); startResizeT(pt.clientX, pt.clientY, handle.dataset.corner, pt.identifier); return; }
+      if (handle && sel){ lastTap = null; e.preventDefault(); startResizeT(pt.clientX, pt.clientY, handle.dataset.corner, pt.identifier); return; }
       var hit = target.closest(EDITABLE);
-      if (!hit || !root.contains(hit)){ pendingTap = null; deselect(); return; }
+      if (!hit || !root.contains(hit)){ lastTap = null; pendingTap = null; deselect(); return; }
       var touchingSelection = sel && (sel === hit || sel.contains(hit));
       // Claim a selected movable element at touchstart, before Safari can
       // begin a scroll chain. Unselected content stays native so it scrolls.
@@ -864,6 +898,7 @@
       if (pendingTap){
         var q = findTouch(e.touches, pendingTap.id); if (!q) return;
         if (Math.hypot(q.clientX - pendingTap.x, q.clientY - pendingTap.y) > 4){
+          lastTap = null;
           // moved past the tap threshold: if it's on the current selection,
           // this is a move-drag; otherwise it's a page scroll — let it go.
           if (sel && touchCanMove(sel) && (sel === pendingTap.el || sel.contains(pendingTap.el))){
@@ -917,6 +952,7 @@
       }
     }
     function onTouchCancel(e){
+      lastTap = null;
       pendingTap = null; // a cancelled touch is never a tap/double-tap
       if (pinch){
         var live0 = findTouch(e.touches, pinch.id1);
@@ -1027,98 +1063,123 @@
       if (editingEl && e.target === editingEl) saveText(editingEl);
     });
 
-    // ---- align: snap small accidental drift back to perfect (tiles only) ----
-    // `offsetLeft`/`offsetTop` reflect a tile's actual CSS Grid cell and are
-    // untouched by our own transform, no matter how far it's been dragged —
-    // so the 6 tiles' own offsetLeft/offsetTop are always exactly the 6 real
-    // grid slots, even mid-rearrange. That means Align can snap a dragged
-    // tile to whichever slot it's now CLOSEST to (not just back to its own
-    // original slot) — so swapping two tiles by roughly dragging them into
-    // each other's spot, then clicking Align, locks them exactly into
-    // place instead of only correcting drift from their old spot.
-    //
-    // Align ONLY ever touches a tile's own position/size — never anything
-    // INSIDE a tile (images, icons, text). It used to also snap small
-    // horizontal drift on those, but that meant a deliberate small nudge
-    // (e.g. a photo shifted 6px on purpose) kept getting silently reverted
-    // every time Align ran. Once something is placed inside a tile, it
-    // stays exactly where it's put — only the tile itself gets straightened.
-    // Click "Align" for a normal-size correction (up to 14px of drift);
-    // hold Shift and click for a bigger correction (up to 40px). Anything
-    // drifted further than that is left alone as a deliberate move.
-    function nearestTileSlot(x, y, tiles){
-      var best = null, bestDist = Infinity;
-      tiles.forEach(function(t){
-        var d = Math.hypot(x - t.offsetLeft, y - t.offsetTop);
-        if (d < bestDist){ bestDist = d; best = t; }
-      });
-      return best;
-    }
-    function align(threshold){
-      var wantedTargets = sel ? [sel] : els;
-      var tileTargets = wantedTargets.filter(function(el){ return el.matches('.pdp-cmp__card'); });
-      var textTargets = wantedTargets.filter(function(el){ return el.__cvAlignH; });
+    // ---- align: repair the complete tile system in one undoable action ----
+    // A tile's existing CSS/CANVA-BAKED transform lives in __cvBase. Clearing
+    // only the editor-authored delta therefore returns every card to exactly
+    // the position and size the current theme defines, without disturbing the
+    // deliberately reordered baked layout.
+    function align(){
       var tiles = els.filter(function(el){ return el.matches('.pdp-cmp__card'); });
-      var batch = captureBatch(tileTargets.concat(textTargets));
-      var n = 0;
-      tileTargets.forEach(function(el){
-        var st = stateOf(el), changed = false;
-        var curX = el.offsetLeft + st.dx, curY = el.offsetTop + st.dy;
-        var slot = nearestTileSlot(curX, curY, tiles);
-        if (slot){
-          var wantDx = slot.offsetLeft - el.offsetLeft, wantDy = slot.offsetTop - el.offsetTop;
-          var errX = curX - slot.offsetLeft, errY = curY - slot.offsetTop;
-          if ((st.dx !== wantDx || st.dy !== wantDy) && Math.abs(errX) <= threshold && Math.abs(errY) <= threshold){
-            st.dx = wantDx; st.dy = wantDy; changed = true;
-          }
+      var textTargets = els.filter(function(el){ return el.__cvAlignH && el.closest('.pdp-cmp__card'); });
+      var alignXKey = desktopMQ.matches ? 'axd' : 'axm';
+      var alignYKey = desktopMQ.matches ? 'ayd' : 'aym';
+      var otherAlignXKey = desktopMQ.matches ? 'axm' : 'axd';
+      var directTextTargets = textTargets.filter(function(el){
+        return el.parentElement && el.parentElement.matches('.pdp-cmp__card') &&
+          el.matches('.pdp-cmp__eyebrow, .pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__sub');
+      });
+      var batch = captureBatch(tiles.concat(textTargets));
+      var changed = {};
+      function remember(el){ changed[el.__cvKey] = true; }
+
+      tiles.forEach(function(el){
+        var st = stateOf(el);
+        if (st.dx !== 0 || st.dy !== 0 || st.s !== 1){
+          st.dx = 0; st.dy = 0; st.s = 1;
+          saveState(el, st); remember(el);
         }
-        if (st.s !== 1 && Math.abs(st.s - 1) <= threshold / 400){ st.s = 1; changed = true; }
-        if (changed){ saveState(el, st); n++; }
       });
-      // Text boxes only ever get straightened left/right — small drift
-      // only, same rule as a tile — never resized or moved vertically by
-      // Align (their vertical spot is set by their own CSS on purpose).
+
+      // First remove every stored sideways text nudge, including nested stat
+      // parts, plus this viewport's previous centering correction. The other
+      // viewport's correction stays independent. Vertical placement, scale,
+      // and edited wording are preserved.
       textTargets.forEach(function(el){
-        var st = stateOf(el), changed = false;
-        if (st.dx !== 0 && Math.abs(st.dx) <= threshold){ st.dx = 0; changed = true; }
-        if (changed){ saveState(el, st); n++; }
+        var st = stateOf(el);
+        if (st.dx !== 0 || st[alignXKey] !== 0 || st[alignYKey] !== 0){
+          // dx is shared between viewports. Move its old value into the
+          // inactive viewport's private correction before clearing it, so
+          // repairing this viewport leaves the other one visually unchanged.
+          st[otherAlignXKey] += st.dx;
+          st.dx = 0; st[alignXKey] = 0; st[alignYKey] = 0;
+          saveState(el, st); remember(el);
+        }
       });
+
+      // Authored CSS intentionally places a few text groups off-centre, so a
+      // zero dx is not enough. Measure each visible top-level group and move
+      // its visual centre onto the card centre through the exact transform
+      // inverse. Nested stat parts stay together as one group.
+      directTextTargets.forEach(function(el){
+        if (!(el.textContent || '').trim()) return;
+        var card = el.closest('.pdp-cmp__card');
+        var er = el.getBoundingClientRect(), cr = card.getBoundingClientRect();
+        if (!er.width || !er.height || !cr.width) return;
+        var screenDx = (cr.left + cr.width/2) - (er.left + er.width/2);
+        if (Math.abs(screenDx) < 0.25) return;
+        var inv = screenDeltaInverse(el);
+        if (!inv) return;
+        var st = stateOf(el);
+        st[alignXKey] += inv.xx * screenDx;
+        st[alignYKey] += inv.yx * screenDx;
+        saveState(el, st); remember(el);
+      });
+
       commitBatch(batch);
       positionBox();
-      return n;
+      return Object.keys(changed).length;
     }
 
     // ---- export payload for "lock it" ----
     function exportCode(){
       var out = [];
+      var activeViewport = desktopMQ.matches ? 'desktop' : 'mobile';
+      function round2(n){ return Math.round(n*100)/100; }
       els.forEach(function(el){
         var s = layout[el.__cvKey];
         if (!s) return;
-        var hasTransform = s.dx || s.dy || (s.s && s.s !== 1);
-        var hasText = s.text != null;
+        var st = stateOf(el);
+        // Keep the legacy dx/dy fields as the active viewport for existing
+        // lock workflows, while retaining both viewport corrections whenever
+        // they differ so neither layout is silently lost in the copied JSON.
+        var desktopDx = round2(st.dx + st.axd), desktopDy = round2(st.dy + st.ayd);
+        var mobileDx = round2(st.dx + st.axm), mobileDy = round2(st.dy + st.aym);
+        var dx = desktopMQ.matches ? desktopDx : mobileDx;
+        var dy = desktopMQ.matches ? desktopDy : mobileDy;
+        var hasTransform = desktopDx || desktopDy || mobileDx || mobileDy || (st.s && st.s !== 1);
+        var hasText = st.text != null;
         if (!hasTransform && !hasText) return;
-        var item = { sel: '.pdp-cmp>' + el.__cvKey, kind: label(el), dx: s.dx||0, dy: s.dy||0, s: s.s||1, base: el.__cvBase || 'none' };
-        if (hasText) item.text = s.text;
+        var item = { sel: '.pdp-cmp>' + el.__cvKey, kind: label(el), dx: dx, dy: dy, s: st.s||1, base: el.__cvBase || 'none' };
+        if (desktopDx !== mobileDx || desktopDy !== mobileDy){
+          item.viewportOffsets = {
+            desktop:{dx:desktopDx,dy:desktopDy},
+            mobile:{dx:mobileDx,dy:mobileDy}
+          };
+        }
+        if (hasText) item.text = st.text;
         out.push(item);
       });
-      return JSON.stringify({ v:1, note:'Voltical compare-grid layout — desktop', items: out }, null, 2);
+      return JSON.stringify({ v:1, viewport:activeViewport, note:'Voltical compare-grid layout — ' + activeViewport, items: out }, null, 2);
     }
 
     // ---- toolbar ----
     var tb = document.createElement('div'); tb.className = 'cv-tb';
     var hintText = coarse
-      ? 'Tap a tile to select · double-tap what’s inside to grab it (or a caption to type) · tap a grabbed item again to deselect · drag to move · pinch or drag a corner to resize · swipe a card or elsewhere to scroll'
+      ? 'Tap to select/deselect a tile · double-tap an item to grab it · drag to move · Edit text opens typing · pinch or corners resize · Align repairs every tile and centres all tile text'
       : 'Click a tile · double-click to grab what’s inside · drag to move · corner or scroll to resize · arrows nudge · Enter types into a selected caption · Backspace deletes selected text';
     tb.innerHTML =
       '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
       '<span class="cv-tb__hint">' + hintText + '</span>' +
       '<button class="cv-btn" data-cv="undo" title="Undo the last move, resize, type, delete, Align, or Reset.">Undo</button>' +
-      '<button class="cv-btn" data-cv="align" title="Straighten tiles onto the grid and text boxes left/right. Leaves images and icons alone. Shift+click for a bigger correction.">Align</button>' +
+      '<button class="cv-btn" data-cv="edit-text" title="Type into the selected caption." hidden>Edit text</button>' +
+      '<button class="cv-btn" data-cv="align" title="Repair all six tile positions and sizes, and horizontally centre every tile text group. Images and icons stay untouched.">Align all</button>' +
       '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
       '<button class="cv-btn" data-cv="reset-all">Reset all</button>' +
       '<button class="cv-btn cv-btn--go" data-cv="copy">Copy layout</button>' +
       '<button class="cv-btn" data-cv="done">Done</button>';
     document.body.appendChild(tb);
+    editTextBtn = tb.querySelector('[data-cv="edit-text"]');
+    updateEditTextButton();
 
     // ---- export panel ----
     var panel = document.createElement('div'); panel.className = 'cv-panel';
@@ -1138,7 +1199,8 @@
       var b = e.target.closest('[data-cv]'); if (!b) return;
       var a = b.dataset.cv;
       if (a === 'undo'){ undo(); }
-      else if (a === 'align'){ align(e.shiftKey ? 40 : 14); }
+      else if (a === 'edit-text' && sel && isTextEditable(sel)){ enterTextEdit(sel); }
+      else if (a === 'align'){ align(); }
       else if (a === 'reset-sel' && sel){
         var resetBatch = captureBatch([sel]);
         var keepText = stateOf(sel).text;
