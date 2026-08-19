@@ -1298,8 +1298,18 @@
 @media (max-width: 899px) {
   /* backdrop behind the tiles reuses the existing --tile design token
      (also the tile's own default background elsewhere in this file)
-     rather than a new one-off value. */
-  .pdp-cmp-wrap { background: var(--tile, #F7FAFA); }
+     rather than a new one-off value. Full-bleed to the true screen
+     edges rather than stopping at .wrap's own left/right padding —
+     negative margin breaks out to the viewport edge, matching padding
+     added back inside keeps .pdp-cmp itself (and everything in it) at
+     the exact same width/position as before. */
+  .pdp-cmp-wrap {
+    background: var(--tile, #F7FAFA);
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding-left: calc(50vw - 50%);
+    padding-right: calc(50vw - 50%);
+  }
 
   /* neutralize only the baked CAPTION-position transforms for these two
      tiles — (0,6-7,0) beats the baked (0,5,0) !important. The image's
