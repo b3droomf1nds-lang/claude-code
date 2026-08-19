@@ -125,6 +125,22 @@
     font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:14px 16px;resize:none;box-sizing:border-box;}
   .cv-panel__foot{padding:12px 16px;border-top:1px solid #262628;display:flex;gap:8px;justify-content:flex-end;align-items:center;}
   .cv-panel__note{margin-right:auto;opacity:.6;font-size:11px;max-width:340px;}
+
+  /* ---- phone: dock the toolbar to the bottom, let it wrap, and make the
+     corner resize handles finger-sized (the 12px desktop dots are too
+     small to grab with a fingertip). Kept to coarse pointers so a
+     touchscreen laptop with a mouse still gets the compact desktop UI. */
+  @media (max-width:899px) and (pointer:coarse){
+    .cv-tb{top:auto;bottom:calc(10px + env(safe-area-inset-bottom));left:8px;right:8px;
+      flex-wrap:wrap;justify-content:center;padding:10px;gap:8px;}
+    .cv-tb__title{margin-right:0;}
+    .cv-tb__hint{flex-basis:100%;max-width:none;text-align:center;order:9;font-size:11px;}
+    .cv-btn{padding:10px 13px;font-size:13px;}
+    .cv-h{width:22px;height:22px;}
+    .cv-h--tl{top:-12px;left:-12px;} .cv-h--tr{top:-12px;right:-12px;}
+    .cv-h--bl{bottom:-12px;left:-12px;} .cv-h--br{bottom:-12px;right:-12px;}
+    .cv-tag{top:-24px;font-size:12px;padding:4px 7px;}
+  }
 </style>
 <script>
 (function(){
@@ -352,7 +368,14 @@
     }
 
     if (!ON) return;                 // viewer with a saved layout — no controls
-    if (!window.matchMedia('(min-width:900px)').matches) return; // desktop tool only
+
+    // Editor controls run on phones too now (touch handlers added below).
+    // Whether the compare block is in its big scaled desktop layout or the
+    // stacked mobile one, all the drag/resize math is viewport-agnostic:
+    // it divides screen-pixel deltas by the element's cumulative ancestor
+    // scale (cumScale), which is ~4.35x on desktop and ~1x on mobile, so a
+    // drag lands 1:1 either way.
+    var coarse = window.matchMedia('(pointer:coarse)').matches;
 
     document.documentElement.classList.add('cv-editing');
 
@@ -397,8 +420,19 @@
       box.style.left = r.left + 'px'; box.style.top = r.top + 'px';
       box.style.width = r.width + 'px'; box.style.height = r.height + 'px';
     }
-    function select(el){ sel = el; tag.textContent = label(el); positionBox(); }
-    function deselect(){ sel = null; positionBox(); }
+    // On touch, the selected element gets touch-action:none so a finger
+    // drag ON it moves it instead of scrolling the page — every OTHER
+    // element keeps normal touch-action, so you can still scroll the tall
+    // tile stack by dragging anywhere that isn't the current selection.
+    // (Inline touch-action is inert for mouse, so this is a no-op on
+    // desktop.)
+    function select(el){
+      if (sel && sel !== el && sel.style) sel.style.touchAction = '';
+      sel = el;
+      if (el && el.style) el.style.touchAction = 'none';
+      tag.textContent = label(el); positionBox();
+    }
+    function deselect(){ if (sel && sel.style) sel.style.touchAction = ''; sel = null; positionBox(); }
 
     // ---- inline text editing ----
     var textEditBatch = null;
@@ -526,6 +560,107 @@
     document.addEventListener('mousedown', onDown, true);
     document.addEventListener('mousemove', onMove, true);
     document.addEventListener('mouseup', onUp, true);
+
+    // ---- touch: the phone equivalent of the mouse flow above ----
+    // The desktop path (mouse) is left exactly as-is; this is a separate,
+    // additive set of handlers so nothing about the proven desktop editor
+    // changes. On a touch-only phone only these fire; on desktop only the
+    // mouse ones do.
+    //
+    // Model (a finger can't hover, right-click, scroll-wheel, or press
+    // arrow keys, so it can't be identical):
+    //   • tap a tile                → select it (whole tile)
+    //   • tap again / double-tap    → drill into the image/icon/caption under it
+    //   • double-tap a caption      → start typing (on-screen keyboard)
+    //   • drag the SELECTED element → move it (it alone is touch-action:none)
+    //   • drag anywhere else        → the page scrolls normally
+    //   • drag a corner handle      → resize
+    // Everything commits to the same undo/localStorage/"Copy layout" as the
+    // mouse path — it's the same state, just a different input.
+    var pendingTap = null; // a touch that may become a tap (select) or a scroll
+    var lastTap = null;    // {el, t} for double-tap detection
+    function makeMoveT(el, cx, cy, wasSelected){
+      var sc = cumScale(el), st = stateOf(el);
+      return {el:el, mode:'move', sx:cx, sy:cy, dx0:st.dx, dy0:st.dy, s0:st.s,
+              scx:sc.sx, scy:sc.sy, moved:false, wasSelected:wasSelected, batch:captureBatch([el])};
+    }
+    function startResizeT(cx, cy, corner){
+      var c = centerOf(sel), st = stateOf(sel);
+      var d0 = Math.hypot(cx - c.x, cy - c.y) || 1;
+      dragging = {el:sel, mode:'scale', d0:d0, s0:st.s, dx0:st.dx, dy0:st.dy, cx:c.x, cy:c.y, batch:captureBatch([sel])};
+    }
+    function resolveTap(p){
+      var hit = p.el, card = p.card, now = Date.now();
+      var dbl = lastTap && lastTap.el === hit && (now - lastTap.t) < 340;
+      lastTap = {el:hit, t:now};
+      var t;
+      if (!card) t = hit;                       // heading / selector
+      else if (dbl){
+        // double-tap a caption → straight into typing; anything else → drill
+        if (isTextEditable(hit)){ select(hit); enterTextEdit(hit); return; }
+        t = hit;
+      }
+      else if (sel && sel !== card && (sel === hit || sel.contains(hit))) t = sel; // keep drilled child
+      else t = card;                            // single tap → whole tile
+      // a plain repeat tap on an already-selected caption → type
+      if (sel === t && isTextEditable(t) && !dbl){ enterTextEdit(t); return; }
+      select(t);
+    }
+    function onTouchStart(e){
+      if (e.touches.length > 1){ pendingTap = null; return; } // let pinch-zoom through
+      var pt = e.touches[0];
+      var target = document.elementFromPoint(pt.clientX, pt.clientY) || e.target;
+      if (editingEl && !editingEl.contains(target)) exitTextEdit();
+      if (target.closest('.cv-tb, .cv-panel')) return; // toolbar taps behave natively
+      if (editingEl) return;
+      var handle = target.closest('.cv-h');
+      if (handle && sel){ e.preventDefault(); startResizeT(pt.clientX, pt.clientY, handle.dataset.corner); return; }
+      var hit = target.closest(EDITABLE);
+      if (!hit || !root.contains(hit)){ pendingTap = null; deselect(); return; }
+      pendingTap = {el:hit, card:hit.closest('.pdp-cmp__card'), x:pt.clientX, y:pt.clientY};
+    }
+    function onTouchMove(e){
+      if (dragging){
+        var p = e.touches[0]; if (!p) return;
+        var d = dragging, st = stateOf(d.el);
+        if (d.mode === 'move'){
+          if (Math.abs(p.clientX - d.sx) > 3 || Math.abs(p.clientY - d.sy) > 3) d.moved = true;
+          st.dx = d.dx0 + (p.clientX - d.sx) / d.scx;
+          st.dy = d.dy0 + (p.clientY - d.sy) / d.scy;
+        } else {
+          var dist = Math.hypot(p.clientX - d.cx, p.clientY - d.cy);
+          st.s = Math.max(0.15, Math.min(10, d.s0 * (dist / d.d0)));
+        }
+        saveState(d.el, st); positionBox();
+        e.preventDefault();
+        return;
+      }
+      if (pendingTap){
+        var q = e.touches[0]; if (!q) return;
+        if (Math.abs(q.clientX - pendingTap.x) > 8 || Math.abs(q.clientY - pendingTap.y) > 8){
+          // moved past the tap threshold: if it's on the current selection,
+          // this is a move-drag; otherwise it's a page scroll — let it go.
+          if (sel && (sel === pendingTap.el || sel.contains(pendingTap.el))){
+            dragging = makeMoveT(sel, q.clientX, q.clientY, true);
+            e.preventDefault();
+          }
+          pendingTap = null;
+        }
+      }
+    }
+    function onTouchEnd(){
+      if (pendingTap){ resolveTap(pendingTap); pendingTap = null; }
+      if (dragging && !dragging.moved && dragging.wasSelected && dragging.el.__cvTextEditable && dragging.el !== editingEl){
+        enterTextEdit(dragging.el);
+      }
+      if (dragging && dragging.batch) commitBatch(dragging.batch);
+      dragging = null;
+    }
+    document.addEventListener('touchstart', onTouchStart, {passive:false, capture:true});
+    document.addEventListener('touchmove', onTouchMove, {passive:false, capture:true});
+    document.addEventListener('touchend', onTouchEnd, {passive:false, capture:true});
+    document.addEventListener('touchcancel', onTouchEnd, {passive:false, capture:true});
+
     window.addEventListener('scroll', positionBox, true);
     window.addEventListener('resize', positionBox);
 
@@ -684,9 +819,12 @@
 
     // ---- toolbar ----
     var tb = document.createElement('div'); tb.className = 'cv-tb';
+    var hintText = coarse
+      ? 'Tap a tile to select · drag the selected tile to move · double-tap what’s inside to grab it (or a caption to type) · drag a corner to resize · drag elsewhere to scroll'
+      : 'Click a tile · double-click to grab what’s inside · drag to move · corner or scroll to resize · arrows nudge · Enter types into a selected caption · Backspace deletes selected text';
     tb.innerHTML =
       '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
-      '<span class="cv-tb__hint">Click a tile · double-click to grab what’s inside · drag to move · corner or scroll to resize · arrows nudge · Enter types into a selected caption · Backspace deletes selected text</span>' +
+      '<span class="cv-tb__hint">' + hintText + '</span>' +
       '<button class="cv-btn" data-cv="undo" title="Undo the last move, resize, type, delete, Align, or Reset.">Undo</button>' +
       '<button class="cv-btn" data-cv="align" title="Straighten tiles onto the grid and text boxes left/right. Leaves images and icons alone. Shift+click for a bigger correction.">Align</button>' +
       '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
