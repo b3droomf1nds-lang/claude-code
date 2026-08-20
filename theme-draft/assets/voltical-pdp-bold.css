@@ -894,7 +894,10 @@
   /* Keep the black side-phone artwork in front of this tile's stat/captions. */
   z-index: 3;
   display: block;
-  overflow: hidden;
+  /* Let editor-positioned phone pixels extend throughout the card instead of
+     being cut off at the bottom edge of this smaller image slot. The card
+     itself remains the outer clipping boundary. */
+  overflow: visible;
   pointer-events: none;
 }
 .template-product .pdp-cmp__img-slot img.pdp-cmp__img--full-upright {
