@@ -773,19 +773,12 @@
 .template-product .pdp-cmp__card--magnet .pdp-cmp__sub--magnet-hold {
   top: 14px;
 }
-.template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-lead {
-  color: #1d1f24;
-  font-weight: 500;
-}
-.template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-detail {
-  color: #737d8b;
-}
-.template-product .pdp-cmp__card--video .pdp-cmp__alloy-lead {
-  color: #1d1f24;
-  font-weight: 500;
-}
-.template-product .pdp-cmp__card--video .pdp-cmp__alloy-detail {
-  color: #737d8b;
+.pdp-cmp__mobile-copy { display: none; }
+.pdp-cmp__desktop-copy { display: inline; }
+.template-product .pdp-cmp__magnet-picture {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .template-product .pdp-cmp__card--magnet .pdp-cmp__img-slot {
   position: absolute;
@@ -1083,6 +1076,17 @@
    at all and its tile is 350px, so 350/463.6 × 4.347 = 3.2816 is what
    converts any desktop raw px into its mobile equivalent. */
 @media (max-width: 899px) {
+  .pdp-cmp__desktop-copy { display: none; }
+  .pdp-cmp__mobile-copy { display: inline; }
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-lead,
+  .template-product .pdp-cmp__card--video .pdp-cmp__alloy-lead {
+    color: #1d1f24;
+    font-weight: 500;
+  }
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-detail,
+  .template-product .pdp-cmp__card--video .pdp-cmp__alloy-detail {
+    color: #737d8b;
+  }
   .template-product .pdp-cmp__card {
     height: auto;
     aspect-ratio: 1.16 / 1;
