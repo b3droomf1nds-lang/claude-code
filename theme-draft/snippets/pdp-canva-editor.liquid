@@ -170,6 +170,11 @@
   var qs = location.search || '';
   var wantOn  = /[?&]edit=1(?:&|$)/.test(qs);
   var wantOff = /[?&]edit=0(?:&|$)/.test(qs);
+  // A URL-triggered full wipe of the saved layout, for when a touch-drag
+  // has left something stranded off-screen and the on-page "Reset all"
+  // button isn't reachable (e.g. the broken element is covering it, or the
+  // page never got scrolled far enough to reach the toolbar reliably).
+  var wantResetAll = /[?&]resetall=1(?:&|$)/.test(qs);
   function ls(get, k, v){ try { return get ? localStorage.getItem(k) : localStorage.setItem(k, v); } catch(e){ return null; } }
   function rm(k){ try { localStorage.removeItem(k); } catch(e){} }
 
@@ -178,6 +183,7 @@
   var ON = ls(true, 'volt-canva-on') === '1' && !wantOff;
 
   var LKEY = 'volt-canva-layout-4';
+  if (wantResetAll) rm(LKEY);
   var layout = {};
   try { layout = JSON.parse(ls(true, LKEY) || '{}') || {}; } catch(e){ layout = {}; }
 
