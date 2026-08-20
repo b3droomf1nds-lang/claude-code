@@ -452,6 +452,14 @@
   border: 1.5px solid var(--ink-12, rgba(19,19,22,.1));
 }
 
+/* Match the selected-variant highlight to the same purple used by the
+   cross-sell add-on toggles right above the buy button (var(--focus),
+   #8F7FDC) instead of the shared theme's lighter --lilac-m default. */
+.pdp--bold .opt input:checked + .opt__pill--box {
+  border-color: var(--focus, #8F7FDC);
+  box-shadow: 0 0 0 1px var(--focus, #8F7FDC);
+}
+
 .pdp--bold .atc__btn {
   background: var(--ink, #131316);
   color: var(--base, #FAFAF8);
