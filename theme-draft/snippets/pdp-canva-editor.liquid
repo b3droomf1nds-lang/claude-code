@@ -233,6 +233,12 @@
     function isAlignHoriz(el){
       return isTextEditable(el) || el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__stat-x');
     }
+    // The charge-time number and its battery form one deliberately composed
+    // visual. Align all must leave that pair exactly where the editor placed it.
+    function isAlignExcluded(el){
+      return !!el.closest('.pdp-cmp__card--charge') &&
+        el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row');
+    }
 
     var editingEl = null;
 
@@ -1103,7 +1109,9 @@
     // deliberately reordered baked layout.
     function align(){
       var tiles = els.filter(function(el){ return el.matches('.pdp-cmp__card'); });
-      var textTargets = els.filter(function(el){ return el.__cvAlignH && el.closest('.pdp-cmp__card'); });
+      var textTargets = els.filter(function(el){
+        return el.__cvAlignH && el.closest('.pdp-cmp__card') && !isAlignExcluded(el);
+      });
       var alignXKey = desktopMQ.matches ? 'axd' : 'axm';
       var alignYKey = desktopMQ.matches ? 'ayd' : 'aym';
       var otherAlignXKey = desktopMQ.matches ? 'axm' : 'axd';
