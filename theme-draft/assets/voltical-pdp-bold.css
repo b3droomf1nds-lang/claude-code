@@ -1361,10 +1361,10 @@
     gap: 4px;
     min-width: 0;
   }
-  /* This one has the longer editorial layout requested for the magnetic
-     hold story: 470px × 1.15 = 540.5px. Keep video at the shared size. */
+  /* Keep the magnetic-hold story slightly taller than the shared cards:
+     540.5px reduced by 5% = 513.475px. */
   .template-product .pdp-cmp__card--magnet {
-    height: 540.5px;
+    height: 513.475px;
   }
 
   /* captions: normal centered flow at the top of the card */
