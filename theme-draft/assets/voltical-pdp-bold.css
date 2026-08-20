@@ -773,6 +773,13 @@
 .template-product .pdp-cmp__card--magnet .pdp-cmp__sub--magnet-hold {
   top: 14px;
 }
+.template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-lead {
+  color: #1d1f24;
+  font-weight: 500;
+}
+.template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-detail {
+  color: #737d8b;
+}
 .template-product .pdp-cmp__card--magnet .pdp-cmp__img-slot {
   position: absolute;
   left: 15px;
@@ -1097,6 +1104,9 @@
 
   .template-product .pdp-cmp__card--magnet .pdp-cmp__sub--magnet-hold {
     top: 45.94px;
+  }
+  .template-product .pdp-cmp__card--magnet {
+    aspect-ratio: 1.16 / 1.12;
   }
 
   .template-product .pdp-cmp__card--magnet .pdp-cmp__img-slot {
