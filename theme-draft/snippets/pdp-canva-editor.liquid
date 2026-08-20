@@ -175,6 +175,10 @@
   // button isn't reachable (e.g. the broken element is covering it, or the
   // page never got scrolled far enough to reach the toolbar reliably).
   var wantResetAll = /[?&]resetall=1(?:&|$)/.test(qs);
+  // One-shot recovery link for an image accidentally dragged out of reach.
+  // It only clears the top tile image's move offset; its chosen zoom and the
+  // rest of the saved layout stay exactly as they were.
+  var recoverTopImage = /[?&]recover=top-image(?:&|$)/.test(qs);
   function ls(get, k, v){ try { return get ? localStorage.getItem(k) : localStorage.setItem(k, v); } catch(e){ return null; } }
   function rm(k){ try { localStorage.removeItem(k); } catch(e){} }
 
@@ -401,6 +405,30 @@
       el.__cvOrigText = el.__cvTextEditable ? el.innerHTML : null;
       applyState(el);
     });
+
+    if (recoverTopImage){
+      // Mobile deliberately reorders the source cards, so find the visually
+      // topmost tile rather than assuming :first-child is the tile on top.
+      var topCard = [].slice.call(root.querySelectorAll('.pdp-cmp__card')).reduce(function(best, card){
+        if (!best) return card;
+        var r = card.getBoundingClientRect(), br = best.getBoundingClientRect();
+        return r.top < br.top || (Math.abs(r.top - br.top) < 1 && r.left < br.left) ? card : best;
+      }, null);
+      var topImage = topCard && topCard.querySelector('.pdp-cmp__img-slot img');
+      if (topImage && topImage.__cvKey){
+        var recoveredState = stateOf(topImage);
+        recoveredState.dx = 0;
+        recoveredState.dy = 0;
+        saveState(topImage, recoveredState);
+      }
+      // Consume the command so an ordinary refresh will not reset a later,
+      // intentional move. replaceState avoids a reload or history entry.
+      try {
+        var cleanUrl = new URL(location.href);
+        cleanUrl.searchParams.delete('recover');
+        window.history.replaceState(null, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+      } catch(e){}
+    }
 
     // Crossing the 900px line (e.g. dragging the window narrow to check the
     // phone layout, or a device rotating) swaps every element's base
