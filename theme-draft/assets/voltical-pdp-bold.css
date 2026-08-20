@@ -452,12 +452,11 @@
   border: 1.5px solid var(--ink-12, rgba(19,19,22,.1));
 }
 
-/* Match the selected-variant highlight to the same pale lilac used by
-   the cross-sell add-on cards right above the buy button. */
+/* Pale ice-blue selected-variant highlight. */
 .pdp--bold .opt input:checked + .opt__pill--box {
-  background: var(--lilac, #F1EFFB);
-  border-color: var(--lilac-m, #DFD8F8);
-  box-shadow: 0 0 0 1px var(--lilac-m, #DFD8F8);
+  background: var(--sky, #EDF6FB);
+  border-color: var(--sky-m, #D9EAF7);
+  box-shadow: 0 0 0 1px var(--sky-m, #D9EAF7);
 }
 
 .pdp--bold .atc__btn {
