@@ -452,12 +452,12 @@
   border: 1.5px solid var(--ink-12, rgba(19,19,22,.1));
 }
 
-/* Match the selected-variant highlight to the same purple used by the
-   cross-sell add-on toggles right above the buy button (var(--focus),
-   #8F7FDC) instead of the shared theme's lighter --lilac-m default. */
+/* Match the selected-variant highlight to the same pale lilac used by
+   the cross-sell add-on cards right above the buy button. */
 .pdp--bold .opt input:checked + .opt__pill--box {
-  border-color: var(--focus, #8F7FDC);
-  box-shadow: 0 0 0 1px var(--focus, #8F7FDC);
+  background: var(--lilac, #F1EFFB);
+  border-color: var(--lilac-m, #DFD8F8);
+  box-shadow: 0 0 0 1px var(--lilac-m, #DFD8F8);
 }
 
 .pdp--bold .atc__btn {
