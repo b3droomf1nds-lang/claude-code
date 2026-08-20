@@ -452,11 +452,12 @@
   border: 1.5px solid var(--ink-12, rgba(19,19,22,.1));
 }
 
-/* Pale ice-blue selected-variant highlight. */
+/* Pale ice-blue selected-variant highlight, matched to a supplied
+   reference swatch (not one of the theme's own design tokens). */
 .pdp--bold .opt input:checked + .opt__pill--box {
-  background: var(--sky, #EDF6FB);
-  border-color: var(--sky-m, #D9EAF7);
-  box-shadow: 0 0 0 1px var(--sky-m, #D9EAF7);
+  background: #E8F3FC;
+  border-color: #BFE0F5;
+  box-shadow: 0 0 0 1px #BFE0F5;
 }
 
 .pdp--bold .atc__btn {
