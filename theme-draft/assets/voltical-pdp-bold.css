@@ -1368,10 +1368,9 @@
     gap: 4px;
     min-width: 0;
   }
-  /* Keep the magnetic-hold story slightly taller than the shared cards:
-     540.5px reduced by 5% = 513.475px. */
+  /* Match the magnetic-hold card to the shared tall-card height. */
   .template-product .pdp-cmp__card--magnet {
-    height: 513.475px;
+    height: 470px;
   }
 
   /* captions: normal centered flow at the top of the card */
