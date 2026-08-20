@@ -780,6 +780,13 @@
 .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-detail {
   color: #737d8b;
 }
+.template-product .pdp-cmp__card--video .pdp-cmp__alloy-lead {
+  color: #1d1f24;
+  font-weight: 500;
+}
+.template-product .pdp-cmp__card--video .pdp-cmp__alloy-detail {
+  color: #737d8b;
+}
 .template-product .pdp-cmp__card--magnet .pdp-cmp__img-slot {
   position: absolute;
   left: 15px;
