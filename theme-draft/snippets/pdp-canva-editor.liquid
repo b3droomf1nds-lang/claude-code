@@ -178,9 +178,14 @@
   // One-shot recovery link for an image accidentally dragged out of reach.
   // It only clears the top tile image's move offset; its chosen zoom and the
   // rest of the saved layout stay exactly as they were.
-  var recoverTopImage = /[?&]recover=top-image(?:&|$)/.test(qs);
+  var recoverTopImageRequested = /[?&]recover=top-image(?:&|$)/.test(qs);
   function ls(get, k, v){ try { return get ? localStorage.getItem(k) : localStorage.setItem(k, v); } catch(e){ return null; } }
   function rm(k){ try { localStorage.removeItem(k); } catch(e){} }
+  // Keep the flag in the URL so ChatGPT's "Open in browser" handoff carries
+  // it into Safari/Chrome. Each browser has separate localStorage, so this
+  // marker makes the same URL one-shot independently in each browser.
+  var RECOVER_TOP_KEY = 'volt-canva-recovered-top-image-v1';
+  var recoverTopImage = recoverTopImageRequested && ls(true, RECOVER_TOP_KEY) !== '1';
 
   if (wantOn)  ls(false, 'volt-canva-on', '1');
   if (wantOff) rm('volt-canva-on');
@@ -420,14 +425,8 @@
         recoveredState.dx = 0;
         recoveredState.dy = 0;
         saveState(topImage, recoveredState);
+        ls(false, RECOVER_TOP_KEY, '1');
       }
-      // Consume the command so an ordinary refresh will not reset a later,
-      // intentional move. replaceState avoids a reload or history entry.
-      try {
-        var cleanUrl = new URL(location.href);
-        cleanUrl.searchParams.delete('recover');
-        window.history.replaceState(null, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
-      } catch(e){}
     }
 
     // Crossing the 900px line (e.g. dragging the window narrow to check the
