@@ -1373,11 +1373,12 @@
     min-width: 0;
   }
   /* video is the top tile in the mobile stack (order:1 above) — 15%
-     taller than the rest (470px * 1.15 = 540.5px). The image slot below
-     stays frozen at its original size (same zoom); the extra height just
-     gives overflow:hidden more room to reveal further down the image. */
+     taller than the rest, then reduced 5% off that (470px * 1.15 * 0.95 =
+     513.475px). The image slot below stays frozen at its original size
+     (same zoom); the extra height just gives overflow:hidden more room
+     to reveal further down the image. */
   .template-product .pdp-cmp__card--video {
-    height: 540.5px;
+    height: 513.475px;
   }
 
   /* captions: normal centered flow at the top of the card */
