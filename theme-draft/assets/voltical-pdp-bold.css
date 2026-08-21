@@ -1372,11 +1372,6 @@
     gap: 4px;
     min-width: 0;
   }
-  /* Keep the magnetic-hold card 15% taller than the shared tall cards. */
-  .template-product .pdp-cmp__card--magnet {
-    height: 540.5px;
-  }
-
   /* video is the top tile in the mobile stack (order:1 above) — 15%
      taller than the rest (470px * 1.15 = 540.5px). The image slot below
      stays frozen at its original size (same zoom); the extra height just
