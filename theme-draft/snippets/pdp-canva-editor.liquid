@@ -192,9 +192,17 @@
   var ON = ls(true, 'volt-canva-on') === '1' && !wantOff;
 
   var LKEY = 'volt-canva-layout-4';
-  if (wantResetAll) rm(LKEY);
+  // Undo history is persisted alongside the layout so the Refresh button
+  // can reload the page without throwing away the undo stack. Reset all
+  // wipes both so a fresh start has nothing to undo back into.
+  var HKEY = 'volt-canva-history-4';
+  if (wantResetAll){ rm(LKEY); rm(HKEY); }
   var layout = {};
   try { layout = JSON.parse(ls(true, LKEY) || '{}') || {}; } catch(e){ layout = {}; }
+  // Raw (key-based) undo batches read back from storage; remapped to live
+  // elements once they're registered below.
+  var savedHistory = [];
+  try { savedHistory = JSON.parse(ls(true, HKEY) || '[]') || []; } catch(e){ savedHistory = []; }
 
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__sub, ' +
@@ -389,6 +397,14 @@
     function captureBatch(elsArr){
       return elsArr.map(function(el){ return { el: el, prev: cloneEntry(layout[el.__cvKey]) }; });
     }
+    // Write the undo stack to storage as element-KEY-based batches (a live
+    // DOM element can't be serialized, but its stable __cvKey can, and it's
+    // remapped back to the element on the next page load).
+    function persistHistory(){
+      ls(false, HKEY, JSON.stringify(history.map(function(batch){
+        return batch.map(function(b){ return { key: b.el.__cvKey, prev: b.prev }; });
+      })));
+    }
     function commitBatch(batch){
       var changed = batch.filter(function(b){
         return JSON.stringify(b.prev) !== JSON.stringify(layout[b.el.__cvKey] || null);
@@ -396,6 +412,7 @@
       if (!changed.length) return;
       history.push(changed);
       if (history.length > HISTORY_MAX) history.shift();
+      persistHistory();
     }
     function undo(){
       if (!history.length) return;
@@ -405,21 +422,35 @@
         applyState(b.el);
       });
       ls(false, LKEY, JSON.stringify(layout));
+      persistHistory();
       positionBox();
     }
 
     // Register every editable element: record its base transform + stable key,
     // then re-apply any saved layout (this runs even when NOT editing).
     var els = [].slice.call(root.querySelectorAll(EDITABLE));
+    var byKey = {};
     els.forEach(function(el){
       var cs = getComputedStyle(el).transform;
       el.__cvBase = (cs && cs !== 'none') ? cs : '';
       el.__cvKey  = pathFor(el);
+      byKey[el.__cvKey] = el;
       el.__cvTextEditable = isTextEditable(el);
       el.__cvAlignH = isAlignHoriz(el);
       el.__cvOrigText = el.__cvTextEditable ? el.innerHTML : null;
       applyState(el);
     });
+
+    // Rehydrate the undo stack saved before a Refresh: map each batch's
+    // stored element keys back to the live elements. Any entry whose key no
+    // longer resolves (markup changed) is dropped; a batch left empty is
+    // skipped so undo never hits a dead no-op step.
+    history = savedHistory.map(function(batch){
+      return (batch || []).map(function(b){
+        var el = byKey[b.key];
+        return el ? { el: el, prev: b.prev } : null;
+      }).filter(Boolean);
+    }).filter(function(batch){ return batch.length; });
 
     if (recoverTopImage){
       // Mobile deliberately reorders the source cards, so find the visually
@@ -1216,6 +1247,7 @@
       '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
       '<span class="cv-tb__hint">' + hintText + '</span>' +
       '<button class="cv-btn" data-cv="undo" title="Undo the last move, resize, type, delete, Align, or Reset.">Undo</button>' +
+      '<button class="cv-btn" data-cv="refresh" title="Reload the page, keeping all your changes and the undo history.">Refresh</button>' +
       '<button class="cv-btn" data-cv="edit-text" title="Type into the selected caption." hidden>Edit text</button>' +
       '<button class="cv-btn" data-cv="align" title="Repair all six tile positions and sizes, and horizontally centre every tile text group. Images and icons stay untouched.">Align all</button>' +
       '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
@@ -1244,6 +1276,13 @@
       var b = e.target.closest('[data-cv]'); if (!b) return;
       var a = b.dataset.cv;
       if (a === 'undo'){ undo(); }
+      else if (a === 'refresh'){
+        // Layout + undo history are already persisted on every change, so a
+        // plain reload comes back with everything intact. Commit any caption
+        // currently being typed first so it isn't lost on the way out.
+        if (editingEl) exitTextEdit();
+        location.reload();
+      }
       else if (a === 'edit-text' && sel && isTextEditable(sel)){ enterTextEdit(sel); }
       else if (a === 'align'){ align(); }
       else if (a === 'reset-sel' && sel){
