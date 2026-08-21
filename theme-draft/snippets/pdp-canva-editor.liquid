@@ -222,8 +222,12 @@
     // Only literal captions are safe to type into — the stat numbers
     // (data-calc-*) are computed live by the compare script, so editing
     // them by hand would just get overwritten on the next recalculation.
+    // The one deliberate exception is the "full charges" stat
+    // ([data-calc-full]) — made typeable on request; typing into it
+    // detaches it from the live calculator, so it'll stop updating when
+    // the iPhone-model dropdown changes and just show whatever was typed.
     function isTextEditable(el){
-      return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading, .pdp-cmp__label');
+      return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading, .pdp-cmp__label, [data-calc-full]');
     }
     // Wider than isTextEditable: also covers the big live-computed stat
     // numbers (e.g. "67h"), which must NOT be made typeable (they're
