@@ -1372,9 +1372,9 @@
     gap: 4px;
     min-width: 0;
   }
-  /* Match the magnetic-hold card to the shared tall-card height. */
+  /* Keep the magnetic-hold card 15% taller than the shared tall cards. */
   .template-product .pdp-cmp__card--magnet {
-    height: 470px;
+    height: 540.5px;
   }
 
   /* video is the top tile in the mobile stack (order:1 above) — 15%
