@@ -1091,6 +1091,13 @@
     line-height: inherit;
     font-weight: 500;
   }
+  /* Pin the charge lead to the same resolved mobile size as the magnet lead;
+     this keeps saved Canva caption markup from inheriting a smaller value. */
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range > .pdp-cmp__charge-range-lead,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range > .pdp-cmp__range-bold {
+    font-size: 15.75px;
+    line-height: 1.08;
+  }
   .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-detail,
   .template-product .pdp-cmp__card--video .pdp-cmp__alloy-detail {
     color: #737d8b;
