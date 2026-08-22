@@ -1012,6 +1012,10 @@
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
   font-variant-numeric: tabular-nums;
 }
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__range-bold {
+  color: #1d1f24;
+  font-weight: 500;
+}
 .template-product .pdp-cmp__card--video {
   position: relative;
   justify-content: flex-start;
