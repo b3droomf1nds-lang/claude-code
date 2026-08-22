@@ -301,6 +301,14 @@
       return {dx: (st.dx + ax) * f, dy: (st.dy + ay) * f};
     }
 
+    // Canva mode restores any caption text saved in localStorage. Keep the
+    // authored Apple-style emphasis on the charging-time range even when an
+    // older saved layout contains that caption as plain text.
+    function decorateChargeRangeText(html){
+      if (html.indexOf('pdp-cmp__charge-range-lead') !== -1) return html;
+      return html.replace(/(20%\s*to\s*80%)/i, '<span class="pdp-cmp__charge-range-lead">$1</span>');
+    }
+
     function applyState(el){
       var st = stateOf(el);
       var mv = effTranslate(el, st);
@@ -328,6 +336,7 @@
         // edit) clears the saved text, and the box needs to actively come
         // back to its original content, not just sit however it was left.
         var wantText = st.text != null ? st.text : el.__cvOrigText;
+        if (el.matches('.pdp-cmp__sub--range')) wantText = decorateChargeRangeText(wantText);
         if (el !== editingEl && el.innerHTML !== wantText){
           el.innerHTML = wantText;
         }
