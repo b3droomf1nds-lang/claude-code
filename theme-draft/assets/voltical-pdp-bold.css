@@ -849,6 +849,8 @@
 .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
   font-size: 4.8px;
   margin-top: 3px;
+}
+.template-product .pdp-cmp__card--charge .pdp-cmp__range-bold {
   color: #1d1f24;
   font-weight: 500;
   /* iOS's own system font (SF Pro), not the theme's Instrument Sans,
