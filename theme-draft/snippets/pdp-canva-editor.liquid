@@ -1221,6 +1221,7 @@
       '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
       '<span class="cv-tb__hint">' + hintText + '</span>' +
       '<button class="cv-btn" data-cv="undo" title="Undo the last move, resize, type, delete, Align, or Reset.">Undo</button>' +
+      '<button class="cv-btn" data-cv="refresh" title="Reload the preview while keeping Canva mode and your saved layout.">Refresh</button>' +
       '<button class="cv-btn" data-cv="edit-text" title="Type into the selected caption." hidden>Edit text</button>' +
       '<button class="cv-btn" data-cv="align" title="Repair all six tile positions and sizes, and horizontally centre every tile text group. Images and icons stay untouched.">Align all</button>' +
       '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
@@ -1249,6 +1250,7 @@
       var b = e.target.closest('[data-cv]'); if (!b) return;
       var a = b.dataset.cv;
       if (a === 'undo'){ undo(); }
+      else if (a === 'refresh'){ location.reload(); }
       else if (a === 'edit-text' && sel && isTextEditable(sel)){ enterTextEdit(sel); }
       else if (a === 'align'){ align(); }
       else if (a === 'reset-sel' && sel){
