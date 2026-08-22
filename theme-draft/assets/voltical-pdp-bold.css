@@ -1398,6 +1398,14 @@
   .template-product .pdp-cmp__card--video {
     height: 513.475px;
   }
+  /* magnet tile matched to the same height as the top (video) tile. The
+     img-slot freeze rule below already covers this tile too, so the
+     extra height only opens up room at the bottom of the card — the
+     image's own position/zoom is untouched, it just reveals more of
+     the bottom of the image instead of shifting anything else. */
+  .template-product .pdp-cmp__card--magnet {
+    height: 513.475px;
+  }
 
   /* captions: normal centered flow at the top of the card */
   .template-product .pdp-cmp__card--magnet .pdp-cmp__sub,
