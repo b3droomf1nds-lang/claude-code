@@ -1087,7 +1087,16 @@
   .template-product .pdp-cmp__card--video .pdp-cmp__alloy-lead {
     color: #1d1f24;
     font-family: var(--sans);
+    font-size: inherit;
+    line-height: inherit;
     font-weight: 500;
+  }
+  /* The rest of the charge-range caption follows the magnet tile's muted
+     detail text; the lead span above is the only dark/bolder part. */
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
+    color: #737d8b;
+    font-family: var(--sans);
+    font-weight: 400;
   }
   .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-detail,
   .template-product .pdp-cmp__card--video .pdp-cmp__alloy-detail {
