@@ -1083,6 +1083,7 @@
      than approximating the look with a separate font-weight. */
   .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-lead,
   .template-product .pdp-cmp__card--charge .pdp-cmp__charge-range-lead,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__range-bold,
   .template-product .pdp-cmp__card--video .pdp-cmp__alloy-lead {
     color: #1d1f24;
     font-family: var(--sans);

@@ -315,7 +315,7 @@
       // Remove any older/partial wrappers first. This makes the operation
       // deterministic: every saved version is rebuilt from its visible text,
       // so a stale span around only "20%" cannot survive forever.
-      [].slice.call(box.querySelectorAll('.pdp-cmp__charge-range-lead')).forEach(function(span){
+      [].slice.call(box.querySelectorAll('.pdp-cmp__charge-range-lead, .pdp-cmp__range-bold')).forEach(function(span){
         var parent = span.parentNode;
         while (span.firstChild) parent.insertBefore(span.firstChild, span);
         parent.removeChild(span);
