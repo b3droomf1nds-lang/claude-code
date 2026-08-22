@@ -129,11 +129,9 @@
     BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:3px 6px;border-radius:5px;white-space:nowrap;
     pointer-events:none;}
   .cv-editing-text{outline:2px solid #0a84ff !important;outline-offset:2px;cursor:text !important;
-    /* Only an explicit Enter (a <br> we insert ourselves) should start a
-       new line — without this, the browser's own auto-wrap kicks in as
-       soon as typed text exceeds the box width, which looks like the
-       line broke on its own. */
-    white-space:nowrap !important;}
+    /* Keep the caption's natural wrapping visible while it is being edited.
+       Explicit Enter-created <br> breaks still work normally. */
+    white-space:normal !important;}
 
   .cv-panel{position:fixed;inset:0;z-index:2147483100;background:rgba(0,0,0,.55);display:none;
     align-items:center;justify-content:center;padding:24px;}
