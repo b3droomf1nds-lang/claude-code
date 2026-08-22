@@ -155,9 +155,14 @@
     html.cv-editing body{overscroll-behavior-y:none;}
     .cv-tb{top:auto;bottom:calc(10px + env(safe-area-inset-bottom));left:8px;right:8px;
       flex-wrap:wrap;justify-content:center;padding:10px;gap:8px;}
+    /* The toolbar always stays bottom-docked. Once its one-time tip has
+       been seen, this smaller version simply takes up less vertical space
+       above that same fixed bottom edge. */
+    .cv-tb.cv-tb--compact{padding:8px;gap:7px;}
     .cv-tb__title{margin-right:0;}
     .cv-tb__hint{flex-basis:100%;max-width:none;text-align:center;order:9;font-size:11px;}
     .cv-btn{padding:10px 13px;font-size:13px;}
+    .cv-tb.cv-tb--compact .cv-btn{padding:9px 12px;}
     .cv-h{width:22px;height:22px;}
     .cv-h--tl{top:-12px;left:-12px;} .cv-h--tr{top:-12px;right:-12px;}
     .cv-h--bl{bottom:-12px;left:-12px;} .cv-h--br{bottom:-12px;right:-12px;}
@@ -198,6 +203,12 @@
   // can reload the page without throwing away the undo stack. Reset all
   // wipes both so a fresh start has nothing to undo back into.
   var HKEY = 'volt-canva-history-4';
+  // The toolbar tip is shown once per browser. Bump this version only when
+  // introducing a real new editor gesture or control, and update its copy
+  // below; that gives the new feature one clear first-use introduction.
+  var HINT_KEY = 'volt-canva-hint-version';
+  var HINT_VERSION = '2';
+  var showHint = ls(true, HINT_KEY) !== HINT_VERSION;
   if (wantResetAll){ rm(LKEY); rm(HKEY); }
   var layout = {};
   try { layout = JSON.parse(ls(true, LKEY) || '{}') || {}; } catch(e){ layout = {}; }
@@ -1339,13 +1350,14 @@
     }
 
     // ---- toolbar ----
-    var tb = document.createElement('div'); tb.className = 'cv-tb';
+    var tb = document.createElement('div');
+    tb.className = 'cv-tb' + (showHint ? '' : ' cv-tb--compact');
     var hintText = coarse
-      ? 'Tap to select/deselect a tile · double-tap an item to grab it · drag to move · Edit text opens typing · pinch or corners resize · Align repairs every tile and centres all tile text'
-      : 'Click a tile · double-click to grab what’s inside · drag to move · corner or scroll to resize · arrows nudge · Enter types into a selected caption · Backspace deletes selected text';
+      ? 'Tip: tap a tile · double-tap an item · drag to move · pinch or corners resize.'
+      : 'Tip: click a tile · double-click an item · drag to move · scroll or corners resize.';
     tb.innerHTML =
       '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
-      '<span class="cv-tb__hint">' + hintText + '</span>' +
+      (showHint ? '<span class="cv-tb__hint">' + hintText + '</span>' : '') +
       '<button class="cv-btn" data-cv="undo" title="Undo the last move, resize, type, delete, Align, or Reset.">Undo</button>' +
       '<button class="cv-btn" data-cv="refresh" title="Reload the page, keeping all your changes and the undo history.">Refresh</button>' +
       '<button class="cv-btn" data-cv="edit-text" title="Type into the selected caption." hidden>Edit text</button>' +
@@ -1355,6 +1367,7 @@
       '<button class="cv-btn cv-btn--go" data-cv="copy">Copy layout</button>' +
       '<button class="cv-btn" data-cv="done">Done</button>';
     document.body.appendChild(tb);
+    if (showHint) ls(false, HINT_KEY, HINT_VERSION);
     editTextBtn = tb.querySelector('[data-cv="edit-text"]');
     updateEditTextButton();
 
