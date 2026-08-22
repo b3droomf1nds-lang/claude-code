@@ -1091,13 +1091,6 @@
     line-height: inherit;
     font-weight: 500;
   }
-  /* The rest of the charge-range caption follows the magnet tile's muted
-     detail text; the lead span above is the only dark/bolder part. */
-  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
-    color: #737d8b;
-    font-family: var(--sans);
-    font-weight: 400;
-  }
   .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-detail,
   .template-product .pdp-cmp__card--video .pdp-cmp__alloy-detail {
     color: #737d8b;
@@ -1174,7 +1167,10 @@
   .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
     font-size: 15.75px;
     margin-top: 9.84px;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    /* Match the magnet tile's muted detail copy outside the emphasized span. */
+    color: #737d8b;
+    font-family: var(--sans);
+    font-weight: 400;
     font-variant-numeric: tabular-nums;
   }
 
