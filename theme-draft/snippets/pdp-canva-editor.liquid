@@ -412,15 +412,13 @@
         if (el !== editingEl && el.innerHTML !== wantText){
           el.innerHTML = wantText;
         }
-        // Once a caption has been retyped, it should ONLY break where an
-        // explicit Enter placed a <br> — never on its own just because the
-        // line got long. Without this, editing was WYSIWYG only while the
-        // box was focused; the instant you clicked away, the box fell back
-        // to normal word-wrap and text you never broke could still jump to
-        // a new line. Keep this on permanently (not just while editing)
-        // for any box that's actually been retyped; leave untouched boxes
-        // exactly as designed.
-        el.style.whiteSpace = st.text != null ? 'nowrap' : '';
+        // The charge caption is intentionally multi-line in both Canva and
+        // the finished preview. Override its authored nowrap so saved text
+        // cannot collapse back into one line after editing ends. Preserve
+        // the existing behavior for every other editable box.
+        el.style.whiteSpace = isChargeRangeCaption(el)
+          ? 'normal'
+          : (st.text != null ? 'nowrap' : '');
       }
     }
     function writeState(el, st, persist){
