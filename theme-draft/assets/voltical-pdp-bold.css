@@ -849,8 +849,8 @@
 .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
   font-size: 4.8px;
   margin-top: 3px;
-  /* iOS's own system font (SF Pro), not the theme's Instrument Sans,
-     to match the battery-percentage reference look. */
+  /* Keep the surrounding caption in its existing iOS-style typeface. The
+     exact 20%-to-80% phrase switches to the magnet lead's font below. */
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
   font-variant-numeric: tabular-nums;
 }
@@ -1379,11 +1379,12 @@
     min-width: 0;
   }
   /* video is the top tile in the mobile stack (order:1 above) — 15%
-     taller than the rest (470px * 1.15 = 540.5px). The image slot below
-     stays frozen at its original size (same zoom); the extra height just
-     gives overflow:hidden more room to reveal further down the image. */
+     taller than the rest, then reduced 5% off that (470px * 1.15 * 0.95 =
+     513.475px). The image slot below stays frozen at its original size
+     (same zoom); the extra height just gives overflow:hidden more room
+     to reveal further down the image. */
   .template-product .pdp-cmp__card--video {
-    height: 540.5px;
+    height: 513.475px;
   }
 
   /* captions: normal centered flow at the top of the card */

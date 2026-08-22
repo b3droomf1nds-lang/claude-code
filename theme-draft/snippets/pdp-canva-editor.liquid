@@ -81,6 +81,10 @@
   .cv-btn:hover{background:#2a2a2c;}
   .cv-btn--go{background:#0a84ff;border-color:#0a84ff;}
   .cv-btn--go:hover{background:#0a74e0;}
+  /* Armed "are you sure" state for Reset all (a reliable two-tap confirm
+     that works even where a native confirm() dialog is suppressed). */
+  .cv-btn.is-armed{background:#c0392b;border-color:#c0392b;}
+  .cv-btn.is-armed:hover{background:#a93226;}
 
   .cv-hover{outline:1.5px dashed rgba(10,132,255,.55) !important;outline-offset:1px;cursor:grab;}
   /* The image wrappers are normally pointer-events:none (they're decorative,
@@ -192,9 +196,17 @@
   var ON = ls(true, 'volt-canva-on') === '1' && !wantOff;
 
   var LKEY = 'volt-canva-layout-4';
-  if (wantResetAll) rm(LKEY);
+  // Undo history is persisted alongside the layout so the Refresh button
+  // can reload the page without throwing away the undo stack. Reset all
+  // wipes both so a fresh start has nothing to undo back into.
+  var HKEY = 'volt-canva-history-4';
+  if (wantResetAll){ rm(LKEY); rm(HKEY); }
   var layout = {};
   try { layout = JSON.parse(ls(true, LKEY) || '{}') || {}; } catch(e){ layout = {}; }
+  // Raw (key-based) undo batches read back from storage; remapped to live
+  // elements once they're registered below.
+  var savedHistory = [];
+  try { savedHistory = JSON.parse(ls(true, HKEY) || '[]') || []; } catch(e){ savedHistory = []; }
 
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__sub, ' +
@@ -222,8 +234,12 @@
     // Only literal captions are safe to type into — the stat numbers
     // (data-calc-*) are computed live by the compare script, so editing
     // them by hand would just get overwritten on the next recalculation.
+    // The one deliberate exception is the "full charges" stat
+    // ([data-calc-full]) — made typeable on request; typing into it
+    // detaches it from the live calculator, so it'll stop updating when
+    // the iPhone-model dropdown changes and just show whatever was typed.
     function isTextEditable(el){
-      return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading, .pdp-cmp__label');
+      return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading, .pdp-cmp__label, [data-calc-full]');
     }
     function isChargeRangeCaption(el){
       return el.matches('.pdp-cmp__sub--range');
@@ -335,7 +351,7 @@
       }
       [].slice.call(box.childNodes).forEach(collect);
 
-      var match = /20%\s*to\s*80%/i.exec(flat);
+      var match = /20%[\s\u00a0]+to[\s\u00a0]+80%/i.exec(flat);
       if (!match) return box.innerHTML;
       var from = match.index, to = from + match[0].length;
 
@@ -446,6 +462,14 @@
     function captureBatch(elsArr){
       return elsArr.map(function(el){ return { el: el, prev: cloneEntry(layout[el.__cvKey]) }; });
     }
+    // Write the undo stack to storage as element-KEY-based batches (a live
+    // DOM element can't be serialized, but its stable __cvKey can, and it's
+    // remapped back to the element on the next page load).
+    function persistHistory(){
+      ls(false, HKEY, JSON.stringify(history.map(function(batch){
+        return batch.map(function(b){ return { key: b.el.__cvKey, prev: b.prev }; });
+      })));
+    }
     function commitBatch(batch){
       var changed = batch.filter(function(b){
         return JSON.stringify(b.prev) !== JSON.stringify(layout[b.el.__cvKey] || null);
@@ -453,6 +477,7 @@
       if (!changed.length) return;
       history.push(changed);
       if (history.length > HISTORY_MAX) history.shift();
+      persistHistory();
     }
     function undo(){
       if (!history.length) return;
@@ -462,17 +487,20 @@
         applyState(b.el);
       });
       ls(false, LKEY, JSON.stringify(layout));
+      persistHistory();
       positionBox();
     }
 
     // Register every editable element: record its base transform + stable key,
     // then re-apply any saved layout (this runs even when NOT editing).
     var els = [].slice.call(root.querySelectorAll(EDITABLE));
+    var byKey = {};
     var normalizedSavedChargeText = false;
     els.forEach(function(el){
       var cs = getComputedStyle(el).transform;
       el.__cvBase = (cs && cs !== 'none') ? cs : '';
       el.__cvKey  = pathFor(el);
+      byKey[el.__cvKey] = el;
       el.__cvTextEditable = isTextEditable(el);
       el.__cvAlignH = isAlignHoriz(el);
       el.__cvOrigText = el.__cvTextEditable ? el.innerHTML : null;
@@ -493,6 +521,32 @@
       applyState(el);
     });
     if (normalizedSavedChargeText) ls(false, LKEY, JSON.stringify(layout));
+
+    // Rehydrate the undo stack saved before a Refresh: map each batch's
+    // stored element keys back to the live elements. Any entry whose key no
+    // longer resolves (markup changed) is dropped; a batch left empty is
+    // skipped so undo never hits a dead no-op step.
+    history = savedHistory.map(function(batch){
+      return (batch || []).map(function(b){
+        var el = byKey[b.key];
+        if (!el) return null;
+        var prev = cloneEntry(b.prev);
+        // Old saved undo entries can contain the plain caption or Claude's
+        // temporary generic wrapper. Canonicalize those too, otherwise an
+        // Undo after Refresh can silently bring the wrong markup back.
+        if (prev && el.__cvTextEditable && isChargeRangeCaption(el) && prev.text != null){
+          prev.text = decorateChargeRangeText(prev.text);
+          if (prev.text === el.__cvOrigText) delete prev.text;
+          var prevHasTransform = prev.dx || prev.dy || prev.axd || prev.ayd ||
+            prev.axm || prev.aym || (prev.s && prev.s !== 1);
+          if (!prevHasTransform && prev.text == null) prev = null;
+        }
+        return { el: el, prev: prev };
+      }).filter(Boolean);
+    }).filter(function(batch){ return batch.length; });
+    // Also removes dead element keys and stores the canonical wrappers so the
+    // next Refresh starts from the same model Undo will actually restore.
+    persistHistory();
 
     if (recoverTopImage){
       // Mobile deliberately reorders the source cards, so find the visually
@@ -1289,7 +1343,7 @@
       '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
       '<span class="cv-tb__hint">' + hintText + '</span>' +
       '<button class="cv-btn" data-cv="undo" title="Undo the last move, resize, type, delete, Align, or Reset.">Undo</button>' +
-      '<button class="cv-btn" data-cv="refresh" title="Reload the preview while keeping Canva mode and your saved layout.">Refresh</button>' +
+      '<button class="cv-btn" data-cv="refresh" title="Reload the page, keeping all your changes and the undo history.">Refresh</button>' +
       '<button class="cv-btn" data-cv="edit-text" title="Type into the selected caption." hidden>Edit text</button>' +
       '<button class="cv-btn" data-cv="align" title="Repair all six tile positions and sizes, and horizontally centre every tile text group. Images and icons stay untouched.">Align all</button>' +
       '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
@@ -1314,32 +1368,62 @@
 
     function copyToClipboard(text){ try { navigator.clipboard.writeText(text); } catch(e){ try { ta.focus(); ta.select(); document.execCommand('copy'); } catch(_){} } }
 
+    // ---- Reset all two-tap confirmation ----
+    var resetAllTimer = null;
+    function armResetAll(btn){
+      if (btn.dataset.label == null) btn.dataset.label = btn.textContent;
+      btn.classList.add('is-armed');
+      btn.textContent = 'Sure? Reset all';
+      clearTimeout(resetAllTimer);
+      resetAllTimer = setTimeout(disarmResetAll, 4000);
+    }
+    function disarmResetAll(){
+      clearTimeout(resetAllTimer);
+      var btn = tb.querySelector('[data-cv="reset-all"]');
+      if (btn && btn.classList.contains('is-armed')){
+        btn.classList.remove('is-armed');
+        if (btn.dataset.label != null) btn.textContent = btn.dataset.label;
+      }
+    }
+
     tb.addEventListener('click', function(e){
       var b = e.target.closest('[data-cv]'); if (!b) return;
       var a = b.dataset.cv;
+      // Any toolbar tap other than Reset all itself cancels a pending
+      // Reset-all confirmation.
+      if (a !== 'reset-all') disarmResetAll();
       if (a === 'undo'){ undo(); }
-      else if (a === 'refresh'){ location.reload(); }
+      else if (a === 'refresh'){
+        // Layout + undo history are already persisted on every change, so a
+        // plain reload comes back with everything intact. Commit any caption
+        // currently being typed first so it isn't lost on the way out.
+        if (editingEl) exitTextEdit();
+        location.reload();
+      }
       else if (a === 'edit-text' && sel && isTextEditable(sel)){ enterTextEdit(sel); }
       else if (a === 'align'){ align(); }
       else if (a === 'reset-sel' && sel){
         var resetBatch = captureBatch([sel]);
-        var keepText = stateOf(sel).text;
-        saveState(sel, {dx:0, dy:0, s:1, text:keepText});
+        saveState(sel, {dx:0, dy:0, s:1, text:null});
         commitBatch(resetBatch);
         positionBox();
       }
       else if (a === 'reset-all'){
-        if (confirm('Reset every tile, image and text back to its original position? (typed caption edits are kept)')){
-          var resetAllBatch = captureBatch(els.filter(function(el){ return layout[el.__cvKey]; }));
-          Object.keys(layout).forEach(function(k){
-            layout[k] = layout[k].text != null ? {dx:0, dy:0, s:1, text:layout[k].text} : undefined;
-            if (layout[k] === undefined) delete layout[k];
-          });
-          ls(false, LKEY, JSON.stringify(layout));
-          commitBatch(resetAllBatch);
-          els.forEach(applyState);
-          deselect();
+        // Two-tap "are you sure": the first tap arms the button (turns it
+        // red and relabels it); only a second tap within a few seconds
+        // actually resets. More reliable than a native confirm() dialog,
+        // which some mobile in-app browsers silently suppress.
+        if (!b.classList.contains('is-armed')){
+          armResetAll(b);
+          return;
         }
+        disarmResetAll();
+        var resetAllBatch = captureBatch(els.filter(function(el){ return layout[el.__cvKey]; }));
+        layout = {};
+        ls(false, LKEY, JSON.stringify(layout));
+        commitBatch(resetAllBatch);
+        els.forEach(applyState);
+        deselect();
       }
       else if (a === 'copy'){ ta.value = exportCode(); copyToClipboard(ta.value); panel.classList.add('is-open'); }
       else if (a === 'done'){
