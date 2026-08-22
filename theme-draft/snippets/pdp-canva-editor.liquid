@@ -337,6 +337,14 @@
         parent.removeChild(span);
       });
 
+      // The charge caption used to be saved as either just the range or
+      // "Charging time from" plus the range. Migrate those old defaults to
+      // the fuller copy while keeping only the range itself emphasized.
+      var visibleBefore = (box.textContent || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+      if (/^(?:Charging time from\s+)?20%\s+to\s+80%$/i.test(visibleBefore)){
+        box.innerHTML = 'Charging time from <span class="pdp-cmp__charge-range-lead">20% to 80%</span> with Core<br>';
+      }
+
       var flat = '', pieces = [];
       function collect(node){
         if (node.nodeType === 3){
