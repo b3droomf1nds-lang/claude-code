@@ -1161,7 +1161,10 @@
     margin-top: 9.84px;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
     font-variant-numeric: tabular-nums;
-    /* Apple-style caption emphasis for the 20% to 80% charge range. */
+  }
+
+  .template-product .pdp-cmp__partial-range-lead {
+    color: #1d1f24;
     font-weight: 600;
   }
 
