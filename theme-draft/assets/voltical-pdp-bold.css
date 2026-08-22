@@ -849,6 +849,8 @@
 .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
   font-size: 4.8px;
   margin-top: 3px;
+  color: #1d1f24;
+  font-weight: 500;
   /* iOS's own system font (SF Pro), not the theme's Instrument Sans,
      to match the battery-percentage reference look. */
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
