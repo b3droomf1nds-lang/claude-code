@@ -1239,9 +1239,11 @@
 
   .template-product .pdp-cmp__card--partial-image .pdp-cmp__sub--partial-range {
     bottom: 26.25px;
-    font-size: 15.75px;
+    font-size: 20px;
     white-space: nowrap;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    color: #737d8b;
+    font-family: var(--sans);
+    font-weight: 400;
     font-variant-numeric: tabular-nums;
   }
 
