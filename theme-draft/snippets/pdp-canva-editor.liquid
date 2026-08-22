@@ -1312,8 +1312,7 @@
       else if (a === 'align'){ align(); }
       else if (a === 'reset-sel' && sel){
         var resetBatch = captureBatch([sel]);
-        var keepText = stateOf(sel).text;
-        saveState(sel, {dx:0, dy:0, s:1, text:keepText});
+        saveState(sel, {dx:0, dy:0, s:1, text:null});
         commitBatch(resetBatch);
         positionBox();
       }
@@ -1328,10 +1327,7 @@
         }
         disarmResetAll();
         var resetAllBatch = captureBatch(els.filter(function(el){ return layout[el.__cvKey]; }));
-        Object.keys(layout).forEach(function(k){
-          layout[k] = layout[k].text != null ? {dx:0, dy:0, s:1, text:layout[k].text} : undefined;
-          if (layout[k] === undefined) delete layout[k];
-        });
+        layout = {};
         ls(false, LKEY, JSON.stringify(layout));
         commitBatch(resetAllBatch);
         els.forEach(applyState);
