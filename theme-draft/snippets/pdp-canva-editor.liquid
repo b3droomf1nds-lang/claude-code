@@ -375,6 +375,46 @@
       return box.innerHTML;
     }
 
+    // A caption can have a saved Canva scale while the magnet caption has a
+    // different one. CSS font sizes alone cannot make those *rendered* letter
+    // sizes match, because the scale lives on the editable parent. On mobile,
+    // measure one real line from each tile after layout, then compensate only
+    // the bold range span. Its saved position and the parent scale stay intact.
+    var chargeLeadSizeFrame = 0;
+    function syncChargeLeadToMagnet(){
+      if (desktopMQ.matches) return;
+      var magnetLead = root.querySelector('.pdp-cmp__card--magnet .pdp-cmp__magnet-lead');
+      var chargeLead = root.querySelector('.pdp-cmp__card--charge .pdp-cmp__charge-range-lead, .pdp-cmp__card--charge .pdp-cmp__range-bold');
+      if (!magnetLead || !chargeLead) return;
+
+      // Start from the stylesheet's normal value on every pass, rather than
+      // multiplying a previous correction after a refresh or orientation swap.
+      if (chargeLead.dataset.cvMatchedLeadSize === '1'){
+        chargeLead.style.removeProperty('font-size');
+        chargeLead.style.removeProperty('line-height');
+        delete chargeLead.dataset.cvMatchedLeadSize;
+      }
+      var magnetRects = magnetLead.getClientRects();
+      var chargeRects = chargeLead.getClientRects();
+      var magnetLine = magnetRects.length ? magnetRects[0].height : magnetLead.getBoundingClientRect().height;
+      var chargeLine = chargeRects.length ? chargeRects[0].height : chargeLead.getBoundingClientRect().height;
+      var chargeSize = parseFloat(getComputedStyle(chargeLead).fontSize);
+      if (!magnetLine || !chargeLine || !chargeSize) return;
+      var matchedSize = chargeSize * (magnetLine / chargeLine);
+      if (!isFinite(matchedSize) || matchedSize < 8 || matchedSize > 48) return;
+      chargeLead.style.setProperty('font-size', matchedSize.toFixed(3) + 'px', 'important');
+      chargeLead.style.setProperty('line-height', '1.08', 'important');
+      chargeLead.dataset.cvMatchedLeadSize = '1';
+    }
+    function scheduleChargeLeadSync(){
+      if (desktopMQ.matches) return;
+      if (chargeLeadSizeFrame) cancelAnimationFrame(chargeLeadSizeFrame);
+      chargeLeadSizeFrame = requestAnimationFrame(function(){
+        chargeLeadSizeFrame = 0;
+        syncChargeLeadToMagnet();
+      });
+    }
+
     function applyState(el){
       var st = stateOf(el);
       var mv = effTranslate(el, st);
@@ -489,6 +529,7 @@
       ls(false, LKEY, JSON.stringify(layout));
       persistHistory();
       positionBox();
+      scheduleChargeLeadSync();
     }
 
     // Register every editable element: record its base transform + stable key,
@@ -547,6 +588,7 @@
     // Also removes dead element keys and stores the canonical wrappers so the
     // next Refresh starts from the same model Undo will actually restore.
     persistHistory();
+    scheduleChargeLeadSync();
 
     if (recoverTopImage){
       // Mobile deliberately reorders the source cards, so find the visually
@@ -588,6 +630,7 @@
         sel.classList.toggle('cv-touch-ready', coarse && touchCanMove(sel));
       }
       if (ON) positionBox();
+      scheduleChargeLeadSync();
     }
 
     if (!ON) return;                 // viewer with a saved layout — no controls
@@ -699,6 +742,7 @@
       el.classList.remove('cv-editing-text');
       saveText(el);
       if (textEditBatch){ commitBatch(textEditBatch); textEditBatch = null; }
+      if (isChargeRangeCaption(el)) scheduleChargeLeadSync();
       updateEditTextButton();
     }
     function insertLineBreak(){
@@ -1423,6 +1467,7 @@
         ls(false, LKEY, JSON.stringify(layout));
         commitBatch(resetAllBatch);
         els.forEach(applyState);
+        scheduleChargeLeadSync();
         deselect();
       }
       else if (a === 'copy'){ ta.value = exportCode(); copyToClipboard(ta.value); panel.classList.add('is-open'); }
