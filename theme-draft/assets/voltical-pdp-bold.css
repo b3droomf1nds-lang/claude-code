@@ -1078,9 +1078,14 @@
 @media (max-width: 899px) {
   .pdp-cmp__desktop-copy { display: none; }
   .pdp-cmp__mobile-copy { display: inline; }
+  /* The charging range deliberately shares this exact rule with the two
+     established Apple-style lead lines. Add future lead phrases here rather
+     than approximating the look with a separate font-weight. */
   .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-lead,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__charge-range-lead,
   .template-product .pdp-cmp__card--video .pdp-cmp__alloy-lead {
     color: #1d1f24;
+    font-family: var(--sans);
     font-weight: 500;
   }
   .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-detail,
@@ -1161,11 +1166,6 @@
     margin-top: 9.84px;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
     font-variant-numeric: tabular-nums;
-  }
-
-  .template-product .pdp-cmp__charge-range-lead {
-    color: #1d1f24 !important;
-    font-weight: 700 !important;
   }
 
   .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__eyebrow {

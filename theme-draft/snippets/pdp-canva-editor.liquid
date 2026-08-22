@@ -225,6 +225,9 @@
     function isTextEditable(el){
       return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading, .pdp-cmp__label');
     }
+    function isChargeRangeCaption(el){
+      return el.matches('.pdp-cmp__sub--range');
+    }
     // Wider than isTextEditable: also covers the big live-computed stat
     // numbers (e.g. "67h"), which must NOT be made typeable (they're
     // overwritten by the compare script on recalculation) but still
@@ -301,12 +304,59 @@
       return {dx: (st.dx + ax) * f, dy: (st.dy + ay) * f};
     }
 
-    // Canva mode restores any caption text saved in localStorage. Keep the
-    // authored Apple-style emphasis on the charging-time range even when an
-    // older saved layout contains that caption as plain text.
+    // Canva mode restores caption innerHTML from localStorage, so markup added
+    // only in Liquid can disappear on refresh. Rebuild the emphasis from the
+    // visible text every time. Walking text nodes (instead of regexing the raw
+    // HTML) also handles saved <br>, &nbsp;, or nested spans inside the phrase.
     function decorateChargeRangeText(html){
-      if (html.indexOf('pdp-cmp__charge-range-lead') !== -1) return html;
-      return html.replace(/(20%\s*to\s*80%)/i, '<span class="pdp-cmp__charge-range-lead">$1</span>');
+      var box = document.createElement('div');
+      box.innerHTML = html;
+
+      // Remove any older/partial wrappers first. This makes the operation
+      // deterministic: every saved version is rebuilt from its visible text,
+      // so a stale span around only "20%" cannot survive forever.
+      [].slice.call(box.querySelectorAll('.pdp-cmp__charge-range-lead')).forEach(function(span){
+        var parent = span.parentNode;
+        while (span.firstChild) parent.insertBefore(span.firstChild, span);
+        parent.removeChild(span);
+      });
+
+      var flat = '', pieces = [];
+      function collect(node){
+        if (node.nodeType === 3){
+          var value = node.nodeValue || '';
+          pieces.push({node:node, start:flat.length, end:flat.length + value.length});
+          flat += value;
+          return;
+        }
+        if (node.nodeType !== 1) return;
+        if (node.tagName === 'BR') { flat += ' '; return; }
+        [].slice.call(node.childNodes).forEach(collect);
+      }
+      [].slice.call(box.childNodes).forEach(collect);
+
+      var match = /20%\s*to\s*80%/i.exec(flat);
+      if (!match) return box.innerHTML;
+      var from = match.index, to = from + match[0].length;
+
+      // Work backwards so splitting a later text node cannot disturb offsets
+      // recorded for an earlier one. If a <br> divides the phrase, each text
+      // fragment gets the same lead class and therefore looks continuous.
+      pieces.slice().reverse().forEach(function(piece){
+        var start = Math.max(from, piece.start);
+        var end = Math.min(to, piece.end);
+        if (start >= end) return;
+        var target = piece.node;
+        var localStart = start - piece.start;
+        var localLength = end - start;
+        if (localStart) target = target.splitText(localStart);
+        if (localLength < target.nodeValue.length) target.splitText(localLength);
+        var span = document.createElement('span');
+        span.className = 'pdp-cmp__charge-range-lead';
+        target.parentNode.insertBefore(span, target);
+        span.appendChild(target);
+      });
+      return box.innerHTML;
     }
 
     function applyState(el){
@@ -336,7 +386,7 @@
         // edit) clears the saved text, and the box needs to actively come
         // back to its original content, not just sit however it was left.
         var wantText = st.text != null ? st.text : el.__cvOrigText;
-        if (el.matches('.pdp-cmp__sub--range')) wantText = decorateChargeRangeText(wantText);
+        if (isChargeRangeCaption(el)) wantText = decorateChargeRangeText(wantText);
         if (el !== editingEl && el.innerHTML !== wantText){
           el.innerHTML = wantText;
         }
@@ -378,7 +428,9 @@
     function previewState(el, st){ writeState(el, st, false); }
     function saveText(el){
       var st = stateOf(el);
-      st.text = el.innerHTML;
+      st.text = isChargeRangeCaption(el)
+        ? decorateChargeRangeText(el.innerHTML)
+        : el.innerHTML;
       saveState(el, st);
     }
 
@@ -416,6 +468,7 @@
     // Register every editable element: record its base transform + stable key,
     // then re-apply any saved layout (this runs even when NOT editing).
     var els = [].slice.call(root.querySelectorAll(EDITABLE));
+    var normalizedSavedChargeText = false;
     els.forEach(function(el){
       var cs = getComputedStyle(el).transform;
       el.__cvBase = (cs && cs !== 'none') ? cs : '';
@@ -423,8 +476,23 @@
       el.__cvTextEditable = isTextEditable(el);
       el.__cvAlignH = isAlignHoriz(el);
       el.__cvOrigText = el.__cvTextEditable ? el.innerHTML : null;
+      if (el.__cvTextEditable && isChargeRangeCaption(el)){
+        el.__cvOrigText = decorateChargeRangeText(el.__cvOrigText);
+        var savedEntry = layout[el.__cvKey];
+        if (savedEntry && savedEntry.text != null){
+          var normalizedText = decorateChargeRangeText(savedEntry.text);
+          if (normalizedText === el.__cvOrigText){
+            delete savedEntry.text;
+            var savedHasTransform = savedEntry.dx || savedEntry.dy || savedEntry.axd || savedEntry.ayd ||
+              savedEntry.axm || savedEntry.aym || (savedEntry.s && savedEntry.s !== 1);
+            if (!savedHasTransform) delete layout[el.__cvKey];
+          } else savedEntry.text = normalizedText;
+          normalizedSavedChargeText = true;
+        }
+      }
       applyState(el);
     });
+    if (normalizedSavedChargeText) ls(false, LKEY, JSON.stringify(layout));
 
     if (recoverTopImage){
       // Mobile deliberately reorders the source cards, so find the visually
