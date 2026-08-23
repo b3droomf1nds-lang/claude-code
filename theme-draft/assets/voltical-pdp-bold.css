@@ -1527,6 +1527,15 @@
     grid-column: 1 / -1;
   }
 
+  /* The source cards represented by the new summaries stay available on
+     desktop, but are hidden from the mobile stack: vertical tiles 2 (fade),
+     3 (partial charges), and 6 (full charges). */
+  .template-product .pdp-cmp__grid > .pdp-cmp__card--fade,
+  .template-product .pdp-cmp__grid > .pdp-cmp__card--partial-image,
+  .template-product .pdp-cmp__grid > .pdp-cmp__card:has(.pdp-cmp__img--full-upright) {
+    display: none !important;
+  }
+
   .template-product .pdp-cmp__card--compact-video {
     grid-column: 1;
     order: 7;
