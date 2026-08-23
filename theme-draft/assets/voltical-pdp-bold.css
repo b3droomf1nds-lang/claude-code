@@ -1587,7 +1587,7 @@
   .template-product .pdp-cmp__compact-video-main {
     color: #131316;
     font-family: var(--sans);
-    font-size: 39px;
+    font-size: 29px;
     font-weight: 400;
     letter-spacing: -0.045em;
     line-height: 1.03;
@@ -1599,13 +1599,6 @@
   }
 
   .template-product .pdp-cmp__compact-video-main + .pdp-cmp__sub {
-    flex: none;
-  }
-
-  .template-product .pdp-cmp__compact-battery {
-    display: block;
-    width: 35px;
-    height: auto;
     flex: none;
   }
 
@@ -1624,7 +1617,7 @@
 
   .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__eyebrow {
     color: #737d8b;
-    font-size: 16px;
+    font-size: 14px;
     line-height: 1.08;
   }
 
@@ -1642,7 +1635,7 @@
   .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__sub {
     color: #737d8b;
     font-family: var(--sans);
-    font-size: 16px;
+    font-size: 14px;
     line-height: 1.08;
     white-space: normal !important;
   }
