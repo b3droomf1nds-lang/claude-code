@@ -488,9 +488,12 @@
   width: 100%;
 }
 .pdp--bold .atc__price {
-  opacity: 0.8;
-  font-size: 0.95rem;
-  font-weight: 500;
+  /* Match the adjacent Add to bag label exactly. The markup keeps its
+     t-mono hook for other contexts, but this button's price is part of the
+     same label treatment, not a separate muted monospace annotation. */
+  font: inherit;
+  color: inherit;
+  opacity: 1;
 }
 .pdp--bold .atc__btn.is-added .atc__price {
   opacity: 0;
