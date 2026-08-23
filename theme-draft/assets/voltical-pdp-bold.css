@@ -1508,50 +1508,41 @@
 }
 
 /* ==== MOBILE compact stats cluster ========================================
-   Keep the three visual/product-story cards full width at the top. The
-   original second and third cards in the mobile reading order become a pair
-   of compact stat cards, and the original sixth card becomes a wide compact
-   stat card beneath them. At 470px per standard card, two compact rows plus
-   the existing 21.33px row gap add back up to one standard card's height. */
+   Keep all six original cards in their existing mobile order and dimensions.
+   The three compact cards below are visual copies of the second, third and
+   sixth stats: a two-card row, then a wide half-height card. At 470px per
+   standard card, two compact rows plus the 21.33px row gap add back up to one
+   standard card's height. */
+.template-product .pdp-cmp__card--compact-stat {
+  display: none;
+}
+
 @media (max-width: 899px) {
   .template-product .pdp-cmp__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
   }
 
-  .template-product .pdp-cmp__card--video {
+  .template-product .pdp-cmp__card:not(.pdp-cmp__card--compact-stat) {
     grid-column: 1 / -1;
-    order: 1;
   }
 
-  .template-product .pdp-cmp__card--magnet {
-    grid-column: 1 / -1;
-    order: 2;
-  }
-
-  .template-product .pdp-cmp__card--charge {
-    grid-column: 1 / -1;
-    order: 3;
-  }
-
-  .template-product .pdp-cmp__card--fade {
+  .template-product .pdp-cmp__card--compact-video {
     grid-column: 1;
-    order: 4;
+    order: 7;
   }
 
-  .template-product .pdp-cmp__card--partial-image {
+  .template-product .pdp-cmp__card--compact-partial {
     grid-column: 2;
-    order: 5;
+    order: 8;
   }
 
-  .template-product .pdp-cmp__card--full-charges {
+  .template-product .pdp-cmp__card--compact-full {
     grid-column: 1 / -1;
-    order: 6;
+    order: 9;
   }
 
-  .template-product .pdp-cmp__card--fade,
-  .template-product .pdp-cmp__card--partial-image,
-  .template-product .pdp-cmp__card--full-charges {
+  .template-product .pdp-cmp__card--compact-stat {
     box-sizing: border-box;
     width: 100%;
     height: calc((470px - 21.33px) / 2);
@@ -1568,24 +1559,9 @@
     overflow: hidden;
   }
 
-  /* These compact cards intentionally contain only their words and numbers. */
-  .template-product .pdp-cmp__card--partial-image > .pdp-cmp__img-slot,
-  .template-product .pdp-cmp__card--full-charges > .pdp-cmp__img-slot {
-    display: none !important;
-  }
-
-  /* Beat the older Canva-baked mobile transforms and absolute positioning so
-     the compact copy has a clean, predictable flex layout. This affects only
-     these three mobile cards; desktop's editor geometry stays unchanged. */
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--fade > .pdp-cmp__eyebrow,
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--fade > .pdp-cmp__stat,
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--fade > .pdp-cmp__sub,
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--partial-image > .pdp-cmp__eyebrow,
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--partial-image > .pdp-cmp__stat,
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--partial-image > .pdp-cmp__sub,
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--full-charges > .pdp-cmp__eyebrow,
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--full-charges > .pdp-cmp__stat,
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--full-charges > .pdp-cmp__sub {
+  .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__eyebrow,
+  .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__stat,
+  .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__sub {
     position: static !important;
     inset: auto !important;
     width: auto;
@@ -1596,28 +1572,24 @@
     text-align: center !important;
   }
 
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--fade > .pdp-cmp__eyebrow,
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--partial-image > .pdp-cmp__eyebrow,
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--full-charges > .pdp-cmp__eyebrow {
+  .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__eyebrow {
     color: #737d8b;
     font-size: 16px;
     line-height: 1.08;
   }
 
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--fade > .pdp-cmp__stat,
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--partial-image > .pdp-cmp__stat {
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__stat,
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__stat {
     font-size: 58px;
     line-height: .95;
   }
 
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--full-charges > .pdp-cmp__stat {
+  .template-product .pdp-cmp__card--compact-full > .pdp-cmp__stat {
     font-size: 72px;
     line-height: .95;
   }
 
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--fade > .pdp-cmp__sub,
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--partial-image > .pdp-cmp__sub,
-  body.template-product .pdp-cmp__grid > .pdp-cmp__card--full-charges > .pdp-cmp__sub {
+  .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__sub {
     color: #737d8b;
     font-family: var(--sans);
     font-size: 16px;

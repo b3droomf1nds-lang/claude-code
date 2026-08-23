@@ -71,7 +71,7 @@
       <div class="pdp-cmp__sub pdp-cmp__sub--unit">minutes</div>
       <div class="pdp-cmp__sub pdp-cmp__sub--range" style="white-space:nowrap">Charging time from <span class="pdp-cmp__charge-range-lead">20% to 80%</span> with Core for quick, reliable everyday power<br></div>
     </div>
-    <div class="pdp-cmp__card pdp-cmp__card--hero pdp-cmp__card--img pdp-cmp__card--full-charges">
+    <div class="pdp-cmp__card pdp-cmp__card--hero pdp-cmp__card--img">
       <div class="pdp-cmp__eyebrow">Up to</div>
       <div class="pdp-cmp__stat" data-calc-full><span data-calc-full-num>&mdash;</span></div>
       <div class="pdp-cmp__sub">full charges</div>
@@ -101,6 +101,24 @@
       <div class="pdp-cmp__stat" data-calc-video>&mdash;</div>
       <div class="pdp-cmp__sub" style="white-space:nowrap">more video <br>playback</div>
     </div>
+    {%- comment -%} Mobile-only visual summaries. The source tiles above remain
+      in place; CSS places these three compact, duplicate stat cards below them.
+      aria-hidden avoids repeating the same information to screen readers. {%- endcomment -%}
+    <div class="pdp-cmp__card pdp-cmp__card--compact-stat pdp-cmp__card--compact-video" aria-hidden="true">
+      <div class="pdp-cmp__eyebrow">Up to</div>
+      <div class="pdp-cmp__stat" data-calc-video>&mdash;</div>
+      <div class="pdp-cmp__sub">more video<br>playback</div>
+    </div>
+    <div class="pdp-cmp__card pdp-cmp__card--compact-stat pdp-cmp__card--compact-partial" aria-hidden="true">
+      <div class="pdp-cmp__eyebrow">Up to</div>
+      <div class="pdp-cmp__stat" data-calc-partial><span class="pdp-cmp__stat-num" data-calc-partial-num>&mdash;</span></div>
+      <div class="pdp-cmp__sub">20% to 80%<br>charges</div>
+    </div>
+    <div class="pdp-cmp__card pdp-cmp__card--compact-stat pdp-cmp__card--compact-full" aria-hidden="true">
+      <div class="pdp-cmp__eyebrow">Up to</div>
+      <div class="pdp-cmp__stat" data-calc-full><span data-calc-full-num>&mdash;</span></div>
+      <div class="pdp-cmp__sub">full charges</div>
+    </div>
   </div>
 </div>
 </div>
@@ -127,10 +145,14 @@
 
   var select = document.getElementById('pdp-cmp-select');
   var timeEl = document.querySelector('[data-calc-time]');
-  var fullNumEl = document.querySelector('[data-calc-full-num]');
-  var partialNumEl = document.querySelector('[data-calc-partial-num]');
-  var videoEl = document.querySelector('[data-calc-video]');
-  if (!select || !timeEl || !fullNumEl || !partialNumEl || !videoEl) return;
+  var fullNumEls = document.querySelectorAll('[data-calc-full-num]');
+  var partialNumEls = document.querySelectorAll('[data-calc-partial-num]');
+  var videoEls = document.querySelectorAll('[data-calc-video]');
+  if (!select || !timeEl || !fullNumEls.length || !partialNumEls.length || !videoEls.length) return;
+
+  function writeAll(els, value) {
+    els.forEach(function (el) { el.textContent = value; });
+  }
 
   function powerbankWh() {
     var checked = document.querySelector('input[type="radio"]:checked[value*="mAh" i]')
@@ -159,9 +181,9 @@
     var effW = Math.min(phoneMaxW, POWERBANK_MAX_W) * TAPER_FACTOR;
     var minutes = (0.6 * phoneWh) / effW * 60;
 
-    fullNumEl.textContent = fmt(full);
-    partialNumEl.textContent = fmt(partial);
-    videoEl.textContent = Math.round(videoHours) + 'h';
+    writeAll(fullNumEls, fmt(full));
+    writeAll(partialNumEls, fmt(partial));
+    writeAll(videoEls, Math.round(videoHours) + 'h');
     timeEl.textContent = Math.round(minutes);
   }
 
