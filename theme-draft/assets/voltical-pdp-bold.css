@@ -1579,6 +1579,14 @@
     padding: 22px 10px !important;
   }
 
+  /* The video card has no longer got the battery icon beneath its caption, so
+     keep the three text levels as one close, slightly lower-centred group. */
+  .template-product .pdp-cmp__card--compact-video {
+    justify-content: center !important;
+    gap: 14px;
+    padding: 34px 10px 10px !important;
+  }
+
   .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow,
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow {
     flex: none;
