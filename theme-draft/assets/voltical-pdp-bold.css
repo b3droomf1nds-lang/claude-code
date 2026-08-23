@@ -1568,6 +1568,47 @@
     overflow: hidden;
   }
 
+  /* The two side-by-side summaries use the tall portrait proportion from the
+     reference cards (roughly 0.84:1 width-to-height). The wide summary below
+     keeps the half-standard-card height from the previous layout. */
+  .template-product .pdp-cmp__card--compact-video,
+  .template-product .pdp-cmp__card--compact-partial {
+    height: auto;
+    aspect-ratio: 0.84 / 1;
+    justify-content: space-between !important;
+    padding: 22px 10px !important;
+  }
+
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow,
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow {
+    flex: none;
+  }
+
+  .template-product .pdp-cmp__compact-video-main {
+    color: #131316;
+    font-family: var(--sans);
+    font-size: 39px;
+    font-weight: 400;
+    letter-spacing: -0.045em;
+    line-height: 1.03;
+    text-align: center;
+  }
+
+  .template-product .pdp-cmp__compact-video-main span {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .template-product .pdp-cmp__compact-video-main + .pdp-cmp__sub {
+    flex: none;
+  }
+
+  .template-product .pdp-cmp__compact-battery {
+    display: block;
+    width: 35px;
+    height: auto;
+    flex: none;
+  }
+
   .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__eyebrow,
   .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__stat,
   .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__sub {

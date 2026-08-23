@@ -106,8 +106,9 @@
       aria-hidden avoids repeating the same information to screen readers. {%- endcomment -%}
     <div class="pdp-cmp__card pdp-cmp__card--compact-stat pdp-cmp__card--compact-video" aria-hidden="true">
       <div class="pdp-cmp__eyebrow">Up to</div>
-      <div class="pdp-cmp__stat" data-calc-video>&mdash;</div>
-      <div class="pdp-cmp__sub">more video<br>playback</div>
+      <div class="pdp-cmp__compact-video-main"><span data-calc-video-num>&mdash;</span> more<br>hours</div>
+      <div class="pdp-cmp__sub">video playback<sup>2</sup></div>
+      <img class="pdp-cmp__compact-battery" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/battery-terminal-semicircle-caps.webp?v=1787084702" alt="">
     </div>
     <div class="pdp-cmp__card pdp-cmp__card--compact-stat pdp-cmp__card--compact-partial" aria-hidden="true">
       <div class="pdp-cmp__eyebrow">Up to</div>
@@ -148,7 +149,8 @@
   var fullNumEls = document.querySelectorAll('[data-calc-full-num]');
   var partialNumEls = document.querySelectorAll('[data-calc-partial-num]');
   var videoEls = document.querySelectorAll('[data-calc-video]');
-  if (!select || !timeEl || !fullNumEls.length || !partialNumEls.length || !videoEls.length) return;
+  var videoNumEls = document.querySelectorAll('[data-calc-video-num]');
+  if (!select || !timeEl || !fullNumEls.length || !partialNumEls.length || !videoEls.length || !videoNumEls.length) return;
 
   function writeAll(els, value) {
     els.forEach(function (el) { el.textContent = value; });
@@ -184,6 +186,7 @@
     writeAll(fullNumEls, fmt(full));
     writeAll(partialNumEls, fmt(partial));
     writeAll(videoEls, Math.round(videoHours) + 'h');
+    writeAll(videoNumEls, Math.round(videoHours));
     timeEl.textContent = Math.round(minutes);
   }
 
