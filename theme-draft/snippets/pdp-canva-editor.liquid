@@ -950,6 +950,17 @@
       if (touchFrame){ cancelAnimationFrame(touchFrame); touchFrame = 0; }
       touchSample = null;
     }
+    // A selected element begins visually tracking at the very first movement
+    // pixel, before we know whether the gesture will end up being a tap. If
+    // it does end as a tap, put its preview-only state back exactly where it
+    // started instead of saving a tiny accidental nudge.
+    function restorePreviewBatch(batch){
+      (batch || []).forEach(function(b){
+        if (b.prev) layout[b.el.__cvKey] = cloneEntry(b.prev);
+        else delete layout[b.el.__cvKey];
+        applyState(b.el);
+      });
+    }
     function makeMoveT(el, cx, cy, wasSelected, id){
       var inv = screenDeltaInverse(el);
       if (!inv) return null;
@@ -1069,10 +1080,13 @@
       if (!hit || !root.contains(hit)){ lastTap = null; pendingTap = null; deselect(); return; }
       var touchingSelection = sel && (sel === hit || sel.contains(hit));
       // Claim a selected movable element at touchstart, before Safari can
-      // begin a scroll chain. Unselected content stays native so it scrolls.
+      // begin a scroll chain. Its transform now starts from this exact point
+      // too, rather than waiting for the tap threshold and then jumping.
+      // Unselected content stays native so it scrolls.
       if (touchingSelection && touchCanMove(sel)){
         e.preventDefault();
-        setTouchActive(sel);
+        dragging = makeMoveT(sel, pt.clientX, pt.clientY, true, pt.identifier);
+        if (dragging) setTouchActive(sel);
       }
       pendingTap = {el:hit, card:hit.closest('.pdp-cmp__card'), x:pt.clientX, y:pt.clientY, id:pt.identifier};
     }
@@ -1088,6 +1102,14 @@
       if (dragging){
         e.preventDefault();
         var p = findTouch(e.touches, dragging.id); if (!p) return; // not the tracked finger
+        // Keep the small threshold only for classifying a clean tap. The
+        // rendered drag itself already began at touchstart, so crossing it
+        // cannot produce a delayed jump under the finger.
+        if (pendingTap && pendingTap.id === dragging.id &&
+            Math.hypot(p.clientX - pendingTap.x, p.clientY - pendingTap.y) > 4){
+          pendingTap = null;
+          lastTap = null;
+        }
         queueTouchSample({kind:'drag', gesture:dragging, x:p.clientX, y:p.clientY});
         return;
       }
@@ -1137,8 +1159,17 @@
         e.preventDefault();
         var tapped = pendingTap;
         pendingTap = null;
+        // A tap may have produced a few pixels of live preview while the
+        // finger settled. It was never a deliberate move, so discard that
+        // preview before resolving the normal select/deselect action.
+        if (dragging && dragging.id === tapped.id){
+          discardTouchSample();
+          restorePreviewBatch(dragging.batch);
+          dragging = null;
+        }
         resolveTap(tapped);
         setTouchActive(null);
+        return;
       }
       if (dragging && !findTouch(e.touches, dragging.id)){
         e.preventDefault();
