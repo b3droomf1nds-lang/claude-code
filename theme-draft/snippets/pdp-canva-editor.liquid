@@ -188,6 +188,16 @@
   var recoverTopImageRequested = /[?&]recover=top-image(?:&|$)/.test(qs);
   function ls(get, k, v){ try { return get ? localStorage.getItem(k) : localStorage.setItem(k, v); } catch(e){ return null; } }
   function rm(k){ try { localStorage.removeItem(k); } catch(e){} }
+  // Some in-app mobile browsers temporarily deny localStorage to preview
+  // pages. The onboarding flag is harmless but should still survive a
+  // reload there, so mirror just that flag in a first-party cookie.
+  function cookieGet(k){
+    var m = document.cookie.match(new RegExp('(?:^|;\\s*)' + k.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&') + '=([^;]*)'));
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  function cookieSet(k, v){
+    document.cookie = k + '=' + encodeURIComponent(v) + '; Max-Age=31536000; Path=/; SameSite=Lax';
+  }
   // Keep the flag in the URL so ChatGPT's "Open in browser" handoff carries
   // it into Safari/Chrome. Each browser has separate localStorage, so this
   // marker makes the same URL one-shot independently in each browser.
@@ -208,7 +218,8 @@
   // below; that gives the new feature one clear first-use introduction.
   var HINT_KEY = 'volt-canva-hint-version';
   var HINT_VERSION = '2';
-  var showHint = ls(true, HINT_KEY) !== HINT_VERSION;
+  var HINT_COOKIE = 'volt-canva-hint-v2';
+  var showHint = ls(true, HINT_KEY) !== HINT_VERSION && cookieGet(HINT_COOKIE) !== HINT_VERSION;
   if (wantResetAll){ rm(LKEY); rm(HKEY); }
   var layout = {};
   try { layout = JSON.parse(ls(true, LKEY) || '{}') || {}; } catch(e){ layout = {}; }
@@ -1367,7 +1378,10 @@
       '<button class="cv-btn cv-btn--go" data-cv="copy">Copy layout</button>' +
       '<button class="cv-btn" data-cv="done">Done</button>';
     document.body.appendChild(tb);
-    if (showHint) ls(false, HINT_KEY, HINT_VERSION);
+    if (showHint){
+      ls(false, HINT_KEY, HINT_VERSION);
+      cookieSet(HINT_COOKIE, HINT_VERSION);
+    }
     editTextBtn = tb.querySelector('[data-cv="edit-text"]');
     updateEditTextButton();
 
