@@ -1619,6 +1619,13 @@
     line-height: 1.03 !important;
   }
 
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__stat .pdp-cmp__stat-num {
+    background: linear-gradient(180deg, #131316 0%, rgba(19, 19, 22, 0.35) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
   .template-product .pdp-cmp__compact-battery {
     display: block;
     /* Only ~62% of this WebP canvas is the visible battery. At a 28% image
