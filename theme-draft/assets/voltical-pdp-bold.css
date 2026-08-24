@@ -1612,7 +1612,9 @@
 
   .template-product .pdp-cmp__compact-battery {
     display: block;
-    width: 30px;
+    /* Apple reference icon is ~17.5% of its card width. Percentage keeps
+       Voltical's own icon at that same visual proportion on every phone. */
+    width: 17.5%;
     height: auto;
     flex: none;
   }
