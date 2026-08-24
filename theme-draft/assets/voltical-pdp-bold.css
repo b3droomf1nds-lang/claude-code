@@ -1612,9 +1612,10 @@
 
   .template-product .pdp-cmp__compact-battery {
     display: block;
-    /* Apple reference icon is ~17.5% of its card width. Percentage keeps
-       Voltical's own icon at that same visual proportion on every phone. */
-    width: 17.5%;
+    /* Only ~62% of this WebP canvas is the visible battery. At a 28% image
+       box, the visible green icon is ~17.5% of the card — Apple-reference
+       proportion, without changing the source asset itself. */
+    width: 28%;
     height: auto;
     flex: none;
   }
