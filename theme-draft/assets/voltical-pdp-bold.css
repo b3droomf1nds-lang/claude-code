@@ -1579,12 +1579,12 @@
     padding: 22px 10px !important;
   }
 
-  /* The video card has no longer got the battery icon beneath its caption, so
-     keep the three text levels as one close, slightly lower-centred group. */
+  /* Mirrors the reference structure: top label, centre headline, muted
+     caption, then Voltical's own battery icon. */
   .template-product .pdp-cmp__card--compact-video {
     justify-content: center !important;
-    gap: 14px;
-    padding: 34px 10px 10px !important;
+    gap: 12px;
+    padding: 20px 10px !important;
   }
 
   .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow,
@@ -1607,6 +1607,13 @@
   }
 
   .template-product .pdp-cmp__compact-video-main + .pdp-cmp__sub {
+    flex: none;
+  }
+
+  .template-product .pdp-cmp__compact-battery {
+    display: block;
+    width: 30px;
+    height: auto;
     flex: none;
   }
 
