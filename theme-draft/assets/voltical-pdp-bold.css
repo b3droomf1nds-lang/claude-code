@@ -1610,10 +1610,10 @@
     flex: none;
   }
 
-  /* Match the neighbouring square's headline treatment without shrinking
-     this card's number: same face, regular weight, tracking and rhythm. */
+  /* Match Apple's comparison-card headline treatment: SF system display
+     face, regular 400 weight, and its tight optical tracking. */
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__stat {
-    font-family: var(--sans);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
     font-weight: 400;
     letter-spacing: -0.045em;
     line-height: 1.03 !important;
