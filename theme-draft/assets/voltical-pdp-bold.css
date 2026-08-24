@@ -1615,7 +1615,7 @@
     /* Only ~62% of this WebP canvas is the visible battery. At a 28% image
        box, the visible green icon is ~17.5% of the card — Apple-reference
        proportion, without changing the source asset itself. */
-    width: 28%;
+    width: 30.8%;
     height: auto;
     flex: none;
   }
