@@ -1587,6 +1587,13 @@
     padding: 20px 10px !important;
   }
 
+  /* One clear Apple-style claim: qualifier, hero count, range, unit. */
+  .template-product .pdp-cmp__card--compact-partial {
+    justify-content: center !important;
+    gap: 8px;
+    padding: 20px 10px !important;
+  }
+
   .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow,
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow {
     flex: none;
@@ -1618,6 +1625,36 @@
     width: 30.8%;
     height: auto;
     flex: none;
+  }
+
+  .template-product .pdp-cmp__compact-partial-main {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    color: #131316;
+    font-size: 52px !important;
+    font-weight: 400;
+    letter-spacing: -0.045em;
+    line-height: .95 !important;
+  }
+
+  .template-product .pdp-cmp__compact-count-mark {
+    display: inline-block;
+    margin-left: 2px;
+    font-size: .52em;
+    font-weight: 400;
+    letter-spacing: 0;
+    transform: translateY(-.28em);
+  }
+
+  .template-product .pdp-cmp__compact-partial-range {
+    color: #1d1f24;
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    text-align: center;
   }
 
   .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__eyebrow,
