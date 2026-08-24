@@ -1610,6 +1610,15 @@
     flex: none;
   }
 
+  /* Match the neighbouring square's headline treatment without shrinking
+     this card's number: same face, regular weight, tracking and rhythm. */
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__stat {
+    font-family: var(--sans);
+    font-weight: 400;
+    letter-spacing: -0.045em;
+    line-height: 1.03 !important;
+  }
+
   .template-product .pdp-cmp__compact-battery {
     display: block;
     /* Only ~62% of this WebP canvas is the visible battery. At a 28% image
