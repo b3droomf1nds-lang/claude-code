@@ -7,7 +7,9 @@
     "theme:pull": "shopify theme pull",
     "theme:push": "shopify theme push",
     "theme:dev": "shopify theme dev",
-    "theme:list": "shopify theme list"
+    "theme:list": "shopify theme list",
+    "test:compare": "playwright test",
+    "test:compare:update": "playwright test --update-snapshots"
   },
   "repository": {
     "type": "git",
@@ -17,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@shopify/cli": "^4.5.2"
   }
 }
