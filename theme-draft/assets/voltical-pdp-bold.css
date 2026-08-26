@@ -1594,7 +1594,7 @@
      centred reading group. */
   .template-product .pdp-cmp__card--compact-partial {
     justify-content: center !important;
-    gap: 4px;
+    gap: 9px;
     padding: 20px 10px !important;
   }
 
@@ -1621,24 +1621,21 @@
     flex: none;
   }
 
-  /* Match the supplied 70% faster reference: one two-line display hero,
-     faded from the reference's blue-grey into ink. The value remains a live
-     calculator output; only its presentation changes. */
-  .template-product .pdp-cmp__compact-partial-main {
-    background: linear-gradient(0deg, #7A8FA4, #1D1D1F 50%);
+  /* Match Apple's comparison-card headline treatment: SF system display
+     face, regular 400 weight, and its tight optical tracking. */
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__stat {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    font-weight: 400;
+    letter-spacing: -0.045em;
+    line-height: 1.03 !important;
+  }
+
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__stat .pdp-cmp__stat-num {
+    /* Apple-like ink-to-navy lift: deep at the top, softly blue-grey below. */
+    background: linear-gradient(180deg, #0b1f3a 0%, #71839b 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
-    font-size: 28px;
-    font-weight: 500;
-    letter-spacing: 0.007em;
-    line-height: 32px;
-    text-align: center;
-  }
-
-  .template-product .pdp-cmp__compact-partial-main span {
-    font-variant-numeric: tabular-nums;
   }
 
   .template-product .pdp-cmp__compact-battery {
@@ -1670,7 +1667,8 @@
     line-height: 1.08;
   }
 
-  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__stat {
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__stat,
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__stat {
     font-size: 58px;
     line-height: .95;
   }
@@ -1688,4 +1686,8 @@
     white-space: normal !important;
   }
 
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__sub {
+    font-size: 15px;
+    line-height: 1.12;
+  }
 }

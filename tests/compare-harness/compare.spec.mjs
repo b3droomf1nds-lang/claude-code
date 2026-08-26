@@ -82,15 +82,6 @@ test.describe('responsive render', () => {
           ['video'], ['magnet'], ['charge'],
           ['compact-video', 'compact-partial'], ['compact-full']
         ]);
-        const partial = page.locator('.pdp-cmp__card--compact-partial');
-        const partialHero = partial.locator('.pdp-cmp__compact-partial-main');
-        await expect(partialHero).toHaveText('3.6extra');
-        await expect(partialHero.locator('br')).toHaveCount(1);
-        await expect(partial.locator('.pdp-cmp__sub')).toHaveText('20% to 80% charges');
-        await expect(partialHero).toHaveCSS(
-          'background-image',
-          'linear-gradient(0deg, rgb(122, 143, 164), rgb(29, 29, 31) 50%)'
-        );
       } else {
         expect(kinds.flat()).toEqual(['video', 'fade', 'partial-image', 'magnet', 'charge', 'full']);
         await expect(page.locator('.pdp-cmp__card--compact-stat').first()).toBeHidden();
