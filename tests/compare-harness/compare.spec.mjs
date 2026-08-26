@@ -153,16 +153,20 @@ test('charge-range emphasis stays phrase-scoped and canonical through Canva rest
   await page.goto(`${baseUrl}?edit=1`);
 
   const chargeCaption = page.locator('.pdp-cmp__card--charge .pdp-cmp__sub--range');
-  const chargeLead = chargeCaption.locator(':scope > .pdp-cmp__charge-range-lead');
+  const chargeLead = chargeCaption.locator(':scope > .pdp-cmp__mobile-copy > .pdp-cmp__charge-range-lead');
   const magnetLead = page.locator('.pdp-cmp__card--magnet .pdp-cmp__magnet-lead');
 
   await expect(chargeLead).toHaveCount(1);
   await expect(chargeLead).toHaveText('20% to 80%');
+  const mobileChargeCopy = chargeCaption.locator(':scope > .pdp-cmp__mobile-copy');
+  await expect(mobileChargeCopy).toHaveText('Quick, reliable chargingfrom 20% to 80% with Core.');
+  expect(await mobileChargeCopy.locator('br').count()).toBe(2);
+  await expect(chargeCaption.locator(':scope > .pdp-cmp__desktop-copy')).toHaveText('Charging time from 20% to 80% with Core for quick, reliable everyday power');
   await expect(page.locator('.pdp-cmp__card--partial-image .pdp-cmp__charge-range-lead')).toHaveCount(0);
 
   const styles = await page.evaluate(() => {
     const chargeCaptionEl = document.querySelector('.pdp-cmp__card--charge .pdp-cmp__sub--range');
-    const chargeLeadEl = chargeCaptionEl.querySelector(':scope > .pdp-cmp__charge-range-lead');
+    const chargeLeadEl = chargeCaptionEl.querySelector(':scope > .pdp-cmp__mobile-copy > .pdp-cmp__charge-range-lead');
     const magnetLeadEl = document.querySelector('.pdp-cmp__card--magnet .pdp-cmp__magnet-lead');
     const captionStyle = getComputedStyle(chargeCaptionEl);
     const chargeStyle = getComputedStyle(chargeLeadEl);

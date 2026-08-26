@@ -1176,7 +1176,9 @@
 
   .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
     font-size: 20px;
-    margin-top: 9.84px;
+    max-width: 280px;
+    margin-top: 8px;
+    line-height: 1.14;
     /* Match the magnet tile's muted detail copy outside the emphasized span. */
     color: #737d8b;
     font-family: var(--sans);
