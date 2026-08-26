@@ -20,7 +20,7 @@ The eventual `SKILL.md` should remain lean. These candidate rules will be refine
 ## Proposed supporting references
 
 - `architecture.md`: current card map, CSS cascade zones, editor state, calculator hooks, and known coupling.
-- `reference-evidence.md`: dated Apple/user-reference measurements with provenance and screenshots.
+- `reference-evidence.md`: dated Apple/user-reference measurements with provenance; the current study is recorded in `docs/voltical-comparison-reference-evidence.md`.
 - `design-system.md`: durable Voltical tokens plus generic design principles, clearly separated from Apple-specific observations.
 - `regression-cases.md`: the project cases currently recorded in `docs/voltical-comparison-regression-cases.md`.
 - `qa.md`: harness commands, viewport matrix, assertions, and unpublished-draft spot-check procedure.
