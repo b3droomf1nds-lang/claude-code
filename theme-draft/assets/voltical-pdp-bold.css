@@ -1589,6 +1589,15 @@
     padding: 20px 10px !important;
   }
 
+  /* The partial-charge card is a single claim, not an eyebrow pinned above
+     a separated result. Keep its context, number, and range as one calm,
+     centred reading group. */
+  .template-product .pdp-cmp__card--compact-partial {
+    justify-content: center !important;
+    gap: 9px;
+    padding: 20px 10px !important;
+  }
+
   .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow,
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow {
     flex: none;
@@ -1675,5 +1684,10 @@
     font-size: 14px;
     line-height: 1.08;
     white-space: normal !important;
+  }
+
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__sub {
+    font-size: 15px;
+    line-height: 1.12;
   }
 }
