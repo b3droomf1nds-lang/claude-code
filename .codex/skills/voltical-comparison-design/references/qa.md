@@ -12,8 +12,9 @@ npm run test:compare
 
 The harness renders the real snippets and CSS with deterministic placeholder
 images. It checks source contracts, responsive card sets at 390/899/900/1440,
-horizontal overflow, calculator duplicate synchronization, Canva
-Refresh/Reset/Undo, and continuous final touch movement.
+horizontal overflow, calculator duplicate synchronization, phrase-scoped
+charge emphasis and canonical restore, Canva Refresh/Reset/Undo, and continuous
+final touch movement.
 
 After editing, run the same command. If a requested visual change causes an
 expected screenshot failure:

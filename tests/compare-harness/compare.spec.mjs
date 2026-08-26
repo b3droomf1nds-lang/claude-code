@@ -148,6 +148,66 @@ test('calculator keeps source and compact duplicate stats synchronized', async (
   expect(new Set(changedCapacity.full).size).toBe(1);
 });
 
+test('charge-range emphasis stays phrase-scoped and canonical through Canva restore', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${baseUrl}?edit=1`);
+
+  const chargeCaption = page.locator('.pdp-cmp__card--charge .pdp-cmp__sub--range');
+  const chargeLead = chargeCaption.locator(':scope > .pdp-cmp__charge-range-lead');
+  const magnetLead = page.locator('.pdp-cmp__card--magnet .pdp-cmp__magnet-lead');
+
+  await expect(chargeLead).toHaveCount(1);
+  await expect(chargeLead).toHaveText('20% to 80%');
+  await expect(page.locator('.pdp-cmp__card--partial-image .pdp-cmp__charge-range-lead')).toHaveCount(0);
+
+  const styles = await page.evaluate(() => {
+    const chargeCaptionEl = document.querySelector('.pdp-cmp__card--charge .pdp-cmp__sub--range');
+    const chargeLeadEl = chargeCaptionEl.querySelector(':scope > .pdp-cmp__charge-range-lead');
+    const magnetLeadEl = document.querySelector('.pdp-cmp__card--magnet .pdp-cmp__magnet-lead');
+    const captionStyle = getComputedStyle(chargeCaptionEl);
+    const chargeStyle = getComputedStyle(chargeLeadEl);
+    const magnetStyle = getComputedStyle(magnetLeadEl);
+    return {
+      captionWeight: captionStyle.fontWeight,
+      chargeWeight: chargeStyle.fontWeight,
+      chargeFamily: chargeStyle.fontFamily,
+      chargeColor: chargeStyle.color,
+      magnetWeight: magnetStyle.fontWeight,
+      magnetFamily: magnetStyle.fontFamily,
+      magnetColor: magnetStyle.color
+    };
+  });
+  expect(styles.chargeWeight).toBe(styles.magnetWeight);
+  expect(styles.chargeFamily).toBe(styles.magnetFamily);
+  expect(styles.chargeColor).toBe(styles.magnetColor);
+  expect(styles.captionWeight).not.toBe(styles.chargeWeight);
+
+  await page.evaluate(() => {
+    localStorage.setItem('volt-canva-layout-4', JSON.stringify({
+      ':nth-child(2)>:nth-child(2)>:nth-child(4)': {
+        text: 'Charging time from 20% to 80% with Core for quick, reliable everyday power<br>'
+      }
+    }));
+    location.reload();
+  });
+  await page.waitForLoadState('load');
+
+  await expect(chargeLead).toHaveCount(1);
+  await expect(chargeLead).toHaveText('20% to 80%');
+  const restored = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-layout-4') || '{}'));
+  expect(restored[':nth-child(2)>:nth-child(2)>:nth-child(4)']).toBeUndefined();
+
+  await chargeCaption.dblclick();
+  const historyBeforeNoopEdit = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-history-4') || '[]').length);
+  await chargeCaption.click();
+  await expect(chargeCaption).toHaveAttribute('contenteditable', 'true');
+  await page.locator('.pdp-cmp__select-heading').click();
+  await expect(chargeCaption).toHaveAttribute('contenteditable', 'false');
+  const historyAfterNoopEdit = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-history-4') || '[]').length);
+  expect(historyAfterNoopEdit).toBe(historyBeforeNoopEdit);
+  await expect(chargeLead).toHaveCount(1);
+});
+
 test('Canva Refresh keeps undo history and Reset all is one undoable action', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${baseUrl}?edit=1`);

@@ -29,6 +29,8 @@ under `test-results/` and are ignored by git.
 - mobile and desktop visible card sets at 390, 899, 900, and 1440 pixels;
 - horizontal overflow and pixel baselines for the comparison block;
 - calculator synchronization across source and compact duplicate values;
+- phrase-scoped charging-range emphasis, semantic-card isolation, canonical
+  Canva restore, and no-op text-edit history;
 - persisted Canva Refresh, Reset all, and Undo behavior;
 - real touch movement before the old four-pixel threshold, exact lift position,
   and no post-lift drift.

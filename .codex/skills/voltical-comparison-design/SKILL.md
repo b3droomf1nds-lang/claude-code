@@ -1,6 +1,6 @@
 ---
 name: voltical-comparison-design
-description: Design, restyle, resize, recompose, or review the Voltical Core comparison cards and their Canva-mode behavior in theme-draft. Use for requests about comparison tiles, tile copy, statistics, images or icons, crops, spacing, mobile or desktop layout, Apple-reference matching, or comparison-section visual QA; do not use for unrelated product-page components.
+description: Design, restyle, resize, recompose, fix, debug, surgically revert, or review the Voltical Core comparison cards and their Canva-mode behavior in theme-draft. Use for requests about comparison tiles, tile copy, statistics, images or icons, crops, spacing, mobile or desktop layout, Apple-reference matching, or comparison-section visual QA; do not use for unrelated product-page components.
 ---
 
 # Voltical comparison design
