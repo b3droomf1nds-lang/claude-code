@@ -211,9 +211,12 @@
     var videoCardRect = compactVideo.getBoundingClientRect();
     var videoEyebrowRect = compactVideoEyebrow.getBoundingClientRect();
     var partialCardRect = compactPartial.getBoundingClientRect();
+    // The two identical label boxes look fractionally high when their glyph
+    // tops are mathematically identical; one CSS pixel down is the optical
+    // match to the neighbouring label on a phone.
     compactPartialEyebrow.style.setProperty(
       '--pdp-compact-partial-eyebrow-top',
-      (videoEyebrowRect.top - videoCardRect.top) + 'px'
+      (videoEyebrowRect.top - videoCardRect.top + 1) + 'px'
     );
   }
   function scheduleCompactPartialEyebrowAlignment() {
