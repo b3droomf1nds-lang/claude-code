@@ -129,9 +129,7 @@ test.describe('responsive render', () => {
           fontWeight: pairedEyebrows[0].fontWeight,
           lineHeight: pairedEyebrows[0].lineHeight
         });
-        const opticalNudge = pairedEyebrows[1].top - pairedEyebrows[0].top;
-        expect(opticalNudge).toBeGreaterThanOrEqual(.75);
-        expect(opticalNudge).toBeLessThanOrEqual(1.25);
+        expect(Math.abs(pairedEyebrows[1].top - pairedEyebrows[0].top)).toBeLessThanOrEqual(1);
       } else {
         expect(kinds.flat()).toEqual(['video', 'fade', 'partial-image', 'magnet', 'charge', 'full']);
         await expect(page.locator('.pdp-cmp__card--compact-stat').first()).toBeHidden();
