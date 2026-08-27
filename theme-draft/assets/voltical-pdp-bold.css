@@ -1570,13 +1570,14 @@
     overflow: hidden;
   }
 
-  /* The two side-by-side summaries use the tall portrait proportion from the
-     reference cards (roughly 0.84:1 width-to-height). The wide summary below
-     keeps the half-standard-card height from the previous layout. */
+  /* The two side-by-side summaries use the measured 159.125 × 192 reference
+     shell. Keeping the shell shared prevents the matched right-hand card from
+     looking like a different component beside the video summary. */
   .template-product .pdp-cmp__card--compact-video,
   .template-product .pdp-cmp__card--compact-partial {
     height: auto;
-    aspect-ratio: 0.84 / 1;
+    aspect-ratio: 159.125 / 192;
+    border-radius: 12px;
     justify-content: space-between !important;
     padding: 22px 10px !important;
   }
@@ -1697,14 +1698,12 @@
     top: calc(50% - 54px) !important;
     left: 0;
     right: 0;
-    /* This is deliberately the same supporting-label treatment as the
-       compact video card immediately beside it. */
-    color: #737d8b;
-    font-family: var(--sans);
+    color: #606f7f;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
     font-size: 14px;
     font-weight: 400;
-    letter-spacing: normal;
-    line-height: 1.08;
+    letter-spacing: -0.224px;
+    line-height: 18px;
   }
 
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main {
@@ -1720,12 +1719,10 @@
     left: 0;
     right: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-    /* The Voltical qualifier has more characters than the reference's
-       "GPU performance". Keep it as one quiet supporting line without
-       disturbing the matched three-part reading group above. */
-    font-size: 12px;
+    color: #606f7f;
+    font-size: 14px;
     font-weight: 400;
-    letter-spacing: -0.016em;
+    letter-spacing: -0.224px;
     line-height: 18px;
     white-space: nowrap !important;
   }

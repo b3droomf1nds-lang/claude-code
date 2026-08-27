@@ -528,14 +528,15 @@
     var els = [].slice.call(root.querySelectorAll(EDITABLE));
     var byKey = {};
     var normalizedSavedChargeText = false;
-    // The compact partial-card eyebrow was previously allowed to retain a
-    // mobile move/scale while its paired card changed. On the first load of
-    // this version, restore only that label's old transform to its authored
-    // paired position. Keep any typed wording and every other Canva entry.
-    var COMPACT_PARTIAL_EYEBROW_MIGRATION = 'volt-canva-compact-partial-eyebrow-v1';
-    var resetCompactPartialEyebrow = !desktopMQ.matches &&
-      ls(true, COMPACT_PARTIAL_EYEBROW_MIGRATION) !== '1';
-    var resetCompactPartialEyebrowLayout = false;
+    // The strict-reference layout replaces older hand-authored moves on this
+    // one compact card. Clear only its three text elements once on mobile;
+    // every other Canva adjustment remains untouched. Purging their saved
+    // history keys below also prevents Undo from reviving the stale layout.
+    var COMPACT_PARTIAL_REFERENCE_MIGRATION = 'volt-canva-compact-partial-reference-v1';
+    var resetCompactPartialReference = !desktopMQ.matches &&
+      ls(true, COMPACT_PARTIAL_REFERENCE_MIGRATION) !== '1';
+    var resetCompactPartialReferenceLayout = false;
+    var resetCompactPartialKeys = {};
     els.forEach(function(el){
       var cs = getComputedStyle(el).transform;
       el.__cvBase = (cs && cs !== 'none') ? cs : '';
@@ -544,15 +545,14 @@
       el.__cvTextEditable = isTextEditable(el);
       el.__cvAlignH = isAlignHoriz(el);
       el.__cvOrigText = el.__cvTextEditable ? el.innerHTML : null;
-      if (resetCompactPartialEyebrow &&
-          el.matches('.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow')){
-        var oldEyebrowState = layout[el.__cvKey];
-        if (oldEyebrowState){
-          // Preserve explicitly edited words, but clear the stale move/scale
-          // that made this one label diverge from its neighbouring card.
-          if (oldEyebrowState.text != null) layout[el.__cvKey] = {text:oldEyebrowState.text};
-          else delete layout[el.__cvKey];
-          resetCompactPartialEyebrowLayout = true;
+      if (resetCompactPartialReference && el.matches(
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__sub')){
+        resetCompactPartialKeys[el.__cvKey] = true;
+        if (layout[el.__cvKey]){
+          delete layout[el.__cvKey];
+          resetCompactPartialReferenceLayout = true;
         }
       }
       if (el.__cvTextEditable && isChargeRangeCaption(el)){
@@ -571,10 +571,10 @@
       }
       applyState(el);
     });
-    if (normalizedSavedChargeText || resetCompactPartialEyebrowLayout) {
+    if (normalizedSavedChargeText || resetCompactPartialReferenceLayout) {
       ls(false, LKEY, JSON.stringify(layout));
     }
-    if (resetCompactPartialEyebrow) ls(false, COMPACT_PARTIAL_EYEBROW_MIGRATION, '1');
+    if (resetCompactPartialReference) ls(false, COMPACT_PARTIAL_REFERENCE_MIGRATION, '1');
 
     // Rehydrate the undo stack saved before a Refresh: map each batch's
     // stored element keys back to the live elements. Any entry whose key no
@@ -582,6 +582,7 @@
     // skipped so undo never hits a dead no-op step.
     history = savedHistory.map(function(batch){
       return (batch || []).map(function(b){
+        if (resetCompactPartialKeys[b.key]) return null;
         var el = byKey[b.key];
         if (!el) return null;
         var prev = cloneEntry(b.prev);

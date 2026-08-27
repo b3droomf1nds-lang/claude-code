@@ -84,6 +84,8 @@ test.describe('responsive render', () => {
         ]);
         const partial = page.locator('.pdp-cmp__card--compact-partial');
         const partialHero = partial.locator('.pdp-cmp__compact-partial-main');
+        await expect(page.locator('.pdp-cmp__card--compact-video')).toHaveCSS('border-radius', '12px');
+        await expect(partial).toHaveCSS('border-radius', '12px');
         await expect(partialHero).toHaveText('3.6extra');
         await expect(partialHero.locator('br')).toHaveCount(1);
         await expect(partial.locator('.pdp-cmp__sub')).toHaveText('20% to 80% charges');
@@ -95,7 +97,7 @@ test.describe('responsive render', () => {
           const cardRect = card.getBoundingClientRect();
           const read = (selector) => {
             const rect = card.querySelector(selector).getBoundingClientRect();
-            return { top: rect.top - cardRect.top, height: rect.height };
+            return { top: rect.top - cardRect.top, width: rect.width, height: rect.height };
           };
           return {
             height: cardRect.height,
@@ -106,10 +108,23 @@ test.describe('responsive render', () => {
               const descriptor = card.querySelector(':scope > .pdp-cmp__sub');
               const style = getComputedStyle(descriptor);
               return {
+                color: style.color,
                 fontSize: style.fontSize,
+                letterSpacing: style.letterSpacing,
+                lineHeight: style.lineHeight,
                 whiteSpace: style.whiteSpace,
                 scrollWidth: descriptor.scrollWidth,
                 clientWidth: descriptor.clientWidth
+              };
+            })(),
+            eyebrowStyle: (() => {
+              const eyebrow = card.querySelector(':scope > .pdp-cmp__eyebrow');
+              const style = getComputedStyle(eyebrow);
+              return {
+                color: style.color,
+                fontSize: style.fontSize,
+                letterSpacing: style.letterSpacing,
+                lineHeight: style.lineHeight
               };
             })()
           };
@@ -118,8 +133,20 @@ test.describe('responsive render', () => {
         expect(Math.abs(partialLayout.descriptor.top - (partialLayout.height / 2 + 36))).toBeLessThanOrEqual(1);
         expect(partialLayout.hero.height).toBeCloseTo(64, 0);
         expect(partialLayout.descriptor.height).toBeCloseTo(18, 0);
-        expect(partialLayout.descriptorStyle.fontSize).toBe('12px');
-        expect(partialLayout.descriptorStyle.whiteSpace).toBe('nowrap');
+        expect(partialLayout.height / partialLayout.hero.width).toBeCloseTo(192 / 159.125, 2);
+        expect(partialLayout.descriptorStyle).toMatchObject({
+          color: 'rgb(96, 111, 127)',
+          fontSize: '14px',
+          letterSpacing: '-0.224px',
+          lineHeight: '18px',
+          whiteSpace: 'nowrap'
+        });
+        expect(partialLayout.eyebrowStyle).toMatchObject({
+          color: 'rgb(96, 111, 127)',
+          fontSize: '14px',
+          letterSpacing: '-0.224px',
+          lineHeight: '18px'
+        });
         expect(partialLayout.descriptorStyle.scrollWidth).toBeLessThanOrEqual(partialLayout.descriptorStyle.clientWidth);
         expect(Math.abs(partialLayout.eyebrow.top - (partialLayout.height / 2 - 54))).toBeLessThanOrEqual(1);
       } else {
@@ -252,29 +279,44 @@ test('charge-range emphasis stays phrase-scoped and canonical through Canva rest
   await expect(chargeLead).toHaveCount(1);
 });
 
-test('mobile migration clears only the legacy compact-partial eyebrow transform', async ({ page }) => {
+test('mobile reference migration clears only the compact-partial text layout and history', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${baseUrl}?edit=1`);
 
   const keys = await page.evaluate(() => ({
     eyebrow: document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow').__cvKey,
-    descriptor: document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__sub').__cvKey
+    hero: document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main').__cvKey,
+    descriptor: document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__sub').__cvKey,
+    control: document.querySelector('.pdp-cmp__card--compact-video > .pdp-cmp__sub').__cvKey
   }));
   await Promise.all([
     page.waitForEvent('load'),
     page.evaluate((savedKeys) => {
       localStorage.setItem('volt-canva-layout-4', JSON.stringify({
         [savedKeys.eyebrow]: { dx: 18, dy: -11, s: 1.7 },
-        [savedKeys.descriptor]: { dx: 7, dy: 5 }
+        [savedKeys.hero]: { dx: -9, dy: 14, s: 1.4 },
+        [savedKeys.descriptor]: { dx: 7, dy: 5, text: 'old compact copy' },
+        [savedKeys.control]: { dx: 3, dy: 2 }
       }));
-      localStorage.removeItem('volt-canva-compact-partial-eyebrow-v1');
+      localStorage.setItem('volt-canva-history-4', JSON.stringify([[
+        { key: savedKeys.eyebrow, prev: { dx: 4, dy: 6 } },
+        { key: savedKeys.hero, prev: { s: 1.2 } },
+        { key: savedKeys.descriptor, prev: { text: 'older compact copy' } },
+        { key: savedKeys.control, prev: { dx: 1 } }
+      ]]));
+      localStorage.removeItem('volt-canva-compact-partial-reference-v1');
       location.reload();
     }, keys)
   ]);
 
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-layout-4') || '{}'));
   expect(saved[keys.eyebrow]).toBeUndefined();
-  expect(saved[keys.descriptor]).toMatchObject({ dx: 7, dy: 5 });
+  expect(saved[keys.hero]).toBeUndefined();
+  expect(saved[keys.descriptor]).toBeUndefined();
+  expect(saved[keys.control]).toMatchObject({ dx: 3, dy: 2 });
+  await expect(page.locator('.pdp-cmp__card--compact-partial > .pdp-cmp__sub')).toHaveText('20% to 80% charges');
+  const savedHistory = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-history-4') || '[]'));
+  expect(savedHistory.flat().map((entry) => entry.key)).toEqual([keys.control]);
   await expect.poll(() => page.evaluate(() => {
     const card = document.querySelector('.pdp-cmp__card--compact-partial');
     const cardRect = card.getBoundingClientRect();
