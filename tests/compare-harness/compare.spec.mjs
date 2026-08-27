@@ -260,6 +260,40 @@ test('charge-range emphasis stays phrase-scoped and canonical through Canva rest
   await expect(chargeLead).toHaveCount(1);
 });
 
+test('mobile migration clears only the legacy compact-partial eyebrow transform', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${baseUrl}?edit=1`);
+
+  const keys = await page.evaluate(() => ({
+    eyebrow: document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow').__cvKey,
+    descriptor: document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__sub').__cvKey
+  }));
+  await Promise.all([
+    page.waitForEvent('load'),
+    page.evaluate((savedKeys) => {
+      localStorage.setItem('volt-canva-layout-4', JSON.stringify({
+        [savedKeys.eyebrow]: { dx: 18, dy: -11, s: 1.7 },
+        [savedKeys.descriptor]: { dx: 7, dy: 5 }
+      }));
+      localStorage.removeItem('volt-canva-compact-partial-eyebrow-v1');
+      location.reload();
+    }, keys)
+  ]);
+
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-layout-4') || '{}'));
+  expect(saved[keys.eyebrow]).toBeUndefined();
+  expect(saved[keys.descriptor]).toMatchObject({ dx: 7, dy: 5 });
+  await expect.poll(() => page.evaluate(() => {
+    const cards = document.querySelectorAll('.pdp-cmp__card--compact-video, .pdp-cmp__card--compact-partial');
+    const offsets = [...cards].map((card) => {
+      const cardRect = card.getBoundingClientRect();
+      const eyebrowRect = card.querySelector(':scope > .pdp-cmp__eyebrow').getBoundingClientRect();
+      return eyebrowRect.top - cardRect.top;
+    });
+    return Math.abs(offsets[0] - offsets[1]);
+  })).toBeLessThanOrEqual(1);
+});
+
 test('Canva Refresh keeps undo history and Reset all is one undoable action', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${baseUrl}?edit=1`);
