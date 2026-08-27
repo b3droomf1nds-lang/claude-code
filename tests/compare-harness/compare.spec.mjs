@@ -91,14 +91,25 @@ test.describe('responsive render', () => {
           'background-image',
           'linear-gradient(0deg, rgb(122, 143, 164), rgb(29, 29, 31) 50%)'
         );
-        const eyebrowOffsets = await page.locator(
-          '.pdp-cmp__card--compact-video, .pdp-cmp__card--compact-partial'
-        ).evaluateAll((cards) => cards.map((card) => {
+        const partialLayout = await partial.evaluate((card) => {
           const cardRect = card.getBoundingClientRect();
-          const eyebrowRect = card.querySelector('.pdp-cmp__eyebrow').getBoundingClientRect();
-          return eyebrowRect.top - cardRect.top;
-        }));
-        expect(Math.abs(eyebrowOffsets[0] - eyebrowOffsets[1])).toBeLessThanOrEqual(1);
+          const read = (selector) => {
+            const rect = card.querySelector(selector).getBoundingClientRect();
+            return { top: rect.top - cardRect.top, height: rect.height };
+          };
+          return {
+            height: cardRect.height,
+            eyebrow: read(':scope > .pdp-cmp__eyebrow'),
+            hero: read(':scope > .pdp-cmp__compact-partial-main'),
+            descriptor: read(':scope > .pdp-cmp__sub')
+          };
+        });
+        expect(Math.abs(partialLayout.eyebrow.top - (partialLayout.height / 2 - 54))).toBeLessThanOrEqual(1);
+        expect(Math.abs(partialLayout.hero.top - (partialLayout.height / 2 - 32))).toBeLessThanOrEqual(1);
+        expect(Math.abs(partialLayout.descriptor.top - (partialLayout.height / 2 + 36))).toBeLessThanOrEqual(1);
+        expect(partialLayout.eyebrow.height).toBeCloseTo(18, 0);
+        expect(partialLayout.hero.height).toBeCloseTo(64, 0);
+        expect(partialLayout.descriptor.height).toBeCloseTo(18, 0);
       } else {
         expect(kinds.flat()).toEqual(['video', 'fade', 'partial-image', 'magnet', 'charge', 'full']);
         await expect(page.locator('.pdp-cmp__card--compact-stat').first()).toBeHidden();
