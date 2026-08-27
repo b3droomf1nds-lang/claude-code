@@ -296,6 +296,18 @@ test('mobile migration clears only the legacy compact-partial eyebrow transform'
   })).toBeLessThanOrEqual(1);
 });
 
+test('Canva exposes the compact partial live stat for moving and resizing', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${baseUrl}?edit=1`);
+
+  const hero = page.locator('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main');
+  await hero.scrollIntoViewIfNeeded();
+  await hero.dblclick();
+  await expect(page.locator('.cv-tag')).toHaveText('stat');
+  await expect(hero).not.toHaveAttribute('contenteditable', 'true');
+  await expect(hero).toHaveText('3.6extra');
+});
+
 test('Canva Refresh keeps undo history and Reset all is one undoable action', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${baseUrl}?edit=1`);
