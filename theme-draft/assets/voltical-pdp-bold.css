@@ -1688,11 +1688,11 @@
     white-space: normal !important;
   }
 
-  /* Keep the partial-charge eyebrow on the same top inset as the compact
-     card beside it, while the 3.6/extra claim remains vertically centred. */
+  /* The exact top offset is measured from the compact card beside it after
+     Canva's saved transforms have restored; see alignCompactEyebrows(). */
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow {
     position: absolute !important;
-    top: calc(37.073% - 59.92px) !important;
+    top: var(--pdp-compact-eyebrow-top, 22px) !important;
     left: 0;
     right: 0;
   }

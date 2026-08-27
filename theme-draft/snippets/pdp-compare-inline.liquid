@@ -194,6 +194,44 @@
   document.querySelectorAll('input[type="radio"][value*="mAh" i]').forEach(function (el) {
     el.addEventListener('change', update);
   });
+
+  // The two compact cards have different content heights, so a fixed CSS
+  // percentage cannot keep their "Up to" labels visually aligned at every
+  // phone width. Measure the neighbouring rendered label after all theme and
+  // Canva transforms have settled, then set the matching local offset.
+  var compactVideo = document.querySelector('.pdp-cmp__card--compact-video');
+  var compactPartial = document.querySelector('.pdp-cmp__card--compact-partial');
+  var compactVideoEyebrow = compactVideo && compactVideo.querySelector('.pdp-cmp__eyebrow');
+  var compactPartialEyebrow = compactPartial && compactPartial.querySelector('.pdp-cmp__eyebrow');
+  function alignCompactEyebrows() {
+    if (!compactVideo || !compactPartial || !compactVideoEyebrow || !compactPartialEyebrow) return;
+    if (!window.matchMedia('(max-width:899px)').matches) {
+      compactPartialEyebrow.style.removeProperty('--pdp-compact-eyebrow-top');
+      return;
+    }
+    compactPartialEyebrow.style.removeProperty('--pdp-compact-eyebrow-top');
+    var sourceCard = compactVideo.getBoundingClientRect();
+    var sourceEyebrow = compactVideoEyebrow.getBoundingClientRect();
+    var targetCard = compactPartial.getBoundingClientRect();
+    var targetEyebrow = compactPartialEyebrow.getBoundingClientRect();
+    var wantedOffset = sourceEyebrow.top - sourceCard.top;
+    var actualOffset = targetEyebrow.top - targetCard.top;
+    var baseTop = parseFloat(getComputedStyle(compactPartialEyebrow).top) || 0;
+    compactPartialEyebrow.style.setProperty(
+      '--pdp-compact-eyebrow-top',
+      (baseTop + wantedOffset - actualOffset) + 'px'
+    );
+  }
+  function scheduleCompactEyebrowAlignment() {
+    requestAnimationFrame(function () {
+      requestAnimationFrame(alignCompactEyebrows);
+    });
+  }
+  var compactBattery = compactVideo && compactVideo.querySelector('.pdp-cmp__compact-battery');
+  if (compactBattery) compactBattery.addEventListener('load', scheduleCompactEyebrowAlignment);
+  window.addEventListener('resize', scheduleCompactEyebrowAlignment);
+  window.addEventListener('load', scheduleCompactEyebrowAlignment);
   update();
+  scheduleCompactEyebrowAlignment();
 })();
 </script>
