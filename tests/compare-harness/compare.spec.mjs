@@ -129,7 +129,7 @@ test.describe('responsive render', () => {
           fontWeight: pairedEyebrows[0].fontWeight,
           lineHeight: pairedEyebrows[0].lineHeight
         });
-        expect(Math.abs((pairedEyebrows[1].top - pairedEyebrows[0].top) + 20)).toBeLessThanOrEqual(1);
+        expect(Math.abs(pairedEyebrows[1].top - pairedEyebrows[0].top)).toBeLessThanOrEqual(1);
       } else {
         expect(kinds.flat()).toEqual(['video', 'fade', 'partial-image', 'magnet', 'charge', 'full']);
         await expect(page.locator('.pdp-cmp__card--compact-stat').first()).toBeHidden();
@@ -291,16 +291,7 @@ test('mobile migration clears only the legacy compact-partial eyebrow transform'
       return eyebrowRect.top - cardRect.top;
     });
     return Math.abs(offsets[0] - offsets[1]);
-  })).toBeGreaterThanOrEqual(19);
-  await expect.poll(() => page.evaluate(() => {
-    const cards = document.querySelectorAll('.pdp-cmp__card--compact-video, .pdp-cmp__card--compact-partial');
-    const offsets = [...cards].map((card) => {
-      const cardRect = card.getBoundingClientRect();
-      const eyebrowRect = card.querySelector(':scope > .pdp-cmp__eyebrow').getBoundingClientRect();
-      return eyebrowRect.top - cardRect.top;
-    });
-    return Math.abs(offsets[0] - offsets[1]);
-  })).toBeLessThanOrEqual(21);
+  })).toBeLessThanOrEqual(1);
 });
 
 test('Canva exposes the compact partial live stat for moving and resizing', async ({ page }) => {

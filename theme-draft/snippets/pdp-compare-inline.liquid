@@ -210,10 +210,10 @@
     }
     var videoCardRect = compactVideo.getBoundingClientRect();
     var videoEyebrowRect = compactVideoEyebrow.getBoundingClientRect();
-    // Keep the label 20 CSS pixels above the neighbouring label, as requested.
+    // Keep the label at the same card-relative height as its neighbour.
     compactPartialEyebrow.style.setProperty(
       '--pdp-compact-partial-eyebrow-top',
-      (videoEyebrowRect.top - videoCardRect.top - 20) + 'px'
+      (videoEyebrowRect.top - videoCardRect.top) + 'px'
     );
   }
   function scheduleCompactPartialEyebrowAlignment() {
