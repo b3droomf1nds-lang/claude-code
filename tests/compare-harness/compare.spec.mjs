@@ -104,12 +104,32 @@ test.describe('responsive render', () => {
             descriptor: read(':scope > .pdp-cmp__sub')
           };
         });
-        expect(Math.abs(partialLayout.eyebrow.top - (partialLayout.height / 2 - 54))).toBeLessThanOrEqual(1);
         expect(Math.abs(partialLayout.hero.top - (partialLayout.height / 2 - 32))).toBeLessThanOrEqual(1);
         expect(Math.abs(partialLayout.descriptor.top - (partialLayout.height / 2 + 36))).toBeLessThanOrEqual(1);
-        expect(partialLayout.eyebrow.height).toBeCloseTo(18, 0);
         expect(partialLayout.hero.height).toBeCloseTo(64, 0);
         expect(partialLayout.descriptor.height).toBeCloseTo(18, 0);
+        const pairedEyebrows = await page.locator(
+          '.pdp-cmp__card--compact-video, .pdp-cmp__card--compact-partial'
+        ).evaluateAll((cards) => cards.map((card) => {
+          const cardRect = card.getBoundingClientRect();
+          const eyebrow = card.querySelector(':scope > .pdp-cmp__eyebrow');
+          const eyebrowRect = eyebrow.getBoundingClientRect();
+          const style = getComputedStyle(eyebrow);
+          return {
+            top: eyebrowRect.top - cardRect.top,
+            fontFamily: style.fontFamily,
+            fontSize: style.fontSize,
+            fontWeight: style.fontWeight,
+            lineHeight: style.lineHeight
+          };
+        }));
+        expect(pairedEyebrows[1]).toMatchObject({
+          fontFamily: pairedEyebrows[0].fontFamily,
+          fontSize: pairedEyebrows[0].fontSize,
+          fontWeight: pairedEyebrows[0].fontWeight,
+          lineHeight: pairedEyebrows[0].lineHeight
+        });
+        expect(Math.abs(pairedEyebrows[1].top - pairedEyebrows[0].top)).toBeLessThanOrEqual(1);
       } else {
         expect(kinds.flat()).toEqual(['video', 'fade', 'partial-image', 'magnet', 'charge', 'full']);
         await expect(page.locator('.pdp-cmp__card--compact-stat').first()).toBeHidden();

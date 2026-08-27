@@ -1694,14 +1694,17 @@
      from escaping the compact card at narrower phone widths. */
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow {
     position: absolute !important;
-    top: calc(50% - 54px) !important;
+    top: var(--pdp-compact-partial-eyebrow-top, calc(50% - 54px)) !important;
     left: 0;
     right: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    /* This is deliberately the same supporting-label treatment as the
+       compact video card immediately beside it. */
+    color: #737d8b;
+    font-family: var(--sans);
     font-size: 14px;
     font-weight: 400;
-    letter-spacing: -0.016em;
-    line-height: 18px;
+    letter-spacing: normal;
+    line-height: 1.08;
   }
 
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main {
