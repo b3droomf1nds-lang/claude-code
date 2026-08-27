@@ -210,10 +210,10 @@
     }
     var videoCardRect = compactVideo.getBoundingClientRect();
     var videoEyebrowRect = compactVideoEyebrow.getBoundingClientRect();
-    // Keep the glyph tops exactly aligned with the neighbouring label.
+    // Keep the label 20 CSS pixels above the neighbouring label, as requested.
     compactPartialEyebrow.style.setProperty(
       '--pdp-compact-partial-eyebrow-top',
-      (videoEyebrowRect.top - videoCardRect.top) + 'px'
+      (videoEyebrowRect.top - videoCardRect.top - 20) + 'px'
     );
   }
   function scheduleCompactPartialEyebrowAlignment() {
