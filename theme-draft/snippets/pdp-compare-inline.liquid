@@ -210,10 +210,11 @@
     }
     var videoCardRect = compactVideo.getBoundingClientRect();
     var videoEyebrowRect = compactVideoEyebrow.getBoundingClientRect();
-    // Keep the label at the same card-relative height as its neighbour.
+    // The absolute label is inside the card's 20px padding, so subtract that
+    // inset when matching the neighbouring card's visible glyph position.
     compactPartialEyebrow.style.setProperty(
       '--pdp-compact-partial-eyebrow-top',
-      (videoEyebrowRect.top - videoCardRect.top) + 'px'
+      (videoEyebrowRect.top - videoCardRect.top - 20) + 'px'
     );
   }
   function scheduleCompactPartialEyebrowAlignment() {
