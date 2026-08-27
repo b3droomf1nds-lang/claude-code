@@ -195,39 +195,6 @@
     el.addEventListener('change', update);
   });
 
-  // These two compact cards deliberately have different hero/content heights.
-  // The shared "Up to" label must nevertheless sit at the same card-relative
-  // position and use the same metrics in both cards.
-  var compactVideo = document.querySelector('.pdp-cmp__card--compact-video');
-  var compactPartial = document.querySelector('.pdp-cmp__card--compact-partial');
-  var compactVideoEyebrow = compactVideo && compactVideo.querySelector(':scope > .pdp-cmp__eyebrow');
-  var compactPartialEyebrow = compactPartial && compactPartial.querySelector(':scope > .pdp-cmp__eyebrow');
-  function alignCompactPartialEyebrow() {
-    if (!compactVideo || !compactPartial || !compactVideoEyebrow || !compactPartialEyebrow) return;
-    if (!window.matchMedia('(max-width:899px)').matches) {
-      compactPartialEyebrow.style.removeProperty('--pdp-compact-partial-eyebrow-top');
-      return;
-    }
-    var videoCardRect = compactVideo.getBoundingClientRect();
-    var videoEyebrowRect = compactVideoEyebrow.getBoundingClientRect();
-    // The absolute label is inside the card's 20px padding, so subtract that
-    // inset when matching the neighbouring card's visible glyph position.
-    compactPartialEyebrow.style.setProperty(
-      '--pdp-compact-partial-eyebrow-top',
-      (videoEyebrowRect.top - videoCardRect.top - 20) + 'px'
-    );
-  }
-  function scheduleCompactPartialEyebrowAlignment() {
-    requestAnimationFrame(function () {
-      requestAnimationFrame(alignCompactPartialEyebrow);
-    });
-  }
-  window.addEventListener('resize', scheduleCompactPartialEyebrowAlignment);
-  window.addEventListener('load', scheduleCompactPartialEyebrowAlignment);
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(scheduleCompactPartialEyebrowAlignment);
-  }
   update();
-  scheduleCompactPartialEyebrowAlignment();
 })();
 </script>
