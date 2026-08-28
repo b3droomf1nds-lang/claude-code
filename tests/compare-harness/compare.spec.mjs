@@ -87,9 +87,14 @@ test.describe('responsive render', () => {
         await expect(page.locator('.pdp-cmp__card--compact-video')).toHaveCSS('border-radius', '12px');
         await expect(partial).toHaveCSS('border-radius', '12px');
         await expect(partialHero).toHaveText('3.6extra');
-        await expect(partialHero.locator('br')).toHaveCount(1);
+        const partialNumber = partialHero.locator(':scope > .pdp-cmp__compact-partial-number');
+        const partialExtra = partialHero.locator(':scope > .pdp-cmp__compact-partial-extra');
+        await expect(partialNumber).toHaveText('3.6');
+        await expect(partialExtra).toHaveText('extra');
+        await expect(partialNumber).toHaveCSS('display', 'block');
+        await expect(partialExtra).toHaveCSS('display', 'block');
         await expect(partial.locator('.pdp-cmp__sub')).toHaveText('20% to 80% charges');
-        await expect(partialHero).toHaveCSS(
+        await expect(partialNumber).toHaveCSS(
           'background-image',
           'linear-gradient(0deg, rgb(122, 143, 164), rgb(29, 29, 31) 50%)'
         );
@@ -282,25 +287,33 @@ test('charge-range emphasis stays phrase-scoped and canonical through Canva rest
 test('mobile reference migration clears only the compact-partial text layout and history', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${baseUrl}?edit=1`);
+  await page.locator('.pdp-cmp__card--compact-partial').waitFor();
 
-  const keys = await page.evaluate(() => ({
-    eyebrow: document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow').__cvKey,
-    hero: document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main').__cvKey,
-    descriptor: document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__sub').__cvKey,
-    control: document.querySelector('.pdp-cmp__card--compact-video > .pdp-cmp__sub').__cvKey
-  }));
+  const keys = await page.evaluate(() => {
+    const getKey = (selector) => document.querySelector(selector)?.__cvKey;
+    return {
+      eyebrow: getKey('.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow'),
+      number: getKey('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number'),
+      extra: getKey('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra'),
+      descriptor: getKey('.pdp-cmp__card--compact-partial > .pdp-cmp__sub'),
+      control: getKey('.pdp-cmp__card--compact-video > .pdp-cmp__sub')
+    };
+  });
+  expect(Object.values(keys).every(Boolean)).toBeTruthy();
   await Promise.all([
     page.waitForEvent('load'),
     page.evaluate((savedKeys) => {
       localStorage.setItem('volt-canva-layout-4', JSON.stringify({
         [savedKeys.eyebrow]: { dx: 18, dy: -11, s: 1.7 },
-        [savedKeys.hero]: { dx: -9, dy: 14, s: 1.4 },
+        [savedKeys.number]: { dx: -9, dy: 14, s: 1.4 },
+        [savedKeys.extra]: { dx: 4, dy: -6, s: 1.1 },
         [savedKeys.descriptor]: { dx: 7, dy: 5, text: 'old compact copy' },
         [savedKeys.control]: { dx: 3, dy: 2 }
       }));
       localStorage.setItem('volt-canva-history-4', JSON.stringify([[
         { key: savedKeys.eyebrow, prev: { dx: 4, dy: 6 } },
-        { key: savedKeys.hero, prev: { s: 1.2 } },
+        { key: savedKeys.number, prev: { s: 1.2 } },
+        { key: savedKeys.extra, prev: { dx: 2 } },
         { key: savedKeys.descriptor, prev: { text: 'older compact copy' } },
         { key: savedKeys.control, prev: { dx: 1 } }
       ]]));
@@ -311,7 +324,8 @@ test('mobile reference migration clears only the compact-partial text layout and
 
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-layout-4') || '{}'));
   expect(saved[keys.eyebrow]).toBeUndefined();
-  expect(saved[keys.hero]).toBeUndefined();
+  expect(saved[keys.number]).toBeUndefined();
+  expect(saved[keys.extra]).toBeUndefined();
   expect(saved[keys.descriptor]).toBeUndefined();
   expect(saved[keys.control]).toMatchObject({ dx: 3, dy: 2 });
   await expect(page.locator('.pdp-cmp__card--compact-partial > .pdp-cmp__sub')).toHaveText('20% to 80% charges');
@@ -329,12 +343,16 @@ test('Canva exposes the compact partial live stat for moving and resizing', asyn
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${baseUrl}?edit=1`);
 
-  const hero = page.locator('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main');
-  await hero.scrollIntoViewIfNeeded();
-  await hero.dblclick();
+  const number = page.locator('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number');
+  const extra = page.locator('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra');
+  await number.scrollIntoViewIfNeeded();
+  await number.dblclick();
   await expect(page.locator('.cv-tag')).toHaveText('stat');
-  await expect(hero).not.toHaveAttribute('contenteditable', 'true');
-  await expect(hero).toHaveText('3.6extra');
+  await expect(number).not.toHaveAttribute('contenteditable', 'true');
+  await expect(number).toHaveText('3.6');
+  await extra.dblclick();
+  await expect(page.locator('.cv-tag')).toHaveText('text');
+  await expect(extra).toHaveText('extra');
 });
 
 test('Canva Refresh keeps undo history and Reset all is one undoable action', async ({ page }) => {

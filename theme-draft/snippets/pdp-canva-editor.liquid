@@ -229,7 +229,7 @@
   try { savedHistory = JSON.parse(ls(true, HKEY) || '[]') || []; } catch(e){ savedHistory = []; }
 
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__eyebrow, ' +
-    '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-main, .pdp-cmp__sub, ' +
+    '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-number, .pdp-cmp__compact-partial-extra, .pdp-cmp__sub, ' +
     '.pdp-cmp__battery-icon, .pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__select-wrap, ' +
     // The visible "×" on the partial-charges tile ("Up to 3.6× / 20% to
     // 80%") is its own span so it can be grabbed on its own, separate from
@@ -259,7 +259,7 @@
     // detaches it from the live calculator, so it'll stop updating when
     // the iPhone-model dropdown changes and just show whatever was typed.
     function isTextEditable(el){
-      return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading, .pdp-cmp__label, [data-calc-full]');
+      return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__compact-partial-extra, [data-calc-full]');
     }
     function isChargeRangeCaption(el){
       return el.matches('.pdp-cmp__sub--range');
@@ -547,7 +547,8 @@
       el.__cvOrigText = el.__cvTextEditable ? el.innerHTML : null;
       if (resetCompactPartialReference && el.matches(
           '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow, ' +
-          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra, ' +
           '.pdp-cmp__card--compact-partial > .pdp-cmp__sub')){
         resetCompactPartialKeys[el.__cvKey] = true;
         if (layout[el.__cvKey]){
@@ -688,7 +689,7 @@
       if (el.matches('.pdp-cmp__select-heading')) return 'heading';
       if (el.matches('.pdp-cmp__select-wrap')) return 'selector';
       if (el.matches('.pdp-cmp__battery-icon')) return 'icon';
-      if (el.matches('.pdp-cmp__compact-partial-main')) return 'stat';
+      if (el.matches('.pdp-cmp__compact-partial-main, .pdp-cmp__compact-partial-number')) return 'stat';
       if (el.matches('.pdp-cmp__stat-x')) return '×';
       return 'text';
     }

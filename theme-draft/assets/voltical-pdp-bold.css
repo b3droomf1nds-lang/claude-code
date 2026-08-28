@@ -1642,6 +1642,21 @@
     font-variant-numeric: tabular-nums;
   }
 
+  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number,
+  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra {
+    display: block;
+    background: linear-gradient(0deg, #7A8FA4, #1D1D1F 50%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: 0.007em;
+    line-height: 32px;
+    text-align: center;
+  }
+
   .template-product .pdp-cmp__compact-battery {
     display: block;
     /* Only ~62% of this WebP canvas is the visible battery. At a 28% image
