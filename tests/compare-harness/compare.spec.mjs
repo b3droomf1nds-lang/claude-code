@@ -402,6 +402,28 @@ test('mobile eyebrow-alignment migration preserves the compact partial number an
   expect(savedHistory.flat().map((entry) => entry.key)).toEqual([keys.number]);
 });
 
+test('mobile extra restore migration restores authored copy without moving its box', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${baseUrl}?edit=1`);
+  const key = await page.locator('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra').evaluate((el) => el.__cvKey);
+  await Promise.all([
+    page.waitForEvent('load'),
+    page.evaluate((extraKey) => {
+      localStorage.setItem('volt-canva-layout-4', JSON.stringify({
+        [extraKey]: { dx: 4, dy: -6, s: 1.2, text: '' }
+      }));
+      localStorage.setItem('volt-canva-compact-partial-reference-v1', '1');
+      localStorage.setItem('volt-canva-compact-partial-eyebrow-align-v1', '1');
+      localStorage.removeItem('volt-canva-compact-partial-extra-restore-v1');
+      location.reload();
+    }, key)
+  ]);
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-layout-4') || '{}'));
+  expect(saved[key]).toMatchObject({ dx: 4, dy: -6, s: 1.2 });
+  expect(saved[key].text).toBeUndefined();
+  await expect(page.locator('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra')).toHaveText('extra');
+});
+
 test('Canva exposes the compact partial live stat for moving and resizing', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${baseUrl}?edit=1`);
