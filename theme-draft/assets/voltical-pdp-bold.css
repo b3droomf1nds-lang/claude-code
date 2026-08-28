@@ -1622,17 +1622,14 @@
     flex: none;
   }
 
-  /* Match the supplied 70% faster reference: one two-line display hero,
-     faded from the reference's blue-grey into ink. The value remains a live
+  /* Match the supplied 70% faster reference: a solid numeric value with a
+     separate, blue-grey-to-ink word beneath it. The value remains a live
      calculator output; only its presentation changes. */
   .template-product .pdp-cmp__compact-partial-main {
-    background: linear-gradient(0deg, #7A8FA4, #1D1D1F 50%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: #1D1D1F;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
     font-size: 28px;
-    font-weight: 500;
+    font-weight: 400;
     letter-spacing: 0.007em;
     line-height: 32px;
     text-align: center;
@@ -1645,29 +1642,37 @@
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number,
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra {
     display: block;
-    background: linear-gradient(0deg, #7A8FA4, #1D1D1F 50%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
     font-size: 28px;
-    font-weight: 500;
+    font-weight: 400;
     letter-spacing: 0.007em;
     line-height: 32px;
     text-align: center;
   }
 
-  /* iOS Safari can drop a second block-level gradient-text run after a
-     restored contenteditable value. Keep the standalone word readable while
-     the number retains the reference gradient treatment above. */
-  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra {
+  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number {
     background: none;
-    color: #3c4653;
-    -webkit-text-fill-color: #3c4653;
+    color: #1D1D1F;
+    -webkit-text-fill-color: #1D1D1F;
+  }
+
+  /* The reference fades only the word: near-ink at its top into the muted
+     blue-grey at its base. The text is still a separate Canva text box. */
+  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra {
+    background: linear-gradient(to top, #7A8FA4 0%, #1D1D1F 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
   }
 
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra:empty::after {
     content: 'extra';
+    background: linear-gradient(to top, #7A8FA4 0%, #1D1D1F 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
   }
 
   .template-product .pdp-cmp__compact-battery {

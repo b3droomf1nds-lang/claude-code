@@ -93,11 +93,15 @@ test.describe('responsive render', () => {
         await expect(partialExtra).toHaveText('extra');
         await expect(partialNumber).toHaveCSS('display', 'block');
         await expect(partialExtra).toHaveCSS('display', 'block');
-        await expect(partial.locator('.pdp-cmp__sub')).toHaveText('20% to 80% charges');
-        await expect(partialNumber).toHaveCSS(
+        await expect(partialNumber).toHaveCSS('font-weight', '400');
+        await expect(partialExtra).toHaveCSS('font-weight', '400');
+        await expect(partialNumber).toHaveCSS('color', 'rgb(29, 29, 31)');
+        await expect(partialNumber).toHaveCSS('background-image', 'none');
+        await expect(partialExtra).toHaveCSS(
           'background-image',
-          'linear-gradient(0deg, rgb(122, 143, 164), rgb(29, 29, 31) 50%)'
+          'linear-gradient(to top, rgb(122, 143, 164) 0%, rgb(29, 29, 31) 100%)'
         );
+        await expect(partial.locator('.pdp-cmp__sub')).toHaveText('20% to 80% charges');
         const partialLayout = await partial.evaluate((card) => {
           const cardRect = card.getBoundingClientRect();
           const read = (selector) => {
