@@ -1652,8 +1652,11 @@
 
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number {
     background: none;
-    color: #1D1D1F;
-    -webkit-text-fill-color: #1D1D1F;
+    background-image: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    color: #131316;
+    -webkit-text-fill-color: #131316;
   }
 
   /* The reference fades only the word: near-ink at its top into the muted
