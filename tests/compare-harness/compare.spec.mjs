@@ -134,6 +134,26 @@ test.describe('responsive render', () => {
             })()
           };
         });
+        const videoLayout = await page.locator('.pdp-cmp__card--compact-video').evaluate((card) => {
+          const cardRect = card.getBoundingClientRect();
+          const eyebrow = card.querySelector(':scope > .pdp-cmp__eyebrow');
+          const battery = card.querySelector(':scope > .pdp-cmp__compact-battery');
+          const eyebrowRect = eyebrow.getBoundingClientRect();
+          const batteryStyle = getComputedStyle(battery);
+          return {
+            eyebrowTop: eyebrowRect.top - cardRect.top,
+            eyebrowStyle: {
+              color: getComputedStyle(eyebrow).color,
+              fontFamily: getComputedStyle(eyebrow).fontFamily,
+              fontSize: getComputedStyle(eyebrow).fontSize,
+              fontWeight: getComputedStyle(eyebrow).fontWeight,
+              letterSpacing: getComputedStyle(eyebrow).letterSpacing,
+              lineHeight: getComputedStyle(eyebrow).lineHeight
+            },
+            batteryTop: batteryStyle.top,
+            batteryPosition: batteryStyle.position
+          };
+        });
         expect(Math.abs(partialLayout.hero.top - (partialLayout.height / 2 - 45))).toBeLessThanOrEqual(1);
         expect(Math.abs(partialLayout.descriptor.top - (partialLayout.height / 2 + 23))).toBeLessThanOrEqual(1);
         expect(partialLayout.hero.height).toBeCloseTo(64, 0);
@@ -147,13 +167,22 @@ test.describe('responsive render', () => {
           whiteSpace: 'nowrap'
         });
         expect(partialLayout.eyebrowStyle).toMatchObject({
-          color: 'rgb(96, 111, 127)',
+          color: 'rgb(115, 125, 139)',
           fontSize: '14px',
-          letterSpacing: '-0.224px',
-          lineHeight: '18px'
+          letterSpacing: 'normal',
+          lineHeight: '15.12px'
         });
         expect(partialLayout.descriptorStyle.scrollWidth).toBeLessThanOrEqual(partialLayout.descriptorStyle.clientWidth);
-        expect(Math.abs(partialLayout.eyebrow.top - (partialLayout.height / 2 - 67))).toBeLessThanOrEqual(1);
+        expect(Math.abs(partialLayout.eyebrow.top - videoLayout.eyebrowTop)).toBeLessThanOrEqual(1);
+        expect(videoLayout.eyebrowStyle).toMatchObject({
+          color: partialLayout.eyebrowStyle.color,
+          fontSize: partialLayout.eyebrowStyle.fontSize,
+          fontWeight: '400',
+          letterSpacing: partialLayout.eyebrowStyle.letterSpacing,
+          lineHeight: partialLayout.eyebrowStyle.lineHeight
+        });
+        expect(videoLayout.batteryPosition).toBe('relative');
+        expect(videoLayout.batteryTop).toBe('-5px');
       } else {
         expect(kinds.flat()).toEqual(['video', 'fade', 'partial-image', 'magnet', 'charge', 'full']);
         await expect(page.locator('.pdp-cmp__card--compact-stat').first()).toBeHidden();
@@ -335,7 +364,7 @@ test('mobile reference migration clears only the compact-partial text layout and
     const card = document.querySelector('.pdp-cmp__card--compact-partial');
     const cardRect = card.getBoundingClientRect();
     const eyebrowRect = card.querySelector(':scope > .pdp-cmp__eyebrow').getBoundingClientRect();
-    return Math.abs((eyebrowRect.top - cardRect.top) - (cardRect.height / 2 - 67));
+    return Math.abs((eyebrowRect.top - cardRect.top) - (cardRect.height / 2 - (57.016 + window.innerWidth * 0.07222)));
   })).toBeLessThanOrEqual(1);
 });
 
