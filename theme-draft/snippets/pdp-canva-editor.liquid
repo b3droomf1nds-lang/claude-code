@@ -577,9 +577,16 @@
     var COMPACT_FULL_REFERENCE_MIGRATION = 'volt-canva-compact-full-reference-v1';
     var resetCompactFullReference = !desktopMQ.matches &&
       ls(true, COMPACT_FULL_REFERENCE_MIGRATION) !== '1';
+    // If a user already ran the reference migration, their old saved caption
+    // can still override this updated supporting sentence. Remove only that
+    // saved HTML field once, preserving any move/scale they made in Canva.
+    var COMPACT_FULL_COPY_MIGRATION = 'volt-canva-compact-full-copy-v1';
+    var resetCompactFullCopy = !desktopMQ.matches &&
+      ls(true, COMPACT_FULL_COPY_MIGRATION) !== '1';
     var resetCompactPartialReferenceLayout = false;
     var resetCompactPartialKeys = {};
     var resetCompactFullReferenceLayout = false;
+    var resetCompactFullCopyLayout = false;
     var resetCompactFullKeys = {};
     els.forEach(function(el){
       var cs = getComputedStyle(el).transform;
@@ -659,6 +666,19 @@
           resetCompactFullReferenceLayout = true;
         }
       }
+      if (resetCompactFullCopy && el.matches(
+          '.pdp-cmp__card--compact-full > .pdp-cmp__sub')){
+        resetCompactFullKeys[el.__cvKey] = true;
+        var fullCopyEntry = layout[el.__cvKey];
+        if (fullCopyEntry && fullCopyEntry.text != null){
+          delete fullCopyEntry.text;
+          var fullCopyHasTransform = fullCopyEntry.dx || fullCopyEntry.dy ||
+            fullCopyEntry.axd || fullCopyEntry.ayd || fullCopyEntry.axm ||
+            fullCopyEntry.aym || (fullCopyEntry.s && fullCopyEntry.s !== 1);
+          if (!fullCopyHasTransform) delete layout[el.__cvKey];
+          resetCompactFullCopyLayout = true;
+        }
+      }
       if (el.__cvTextEditable && isChargeRangeCaption(el)){
         el.__cvOrigText = decorateChargeRangeText(el.__cvOrigText);
         var savedEntry = layout[el.__cvKey];
@@ -675,7 +695,8 @@
       }
       applyState(el);
     });
-    if (normalizedSavedChargeText || resetCompactPartialReferenceLayout || resetCompactFullReferenceLayout) {
+    if (normalizedSavedChargeText || resetCompactPartialReferenceLayout ||
+        resetCompactFullReferenceLayout || resetCompactFullCopyLayout) {
       ls(false, LKEY, JSON.stringify(layout));
     }
     if (resetCompactPartialReference) ls(false, COMPACT_PARTIAL_REFERENCE_MIGRATION, '1');
@@ -684,6 +705,7 @@
     if (restoreCompactPartialExtra) ls(false, COMPACT_PARTIAL_EXTRA_RESTORE_MIGRATION, '1');
     if (resetCompactPartialExtraVisibility) ls(false, COMPACT_PARTIAL_EXTRA_VISIBILITY_RESET_MIGRATION, '1');
     if (resetCompactFullReference) ls(false, COMPACT_FULL_REFERENCE_MIGRATION, '1');
+    if (resetCompactFullCopy) ls(false, COMPACT_FULL_COPY_MIGRATION, '1');
 
     // Rehydrate the undo stack saved before a Refresh: map each batch's
     // stored element keys back to the live elements. Any entry whose key no
