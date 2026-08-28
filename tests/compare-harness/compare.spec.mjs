@@ -98,11 +98,13 @@ test.describe('responsive render', () => {
         await expect(partialExtra).toHaveCSS('font-weight', '400');
         await expect(partialNumber).toHaveCSS('color', 'rgb(19, 19, 22)');
         await expect(partialNumber).toHaveCSS('background-image', 'none');
-        await expect(partialNumber).toHaveCSS('font-size', '26px');
-        await expect(partialNumber).toHaveCSS('letter-spacing', '-1.17px');
+        await expect(partialNumber).toHaveCSS('font-size', '29px');
+        await expect(partialNumber).toHaveCSS('letter-spacing', '-1.305px');
         const videoNumber = page.locator('.pdp-cmp__card--compact-video [data-calc-video-num]');
         expect(await partialNumber.evaluate((el) => getComputedStyle(el).fontFamily))
           .toBe(await videoNumber.evaluate((el) => getComputedStyle(el).fontFamily));
+        expect(await partialNumber.evaluate((el) => getComputedStyle(el).fontSize))
+          .toBe(await videoNumber.evaluate((el) => getComputedStyle(el).fontSize));
         await expect(partialExtra).toHaveCSS(
           'background-image',
           'linear-gradient(to top, rgb(98, 114, 131) 0%, rgb(23, 23, 25) 100%)'
