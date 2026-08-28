@@ -378,22 +378,24 @@
             </ul>
           {%- endif -%}
 
-          {%- if has_calc -%}
-            <div class="pdp-calc-inline" id="pdp-calc">
-              {% render 'capacity-calculator', product: product %}
-            </div>
-          {%- endif -%}
+          <div class="pdp-secondary-details" hidden>
+            {%- if has_calc -%}
+              <div class="pdp-calc-inline" id="pdp-calc">
+                {% render 'capacity-calculator', product: product %}
+              </div>
+            {%- endif -%}
 
-          {% render 'trust-badges', section: section %}
+            {% render 'trust-badges', section: section %}
 
-          {%- if product.description != blank -%}
-            <div class="pinfo__desc" style="margin-top:32px">
-              <span class="t-eyebrow" style="display:block;margin-bottom:10px">{{ 'products.description' | t }}</span>
-              <div class="t-body">{{ product.description }}</div>
-            </div>
-          {%- endif -%}
+            {%- if product.description != blank -%}
+              <div class="pinfo__desc" style="margin-top:32px">
+                <span class="t-eyebrow" style="display:block;margin-bottom:10px">{{ 'products.description' | t }}</span>
+                <div class="t-body">{{ product.description }}</div>
+              </div>
+            {%- endif -%}
 
-          {% render 'product-specs', product: product %}
+            {% render 'product-specs', product: product %}
+          </div>
         </div>
       </div>
 

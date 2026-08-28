@@ -521,6 +521,12 @@
   margin: 0;
 }
 
+/* Keep the comparison experience focused: the secondary calculator/details
+   block is intentionally hidden at every viewport size. */
+.template-product .pdp-secondary-details {
+  display: none !important;
+}
+
 .pdp--bold .gallery__thumbs {
   justify-content: center;
 }
