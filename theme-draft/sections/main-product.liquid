@@ -359,26 +359,26 @@
         <div class="pinfo__below" data-reveal>
           {% render 'pdp-compare-inline' %}
           {% render 'pdp-canva-editor' %}
-          {%- if stat_src != blank -%}
-            <div class="pstats">
-              {%- assign stat_items = stat_src | split: ';' -%}
-              {%- for s in stat_items -%}
-                {%- assign parts = s | split: '|' -%}
-                <div class="pstats__tile"><span class="t-mono">{{ parts[0] }}</span><small>{{ parts[1] }}</small></div>
-              {%- endfor -%}
-            </div>
-          {%- endif -%}
-
-          {%- if check_src != blank -%}
-            <ul class="pchecks">
-              {%- assign check_items = check_src | split: ';' -%}
-              {%- for c in check_items -%}
-                <li>{{ c | strip }}</li>
-              {%- endfor -%}
-            </ul>
-          {%- endif -%}
-
           <div class="pdp-secondary-details" hidden>
+            {%- if stat_src != blank -%}
+              <div class="pstats">
+                {%- assign stat_items = stat_src | split: ';' -%}
+                {%- for s in stat_items -%}
+                  {%- assign parts = s | split: '|' -%}
+                  <div class="pstats__tile"><span class="t-mono">{{ parts[0] }}</span><small>{{ parts[1] }}</small></div>
+                {%- endfor -%}
+              </div>
+            {%- endif -%}
+
+            {%- if check_src != blank -%}
+              <ul class="pchecks">
+                {%- assign check_items = check_src | split: ';' -%}
+                {%- for c in check_items -%}
+                  <li>{{ c | strip }}</li>
+                {%- endfor -%}
+              </ul>
+            {%- endif -%}
+
             {%- if has_calc -%}
               <div class="pdp-calc-inline" id="pdp-calc">
                 {% render 'capacity-calculator', product: product %}
