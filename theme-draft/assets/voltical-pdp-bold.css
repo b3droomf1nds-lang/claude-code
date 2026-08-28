@@ -1731,9 +1731,54 @@
     line-height: .95;
   }
 
-  .template-product .pdp-cmp__card--compact-full > .pdp-cmp__stat {
-    font-size: 72px;
-    line-height: .95;
+  /* Adapt the supplied wide performance-card hierarchy to Voltical's live
+     full-charge claim: context, one gradient hero line, then a compact
+     two-line explanation. The calculator writes only the number span, so
+     the authored word "extra" never gains a misleading multiplication x. */
+  .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--compact-full {
+    gap: 8px;
+    padding: 28px 20px !important;
+  }
+
+  .template-product .pdp-cmp__card--compact-full > .pdp-cmp__eyebrow {
+    color: #131316;
+    font-family: var(--sans);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+  }
+
+  .template-product .pdp-cmp__card--compact-full > .pdp-cmp__compact-full-main {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.18em;
+    color: transparent;
+    font-family: var(--sans);
+    font-size: 48px;
+    font-weight: 600;
+    letter-spacing: -0.045em;
+    line-height: 1.04;
+    white-space: nowrap;
+    background: linear-gradient(90deg, #EFB3F9 0%, #B043FE 52%, #7559D4 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .template-product .pdp-cmp__compact-full-number {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .template-product .pdp-cmp__card--compact-full > .pdp-cmp__compact-full-detail {
+    color: #131316;
+    font-family: var(--sans);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.18;
+    white-space: normal !important;
   }
 
   .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__sub {

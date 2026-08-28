@@ -570,8 +570,17 @@
     var COMPACT_PARTIAL_EXTRA_VISIBILITY_RESET_MIGRATION = 'volt-canva-compact-partial-extra-visibility-v2';
     var resetCompactPartialExtraVisibility = !desktopMQ.matches &&
       ls(true, COMPACT_PARTIAL_EXTRA_VISIBILITY_RESET_MIGRATION) !== '1';
+    // This card now follows the supplied wide performance-card hierarchy.
+    // Clear only its old three-element mobile layout once so a saved Canva
+    // move or legacy plain stat cannot hide the new live-number + "extra"
+    // markup. Other cards and desktop state remain untouched.
+    var COMPACT_FULL_REFERENCE_MIGRATION = 'volt-canva-compact-full-reference-v1';
+    var resetCompactFullReference = !desktopMQ.matches &&
+      ls(true, COMPACT_FULL_REFERENCE_MIGRATION) !== '1';
     var resetCompactPartialReferenceLayout = false;
     var resetCompactPartialKeys = {};
+    var resetCompactFullReferenceLayout = false;
+    var resetCompactFullKeys = {};
     els.forEach(function(el){
       var cs = getComputedStyle(el).transform;
       el.__cvBase = (cs && cs !== 'none') ? cs : '';
@@ -640,6 +649,16 @@
           resetCompactPartialReferenceLayout = true;
         }
       }
+      if (resetCompactFullReference && el.matches(
+          '.pdp-cmp__card--compact-full > .pdp-cmp__eyebrow, ' +
+          '.pdp-cmp__card--compact-full > .pdp-cmp__stat, ' +
+          '.pdp-cmp__card--compact-full > .pdp-cmp__sub')){
+        resetCompactFullKeys[el.__cvKey] = true;
+        if (layout[el.__cvKey]){
+          delete layout[el.__cvKey];
+          resetCompactFullReferenceLayout = true;
+        }
+      }
       if (el.__cvTextEditable && isChargeRangeCaption(el)){
         el.__cvOrigText = decorateChargeRangeText(el.__cvOrigText);
         var savedEntry = layout[el.__cvKey];
@@ -656,7 +675,7 @@
       }
       applyState(el);
     });
-    if (normalizedSavedChargeText || resetCompactPartialReferenceLayout) {
+    if (normalizedSavedChargeText || resetCompactPartialReferenceLayout || resetCompactFullReferenceLayout) {
       ls(false, LKEY, JSON.stringify(layout));
     }
     if (resetCompactPartialReference) ls(false, COMPACT_PARTIAL_REFERENCE_MIGRATION, '1');
@@ -664,6 +683,7 @@
     if (resetCompactPartialEyebrowHeight) ls(false, COMPACT_PARTIAL_EYEBROW_HEIGHT_RESET_MIGRATION, '1');
     if (restoreCompactPartialExtra) ls(false, COMPACT_PARTIAL_EXTRA_RESTORE_MIGRATION, '1');
     if (resetCompactPartialExtraVisibility) ls(false, COMPACT_PARTIAL_EXTRA_VISIBILITY_RESET_MIGRATION, '1');
+    if (resetCompactFullReference) ls(false, COMPACT_FULL_REFERENCE_MIGRATION, '1');
 
     // Rehydrate the undo stack saved before a Refresh: map each batch's
     // stored element keys back to the live elements. Any entry whose key no
@@ -671,7 +691,7 @@
     // skipped so undo never hits a dead no-op step.
     history = savedHistory.map(function(batch){
       return (batch || []).map(function(b){
-        if (resetCompactPartialKeys[b.key]) return null;
+        if (resetCompactPartialKeys[b.key] || resetCompactFullKeys[b.key]) return null;
         var el = byKey[b.key];
         if (!el) return null;
         var prev = cloneEntry(b.prev);

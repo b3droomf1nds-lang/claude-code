@@ -110,6 +110,22 @@ test.describe('responsive render', () => {
           'linear-gradient(to top, rgb(98, 114, 131) 0%, rgb(23, 23, 25) 100%)'
         );
         await expect(partial.locator('.pdp-cmp__sub')).toHaveText('20% to 80% charges');
+        const compactFull = page.locator('.pdp-cmp__card--compact-full');
+        const compactFullHero = compactFull.locator(':scope > .pdp-cmp__compact-full-main');
+        const compactFullNumber = compactFullHero.locator(':scope > .pdp-cmp__compact-full-number');
+        const compactFullExtra = compactFullHero.locator(':scope > .pdp-cmp__compact-full-extra');
+        await expect(compactFullHero).toHaveText('2.1extra');
+        await expect(compactFullNumber).toHaveText('2.1');
+        await expect(compactFullExtra).toHaveText('extra');
+        await expect(compactFullNumber).not.toContainText('x');
+        await expect(compactFullHero).toHaveCSS('display', 'flex');
+        await expect(compactFullHero).toHaveCSS('font-size', '48px');
+        await expect(compactFullHero).toHaveCSS(
+          'background-image',
+          'linear-gradient(90deg, rgb(239, 179, 249) 0%, rgb(176, 67, 254) 52%, rgb(117, 89, 212) 100%)'
+        );
+        await expect(compactFull.locator(':scope > .pdp-cmp__compact-full-detail'))
+          .toHaveText('full iPhone chargesfor reliable power wherever you go.');
         const partialLayout = await partial.evaluate((card) => {
           const cardRect = card.getBoundingClientRect();
           const read = (selector) => {
@@ -416,6 +432,50 @@ test('mobile eyebrow-height reset preserves the compact partial number and extra
   expect(saved[keys.extra]).toMatchObject({ dx: 4, dy: -6 });
   const savedHistory = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-history-4') || '[]'));
   expect(savedHistory.flat().map((entry) => entry.key)).toEqual([keys.number]);
+});
+
+test('mobile full-card reference migration clears only its legacy Canva layout', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${baseUrl}?edit=1`);
+  const keys = await page.evaluate(() => {
+    const getKey = (selector) => document.querySelector(selector).__cvKey;
+    return {
+      eyebrow: getKey('.pdp-cmp__card--compact-full > .pdp-cmp__eyebrow'),
+      hero: getKey('.pdp-cmp__card--compact-full > .pdp-cmp__stat'),
+      detail: getKey('.pdp-cmp__card--compact-full > .pdp-cmp__sub'),
+      control: getKey('.pdp-cmp__card--compact-partial > .pdp-cmp__sub')
+    };
+  });
+
+  await Promise.all([
+    page.waitForEvent('load'),
+    page.evaluate((savedKeys) => {
+      localStorage.setItem('volt-canva-layout-4', JSON.stringify({
+        [savedKeys.eyebrow]: { dx: 4, dy: -8 },
+        [savedKeys.hero]: { dx: 11, dy: 7, s: 1.3, text: 'old full stat' },
+        [savedKeys.detail]: { dx: -5, dy: 9, text: 'old full copy' },
+        [savedKeys.control]: { dx: 3, dy: 2 }
+      }));
+      localStorage.setItem('volt-canva-history-4', JSON.stringify([[
+        { key: savedKeys.hero, prev: { text: 'older full stat' } },
+        { key: savedKeys.detail, prev: { dy: 2 } },
+        { key: savedKeys.control, prev: { dx: 1 } }
+      ]]));
+      localStorage.removeItem('volt-canva-compact-full-reference-v1');
+      location.reload();
+    }, keys)
+  ]);
+
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-layout-4') || '{}'));
+  expect(saved[keys.eyebrow]).toBeUndefined();
+  expect(saved[keys.hero]).toBeUndefined();
+  expect(saved[keys.detail]).toBeUndefined();
+  expect(saved[keys.control]).toMatchObject({ dx: 3, dy: 2 });
+  await expect(page.locator('.pdp-cmp__card--compact-full > .pdp-cmp__compact-full-main')).toHaveText('2.1extra');
+  await expect(page.locator('.pdp-cmp__card--compact-full > .pdp-cmp__compact-full-detail'))
+    .toHaveText('full iPhone chargesfor reliable power wherever you go.');
+  const savedHistory = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-history-4') || '[]'));
+  expect(savedHistory.flat().map((entry) => entry.key)).toEqual([keys.control]);
 });
 
 test('mobile extra blank-state repair restores authored copy without moving its box', async ({ page }) => {
