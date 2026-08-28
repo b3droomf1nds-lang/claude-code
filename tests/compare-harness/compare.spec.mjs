@@ -51,6 +51,7 @@ test.describe('source contracts', () => {
     expect(section).toMatch(/render 'pdp-compare-inline'[\s\S]*render 'pdp-canva-editor'/);
     expect(section).toMatch(/<div class="pdp-secondary-details" hidden>[\s\S]*class="pstats"[\s\S]*class="pchecks"[\s\S]*render 'capacity-calculator'/);
     expect(css).toMatch(/\.template-product \.pdp-secondary-details\s*\{\s*display:\s*none\s*!important;/);
+    expect(css).toMatch(/\.pdp-cmp-wrap\s*\{[\s\S]*padding-bottom:\s*calc\(\(470px - 21\.33px\) \/ 2\)/);
     expect(css.indexOf('CANVA-BAKED-START')).toBeGreaterThan(-1);
     expect(css.indexOf('CANVA-BAKED-END')).toBeGreaterThan(css.indexOf('CANVA-BAKED-START'));
     expect(css).toContain('@media (max-width: 899px)');
@@ -85,6 +86,8 @@ test.describe('responsive render', () => {
           ['video'], ['magnet'], ['charge'],
           ['compact-video', 'compact-partial'], ['compact-full']
         ]);
+        expect(await page.locator('.pdp-cmp-wrap').evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom)))
+          .toBeGreaterThan(220);
         const partial = page.locator('.pdp-cmp__card--compact-partial');
         const partialHero = partial.locator('.pdp-cmp__compact-partial-main');
         await expect(page.locator('.pdp-cmp__card--compact-video')).toHaveCSS('border-radius', '28px');

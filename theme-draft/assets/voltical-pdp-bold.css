@@ -1383,6 +1383,10 @@
     margin-right: calc(-1 * clamp(20px, 4vw, 44px));
     padding-left: clamp(20px, 4vw, 44px);
     padding-right: clamp(20px, 4vw, 44px);
+    /* Carry the tile-colour backdrop below the final compact tile by that
+       tile's own half-height, so the following story section does not cut
+       the comparison panel off abruptly. */
+    padding-bottom: calc((470px - 21.33px) / 2);
   }
 
   /* neutralize only the baked CAPTION-position transforms for these two
