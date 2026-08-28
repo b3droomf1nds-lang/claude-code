@@ -1662,6 +1662,7 @@
     /* Use the same face and weight as the neighbouring live number so the
        variable's stroke thickness matches even though its size differs. */
     font-family: var(--sans);
+    font-size: 29px;
     font-weight: 400;
     letter-spacing: -0.045em;
   }
