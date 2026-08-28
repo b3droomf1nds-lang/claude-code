@@ -1350,6 +1350,15 @@
    CANVA-BAKED block on purpose so a future "lock it" re-bake doesn't
    clobber it. ==== */
 @media (max-width: 899px) {
+  /* The comparison wrapper deliberately bleeds its existing tile-colour
+     backdrop to both screen edges. The generic mobile product-grid clip
+     otherwise cuts that backdrop off at the inner 20px gutters and exposes
+     the white page behind it. This is Core-only; the gallery still clips
+     within its own media frame. */
+  .pdp--bold.pdp--core .product__grid {
+    overflow: visible;
+  }
+
   /* backdrop behind the tiles reuses the existing --tile design token
      (also the tile's own default background elsewhere in this file)
      rather than a new one-off value. Full-bleed to the true screen

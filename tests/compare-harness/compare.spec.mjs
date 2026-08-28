@@ -53,6 +53,7 @@ test.describe('source contracts', () => {
     expect(css.indexOf('CANVA-BAKED-END')).toBeGreaterThan(css.indexOf('CANVA-BAKED-START'));
     expect(css).toContain('@media (max-width: 899px)');
     expect(css).toContain('@media (min-width: 900px)');
+    expect(css).toMatch(/\.pdp--bold\.pdp--core \.product__grid\s*\{\s*overflow:\s*visible;/);
     expect(editor).toContain("var LKEY = 'volt-canva-layout-4'");
     expect(editor).toContain("var HKEY = 'volt-canva-history-4'");
     expect(editor).toContain("matchMedia('(min-width:900px)')");
