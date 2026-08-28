@@ -1662,7 +1662,7 @@
   /* The reference fades only the word: near-ink at its top into the muted
      blue-grey at its base. The text is still a separate Canva text box. */
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra {
-    background: linear-gradient(to top, #7A8FA4 0%, #1D1D1F 100%);
+    background: linear-gradient(to top, #495662 0%, #111113 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -1671,7 +1671,7 @@
 
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra:empty::after {
     content: 'extra';
-    background: linear-gradient(to top, #7A8FA4 0%, #1D1D1F 100%);
+    background: linear-gradient(to top, #495662 0%, #111113 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
