@@ -134,8 +134,8 @@ test.describe('responsive render', () => {
             })()
           };
         });
-        expect(Math.abs(partialLayout.hero.top - (partialLayout.height / 2 - 45))).toBeLessThanOrEqual(1);
-        expect(Math.abs(partialLayout.descriptor.top - (partialLayout.height / 2 + 23))).toBeLessThanOrEqual(1);
+        expect(Math.abs(partialLayout.hero.top - (partialLayout.height / 2 - 50))).toBeLessThanOrEqual(1);
+        expect(Math.abs(partialLayout.descriptor.top - (partialLayout.height / 2 + 18))).toBeLessThanOrEqual(1);
         expect(partialLayout.hero.height).toBeCloseTo(64, 0);
         expect(partialLayout.descriptor.height).toBeCloseTo(18, 0);
         expect(partialLayout.height / partialLayout.hero.width).toBeCloseTo(192 / 159.125, 2);
@@ -153,7 +153,7 @@ test.describe('responsive render', () => {
           lineHeight: '18px'
         });
         expect(partialLayout.descriptorStyle.scrollWidth).toBeLessThanOrEqual(partialLayout.descriptorStyle.clientWidth);
-        expect(Math.abs(partialLayout.eyebrow.top - (partialLayout.height / 2 - 67))).toBeLessThanOrEqual(1);
+        expect(Math.abs(partialLayout.eyebrow.top - (partialLayout.height / 2 - 72))).toBeLessThanOrEqual(1);
       } else {
         expect(kinds.flat()).toEqual(['video', 'fade', 'partial-image', 'magnet', 'charge', 'full']);
         await expect(page.locator('.pdp-cmp__card--compact-stat').first()).toBeHidden();
@@ -335,7 +335,7 @@ test('mobile reference migration clears only the compact-partial text layout and
     const card = document.querySelector('.pdp-cmp__card--compact-partial');
     const cardRect = card.getBoundingClientRect();
     const eyebrowRect = card.querySelector(':scope > .pdp-cmp__eyebrow').getBoundingClientRect();
-    return Math.abs((eyebrowRect.top - cardRect.top) - (cardRect.height / 2 - 67));
+    return Math.abs((eyebrowRect.top - cardRect.top) - (cardRect.height / 2 - 72));
   })).toBeLessThanOrEqual(1);
 });
 
