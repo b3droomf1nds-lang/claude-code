@@ -1727,7 +1727,7 @@
     position: absolute !important;
     /* Mirror the adjacent compact-video card's vertically centred flex
        position, including its responsive battery footprint. */
-    top: calc(50% - 46.616px - 7.222vw) !important;
+    top: calc(50% - 36.616px - 7.222vw) !important;
     left: 0;
     right: 0;
     color: #737d8b;
