@@ -99,7 +99,7 @@ test.describe('responsive render', () => {
         await expect(partialNumber).toHaveCSS('background-image', 'none');
         await expect(partialExtra).toHaveCSS(
           'background-image',
-          'linear-gradient(to top, rgb(73, 86, 98) 0%, rgb(17, 17, 19) 100%)'
+          'linear-gradient(to top, rgb(98, 114, 131) 0%, rgb(23, 23, 25) 100%)'
         );
         await expect(partial.locator('.pdp-cmp__sub')).toHaveText('20% to 80% charges');
         const partialLayout = await partial.evaluate((card) => {
