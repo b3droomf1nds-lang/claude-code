@@ -1657,6 +1657,9 @@
     background-clip: border-box;
     color: #131316;
     -webkit-text-fill-color: #131316;
+    /* Pull the glyphs toward the decimal just like the compact video
+       statistic, without changing the spacing of the faded word. */
+    letter-spacing: -0.045em;
   }
 
   /* The reference fades only the word: near-ink at its top into the muted

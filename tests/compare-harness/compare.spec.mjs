@@ -97,6 +97,7 @@ test.describe('responsive render', () => {
         await expect(partialExtra).toHaveCSS('font-weight', '400');
         await expect(partialNumber).toHaveCSS('color', 'rgb(19, 19, 22)');
         await expect(partialNumber).toHaveCSS('background-image', 'none');
+        await expect(partialNumber).toHaveCSS('letter-spacing', '-1.26px');
         await expect(partialExtra).toHaveCSS(
           'background-image',
           'linear-gradient(to top, rgb(98, 114, 131) 0%, rgb(23, 23, 25) 100%)'
