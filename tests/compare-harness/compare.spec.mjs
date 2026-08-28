@@ -173,7 +173,7 @@ test.describe('responsive render', () => {
           lineHeight: '15.12px'
         });
         expect(partialLayout.descriptorStyle.scrollWidth).toBeLessThanOrEqual(partialLayout.descriptorStyle.clientWidth);
-        expect(Math.abs(partialLayout.eyebrow.top - (partialLayout.height / 2 - (36.616 + viewport.width * 0.07222)))).toBeLessThanOrEqual(1);
+        expect(Math.abs(partialLayout.eyebrow.top - videoLayout.eyebrowTop)).toBeLessThanOrEqual(1);
         expect(videoLayout.eyebrowStyle).toMatchObject({
           color: partialLayout.eyebrowStyle.color,
           fontSize: partialLayout.eyebrowStyle.fontSize,
@@ -361,10 +361,13 @@ test('mobile reference migration clears only the compact-partial text layout and
   const savedHistory = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-history-4') || '[]'));
   expect(savedHistory.flat().map((entry) => entry.key)).toEqual([keys.control]);
   await expect.poll(() => page.evaluate(() => {
-    const card = document.querySelector('.pdp-cmp__card--compact-partial');
-    const cardRect = card.getBoundingClientRect();
-    const eyebrowRect = card.querySelector(':scope > .pdp-cmp__eyebrow').getBoundingClientRect();
-    return Math.abs((eyebrowRect.top - cardRect.top) - (cardRect.height / 2 - (36.616 + window.innerWidth * 0.07222)));
+    const leftCard = document.querySelector('.pdp-cmp__card--compact-video');
+    const rightCard = document.querySelector('.pdp-cmp__card--compact-partial');
+    const leftCardRect = leftCard.getBoundingClientRect();
+    const rightCardRect = rightCard.getBoundingClientRect();
+    const leftEyebrowRect = leftCard.querySelector(':scope > .pdp-cmp__eyebrow').getBoundingClientRect();
+    const rightEyebrowRect = rightCard.querySelector(':scope > .pdp-cmp__eyebrow').getBoundingClientRect();
+    return Math.abs((leftEyebrowRect.top - leftCardRect.top) - (rightEyebrowRect.top - rightCardRect.top));
   })).toBeLessThanOrEqual(1);
 });
 

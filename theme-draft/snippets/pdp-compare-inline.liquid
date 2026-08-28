@@ -133,9 +133,29 @@
       if (!el.textContent.trim()) el.textContent = 'extra';
     });
   }
-  restoreCompactPartialExtra();
-  setTimeout(restoreCompactPartialExtra, 250);
-  setTimeout(restoreCompactPartialExtra, 1000);
+  function alignCompactPartialEyebrows(){
+    if (window.matchMedia('(min-width:900px)').matches) return;
+    var left = document.querySelector('.pdp-cmp__card--compact-video > .pdp-cmp__eyebrow');
+    var right = document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow');
+    if (!left || !right) return;
+    // Match the rendered positions directly. This tracks the real left-card
+    // flex layout (including the battery asset) instead of approximating it
+    // with a viewport formula, so the two labels stay level on iPhone Safari.
+    var delta = left.getBoundingClientRect().top - right.getBoundingClientRect().top;
+    var top = parseFloat(window.getComputedStyle(right).top);
+    if (isFinite(top) && Math.abs(delta) > 0.01){
+      right.style.setProperty('top', (top + delta) + 'px', 'important');
+    }
+  }
+  function repairCompactPartialCard(){
+    restoreCompactPartialExtra();
+    alignCompactPartialEyebrows();
+  }
+  repairCompactPartialCard();
+  requestAnimationFrame(repairCompactPartialCard);
+  setTimeout(repairCompactPartialCard, 250);
+  setTimeout(repairCompactPartialCard, 1000);
+  window.addEventListener('resize', function(){ requestAnimationFrame(alignCompactPartialEyebrows); });
 </script>
 
 <script>
