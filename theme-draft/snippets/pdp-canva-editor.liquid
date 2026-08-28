@@ -264,6 +264,12 @@
     function isChargeRangeCaption(el){
       return el.matches('.pdp-cmp__sub--range');
     }
+    function isCompactPartialExtra(el){
+      return el.matches('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra');
+    }
+    function isBlankHtml(html){
+      return !String(html || '').replace(/<[^>]*>|&nbsp;/gi, '').trim();
+    }
     // Wider than isTextEditable: also covers the big live-computed stat
     // numbers (e.g. "67h"), which must NOT be made typeable (they're
     // overwritten by the compare script on recalculation) but still
@@ -437,6 +443,10 @@
         // back to its original content, not just sit however it was left.
         var wantText = st.text != null ? st.text : el.__cvOrigText;
         if (isChargeRangeCaption(el)) wantText = decorateChargeRangeText(wantText);
+        // “extra” is an authored label, not optional content. Older local
+        // Canva state can contain an empty text value, so heal that state
+        // rather than leaving an invisible, hard-to-recover text box.
+        if (isCompactPartialExtra(el) && isBlankHtml(wantText)) wantText = el.__cvOrigText;
         if (el !== editingEl && el.innerHTML !== wantText){
           el.innerHTML = wantText;
         }
@@ -479,6 +489,7 @@
       st.text = isChargeRangeCaption(el)
         ? decorateChargeRangeText(el.innerHTML)
         : el.innerHTML;
+      if (isCompactPartialExtra(el) && isBlankHtml(st.text)) st.text = el.__cvOrigText;
       saveState(el, st);
     }
 
@@ -556,6 +567,19 @@
       el.__cvTextEditable = isTextEditable(el);
       el.__cvAlignH = isAlignHoriz(el);
       el.__cvOrigText = el.__cvTextEditable ? el.innerHTML : null;
+      // Apply this repair every load, not just in the one-time migration:
+      // Safari can retain a blank old edit after that migration has run.
+      if (isCompactPartialExtra(el)){
+        var currentExtraEntry = layout[el.__cvKey];
+        if (currentExtraEntry && currentExtraEntry.text != null && isBlankHtml(currentExtraEntry.text)){
+          delete currentExtraEntry.text;
+          var currentExtraHasTransform = currentExtraEntry.dx || currentExtraEntry.dy ||
+            currentExtraEntry.axd || currentExtraEntry.ayd || currentExtraEntry.axm ||
+            currentExtraEntry.aym || (currentExtraEntry.s && currentExtraEntry.s !== 1);
+          if (!currentExtraHasTransform) delete layout[el.__cvKey];
+          resetCompactPartialReferenceLayout = true;
+        }
+      }
       if (resetCompactPartialReference && el.matches(
           '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow, ' +
           '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number, ' +
