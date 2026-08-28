@@ -98,6 +98,9 @@ test.describe('responsive render', () => {
         await expect(partialNumber).toHaveCSS('color', 'rgb(19, 19, 22)');
         await expect(partialNumber).toHaveCSS('background-image', 'none');
         await expect(partialNumber).toHaveCSS('letter-spacing', '-1.26px');
+        const videoNumber = page.locator('.pdp-cmp__card--compact-video [data-calc-video-num]');
+        expect(await partialNumber.evaluate((el) => getComputedStyle(el).fontFamily))
+          .toBe(await videoNumber.evaluate((el) => getComputedStyle(el).fontFamily));
         await expect(partialExtra).toHaveCSS(
           'background-image',
           'linear-gradient(to top, rgb(98, 114, 131) 0%, rgb(23, 23, 25) 100%)'

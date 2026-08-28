@@ -1659,6 +1659,10 @@
     -webkit-text-fill-color: #131316;
     /* Pull the glyphs toward the decimal just like the compact video
        statistic, without changing the spacing of the faded word. */
+    /* Use the same face and weight as the neighbouring live number so the
+       variable's stroke thickness matches even though its size differs. */
+    font-family: var(--sans);
+    font-weight: 400;
     letter-spacing: -0.045em;
   }
 
