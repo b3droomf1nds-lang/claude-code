@@ -424,6 +424,40 @@ test('mobile extra blank-state repair restores authored copy without moving its 
   await expect(page.locator('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra')).toHaveText('extra');
 });
 
+test('mobile extra visibility repair removes a stale zero-scale Canva state', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${baseUrl}?edit=1`);
+  const keys = await page.evaluate(() => ({
+    extra: document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra').__cvKey,
+    control: document.querySelector('.pdp-cmp__card--compact-video > .pdp-cmp__sub').__cvKey
+  }));
+  await Promise.all([
+    page.waitForEvent('load'),
+    page.evaluate((savedKeys) => {
+      localStorage.setItem('volt-canva-layout-4', JSON.stringify({
+        [savedKeys.extra]: { dx: 8, dy: -4, s: 0, text: 'extra' },
+        [savedKeys.control]: { dx: 3, dy: 2 }
+      }));
+      localStorage.setItem('volt-canva-history-4', JSON.stringify([[{
+        key: savedKeys.extra, prev: { s: 0 }
+      }, {
+        key: savedKeys.control, prev: { dx: 1 }
+      }]]));
+      localStorage.setItem('volt-canva-compact-partial-reference-v1', '1');
+      localStorage.setItem('volt-canva-compact-partial-eyebrow-align-v1', '1');
+      localStorage.setItem('volt-canva-compact-partial-extra-restore-v1', '1');
+      localStorage.removeItem('volt-canva-compact-partial-extra-visibility-v2');
+      location.reload();
+    }, keys)
+  ]);
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-layout-4') || '{}'));
+  expect(saved[keys.extra]).toBeUndefined();
+  expect(saved[keys.control]).toMatchObject({ dx: 3, dy: 2 });
+  const savedHistory = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-history-4') || '[]'));
+  expect(savedHistory.flat().map((entry) => entry.key)).toEqual([keys.control]);
+  await expect(page.locator('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra')).toHaveText('extra');
+});
+
 test('Canva exposes the compact partial live stat for moving and resizing', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${baseUrl}?edit=1`);
