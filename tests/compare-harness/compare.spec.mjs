@@ -122,6 +122,7 @@ test.describe('responsive render', () => {
         await expect(compactFullHero).toHaveCSS('font-size', '56px');
         await expect(compactFullNumber).toHaveCSS('font-variant-numeric', 'proportional-nums');
         await expect(compactFull.locator(':scope > .pdp-cmp__compact-full-detail')).toHaveCSS('font-size', '18px');
+        await expect(compactFull.locator(':scope > .pdp-cmp__compact-full-detail')).toHaveCSS('color', 'rgb(115, 125, 139)');
         await expect(compactFullHero).toHaveCSS(
           'background-image',
           'linear-gradient(90deg, rgb(239, 179, 249) 0%, rgb(176, 67, 254) 52%, rgb(117, 89, 212) 100%)'
