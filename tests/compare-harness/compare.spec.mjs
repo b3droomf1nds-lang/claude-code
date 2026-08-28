@@ -368,7 +368,7 @@ test('mobile reference migration clears only the compact-partial text layout and
   })).toBeLessThanOrEqual(1);
 });
 
-test('mobile eyebrow-alignment migration preserves the compact partial number and extra', async ({ page }) => {
+test('mobile eyebrow-height reset preserves the compact partial number and extra', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${baseUrl}?edit=1`);
   const keys = await page.evaluate(() => ({
@@ -390,7 +390,8 @@ test('mobile eyebrow-alignment migration preserves the compact partial number an
         key: savedKeys.number, prev: { s: 1.2 }
       }]]));
       localStorage.setItem('volt-canva-compact-partial-reference-v1', '1');
-      localStorage.removeItem('volt-canva-compact-partial-eyebrow-align-v1');
+      localStorage.setItem('volt-canva-compact-partial-eyebrow-align-v1', '1');
+      localStorage.removeItem('volt-canva-compact-partial-eyebrow-height-v2');
       location.reload();
     }, keys)
   ]);

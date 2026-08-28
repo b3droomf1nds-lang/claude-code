@@ -552,6 +552,12 @@
     var COMPACT_PARTIAL_EYEBROW_ALIGN_MIGRATION = 'volt-canva-compact-partial-eyebrow-align-v1';
     var resetCompactPartialEyebrowAlignment = !desktopMQ.matches &&
       ls(true, COMPACT_PARTIAL_EYEBROW_ALIGN_MIGRATION) !== '1';
+    // The label may have been moved after the first alignment repair. Clear
+    // only this saved right-card label once more so it returns to the exact
+    // card-relative height of the adjacent compact-video "Up to" label.
+    var COMPACT_PARTIAL_EYEBROW_HEIGHT_RESET_MIGRATION = 'volt-canva-compact-partial-eyebrow-height-v2';
+    var resetCompactPartialEyebrowHeight = !desktopMQ.matches &&
+      ls(true, COMPACT_PARTIAL_EYEBROW_HEIGHT_RESET_MIGRATION) !== '1';
     // Restore the authored word “extra” if an older Canva text edit left this
     // new standalone text box blank. Its move and scale remain untouched.
     var COMPACT_PARTIAL_EXTRA_RESTORE_MIGRATION = 'volt-canva-compact-partial-extra-restore-v1';
@@ -606,6 +612,14 @@
           resetCompactPartialReferenceLayout = true;
         }
       }
+      if (resetCompactPartialEyebrowHeight && el.matches(
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow')){
+        resetCompactPartialKeys[el.__cvKey] = true;
+        if (layout[el.__cvKey]){
+          delete layout[el.__cvKey];
+          resetCompactPartialReferenceLayout = true;
+        }
+      }
       if (restoreCompactPartialExtra && el.matches(
           '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra')){
         resetCompactPartialKeys[el.__cvKey] = true;
@@ -647,6 +661,7 @@
     }
     if (resetCompactPartialReference) ls(false, COMPACT_PARTIAL_REFERENCE_MIGRATION, '1');
     if (resetCompactPartialEyebrowAlignment) ls(false, COMPACT_PARTIAL_EYEBROW_ALIGN_MIGRATION, '1');
+    if (resetCompactPartialEyebrowHeight) ls(false, COMPACT_PARTIAL_EYEBROW_HEIGHT_RESET_MIGRATION, '1');
     if (restoreCompactPartialExtra) ls(false, COMPACT_PARTIAL_EXTRA_RESTORE_MIGRATION, '1');
     if (resetCompactPartialExtraVisibility) ls(false, COMPACT_PARTIAL_EXTRA_VISIBILITY_RESET_MIGRATION, '1');
 
