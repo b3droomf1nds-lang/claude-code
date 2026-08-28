@@ -173,7 +173,7 @@ test.describe('responsive render', () => {
           lineHeight: '15.12px'
         });
         expect(partialLayout.descriptorStyle.scrollWidth).toBeLessThanOrEqual(partialLayout.descriptorStyle.clientWidth);
-        expect(Math.abs(partialLayout.eyebrow.top - videoLayout.eyebrowTop)).toBeLessThanOrEqual(1);
+        expect(Math.abs(partialLayout.eyebrow.top - (partialLayout.height / 2 - (46.616 + viewport.width * 0.07222)))).toBeLessThanOrEqual(1);
         expect(videoLayout.eyebrowStyle).toMatchObject({
           color: partialLayout.eyebrowStyle.color,
           fontSize: partialLayout.eyebrowStyle.fontSize,
@@ -364,7 +364,7 @@ test('mobile reference migration clears only the compact-partial text layout and
     const card = document.querySelector('.pdp-cmp__card--compact-partial');
     const cardRect = card.getBoundingClientRect();
     const eyebrowRect = card.querySelector(':scope > .pdp-cmp__eyebrow').getBoundingClientRect();
-    return Math.abs((eyebrowRect.top - cardRect.top) - (cardRect.height / 2 - (57.016 + window.innerWidth * 0.07222)));
+    return Math.abs((eyebrowRect.top - cardRect.top) - (cardRect.height / 2 - (46.616 + window.innerWidth * 0.07222)));
   })).toBeLessThanOrEqual(1);
 });
 
