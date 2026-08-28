@@ -368,6 +368,40 @@ test('mobile reference migration clears only the compact-partial text layout and
   })).toBeLessThanOrEqual(1);
 });
 
+test('mobile eyebrow-alignment migration preserves the compact partial number and extra', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${baseUrl}?edit=1`);
+  const keys = await page.evaluate(() => ({
+    eyebrow: document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow').__cvKey,
+    number: document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number').__cvKey,
+    extra: document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra').__cvKey
+  }));
+  await Promise.all([
+    page.waitForEvent('load'),
+    page.evaluate((savedKeys) => {
+      localStorage.setItem('volt-canva-layout-4', JSON.stringify({
+        [savedKeys.eyebrow]: { dx: 18, dy: -11 },
+        [savedKeys.number]: { dx: -9, dy: 14, s: 1.4 },
+        [savedKeys.extra]: { dx: 4, dy: -6 }
+      }));
+      localStorage.setItem('volt-canva-history-4', JSON.stringify([[{
+        key: savedKeys.eyebrow, prev: { dx: 4, dy: 6 }
+      }, {
+        key: savedKeys.number, prev: { s: 1.2 }
+      }]]));
+      localStorage.setItem('volt-canva-compact-partial-reference-v1', '1');
+      localStorage.removeItem('volt-canva-compact-partial-eyebrow-align-v1');
+      location.reload();
+    }, keys)
+  ]);
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-layout-4') || '{}'));
+  expect(saved[keys.eyebrow]).toBeUndefined();
+  expect(saved[keys.number]).toMatchObject({ dx: -9, dy: 14, s: 1.4 });
+  expect(saved[keys.extra]).toMatchObject({ dx: 4, dy: -6 });
+  const savedHistory = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-history-4') || '[]'));
+  expect(savedHistory.flat().map((entry) => entry.key)).toEqual([keys.number]);
+});
+
 test('Canva exposes the compact partial live stat for moving and resizing', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${baseUrl}?edit=1`);

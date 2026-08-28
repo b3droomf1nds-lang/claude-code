@@ -535,6 +535,12 @@
     var COMPACT_PARTIAL_REFERENCE_MIGRATION = 'volt-canva-compact-partial-reference-v1';
     var resetCompactPartialReference = !desktopMQ.matches &&
       ls(true, COMPACT_PARTIAL_REFERENCE_MIGRATION) !== '1';
+    // The label's type and responsive position were subsequently matched to
+    // the adjacent video card. Clear only its earlier hand-drag once, keeping
+    // the independently editable number, “extra”, and descriptor intact.
+    var COMPACT_PARTIAL_EYEBROW_ALIGN_MIGRATION = 'volt-canva-compact-partial-eyebrow-align-v1';
+    var resetCompactPartialEyebrowAlignment = !desktopMQ.matches &&
+      ls(true, COMPACT_PARTIAL_EYEBROW_ALIGN_MIGRATION) !== '1';
     var resetCompactPartialReferenceLayout = false;
     var resetCompactPartialKeys = {};
     els.forEach(function(el){
@@ -550,6 +556,14 @@
           '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number, ' +
           '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra, ' +
           '.pdp-cmp__card--compact-partial > .pdp-cmp__sub')){
+        resetCompactPartialKeys[el.__cvKey] = true;
+        if (layout[el.__cvKey]){
+          delete layout[el.__cvKey];
+          resetCompactPartialReferenceLayout = true;
+        }
+      }
+      if (resetCompactPartialEyebrowAlignment && el.matches(
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow')){
         resetCompactPartialKeys[el.__cvKey] = true;
         if (layout[el.__cvKey]){
           delete layout[el.__cvKey];
@@ -576,6 +590,7 @@
       ls(false, LKEY, JSON.stringify(layout));
     }
     if (resetCompactPartialReference) ls(false, COMPACT_PARTIAL_REFERENCE_MIGRATION, '1');
+    if (resetCompactPartialEyebrowAlignment) ls(false, COMPACT_PARTIAL_EYEBROW_ALIGN_MIGRATION, '1');
 
     // Rehydrate the undo stack saved before a Refresh: map each batch's
     // stored element keys back to the live elements. Any entry whose key no
