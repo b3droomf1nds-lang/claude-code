@@ -1710,7 +1710,7 @@
      mobile width instead of inheriting the neighbouring card's flex layout. */
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow {
     position: absolute !important;
-    top: calc(50% - 66px) !important;
+    top: calc(50% - 67px) !important;
     left: 0;
     right: 0;
     color: #606f7f;
@@ -1723,14 +1723,14 @@
 
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main {
     position: absolute;
-    top: calc(50% - 44px);
+    top: calc(50% - 45px);
     left: 0;
     right: 0;
   }
 
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__sub {
     position: absolute !important;
-    top: calc(50% + 24px) !important;
+    top: calc(50% + 23px) !important;
     left: 0;
     right: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
