@@ -126,13 +126,16 @@
 
 <script>
   /* A final Safari-safe display repair for an older saved blank Canva value.
-     The editor also normalizes the stored value; this makes the word visible
-     immediately even if an old cached editor runs first. */
-  setTimeout(function(){
+     Run again after the editor has started too: a previously cached editor can
+     otherwise apply its old blank value just after this snippet first renders. */
+  function restoreCompactPartialExtra(){
     document.querySelectorAll('.pdp-cmp__compact-partial-extra').forEach(function(el){
       if (!el.textContent.trim()) el.textContent = 'extra';
     });
-  }, 0);
+  }
+  restoreCompactPartialExtra();
+  setTimeout(restoreCompactPartialExtra, 250);
+  setTimeout(restoreCompactPartialExtra, 1000);
 </script>
 
 <script>
