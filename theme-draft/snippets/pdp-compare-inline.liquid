@@ -125,6 +125,17 @@
 </div>
 
 <script>
+  /* A final Safari-safe display repair for an older saved blank Canva value.
+     The editor also normalizes the stored value; this makes the word visible
+     immediately even if an old cached editor runs first. */
+  setTimeout(function(){
+    document.querySelectorAll('.pdp-cmp__compact-partial-extra').forEach(function(el){
+      if (!el.textContent.trim()) el.textContent = 'extra';
+    });
+  }, 0);
+</script>
+
+<script>
 (function () {
   var PHONES = {
     'iPhone X': [2.716, 18, 13], 'iPhone XS': [2.658, 18, 14], 'iPhone XS Max': [3.174, 18, 15],

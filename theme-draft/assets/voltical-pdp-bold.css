@@ -1657,6 +1657,19 @@
     text-align: center;
   }
 
+  /* iOS Safari can drop a second block-level gradient-text run after a
+     restored contenteditable value. Keep the standalone word readable while
+     the number retains the reference gradient treatment above. */
+  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra {
+    background: none;
+    color: #3c4653;
+    -webkit-text-fill-color: #3c4653;
+  }
+
+  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra:empty::after {
+    content: 'extra';
+  }
+
   .template-product .pdp-cmp__compact-battery {
     display: block;
     /* Only ~62% of this WebP canvas is the visible battery. At a 28% image
