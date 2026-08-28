@@ -1662,7 +1662,11 @@
     /* Use the same face and weight as the neighbouring live number so the
        variable's stroke thickness matches even though its size differs. */
     font-family: var(--sans);
-    font-size: 28px;
+    /* The decimal makes this three-glyph value read optically larger than
+       the two-digit live value beside it. A 26px optical size matches the
+       neighbouring 29px "67" on an actual phone while keeping the same
+       Inter face and 400 stroke weight. */
+    font-size: 26px;
     font-weight: 400;
     letter-spacing: -0.045em;
   }
