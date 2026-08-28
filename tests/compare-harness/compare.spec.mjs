@@ -84,8 +84,8 @@ test.describe('responsive render', () => {
         ]);
         const partial = page.locator('.pdp-cmp__card--compact-partial');
         const partialHero = partial.locator('.pdp-cmp__compact-partial-main');
-        await expect(page.locator('.pdp-cmp__card--compact-video')).toHaveCSS('border-radius', '12px');
-        await expect(partial).toHaveCSS('border-radius', '12px');
+        await expect(page.locator('.pdp-cmp__card--compact-video')).toHaveCSS('border-radius', '28px');
+        await expect(partial).toHaveCSS('border-radius', '28px');
         await expect(partialHero).toHaveText('3.6extra');
         const partialNumber = partialHero.locator(':scope > .pdp-cmp__compact-partial-number');
         const partialExtra = partialHero.locator(':scope > .pdp-cmp__compact-partial-extra');

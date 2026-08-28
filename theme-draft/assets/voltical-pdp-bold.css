@@ -1577,7 +1577,7 @@
   .template-product .pdp-cmp__card--compact-partial {
     height: auto;
     aspect-ratio: 159.125 / 192;
-    border-radius: 12px;
+    border-radius: 28px;
     justify-content: space-between !important;
     padding: 22px 10px !important;
   }
