@@ -1736,17 +1736,17 @@
      two-line explanation. The calculator writes only the number span, so
      the authored word "extra" never gains a misleading multiplication x. */
   .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--compact-full {
-    gap: 8px;
-    padding: 28px 20px !important;
+    gap: 10px;
+    padding: 24px 20px !important;
   }
 
   .template-product .pdp-cmp__card--compact-full > .pdp-cmp__eyebrow {
     color: #131316;
     font-family: var(--sans);
-    font-size: 17px;
+    font-size: 19px;
     font-weight: 600;
     letter-spacing: -0.02em;
-    line-height: 1.12;
+    line-height: 1.1;
   }
 
   .template-product .pdp-cmp__card--compact-full > .pdp-cmp__compact-full-main {
@@ -1756,7 +1756,7 @@
     gap: 0.18em;
     color: transparent;
     font-family: var(--sans);
-    font-size: 48px;
+    font-size: 56px;
     font-weight: 600;
     letter-spacing: -0.045em;
     line-height: 1.04;
@@ -1768,17 +1768,10 @@
   }
 
   .template-product .pdp-cmp__compact-full-number {
-    font-variant-numeric: tabular-nums;
-  }
-
-  .template-product .pdp-cmp__card--compact-full > .pdp-cmp__compact-full-detail {
-    color: #131316;
-    font-family: var(--sans);
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: -0.025em;
-    line-height: 1.18;
-    white-space: normal !important;
+    /* The calculator can produce 1, 2.1, 3.6, etc. Proportional figures
+       keep a live “1” optically natural rather than forcing a tabular slot. */
+    font-feature-settings: "pnum";
+    font-variant-numeric: proportional-nums;
   }
 
   .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__sub {
@@ -1786,6 +1779,19 @@
     font-family: var(--sans);
     font-size: 14px;
     line-height: 1.08;
+    white-space: normal !important;
+  }
+
+  /* This must follow the generic compact-caption rule above: the short-wide
+     card uses a deliberately larger two-line explanation as part of its
+     performance-card hierarchy. */
+  .template-product .pdp-cmp__card--compact-full > .pdp-cmp__compact-full-detail {
+    color: #131316;
+    font-family: var(--sans);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.18;
     white-space: normal !important;
   }
 
