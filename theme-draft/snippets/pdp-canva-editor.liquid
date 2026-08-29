@@ -596,6 +596,11 @@
     var COMPACT_FULL_COPY_MIGRATION = 'volt-canva-compact-full-copy-v3';
     var resetCompactFullCopy = !desktopMQ.matches &&
       ls(true, COMPACT_FULL_COPY_MIGRATION) !== '1';
+    // The top-up caption copy was refined after earlier Canva edits. Clear
+    // only an older saved text override once, preserving any move or scale.
+    var COMPACT_PARTIAL_COPY_MIGRATION = 'volt-canva-compact-partial-copy-v1';
+    var resetCompactPartialCopy = !desktopMQ.matches &&
+      ls(true, COMPACT_PARTIAL_COPY_MIGRATION) !== '1';
     // This card was reshaped to compact-full's full-width shell and flow
     // layout (was a small absolutely-centred square). Clear any saved Canva
     // move/resize on its four elements once so an old drag from the previous
@@ -626,6 +631,7 @@
     var resetCompactVideoReferenceLayout = false;
     var resetCompactVideoKeys = {};
     var resetCompactPartialReferenceLayout = false;
+    var resetCompactPartialCopyLayout = false;
     var resetCompactPartialKeys = {};
     var resetCompactFullReferenceLayout = false;
     var resetCompactFullCopyLayout = false;
@@ -730,6 +736,19 @@
           resetCompactVideoReferenceLayout = true;
         }
       }
+      if (resetCompactPartialCopy && el.matches(
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__sub')){
+        resetCompactPartialKeys[el.__cvKey] = true;
+        var partialCopyEntry = layout[el.__cvKey];
+        if (partialCopyEntry && partialCopyEntry.text != null){
+          delete partialCopyEntry.text;
+          var partialCopyHasTransform = partialCopyEntry.dx || partialCopyEntry.dy ||
+            partialCopyEntry.axd || partialCopyEntry.ayd || partialCopyEntry.axm ||
+            partialCopyEntry.aym || (partialCopyEntry.s && partialCopyEntry.s !== 1);
+          if (!partialCopyHasTransform) delete layout[el.__cvKey];
+          resetCompactPartialCopyLayout = true;
+        }
+      }
       if (resetCompactPartialShape && el.matches(
           '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow, ' +
           '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main, ' +
@@ -783,7 +802,8 @@
     });
     if (normalizedSavedChargeText || resetCompactVideoReferenceLayout ||
         resetCompactPartialReferenceLayout ||
-        resetCompactFullReferenceLayout || resetCompactFullCopyLayout) {
+        resetCompactFullReferenceLayout || resetCompactFullCopyLayout ||
+        resetCompactPartialCopyLayout) {
       ls(false, LKEY, JSON.stringify(layout));
     }
     if (resetCompactVideoReference) ls(false, COMPACT_VIDEO_REFERENCE_MIGRATION, '1');
@@ -794,6 +814,7 @@
     if (restoreCompactPartialExtra) ls(false, COMPACT_PARTIAL_EXTRA_RESTORE_MIGRATION, '1');
     if (resetCompactPartialExtraVisibility) ls(false, COMPACT_PARTIAL_EXTRA_VISIBILITY_RESET_MIGRATION, '1');
     if (resetCompactPartialShape) ls(false, COMPACT_PARTIAL_SHAPE_MIGRATION, '1');
+    if (resetCompactPartialCopy) ls(false, COMPACT_PARTIAL_COPY_MIGRATION, '1');
     if (resetCompactFullReference) ls(false, COMPACT_FULL_REFERENCE_MIGRATION, '1');
     if (resetCompactFullCopy) ls(false, COMPACT_FULL_COPY_MIGRATION, '1');
 

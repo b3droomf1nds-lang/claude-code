@@ -1586,12 +1586,12 @@
 
   .template-product .pdp-cmp__card--compact-partial {
     grid-column: 1 / -1;
-    order: 2;
+    order: 3;
   }
 
   .template-product .pdp-cmp__card--compact-full {
     grid-column: 1 / -1;
-    order: 3;
+    order: 2;
   }
 
   .template-product .pdp-cmp__card--compact-stat {
@@ -1697,21 +1697,21 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* The live calculator number remains a solid ink value. The reference
-     treatment belongs only to the descriptive word beside it. */
+  /* Continue the reference fade through the number, but omit its deepest
+     near-black stop: the whole phrase starts at the reference's darkest navy
+     and stretches gently into the slate finish. */
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number {
-    background: none;
-    color: #171719;
-    -webkit-text-fill-color: #171719;
+    background: linear-gradient(90deg, #718196 0%, #4b5868 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
     font-feature-settings: "pnum";
     font-variant-numeric: proportional-nums;
   }
 
-  /* The reference fades only the word. Adapt its navy-to-slate treatment to
-     a left-to-right read, matching the separate-word setup in the larger card
-     below while keeping this live calculator number solid black. */
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra {
-    background: linear-gradient(90deg, #2c3543 0%, #718196 100%);
+    background: linear-gradient(90deg, #4b5868 0%, #2c3543 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -1720,7 +1720,7 @@
 
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra:empty::after {
     content: 'extra';
-    background: linear-gradient(90deg, #2c3543 0%, #718196 100%);
+    background: linear-gradient(90deg, #4b5868 0%, #2c3543 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
