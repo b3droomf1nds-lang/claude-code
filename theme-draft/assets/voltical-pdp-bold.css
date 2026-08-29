@@ -1817,10 +1817,10 @@
     white-space: normal !important;
   }
 
-  /* Bring back the quiet semibold hierarchy cue on just the two compact
-     “Up to” labels; all other text in those cards stays at its original
-     lighter weight. */
-  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow {
+  /* The compact-card framing is semibold; their live values and the faded
+     “extra” word retain their lighter, deliberately separate treatment. */
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow,
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__sub {
     font-weight: 600;
   }
 
@@ -1858,7 +1858,7 @@
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
     color: #606f7f;
     font-size: 14px;
-    font-weight: 400;
+    font-weight: 600;
     letter-spacing: -0.224px;
     line-height: 18px;
     white-space: nowrap !important;
