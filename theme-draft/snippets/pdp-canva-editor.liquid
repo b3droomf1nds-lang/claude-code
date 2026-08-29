@@ -558,6 +558,13 @@
     var COMPACT_PARTIAL_EYEBROW_HEIGHT_RESET_MIGRATION = 'volt-canva-compact-partial-eyebrow-height-v2';
     var resetCompactPartialEyebrowHeight = !desktopMQ.matches &&
       ls(true, COMPACT_PARTIAL_EYEBROW_HEIGHT_RESET_MIGRATION) !== '1';
+    // A hand resize/move can override the authored comparison between the two
+    // compact cards. Once, return just the right card's live value to the
+    // left card's authored type scale and its “Up to” label to the shared
+    // card-relative height. The other right-card copy remains untouched.
+    var COMPACT_PARTIAL_VALUE_SYNC_MIGRATION = 'volt-canva-compact-partial-value-sync-v1';
+    var resetCompactPartialValueSync = !desktopMQ.matches &&
+      ls(true, COMPACT_PARTIAL_VALUE_SYNC_MIGRATION) !== '1';
     // Restore the authored word “extra” if an older Canva text edit left this
     // new standalone text box blank. Its move and scale remain untouched.
     var COMPACT_PARTIAL_EXTRA_RESTORE_MIGRATION = 'volt-canva-compact-partial-extra-restore-v1';
@@ -656,6 +663,26 @@
           resetCompactPartialReferenceLayout = true;
         }
       }
+      if (resetCompactPartialValueSync && el.matches(
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number')){
+        // A label move changes its shared visual baseline, while only the
+        // number's scale can change its typography. Do not disturb its
+        // horizontal/vertical placement or the independent “extra” text.
+        resetCompactPartialKeys[el.__cvKey] = true;
+        var syncEntry = layout[el.__cvKey];
+        if (syncEntry){
+          if (el.matches('.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow')){
+            delete layout[el.__cvKey];
+          } else {
+            delete syncEntry.s;
+            var syncHasTransform = syncEntry.dx || syncEntry.dy || syncEntry.axd || syncEntry.ayd ||
+              syncEntry.axm || syncEntry.aym || (syncEntry.s && syncEntry.s !== 1) || syncEntry.text != null;
+            if (!syncHasTransform) delete layout[el.__cvKey];
+          }
+          resetCompactPartialReferenceLayout = true;
+        }
+      }
       if (resetCompactFullReference && el.matches(
           '.pdp-cmp__card--compact-full > .pdp-cmp__eyebrow, ' +
           '.pdp-cmp__card--compact-full > .pdp-cmp__stat, ' +
@@ -702,6 +729,7 @@
     if (resetCompactPartialReference) ls(false, COMPACT_PARTIAL_REFERENCE_MIGRATION, '1');
     if (resetCompactPartialEyebrowAlignment) ls(false, COMPACT_PARTIAL_EYEBROW_ALIGN_MIGRATION, '1');
     if (resetCompactPartialEyebrowHeight) ls(false, COMPACT_PARTIAL_EYEBROW_HEIGHT_RESET_MIGRATION, '1');
+    if (resetCompactPartialValueSync) ls(false, COMPACT_PARTIAL_VALUE_SYNC_MIGRATION, '1');
     if (restoreCompactPartialExtra) ls(false, COMPACT_PARTIAL_EXTRA_RESTORE_MIGRATION, '1');
     if (resetCompactPartialExtraVisibility) ls(false, COMPACT_PARTIAL_EXTRA_VISIBILITY_RESET_MIGRATION, '1');
     if (resetCompactFullReference) ls(false, COMPACT_FULL_REFERENCE_MIGRATION, '1');

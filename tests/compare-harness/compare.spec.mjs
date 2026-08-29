@@ -483,6 +483,57 @@ test('mobile eyebrow-height reset preserves the compact partial number and extra
   expect(savedHistory.flat().map((entry) => entry.key)).toEqual([keys.number]);
 });
 
+test('mobile compact-partial metric sync restores the right value scale and label height only', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${baseUrl}?edit=1`);
+  const keys = await page.evaluate(() => ({
+    eyebrow: document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow').__cvKey,
+    number: document.querySelector('.pdp-cmp__compact-partial-number').__cvKey,
+    extra: document.querySelector('.pdp-cmp__compact-partial-extra').__cvKey,
+    descriptor: document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__sub').__cvKey
+  }));
+
+  await Promise.all([
+    page.waitForEvent('load'),
+    page.evaluate((savedKeys) => {
+      localStorage.setItem('volt-canva-layout-4', JSON.stringify({
+        [savedKeys.eyebrow]: { dx: 8, dy: -13 },
+        [savedKeys.number]: { dx: -5, dy: 4, s: 1.35 },
+        [savedKeys.extra]: { dx: 6, dy: -3, s: 1.1 },
+        [savedKeys.descriptor]: { dx: 2, dy: 7 }
+      }));
+      localStorage.setItem('volt-canva-history-4', JSON.stringify([[{
+        key: savedKeys.eyebrow, prev: { dy: -8 }
+      }, {
+        key: savedKeys.number, prev: { s: 1.2 }
+      }, {
+        key: savedKeys.extra, prev: { dx: 1 }
+      }]]));
+      localStorage.setItem('volt-canva-compact-partial-reference-v1', '1');
+      localStorage.setItem('volt-canva-compact-partial-eyebrow-align-v1', '1');
+      localStorage.setItem('volt-canva-compact-partial-eyebrow-height-v2', '1');
+      localStorage.removeItem('volt-canva-compact-partial-value-sync-v1');
+      location.reload();
+    }, keys)
+  ]);
+
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-layout-4') || '{}'));
+  expect(saved[keys.eyebrow]).toBeUndefined();
+  expect(saved[keys.number]).toMatchObject({ dx: -5, dy: 4 });
+  expect(saved[keys.number].s).toBeUndefined();
+  expect(saved[keys.extra]).toMatchObject({ dx: 6, dy: -3, s: 1.1 });
+  expect(saved[keys.descriptor]).toMatchObject({ dx: 2, dy: 7 });
+  const savedHistory = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-history-4') || '[]'));
+  expect(savedHistory.flat().map((entry) => entry.key)).toEqual([keys.extra]);
+  await expect.poll(() => page.evaluate(() => {
+    const left = document.querySelector('.pdp-cmp__card--compact-video > .pdp-cmp__eyebrow');
+    const right = document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow');
+    const leftCard = left.closest('.pdp-cmp__card').getBoundingClientRect();
+    const rightCard = right.closest('.pdp-cmp__card').getBoundingClientRect();
+    return Math.abs((left.getBoundingClientRect().top - leftCard.top) - (right.getBoundingClientRect().top - rightCard.top));
+  })).toBeLessThanOrEqual(1);
+});
+
 test('mobile full-card reference migration clears only its legacy Canva layout', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${baseUrl}?edit=1`);
