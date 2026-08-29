@@ -279,6 +279,11 @@
     function isAlignHoriz(el){
       return isTextEditable(el) || el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__stat-x, .pdp-cmp__compact-video-number');
     }
+    // These two stay locked to their authored vertical position — dragging
+    // only ever moves them left/right, never up/down.
+    function isVertLocked(el){
+      return el.matches('.pdp-cmp__compact-video-number, .pdp-cmp__compact-video-hours');
+    }
     // The charge-time number and its battery form one deliberately composed
     // visual. Align all must leave that pair exactly where the editor placed it.
     function isAlignExcluded(el){
@@ -1053,7 +1058,7 @@
       if (d.mode === 'move'){
         if (Math.abs(e.clientX - d.sx) > 3 || Math.abs(e.clientY - d.sy) > 3) d.moved = true;
         st.dx = d.dx0 + (e.clientX - d.sx) / d.scx;
-        st.dy = d.dy0 + (e.clientY - d.sy) / d.scy;
+        st.dy = isVertLocked(d.el) ? d.dy0 : d.dy0 + (e.clientY - d.sy) / d.scy;
       } else {
         var dist = Math.hypot(e.clientX - d.cx, e.clientY - d.cy);
         var ns = d.s0 * (dist / d.d0);
@@ -1167,7 +1172,7 @@
         var screenX = sample.x - d.sx, screenY = sample.y - d.sy;
         if (Math.hypot(screenX, screenY) > 3) d.moved = true;
         st.dx = d.dx0 + d.inv.xx*screenX + d.inv.xy*screenY;
-        st.dy = d.dy0 + d.inv.yx*screenX + d.inv.yy*screenY;
+        st.dy = isVertLocked(d.el) ? d.dy0 : d.dy0 + d.inv.yx*screenX + d.inv.yy*screenY;
         moveX = screenX; moveY = screenY;
       } else {
         var dist = Math.hypot(sample.x - d.cx, sample.y - d.cy);
@@ -1517,7 +1522,8 @@
       // hold into one undo step the same way the wheel-resize burst does.
       var step = e.shiftKey ? 10 : 1, st = stateOf(sel), moved = true;
       if (e.key === 'ArrowLeft') st.dx -= step; else if (e.key === 'ArrowRight') st.dx += step;
-      else if (e.key === 'ArrowUp') st.dy -= step; else if (e.key === 'ArrowDown') st.dy += step;
+      else if (e.key === 'ArrowUp'){ if (!isVertLocked(sel)) st.dy -= step; else moved = false; }
+      else if (e.key === 'ArrowDown'){ if (!isVertLocked(sel)) st.dy += step; else moved = false; }
       else moved = false;
       if (moved){
         e.preventDefault();
