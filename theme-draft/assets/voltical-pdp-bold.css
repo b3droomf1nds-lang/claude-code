@@ -1378,15 +1378,16 @@
      itself (and everything in it) at the exact same width/position as
      before. */
   .pdp-cmp-wrap {
+    --compact-full-card-height: min(242px, calc((100vw - 40px) * 0.585956));
     background: var(--tile, #F7FAFA);
     margin-left: calc(-1 * clamp(20px, 4vw, 44px));
     margin-right: calc(-1 * clamp(20px, 4vw, 44px));
     padding-left: clamp(20px, 4vw, 44px);
     padding-right: clamp(20px, 4vw, 44px);
     /* Carry the tile-colour backdrop below the final compact tile by that
-       tile's own half-height, so the following story section does not cut
-       the comparison panel off abruptly. */
-    padding-bottom: calc((470px - 21.33px) / 2);
+       tile's own responsive height, so the following story section does not
+       cut the comparison panel off abruptly. */
+    padding-bottom: var(--compact-full-card-height);
   }
 
   /* neutralize only the baked CAPTION-position transforms for these two
@@ -1746,21 +1747,25 @@
      two-line explanation. The calculator writes only the number span, so
      the authored word "extra" never gains a misleading multiplication x. */
   .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--compact-full {
-    /* Scale the supplied reference composition into this existing 334×224px
-       shell: 40px top inset, label, 12px, hero, 11px, two-line caption. */
+    /* Match the supplied 413×242 reference shell at every phone width while
+       retaining Voltical's existing full-row width and 24px corner rhythm. */
+    width: min(100%, 413px);
+    height: auto;
+    aspect-ratio: 413 / 242;
+    justify-self: center;
     justify-content: flex-start !important;
     gap: 0;
-    padding: 40px 20px 39px !important;
+    padding: 24px 14px !important;
   }
 
   .template-product .pdp-cmp__card--compact-full > .pdp-cmp__eyebrow {
     color: #737d8b;
     font-family: var(--sans);
-    font-size: 19px;
+    font-size: 20px;
     font-weight: 600;
     letter-spacing: -0.02em;
-    line-height: 1.1;
-    margin-bottom: 12px;
+    line-height: 1.05;
+    margin-bottom: 7px;
   }
 
   .template-product .pdp-cmp__card--compact-full > .pdp-cmp__compact-full-main {
@@ -1770,12 +1775,12 @@
     gap: 0.18em;
     color: transparent;
     font-family: var(--sans);
-    font-size: 56px;
+    font-size: 72px;
     font-weight: 600;
     letter-spacing: -0.045em;
-    line-height: 1.04;
+    line-height: .95;
     white-space: nowrap;
-    margin-bottom: 11px;
+    margin-bottom: 7px;
     background: linear-gradient(90deg, #EFB3F9 0%, #B043FE 52%, #7559D4 100%);
     -webkit-background-clip: text;
     background-clip: text;
@@ -1805,10 +1810,10 @@
        layout; only its scale changes in this pass. */
     color: #737d8b;
     font-family: var(--sans);
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 600;
     letter-spacing: -0.025em;
-    line-height: 1.18;
+    line-height: 1.1;
     white-space: normal !important;
   }
 

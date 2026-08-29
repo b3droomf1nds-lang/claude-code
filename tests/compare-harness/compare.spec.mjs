@@ -51,7 +51,7 @@ test.describe('source contracts', () => {
     expect(section).toMatch(/render 'pdp-compare-inline'[\s\S]*render 'pdp-canva-editor'/);
     expect(section).toMatch(/<div class="pdp-secondary-details" hidden>[\s\S]*class="pstats"[\s\S]*class="pchecks"[\s\S]*render 'capacity-calculator'/);
     expect(css).toMatch(/\.template-product \.pdp-secondary-details\s*\{\s*display:\s*none\s*!important;/);
-    expect(css).toMatch(/\.pdp-cmp-wrap\s*\{[\s\S]*padding-bottom:\s*calc\(\(470px - 21\.33px\) \/ 2\)/);
+    expect(css).toMatch(/\.pdp-cmp-wrap\s*\{[\s\S]*--compact-full-card-height:[\s\S]*padding-bottom:\s*var\(--compact-full-card-height\)/);
     expect(css.indexOf('CANVA-BAKED-START')).toBeGreaterThan(-1);
     expect(css.indexOf('CANVA-BAKED-END')).toBeGreaterThan(css.indexOf('CANVA-BAKED-START'));
     expect(css).toContain('@media (max-width: 899px)');
@@ -86,8 +86,8 @@ test.describe('responsive render', () => {
           ['video'], ['magnet'], ['charge'],
           ['compact-video', 'compact-partial'], ['compact-full']
         ]);
-        expect(await page.locator('.pdp-cmp-wrap').evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom)))
-          .toBeGreaterThan(220);
+        const backdropDepth = await page.locator('.pdp-cmp-wrap')
+          .evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom));
         const partial = page.locator('.pdp-cmp__card--compact-partial');
         const partialHero = partial.locator('.pdp-cmp__compact-partial-main');
         await expect(page.locator('.pdp-cmp__card--compact-video')).toHaveCSS('border-radius', '28px');
@@ -124,10 +124,10 @@ test.describe('responsive render', () => {
         await expect(compactFullExtra).toHaveText('extra');
         await expect(compactFullNumber).not.toContainText('x');
         await expect(compactFullHero).toHaveCSS('display', 'flex');
-        await expect(compactFullHero).toHaveCSS('font-size', '56px');
+        await expect(compactFullHero).toHaveCSS('font-size', '72px');
         await expect(compactFullNumber).toHaveCSS('font-variant-numeric', 'proportional-nums');
         await expect(compactFull.locator(':scope > .pdp-cmp__eyebrow')).toHaveCSS('color', 'rgb(115, 125, 139)');
-        await expect(compactFull.locator(':scope > .pdp-cmp__compact-full-detail')).toHaveCSS('font-size', '18px');
+        await expect(compactFull.locator(':scope > .pdp-cmp__compact-full-detail')).toHaveCSS('font-size', '20px');
         await expect(compactFull.locator(':scope > .pdp-cmp__compact-full-detail')).toHaveCSS('color', 'rgb(115, 125, 139)');
         await expect(compactFullHero).toHaveCSS(
           'background-image',
@@ -146,6 +146,7 @@ test.describe('responsive render', () => {
             };
           };
           return {
+            cardWidth: cardRect.width,
             cardHeight: cardRect.height,
             radius: getComputedStyle(card).borderRadius,
             eyebrow: read(':scope > .pdp-cmp__eyebrow'),
@@ -153,12 +154,13 @@ test.describe('responsive render', () => {
             detail: read(':scope > .pdp-cmp__compact-full-detail')
           };
         });
-        expect(compactFullLayout.cardHeight).toBeCloseTo(224.335, 1);
+        expect(compactFullLayout.cardWidth / compactFullLayout.cardHeight).toBeCloseTo(413 / 242, 2);
+        expect(backdropDepth).toBeCloseTo(compactFullLayout.cardHeight, 1);
         expect(compactFullLayout.radius).toBe('24px');
-        expect(compactFullLayout.eyebrow.top).toBeCloseTo(40, 1);
-        expect(compactFullLayout.hero.top - compactFullLayout.eyebrow.bottom).toBeCloseTo(12, 1);
-        expect(compactFullLayout.detail.top - compactFullLayout.hero.bottom).toBeCloseTo(11, 1);
-        expect(compactFullLayout.detail.height).toBeCloseTo(42.48, 1);
+        expect(compactFullLayout.eyebrow.top).toBeCloseTo(24, 1);
+        expect(compactFullLayout.hero.top - compactFullLayout.eyebrow.bottom).toBeCloseTo(7, 1);
+        expect(compactFullLayout.detail.top - compactFullLayout.hero.bottom).toBeCloseTo(7, 1);
+        expect(compactFullLayout.detail.height).toBeCloseTo(44, 1);
         const partialLayout = await partial.evaluate((card) => {
           const cardRect = card.getBoundingClientRect();
           const read = (selector) => {
@@ -494,7 +496,7 @@ test('mobile full-card reference migration clears only its legacy Canva layout',
         { key: savedKeys.detail, prev: { dy: 2 } },
         { key: savedKeys.control, prev: { dx: 1 } }
       ]]));
-      localStorage.removeItem('volt-canva-compact-full-reference-v2');
+      localStorage.removeItem('volt-canva-compact-full-reference-v3');
       location.reload();
     }, keys)
   ]);
@@ -530,8 +532,8 @@ test('mobile full-card copy migration preserves its Canva transform while updati
         { key: savedKeys.detail, prev: { text: 'older supporting copy' } },
         { key: savedKeys.control, prev: { dx: 1 } }
       ]]));
-      localStorage.setItem('volt-canva-compact-full-reference-v2', '1');
-      localStorage.removeItem('volt-canva-compact-full-copy-v2');
+      localStorage.setItem('volt-canva-compact-full-reference-v3', '1');
+      localStorage.removeItem('volt-canva-compact-full-copy-v3');
       location.reload();
     }, keys)
   ]);

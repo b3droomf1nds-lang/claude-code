@@ -574,13 +574,13 @@
     // Clear only its old three-element mobile layout once so a saved Canva
     // move or legacy plain stat cannot hide the new live-number + "extra"
     // markup. Other cards and desktop state remain untouched.
-    var COMPACT_FULL_REFERENCE_MIGRATION = 'volt-canva-compact-full-reference-v2';
+    var COMPACT_FULL_REFERENCE_MIGRATION = 'volt-canva-compact-full-reference-v3';
     var resetCompactFullReference = !desktopMQ.matches &&
       ls(true, COMPACT_FULL_REFERENCE_MIGRATION) !== '1';
     // If a user already ran the reference migration, their old saved caption
     // can still override this updated supporting sentence. Remove only that
     // saved HTML field once, preserving any move/scale they made in Canva.
-    var COMPACT_FULL_COPY_MIGRATION = 'volt-canva-compact-full-copy-v2';
+    var COMPACT_FULL_COPY_MIGRATION = 'volt-canva-compact-full-copy-v3';
     var resetCompactFullCopy = !desktopMQ.matches &&
       ls(true, COMPACT_FULL_COPY_MIGRATION) !== '1';
     var resetCompactPartialReferenceLayout = false;
