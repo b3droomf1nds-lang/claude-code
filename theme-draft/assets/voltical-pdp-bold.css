@@ -1701,7 +1701,7 @@
      near-black stop: the whole phrase starts at the reference's darkest navy
      and stretches gently into the slate finish. */
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number {
-    background: linear-gradient(90deg, #718196 0%, #4b5868 100%);
+    background: linear-gradient(0deg, #718196 0%, #4b5868 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -1711,7 +1711,7 @@
   }
 
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra {
-    background: linear-gradient(90deg, #4b5868 0%, #2c3543 100%);
+    background: linear-gradient(0deg, #4b5868 0%, #2c3543 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -1720,7 +1720,7 @@
 
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra:empty::after {
     content: 'extra';
-    background: linear-gradient(90deg, #4b5868 0%, #2c3543 100%);
+    background: linear-gradient(0deg, #4b5868 0%, #2c3543 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
