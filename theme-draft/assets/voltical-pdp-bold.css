@@ -1569,13 +1569,17 @@
   /* These three now lead the mobile stack (order 1/2/3) instead of
      trailing it (they used to be 7/8/9) — see the revert note above. */
   /* compact-video used to share its row with compact-partial (grid-column
-     1 of 2). Now that compact-partial is a full-width row of its own,
-     compact-video spans the full row too and centers its own unchanged
-     159.125×192 shape in it, instead of leaving the other half of the row
-     empty. */
+     1 of 2), then was widened to sit centred alone in the row at its old
+     159.125x192 shape. It now takes the same wide 413x242 shell as the two
+     cards below it — only the outer card shape changed here; its internal
+     content (eyebrow, number, caption, battery icon) keeps the exact same
+     sizes/spacing it already had (see the untouched rule further down).
+     REVERT: change width back to min(100%, 159.125px) !important here, and
+     aspect-ratio back to 159.125 / 192 with border-radius back to 28px in
+     the block below (currently 24px, was 28px). */
   .template-product .pdp-cmp__card--compact-video {
     grid-column: 1 / -1;
-    width: min(100%, 159.125px) !important;
+    width: min(100%, 413px) !important;
     justify-self: center;
     order: 1;
   }
@@ -1607,13 +1611,15 @@
     overflow: hidden;
   }
 
-  /* The remaining side-by-side summary uses the measured 159.125 × 192
-     reference shell. compact-partial used to share this shell too, but it
-     now matches compact-full's wide 413×242 shape instead (below). */
+  /* compact-video now matches the other two cards' 413×242 shell shape and
+     24px corner radius. Its internal layout (centred content, 12px gap,
+     20/10 padding) and every child's font-size/icon-size are unchanged —
+     only the outer box shape moved. REVERT: aspect-ratio back to
+     `159.125 / 192`, border-radius back to `28px`. */
   .template-product .pdp-cmp__card--compact-video {
     height: auto;
-    aspect-ratio: 159.125 / 192;
-    border-radius: 28px;
+    aspect-ratio: 413 / 242;
+    border-radius: 24px; /* was 28px */
     justify-content: center !important;
     gap: 12px;
     padding: 20px 10px !important;
