@@ -115,6 +115,17 @@ test.describe('responsive render', () => {
           'linear-gradient(to top, rgb(98, 114, 131) 0%, rgb(23, 23, 25) 100%)'
         );
         await expect(partial.locator('.pdp-cmp__sub')).toHaveText('20% to 80% charges');
+        for (const target of [
+          page.locator('.pdp-cmp__card--magnet .pdp-cmp__magnet-detail'),
+          page.locator('.pdp-cmp__card--video .pdp-cmp__alloy-detail'),
+          page.locator('.pdp-cmp__card--charge > .pdp-cmp__eyebrow'),
+          page.locator('.pdp-cmp__card--charge .pdp-cmp__sub--range')
+        ]) {
+          await expect(target).toHaveCSS('font-weight', '600');
+        }
+        // The emphasized phrase is intentionally its own lighter lead style.
+        await expect(page.locator('.pdp-cmp__card--charge .pdp-cmp__mobile-copy .pdp-cmp__charge-range-lead'))
+          .toHaveCSS('font-weight', '500');
         const compactFull = page.locator('.pdp-cmp__card--compact-full');
         const compactFullHero = compactFull.locator(':scope > .pdp-cmp__compact-full-main');
         const compactFullNumber = compactFullHero.locator(':scope > .pdp-cmp__compact-full-number');

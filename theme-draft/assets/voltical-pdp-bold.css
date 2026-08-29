@@ -1110,6 +1110,9 @@
   .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-detail,
   .template-product .pdp-cmp__card--video .pdp-cmp__alloy-detail {
     color: #737d8b;
+    /* The quiet supporting line on each tall card uses the same compact-card
+       weight: small enough to stay secondary, but not visually frail. */
+    font-weight: 600;
   }
   .template-product .pdp-cmp__card {
     height: auto;
@@ -1862,6 +1865,14 @@
     letter-spacing: -0.224px;
     line-height: 18px;
     white-space: nowrap !important;
+  }
+
+  /* Final mobile cascade: the quiet copy in the three tall cards shares the
+     compact-card supporting weight. The range lead remains its own 500-weight
+     phrase, so only its surrounding sentence becomes more legible. */
+  .template-product .pdp-cmp__card--charge > .pdp-cmp__eyebrow,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
+    font-weight: 600;
   }
 
 }
