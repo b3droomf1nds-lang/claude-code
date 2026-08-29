@@ -1656,6 +1656,14 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* Safari does not apply CSS transforms to plain inline elements — only
+     inline-block/block. Without this, canva mode's drag transform on this
+     span is set correctly in the DOM but never actually renders on an
+     iPhone, even though it visibly works in a Chromium-based test. */
+  .template-product .pdp-cmp__compact-video-hours {
+    display: inline-block;
+  }
+
   .template-product .pdp-cmp__compact-video-main + .pdp-cmp__sub {
     flex: none;
   }
