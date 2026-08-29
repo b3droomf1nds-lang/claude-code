@@ -600,11 +600,15 @@
     var resetCompactPartialShape = !desktopMQ.matches &&
       ls(true, COMPACT_PARTIAL_SHAPE_MIGRATION) !== '1';
     // compact-video's "Up to" was matched to the other two cards' type
-    // scale. Clear any saved Canva move/resize on the eyebrow and the
-    // combined "67 more / hours" box once so a saved drag from before that
-    // change can't misplace or shrink the new layout. Other cards remain
-    // untouched.
-    var COMPACT_VIDEO_REFERENCE_MIGRATION = 'volt-canva-compact-video-reference-v1';
+    // scale, and its battery icon moved from its own stacked row to sitting
+    // inline right after "hours" (a new default position/size for both the
+    // icon and the text box that contains it). Clear any saved Canva
+    // move/resize on the eyebrow and the combined "67 more / hours" box
+    // once (bumped to v2 to re-run for anyone who already cleared v1) so a
+    // saved drag from before either change can't misplace the new layout.
+    // The icon's own key changed with its new DOM position, so no old
+    // saved data can apply to it either way. Other cards remain untouched.
+    var COMPACT_VIDEO_REFERENCE_MIGRATION = 'volt-canva-compact-video-reference-v2';
     var resetCompactVideoReference = !desktopMQ.matches &&
       ls(true, COMPACT_VIDEO_REFERENCE_MIGRATION) !== '1';
     var resetCompactVideoReferenceLayout = false;

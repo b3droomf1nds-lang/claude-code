@@ -1613,19 +1613,18 @@
 
   /* compact-video now matches the other two cards' 413×242 shell shape and
      24px corner radius; every child keeps its own font-size/icon-size
-     unchanged. The gap and top/bottom padding were trimmed slightly (was
-     12px gap, 20px top/bottom) — with 4 stacked children (this card has
-     one more than the others) at the bigger "Up to" size, the old spacing
-     no longer fit the shorter 413x242 box and clipped the label at the
-     top. REVERT: aspect-ratio back to 159.125 / 192, border-radius back to
-     28px, gap back to 12px, padding back to 20px 10px. */
+     unchanged. Back to the original 12px gap / 20px top-bottom padding now
+     that the battery icon sits inline with "hours" instead of being a 4th
+     stacked row — with only 3 rows again there's room for the original
+     spacing. REVERT: aspect-ratio back to 159.125 / 192, border-radius
+     back to 28px. */
   .template-product .pdp-cmp__card--compact-video {
     height: auto;
     aspect-ratio: 413 / 242;
     border-radius: 24px;
     justify-content: center !important;
-    gap: 7px;
-    padding: 15px 10px !important;
+    gap: 12px;
+    padding: 20px 10px !important;
   }
 
   /* compact-partial now matches compact-full's shape exactly (full-width
@@ -1711,15 +1710,15 @@
   }
 
   .template-product .pdp-cmp__compact-battery {
-    display: block;
-    /* Only ~62% of this WebP canvas is the visible battery. At a 28% image
-       box, the visible green icon is ~17.5% of the card — Apple-reference
-       proportion, without changing the source asset itself. */
-    width: 30.8%;
-    height: auto;
-    flex: none;
-    position: relative;
-    top: -5px;
+    /* Now sits inline right after "hours" (inside the same text block)
+       instead of as its own stacked row below it, so it reads as part of
+       the "67 more hours" line the way the reference layout does. Sized
+       relative to that line's own text height rather than the card width. */
+    display: inline-block;
+    width: auto;
+    height: .8em;
+    vertical-align: middle;
+    margin-left: 6px;
   }
 
   .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__eyebrow,
