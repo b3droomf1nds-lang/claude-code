@@ -230,12 +230,17 @@
      grid has no direct mobile equivalent, but the resulting reading
      order does, so mobile's single-column stack is reordered to match
      it: video, fade, partial-image, magnet, charge, full-charges. */
-  .pdp-cmp>:nth-child(2)>:nth-child(4) { order: 1; } /* video */
-  .pdp-cmp>:nth-child(2)>:nth-child(6) { order: 2; } /* fade */
-  .pdp-cmp>:nth-child(2)>:nth-child(5) { order: 3; } /* partial-image */
-  .pdp-cmp>:nth-child(2)>:nth-child(1) { order: 4; } /* magnet */
-  .pdp-cmp>:nth-child(2)>:nth-child(2) { order: 5; } /* charge */
-  .pdp-cmp>:nth-child(2)>:nth-child(3) { order: 6; } /* full-charges */
+  /* Moved below their old 1/2/3/4/5/6 slots to make room for the three
+     compact summary tiles (order 1/2/3 below), which now lead the mobile
+     stack instead of trailing it. To revert: swap these three back to
+     1/4/5 and set the compact tiles (search "compact-video { grid-column")
+     back to 7/8/9. */
+  .pdp-cmp>:nth-child(2)>:nth-child(4) { order: 4; } /* video */
+  .pdp-cmp>:nth-child(2)>:nth-child(6) { order: 2; } /* fade (hidden on mobile) */
+  .pdp-cmp>:nth-child(2)>:nth-child(5) { order: 3; } /* partial-image (hidden on mobile) */
+  .pdp-cmp>:nth-child(2)>:nth-child(1) { order: 5; } /* magnet */
+  .pdp-cmp>:nth-child(2)>:nth-child(2) { order: 6; } /* charge */
+  .pdp-cmp>:nth-child(2)>:nth-child(3) { order: 9; } /* full-charges (hidden on mobile) */
 }
 .pdp-cmp__group {
   display: contents;
@@ -1561,19 +1566,21 @@
     display: none !important;
   }
 
+  /* These three now lead the mobile stack (order 1/2/3) instead of
+     trailing it (they used to be 7/8/9) — see the revert note above. */
   .template-product .pdp-cmp__card--compact-video {
     grid-column: 1;
-    order: 7;
+    order: 1;
   }
 
   .template-product .pdp-cmp__card--compact-partial {
     grid-column: 2;
-    order: 8;
+    order: 2;
   }
 
   .template-product .pdp-cmp__card--compact-full {
     grid-column: 1 / -1;
-    order: 9;
+    order: 3;
   }
 
   .template-product .pdp-cmp__card--compact-stat {
