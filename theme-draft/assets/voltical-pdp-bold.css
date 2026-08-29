@@ -1710,16 +1710,18 @@
   }
 
   .template-product .pdp-cmp__compact-battery {
-    /* Now sits inline right after "hours" (inside the same text block)
-       instead of as its own stacked row below it, so it reads as part of
-       the "67 more hours" line the way the reference layout does. A fixed
-       px height (not an em/% unit) so it can't inherit an unexpected size
-       from anywhere in the cascade. */
+    /* Sits inline right after "hours" (inside the same text block) instead
+       of as its own stacked row below it, so it reads as part of the "67
+       more hours" line the way the reference layout does. Sized by
+       directly measuring reference pixels: in the reference screenshot the
+       icon's height exactly equals the glyph height of "hours" next to it
+       (a clean 1:1 ratio) — matched here in px (not em/%) so it can't
+       inherit an unexpected size from the cascade. */
     display: inline-block !important;
     width: auto !important;
-    max-width: 40px !important;
-    height: 24px !important;
-    max-height: 24px !important;
+    max-width: 100px !important;
+    height: 56px !important;
+    max-height: 56px !important;
     vertical-align: middle;
     margin-left: 6px;
   }
