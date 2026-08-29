@@ -117,15 +117,17 @@ test.describe('responsive render', () => {
         await expect(partial.locator('.pdp-cmp__sub')).toHaveText('20% to 80% charges');
         for (const target of [
           page.locator('.pdp-cmp__card--magnet .pdp-cmp__magnet-detail'),
+          page.locator('.pdp-cmp__card--magnet .pdp-cmp__magnet-lead'),
           page.locator('.pdp-cmp__card--video .pdp-cmp__alloy-detail'),
+          page.locator('.pdp-cmp__card--video .pdp-cmp__alloy-lead'),
           page.locator('.pdp-cmp__card--charge > .pdp-cmp__eyebrow'),
           page.locator('.pdp-cmp__card--charge .pdp-cmp__sub--range')
         ]) {
           await expect(target).toHaveCSS('font-weight', '600');
         }
-        // The emphasized phrase is intentionally its own lighter lead style.
+        // The darker lead phrases share the semibold supporting treatment.
         await expect(page.locator('.pdp-cmp__card--charge .pdp-cmp__mobile-copy .pdp-cmp__charge-range-lead'))
-          .toHaveCSS('font-weight', '500');
+          .toHaveCSS('font-weight', '600');
         const compactFull = page.locator('.pdp-cmp__card--compact-full');
         const compactFullHero = compactFull.locator(':scope > .pdp-cmp__compact-full-main');
         const compactFullNumber = compactFullHero.locator(':scope > .pdp-cmp__compact-full-number');
@@ -373,7 +375,7 @@ test('charge-range emphasis stays phrase-scoped and canonical through Canva rest
   expect(styles.chargeWeight).toBe(styles.magnetWeight);
   expect(styles.chargeFamily).toBe(styles.magnetFamily);
   expect(styles.chargeColor).toBe(styles.magnetColor);
-  expect(styles.captionWeight).not.toBe(styles.chargeWeight);
+  expect(styles.captionWeight).toBe(styles.chargeWeight);
 
   await page.evaluate(() => {
     localStorage.setItem('volt-canva-layout-4', JSON.stringify({

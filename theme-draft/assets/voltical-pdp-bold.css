@@ -1874,5 +1874,10 @@
   .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
     font-weight: 600;
   }
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-lead,
+  .template-product .pdp-cmp__card--video .pdp-cmp__alloy-lead,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range .pdp-cmp__charge-range-lead {
+    font-weight: 600;
+  }
 
 }
