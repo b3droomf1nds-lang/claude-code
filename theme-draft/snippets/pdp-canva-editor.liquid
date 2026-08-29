@@ -590,6 +590,14 @@
     var COMPACT_FULL_COPY_MIGRATION = 'volt-canva-compact-full-copy-v3';
     var resetCompactFullCopy = !desktopMQ.matches &&
       ls(true, COMPACT_FULL_COPY_MIGRATION) !== '1';
+    // This card was reshaped to compact-full's full-width shell and flow
+    // layout (was a small absolutely-centred square). Clear any saved Canva
+    // move/resize on its four elements once so an old drag from the previous
+    // shape can't misplace them under the new layout. Text edits and other
+    // cards remain untouched.
+    var COMPACT_PARTIAL_SHAPE_MIGRATION = 'volt-canva-compact-partial-shape-v1';
+    var resetCompactPartialShape = !desktopMQ.matches &&
+      ls(true, COMPACT_PARTIAL_SHAPE_MIGRATION) !== '1';
     var resetCompactPartialReferenceLayout = false;
     var resetCompactPartialKeys = {};
     var resetCompactFullReferenceLayout = false;
@@ -683,6 +691,18 @@
           resetCompactPartialReferenceLayout = true;
         }
       }
+      if (resetCompactPartialShape && el.matches(
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-detail')){
+        resetCompactPartialKeys[el.__cvKey] = true;
+        if (layout[el.__cvKey]){
+          delete layout[el.__cvKey];
+          resetCompactPartialReferenceLayout = true;
+        }
+      }
       if (resetCompactFullReference && el.matches(
           '.pdp-cmp__card--compact-full > .pdp-cmp__eyebrow, ' +
           '.pdp-cmp__card--compact-full > .pdp-cmp__stat, ' +
@@ -732,6 +752,7 @@
     if (resetCompactPartialValueSync) ls(false, COMPACT_PARTIAL_VALUE_SYNC_MIGRATION, '1');
     if (restoreCompactPartialExtra) ls(false, COMPACT_PARTIAL_EXTRA_RESTORE_MIGRATION, '1');
     if (resetCompactPartialExtraVisibility) ls(false, COMPACT_PARTIAL_EXTRA_VISIBILITY_RESET_MIGRATION, '1');
+    if (resetCompactPartialShape) ls(false, COMPACT_PARTIAL_SHAPE_MIGRATION, '1');
     if (resetCompactFullReference) ls(false, COMPACT_FULL_REFERENCE_MIGRATION, '1');
     if (resetCompactFullCopy) ls(false, COMPACT_FULL_COPY_MIGRATION, '1');
 

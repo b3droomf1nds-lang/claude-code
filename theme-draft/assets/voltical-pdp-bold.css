@@ -1670,13 +1670,14 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* The number now shares the same fade as the "extra" word beside it,
+     instead of the old plain-ink override. */
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number {
-    background: none;
-    background-image: none;
-    -webkit-background-clip: border-box;
-    background-clip: border-box;
-    color: #131316;
-    -webkit-text-fill-color: #131316;
+    background: linear-gradient(to top, #627283 0%, #171719 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
     font-feature-settings: "pnum";
     font-variant-numeric: proportional-nums;
   }
