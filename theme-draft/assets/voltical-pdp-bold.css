@@ -1571,9 +1571,9 @@
   /* compact-video used to share its row with compact-partial (grid-column
      1 of 2), then was widened to sit centred alone in the row at its old
      159.125x192 shape. It now takes the same wide 413x242 shell as the two
-     cards below it — only the outer card shape changed here; its internal
-     content (eyebrow, number, caption, battery icon) keeps the exact same
-     sizes/spacing it already had (see the untouched rule further down).
+     cards below it, and its "Up to" label was later matched to their type
+     scale too (see the rules further down) — every child's own font-size
+     and the battery icon's size are still untouched throughout.
      REVERT: change width back to min(100%, 159.125px) !important here, and
      aspect-ratio back to 159.125 / 192 with border-radius back to 28px in
      the block below (currently 24px, was 28px). */
@@ -1612,17 +1612,20 @@
   }
 
   /* compact-video now matches the other two cards' 413×242 shell shape and
-     24px corner radius. Its internal layout (centred content, 12px gap,
-     20/10 padding) and every child's font-size/icon-size are unchanged —
-     only the outer box shape moved. REVERT: aspect-ratio back to
-     `159.125 / 192`, border-radius back to `28px`. */
+     24px corner radius; every child keeps its own font-size/icon-size
+     unchanged. The gap and top/bottom padding were trimmed slightly (was
+     12px gap, 20px top/bottom) — with 4 stacked children (this card has
+     one more than the others) at the bigger "Up to" size, the old spacing
+     no longer fit the shorter 413x242 box and clipped the label at the
+     top. REVERT: aspect-ratio back to 159.125 / 192, border-radius back to
+     28px, gap back to 12px, padding back to 20px 10px. */
   .template-product .pdp-cmp__card--compact-video {
     height: auto;
     aspect-ratio: 413 / 242;
-    border-radius: 24px; /* was 28px */
+    border-radius: 24px;
     justify-content: center !important;
-    gap: 12px;
-    padding: 20px 10px !important;
+    gap: 7px;
+    padding: 15px 10px !important;
   }
 
   /* compact-partial now matches compact-full's shape exactly (full-width
@@ -1849,10 +1852,16 @@
     white-space: normal !important;
   }
 
-  /* Keep only the compact-video label light; compact-partial's eyebrow is
-     now the same weight as compact-full's, set above. */
+  /* compact-video's "Up to" now matches the other two cards' eyebrow type
+     scale exactly (was 14px/400, the small-card default). No margin-bottom
+     here (unlike the other two): this card already spaces its 4 stacked
+     children with its own 12px flex gap, so adding one on top would
+     overflow the box. REVERT: remove this rule to fall back to 14px/400. */
   .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow {
-    font-weight: 400;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
   }
 
   /* Final mobile cascade: the quiet copy in the three tall cards shares the
