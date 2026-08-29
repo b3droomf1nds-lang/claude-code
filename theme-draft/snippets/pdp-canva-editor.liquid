@@ -230,7 +230,7 @@
 
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-number, .pdp-cmp__compact-partial-extra, .pdp-cmp__sub, ' +
-    '.pdp-cmp__compact-video-main, .pdp-cmp__compact-battery, ' +
+    '.pdp-cmp__compact-video-main, .pdp-cmp__compact-video-hours, .pdp-cmp__compact-battery, ' +
     '.pdp-cmp__battery-icon, .pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__select-wrap, ' +
     // The visible "×" on the partial-charges tile ("Up to 3.6× / 20% to
     // 80%") is its own span so it can be grabbed on its own, separate from
@@ -260,7 +260,12 @@
     // detaches it from the live calculator, so it'll stop updating when
     // the iPhone-model dropdown changes and just show whatever was typed.
     function isTextEditable(el){
-      return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__compact-partial-extra, [data-calc-full]');
+      return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__compact-partial-extra, .pdp-cmp__compact-video-hours, [data-calc-full]');
+    }
+    // "hours" only ever slides left/right — its vertical position stays
+    // fixed no matter how it's dragged, touch-dragged, or arrow-nudged.
+    function isVertLocked(el){
+      return el.matches('.pdp-cmp__compact-video-hours');
     }
     function isChargeRangeCaption(el){
       return el.matches('.pdp-cmp__sub--range');
@@ -606,13 +611,12 @@
     // found here: it pushed "video playback" down out of the card, clipped
     // by the card's own overflow:hidden, leaving a blank gap where it
     // should be. Clear any saved Canva move/resize on all four once
-    // (bumped to v5: the "67 more hours" text's bigger size is now baked
-    // into the default CSS instead of relying on a per-device canva scale,
-    // so this must re-run once more to clear any leftover scale that would
-    // otherwise compound with the new larger default font.) So no leftover
-    // drag/scale can misplace, hide, or oversize any of them. Other cards
-    // remain untouched.
-    var COMPACT_VIDEO_REFERENCE_MIGRATION = 'volt-canva-compact-video-reference-v5';
+    // (bumped to v6: "hours" split out into its own slidable box again,
+    // which shifts the battery icon's sibling position/key — re-run once
+    // more so nothing old can apply to the icon at its new position.) So
+    // no leftover drag/scale can misplace, hide, or oversize any of them.
+    // Other cards remain untouched.
+    var COMPACT_VIDEO_REFERENCE_MIGRATION = 'volt-canva-compact-video-reference-v6';
     var resetCompactVideoReference = !desktopMQ.matches &&
       ls(true, COMPACT_VIDEO_REFERENCE_MIGRATION) !== '1';
     var resetCompactVideoReferenceLayout = false;
@@ -1048,7 +1052,7 @@
       if (d.mode === 'move'){
         if (Math.abs(e.clientX - d.sx) > 3 || Math.abs(e.clientY - d.sy) > 3) d.moved = true;
         st.dx = d.dx0 + (e.clientX - d.sx) / d.scx;
-        st.dy = d.dy0 + (e.clientY - d.sy) / d.scy;
+        st.dy = isVertLocked(d.el) ? d.dy0 : d.dy0 + (e.clientY - d.sy) / d.scy;
       } else {
         var dist = Math.hypot(e.clientX - d.cx, e.clientY - d.cy);
         var ns = d.s0 * (dist / d.d0);
@@ -1162,7 +1166,7 @@
         var screenX = sample.x - d.sx, screenY = sample.y - d.sy;
         if (Math.hypot(screenX, screenY) > 3) d.moved = true;
         st.dx = d.dx0 + d.inv.xx*screenX + d.inv.xy*screenY;
-        st.dy = d.dy0 + d.inv.yx*screenX + d.inv.yy*screenY;
+        st.dy = isVertLocked(d.el) ? d.dy0 : d.dy0 + d.inv.yx*screenX + d.inv.yy*screenY;
         moveX = screenX; moveY = screenY;
       } else {
         var dist = Math.hypot(sample.x - d.cx, sample.y - d.cy);
@@ -1512,7 +1516,8 @@
       // hold into one undo step the same way the wheel-resize burst does.
       var step = e.shiftKey ? 10 : 1, st = stateOf(sel), moved = true;
       if (e.key === 'ArrowLeft') st.dx -= step; else if (e.key === 'ArrowRight') st.dx += step;
-      else if (e.key === 'ArrowUp') st.dy -= step; else if (e.key === 'ArrowDown') st.dy += step;
+      else if (e.key === 'ArrowUp'){ if (!isVertLocked(sel)) st.dy -= step; else moved = false; }
+      else if (e.key === 'ArrowDown'){ if (!isVertLocked(sel)) st.dy += step; else moved = false; }
       else moved = false;
       if (moved){
         e.preventDefault();
