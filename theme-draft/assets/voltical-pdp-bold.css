@@ -1683,7 +1683,7 @@
        compact-video value — only the characters themselves differ. */
     font-family: var(--sans);
     font-size: 29px;
-    font-weight: 400;
+    font-weight: 600;
     letter-spacing: -0.045em;
   }
 
@@ -1817,6 +1817,20 @@
     white-space: normal !important;
   }
 
+  /* The three compact summaries are one type family. Keep their measured
+     sizes and layouts, but give the two smaller cards the same semibold
+     stroke as the wide full-charge card at every hierarchy level. */
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow,
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow,
+  .template-product .pdp-cmp__compact-video-main,
+  .template-product .pdp-cmp__compact-partial-main,
+  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number,
+  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra,
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__sub,
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__sub {
+    font-weight: 600;
+  }
+
   /* Match the reference card's complete 108px reading group: supporting
      context, a two-line display hero, then the quiet descriptor. These are
      all card-relative positions, so the group keeps its proportions at every
@@ -1831,7 +1845,7 @@
     color: #737d8b;
     font-family: var(--sans);
     font-size: 14px;
-    font-weight: 400;
+    font-weight: 600;
     letter-spacing: normal;
     line-height: 1.08;
   }
@@ -1851,7 +1865,7 @@
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
     color: #606f7f;
     font-size: 14px;
-    font-weight: 400;
+    font-weight: 600;
     letter-spacing: -0.224px;
     line-height: 18px;
     white-space: nowrap !important;

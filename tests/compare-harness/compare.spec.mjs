@@ -99,8 +99,8 @@ test.describe('responsive render', () => {
         await expect(partialExtra).toHaveText('extra');
         await expect(partialNumber).toHaveCSS('display', 'block');
         await expect(partialExtra).toHaveCSS('display', 'block');
-        await expect(partialNumber).toHaveCSS('font-weight', '400');
-        await expect(partialExtra).toHaveCSS('font-weight', '400');
+        await expect(partialNumber).toHaveCSS('font-weight', '600');
+        await expect(partialExtra).toHaveCSS('font-weight', '600');
         await expect(partialNumber).toHaveCSS('color', 'rgb(19, 19, 22)');
         await expect(partialNumber).toHaveCSS('background-image', 'none');
         await expect(partialNumber).toHaveCSS('font-size', '29px');
@@ -129,6 +129,16 @@ test.describe('responsive render', () => {
         await expect(compactFull.locator(':scope > .pdp-cmp__eyebrow')).toHaveCSS('color', 'rgb(115, 125, 139)');
         await expect(compactFull.locator(':scope > .pdp-cmp__compact-full-detail')).toHaveCSS('font-size', '20px');
         await expect(compactFull.locator(':scope > .pdp-cmp__compact-full-detail')).toHaveCSS('color', 'rgb(115, 125, 139)');
+        const compactVideo = page.locator('.pdp-cmp__card--compact-video');
+        for (const target of [
+          compactVideo.locator(':scope > .pdp-cmp__eyebrow'),
+          compactVideo.locator(':scope > .pdp-cmp__compact-video-main'),
+          compactVideo.locator(':scope > .pdp-cmp__sub'),
+          partial.locator(':scope > .pdp-cmp__eyebrow'),
+          partial.locator(':scope > .pdp-cmp__sub')
+        ]) {
+          await expect(target).toHaveCSS('font-weight', '600');
+        }
         await expect(compactFullHero).toHaveCSS(
           'background-image',
           'linear-gradient(90deg, rgb(239, 179, 249) 0%, rgb(176, 67, 254) 52%, rgb(117, 89, 212) 100%)'
@@ -240,7 +250,7 @@ test.describe('responsive render', () => {
         expect(videoLayout.eyebrowStyle).toMatchObject({
           color: partialLayout.eyebrowStyle.color,
           fontSize: partialLayout.eyebrowStyle.fontSize,
-          fontWeight: '400',
+          fontWeight: '600',
           letterSpacing: partialLayout.eyebrowStyle.letterSpacing,
           lineHeight: partialLayout.eyebrowStyle.lineHeight
         });
