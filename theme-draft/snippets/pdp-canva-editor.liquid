@@ -230,7 +230,7 @@
 
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-number, .pdp-cmp__compact-partial-extra, .pdp-cmp__sub, ' +
-    '.pdp-cmp__compact-video-number, .pdp-cmp__compact-video-hours, .pdp-cmp__compact-battery, ' +
+    '.pdp-cmp__compact-video-main, .pdp-cmp__compact-battery, ' +
     '.pdp-cmp__battery-icon, .pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__select-wrap, ' +
     // The visible "×" on the partial-charges tile ("Up to 3.6× / 20% to
     // 80%") is its own span so it can be grabbed on its own, separate from
@@ -260,7 +260,7 @@
     // detaches it from the live calculator, so it'll stop updating when
     // the iPhone-model dropdown changes and just show whatever was typed.
     function isTextEditable(el){
-      return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__compact-partial-extra, .pdp-cmp__compact-video-hours, [data-calc-full]');
+      return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__compact-partial-extra, [data-calc-full]');
     }
     function isChargeRangeCaption(el){
       return el.matches('.pdp-cmp__sub--range');
@@ -277,7 +277,7 @@
     // deserve the same "Align only ever straightens left/right, never
     // moves vertically" treatment as a caption.
     function isAlignHoriz(el){
-      return isTextEditable(el) || el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__stat-x, .pdp-cmp__compact-video-number');
+      return isTextEditable(el) || el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__stat-x, .pdp-cmp__compact-video-main');
     }
     // The charge-time number and its battery form one deliberately composed
     // visual. Align all must leave that pair exactly where the editor placed it.
@@ -600,11 +600,10 @@
     var resetCompactPartialShape = !desktopMQ.matches &&
       ls(true, COMPACT_PARTIAL_SHAPE_MIGRATION) !== '1';
     // compact-video's "Up to" was matched to the other two cards' type
-    // scale, and its live-value line was split into two separately
-    // editable boxes (was one combined box). Clear any saved Canva
-    // move/resize on the eyebrow and the old combined box once so a saved
-    // drag from before either change can't misplace or hide the new
-    // layout. Other cards remain untouched.
+    // scale. Clear any saved Canva move/resize on the eyebrow and the
+    // combined "67 more / hours" box once so a saved drag from before that
+    // change can't misplace or shrink the new layout. Other cards remain
+    // untouched.
     var COMPACT_VIDEO_REFERENCE_MIGRATION = 'volt-canva-compact-video-reference-v1';
     var resetCompactVideoReference = !desktopMQ.matches &&
       ls(true, COMPACT_VIDEO_REFERENCE_MIGRATION) !== '1';
@@ -615,19 +614,6 @@
     var resetCompactFullReferenceLayout = false;
     var resetCompactFullCopyLayout = false;
     var resetCompactFullKeys = {};
-    // The combined "67 more / hours" box is no longer individually
-    // editable (it split into the two boxes above), so it won't appear in
-    // `els` below — clear any layout saved against it directly instead.
-    if (resetCompactVideoReference){
-      var oldCompactVideoMain = root.querySelector('.pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main');
-      if (oldCompactVideoMain){
-        var oldCompactVideoMainKey = pathFor(oldCompactVideoMain);
-        if (layout[oldCompactVideoMainKey]){
-          delete layout[oldCompactVideoMainKey];
-          resetCompactVideoReferenceLayout = true;
-        }
-      }
-    }
     els.forEach(function(el){
       var cs = getComputedStyle(el).transform;
       el.__cvBase = (cs && cs !== 'none') ? cs : '';
@@ -718,8 +704,7 @@
       }
       if (resetCompactVideoReference && el.matches(
           '.pdp-cmp__card--compact-video > .pdp-cmp__eyebrow, ' +
-          '.pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main > .pdp-cmp__compact-video-number, ' +
-          '.pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main > .pdp-cmp__compact-video-hours')){
+          '.pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main')){
         resetCompactVideoKeys[el.__cvKey] = true;
         if (layout[el.__cvKey]){
           delete layout[el.__cvKey];
