@@ -1817,18 +1817,6 @@
     white-space: normal !important;
   }
 
-  /* Keep the compact labels and supporting copy in the same semibold family
-     as the wide full-charge card. The live values retain their lighter,
-     separately-tuned weight for their smaller card proportions. */
-  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow,
-  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow,
-  .template-product .pdp-cmp__compact-partial-main,
-  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra,
-  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__sub,
-  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__sub {
-    font-weight: 600;
-  }
-
   /* Match the reference card's complete 108px reading group: supporting
      context, a two-line display hero, then the quiet descriptor. These are
      all card-relative positions, so the group keeps its proportions at every
@@ -1843,7 +1831,7 @@
     color: #737d8b;
     font-family: var(--sans);
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 400;
     letter-spacing: normal;
     line-height: 1.08;
   }
@@ -1863,7 +1851,7 @@
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
     color: #606f7f;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 400;
     letter-spacing: -0.224px;
     line-height: 18px;
     white-space: nowrap !important;
