@@ -112,7 +112,7 @@ test.describe('responsive render', () => {
           .toBe(await videoNumber.evaluate((el) => getComputedStyle(el).fontSize));
         await expect(partialExtra).toHaveCSS(
           'background-image',
-          'linear-gradient(to top, rgb(98, 114, 131) 0%, rgb(23, 23, 25) 100%)'
+          'linear-gradient(90deg, rgb(44, 53, 67) 0%, rgb(113, 129, 150) 100%)'
         );
         await expect(partial.locator('.pdp-cmp__sub')).toHaveText('20% to 80% charges');
         for (const target of [

@@ -1709,10 +1709,11 @@
     font-variant-numeric: proportional-nums;
   }
 
-  /* The reference fades only the word: near-ink at its top into the muted
-     blue-grey at its base. The text is still a separate Canva text box. */
+  /* The reference fades only the word. Adapt its navy-to-slate treatment to
+     a left-to-right read, matching the separate-word setup in the larger card
+     below while keeping this live calculator number solid black. */
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra {
-    background: linear-gradient(to top, #627283 0%, #171719 100%);
+    background: linear-gradient(90deg, #2c3543 0%, #718196 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -1721,7 +1722,7 @@
 
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra:empty::after {
     content: 'extra';
-    background: linear-gradient(to top, #627283 0%, #171719 100%);
+    background: linear-gradient(90deg, #2c3543 0%, #718196 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
