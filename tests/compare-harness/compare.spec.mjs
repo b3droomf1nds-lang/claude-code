@@ -135,6 +135,11 @@ test.describe('responsive render', () => {
         await expect(compactFullHero).toHaveText('2.1extra');
         await expect(compactFullNumber).toHaveText('2.1');
         await expect(compactFullExtra).toHaveText('extra');
+        const chargeUnit = page.locator('.pdp-cmp__card--charge > .pdp-cmp__sub--unit');
+        for (const property of ['font-family', 'font-size', 'font-weight', 'letter-spacing', 'line-height']) {
+          expect(await chargeUnit.evaluate((el, prop) => getComputedStyle(el)[prop], property))
+            .toBe(await compactFullExtra.evaluate((el, prop) => getComputedStyle(el)[prop], property));
+        }
         await expect(compactFullNumber).not.toContainText('x');
         await expect(compactFullHero).toHaveCSS('display', 'flex');
         await expect(compactFullHero).toHaveCSS('font-size', '72px');
