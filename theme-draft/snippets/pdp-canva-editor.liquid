@@ -611,12 +611,13 @@
     // found here: it pushed "video playback" down out of the card, clipped
     // by the card's own overflow:hidden, leaving a blank gap where it
     // should be. Clear any saved Canva move/resize on all four once
-    // (bumped to v6: "hours" split out into its own slidable box again,
-    // which shifts the battery icon's sibling position/key — re-run once
-    // more so nothing old can apply to the icon at its new position.) So
-    // no leftover drag/scale can misplace, hide, or oversize any of them.
-    // Other cards remain untouched.
-    var COMPACT_VIDEO_REFERENCE_MIGRATION = 'volt-canva-compact-video-reference-v6';
+    // (bumped to v7: the user's approved rightward slide of "hours" is now
+    // baked into the default CSS as translateX(20px), so their own saved
+    // canva drag on "hours" must be cleared here to avoid it double-applying
+    // on top of the baked value. The matcher now also covers the hours box.)
+    // So no leftover drag/scale can misplace, hide, oversize, or double-shift
+    // any of them. Other cards remain untouched.
+    var COMPACT_VIDEO_REFERENCE_MIGRATION = 'volt-canva-compact-video-reference-v7';
     var resetCompactVideoReference = !desktopMQ.matches &&
       ls(true, COMPACT_VIDEO_REFERENCE_MIGRATION) !== '1';
     var resetCompactVideoReferenceLayout = false;
@@ -717,6 +718,7 @@
       if (resetCompactVideoReference && el.matches(
           '.pdp-cmp__card--compact-video > .pdp-cmp__eyebrow, ' +
           '.pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main, ' +
+          '.pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main > .pdp-cmp__compact-video-hours, ' +
           '.pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main > .pdp-cmp__compact-battery, ' +
           '.pdp-cmp__card--compact-video > .pdp-cmp__sub')){
         resetCompactVideoKeys[el.__cvKey] = true;

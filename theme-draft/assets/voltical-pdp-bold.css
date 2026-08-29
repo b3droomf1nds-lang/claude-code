@@ -1659,9 +1659,16 @@
   /* Safari does not apply CSS transforms to plain inline elements — only
      inline-block/block. Without this, canva mode's drag transform on this
      span is set correctly in the DOM but never actually renders on an
-     iPhone, even though it visibly works in a Chromium-based test. */
+     iPhone, even though it visibly works in a Chromium-based test.
+     translateX(20px) bakes in the exact rightward slide the user made in
+     canva mode (measured from their approved screenshot: "hours" centre
+     moved from -59.8px to -40.0px relative to the card centre, i.e. +20px,
+     tightening the gap to the battery). Baked here as the permanent
+     default; the matching canva migration below is bumped so the user's
+     own saved drag is cleared and can't double-apply on top of this. */
   .template-product .pdp-cmp__compact-video-hours {
     display: inline-block;
+    transform: translateX(20px);
   }
 
   .template-product .pdp-cmp__compact-video-main + .pdp-cmp__sub {
