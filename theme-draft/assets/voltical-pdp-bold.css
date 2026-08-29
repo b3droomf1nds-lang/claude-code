@@ -1701,7 +1701,7 @@
      carry the same top-to-bottom gradient independently, like the
      single-word reference, rather than splitting one fade across both. */
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number {
-    background: linear-gradient(180deg, #718196 0%, #2c3543 100%);
+    background: linear-gradient(180deg, #2c3543 0%, #718196 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -1711,7 +1711,7 @@
   }
 
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra {
-    background: linear-gradient(180deg, #718196 0%, #2c3543 100%);
+    background: linear-gradient(180deg, #2c3543 0%, #718196 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -1720,7 +1720,7 @@
 
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra:empty::after {
     content: 'extra';
-    background: linear-gradient(180deg, #718196 0%, #2c3543 100%);
+    background: linear-gradient(180deg, #2c3543 0%, #718196 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
