@@ -1867,6 +1867,14 @@
     white-space: nowrap !important;
   }
 
+  /* Keep only the small-card labels light; their supporting descriptions
+     remain semibold as requested. This follows the partial-card positioning
+     block so it wins that card's later typography declaration. */
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow,
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow {
+    font-weight: 400;
+  }
+
   /* Final mobile cascade: the quiet copy in the three tall cards shares the
      compact-card supporting weight. The range lead remains its own 500-weight
      phrase, so only its surrounding sentence becomes more legible. */

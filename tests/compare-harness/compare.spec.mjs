@@ -144,12 +144,16 @@ test.describe('responsive render', () => {
         await expect(compactFull.locator(':scope > .pdp-cmp__compact-full-detail')).toHaveCSS('color', 'rgb(115, 125, 139)');
         const compactVideo = page.locator('.pdp-cmp__card--compact-video');
         for (const target of [
-          compactVideo.locator(':scope > .pdp-cmp__eyebrow'),
           compactVideo.locator(':scope > .pdp-cmp__sub'),
-          partial.locator(':scope > .pdp-cmp__eyebrow'),
           partial.locator(':scope > .pdp-cmp__sub')
         ]) {
           await expect(target).toHaveCSS('font-weight', '600');
+        }
+        for (const target of [
+          compactVideo.locator(':scope > .pdp-cmp__eyebrow'),
+          partial.locator(':scope > .pdp-cmp__eyebrow')
+        ]) {
+          await expect(target).toHaveCSS('font-weight', '400');
         }
         for (const target of [
           compactVideo.locator(':scope > .pdp-cmp__compact-video-main')
@@ -267,7 +271,7 @@ test.describe('responsive render', () => {
         expect(videoLayout.eyebrowStyle).toMatchObject({
           color: partialLayout.eyebrowStyle.color,
           fontSize: partialLayout.eyebrowStyle.fontSize,
-          fontWeight: '600',
+          fontWeight: '400',
           letterSpacing: partialLayout.eyebrowStyle.letterSpacing,
           lineHeight: partialLayout.eyebrowStyle.lineHeight
         });
