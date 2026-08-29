@@ -1641,7 +1641,11 @@
   .template-product .pdp-cmp__compact-video-main {
     color: #131316;
     font-family: var(--sans);
-    font-size: 29px;
+    /* Reference-matched size (measured from the target screenshot: the "67"
+       digits are ~31px cap-height => ~44px font). This is now the baked
+       default so the big "67 more hours" look no longer depends on a
+       per-device canva scale that the reset migrations would wipe. */
+    font-size: 44px;
     font-weight: 400;
     letter-spacing: -0.045em;
     line-height: 1.03;
@@ -1712,16 +1716,23 @@
   .template-product .pdp-cmp__compact-battery {
     /* Sits inline right after "hours" (inside the same text block) instead
        of as its own stacked row below it, so it reads as part of the "67
-       more hours" line the way the reference layout does. Sized by
-       directly measuring reference pixels: in the reference screenshot the
-       icon's height exactly equals the glyph height of "hours" next to it
-       (a clean 1:1 ratio) — matched here in px (not em/%) so it can't
-       inherit an unexpected size from the cascade. */
+       more hours" line the way the reference layout does.
+
+       Sizing derived by measuring the reference screenshot AND the source
+       image together: in the reference the VISIBLE green battery is the
+       same height as the "hours" glyphs (~34.7 CSS px at 3x). But this
+       source WebP has transparent padding — the visible battery is only
+       ~57.4% of the image canvas height (measured: green glyph 540px tall
+       in a 940px canvas). So the img box must be 34.7 / 0.574 ≈ 60px tall
+       for the visible battery to land at the right size. max-width 108px
+       leaves room for the natural width at that height (60 * 1672/940 ≈
+       107px) so nothing gets constrained smaller. Fixed px (not em/%) so
+       it can't inherit an unexpected size from the cascade. */
     display: inline-block !important;
     width: auto !important;
-    max-width: 100px !important;
-    height: 56px !important;
-    max-height: 56px !important;
+    max-width: 108px !important;
+    height: 60px !important;
+    max-height: 60px !important;
     vertical-align: middle;
     margin-left: 6px;
   }

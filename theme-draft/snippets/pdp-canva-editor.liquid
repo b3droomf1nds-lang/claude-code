@@ -606,10 +606,13 @@
     // found here: it pushed "video playback" down out of the card, clipped
     // by the card's own overflow:hidden, leaving a blank gap where it
     // should be. Clear any saved Canva move/resize on all four once
-    // (bumped to v4 to re-run for anyone who already cleared an earlier
-    // version) so no leftover drag/scale can misplace or hide any of them.
-    // Other cards remain untouched.
-    var COMPACT_VIDEO_REFERENCE_MIGRATION = 'volt-canva-compact-video-reference-v4';
+    // (bumped to v5: the "67 more hours" text's bigger size is now baked
+    // into the default CSS instead of relying on a per-device canva scale,
+    // so this must re-run once more to clear any leftover scale that would
+    // otherwise compound with the new larger default font.) So no leftover
+    // drag/scale can misplace, hide, or oversize any of them. Other cards
+    // remain untouched.
+    var COMPACT_VIDEO_REFERENCE_MIGRATION = 'volt-canva-compact-video-reference-v5';
     var resetCompactVideoReference = !desktopMQ.matches &&
       ls(true, COMPACT_VIDEO_REFERENCE_MIGRATION) !== '1';
     var resetCompactVideoReferenceLayout = false;
