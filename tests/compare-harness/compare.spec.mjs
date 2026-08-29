@@ -134,7 +134,31 @@ test.describe('responsive render', () => {
           'linear-gradient(90deg, rgb(239, 179, 249) 0%, rgb(176, 67, 254) 52%, rgb(117, 89, 212) 100%)'
         );
         await expect(compactFull.locator(':scope > .pdp-cmp__compact-full-detail'))
-          .toHaveText('full iPhone chargesfor reliable power wherever you go, when you need it most.');
+          .toHaveText('full iPhone charges for the daywherever it takes you.');
+        const compactFullLayout = await compactFull.evaluate((card) => {
+          const cardRect = card.getBoundingClientRect();
+          const read = (selector) => {
+            const rect = card.querySelector(selector).getBoundingClientRect();
+            return {
+              top: rect.top - cardRect.top,
+              bottom: rect.bottom - cardRect.top,
+              height: rect.height
+            };
+          };
+          return {
+            cardHeight: cardRect.height,
+            radius: getComputedStyle(card).borderRadius,
+            eyebrow: read(':scope > .pdp-cmp__eyebrow'),
+            hero: read(':scope > .pdp-cmp__compact-full-main'),
+            detail: read(':scope > .pdp-cmp__compact-full-detail')
+          };
+        });
+        expect(compactFullLayout.cardHeight).toBeCloseTo(224.335, 1);
+        expect(compactFullLayout.radius).toBe('24px');
+        expect(compactFullLayout.eyebrow.top).toBeCloseTo(40, 1);
+        expect(compactFullLayout.hero.top - compactFullLayout.eyebrow.bottom).toBeCloseTo(12, 1);
+        expect(compactFullLayout.detail.top - compactFullLayout.hero.bottom).toBeCloseTo(11, 1);
+        expect(compactFullLayout.detail.height).toBeCloseTo(42.48, 1);
         const partialLayout = await partial.evaluate((card) => {
           const cardRect = card.getBoundingClientRect();
           const read = (selector) => {
@@ -470,7 +494,7 @@ test('mobile full-card reference migration clears only its legacy Canva layout',
         { key: savedKeys.detail, prev: { dy: 2 } },
         { key: savedKeys.control, prev: { dx: 1 } }
       ]]));
-      localStorage.removeItem('volt-canva-compact-full-reference-v1');
+      localStorage.removeItem('volt-canva-compact-full-reference-v2');
       location.reload();
     }, keys)
   ]);
@@ -482,7 +506,7 @@ test('mobile full-card reference migration clears only its legacy Canva layout',
   expect(saved[keys.control]).toMatchObject({ dx: 3, dy: 2 });
   await expect(page.locator('.pdp-cmp__card--compact-full > .pdp-cmp__compact-full-main')).toHaveText('2.1extra');
   await expect(page.locator('.pdp-cmp__card--compact-full > .pdp-cmp__compact-full-detail'))
-    .toHaveText('full iPhone chargesfor reliable power wherever you go, when you need it most.');
+    .toHaveText('full iPhone charges for the daywherever it takes you.');
   const savedHistory = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-history-4') || '[]'));
   expect(savedHistory.flat().map((entry) => entry.key)).toEqual([keys.control]);
 });
@@ -506,8 +530,8 @@ test('mobile full-card copy migration preserves its Canva transform while updati
         { key: savedKeys.detail, prev: { text: 'older supporting copy' } },
         { key: savedKeys.control, prev: { dx: 1 } }
       ]]));
-      localStorage.setItem('volt-canva-compact-full-reference-v1', '1');
-      localStorage.removeItem('volt-canva-compact-full-copy-v1');
+      localStorage.setItem('volt-canva-compact-full-reference-v2', '1');
+      localStorage.removeItem('volt-canva-compact-full-copy-v2');
       location.reload();
     }, keys)
   ]);
@@ -517,7 +541,7 @@ test('mobile full-card copy migration preserves its Canva transform while updati
   expect(saved[keys.detail].text).toBeUndefined();
   expect(saved[keys.control]).toMatchObject({ dx: 3, dy: 2 });
   await expect(page.locator('.pdp-cmp__card--compact-full > .pdp-cmp__compact-full-detail'))
-    .toHaveText('full iPhone chargesfor reliable power wherever you go, when you need it most.');
+    .toHaveText('full iPhone charges for the daywherever it takes you.');
   const savedHistory = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-history-4') || '[]'));
   expect(savedHistory.flat().map((entry) => entry.key)).toEqual([keys.control]);
 });

@@ -1746,8 +1746,11 @@
      two-line explanation. The calculator writes only the number span, so
      the authored word "extra" never gains a misleading multiplication x. */
   .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--compact-full {
-    gap: 10px;
-    padding: 24px 20px !important;
+    /* Scale the supplied reference composition into this existing 334×224px
+       shell: 40px top inset, label, 12px, hero, 11px, two-line caption. */
+    justify-content: flex-start !important;
+    gap: 0;
+    padding: 40px 20px 39px !important;
   }
 
   .template-product .pdp-cmp__card--compact-full > .pdp-cmp__eyebrow {
@@ -1757,6 +1760,7 @@
     font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.1;
+    margin-bottom: 12px;
   }
 
   .template-product .pdp-cmp__card--compact-full > .pdp-cmp__compact-full-main {
@@ -1771,6 +1775,7 @@
     letter-spacing: -0.045em;
     line-height: 1.04;
     white-space: nowrap;
+    margin-bottom: 11px;
     background: linear-gradient(90deg, #EFB3F9 0%, #B043FE 52%, #7559D4 100%);
     -webkit-background-clip: text;
     background-clip: text;
