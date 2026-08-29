@@ -1712,11 +1712,14 @@
   .template-product .pdp-cmp__compact-battery {
     /* Now sits inline right after "hours" (inside the same text block)
        instead of as its own stacked row below it, so it reads as part of
-       the "67 more hours" line the way the reference layout does. Sized
-       relative to that line's own text height rather than the card width. */
-    display: inline-block;
-    width: auto;
-    height: .8em;
+       the "67 more hours" line the way the reference layout does. A fixed
+       px height (not an em/% unit) so it can't inherit an unexpected size
+       from anywhere in the cascade. */
+    display: inline-block !important;
+    width: auto !important;
+    max-width: 40px !important;
+    height: 24px !important;
+    max-height: 24px !important;
     vertical-align: middle;
     margin-left: 6px;
   }
