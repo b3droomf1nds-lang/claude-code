@@ -600,8 +600,11 @@
     // layout (was a small absolutely-centred square). Clear any saved Canva
     // move/resize on its four elements once so an old drag from the previous
     // shape can't misplace them under the new layout. Text edits and other
-    // cards remain untouched.
-    var COMPACT_PARTIAL_SHAPE_MIGRATION = 'volt-canva-compact-partial-shape-v1';
+    // cards remain untouched. (Bumped to v2: the caption box itself
+    // ("20% to 80%...") had a stale per-device Canva scale making its text
+    // render visibly larger than the matching full-charges caption despite
+    // both sharing the same 20px CSS font-size.)
+    var COMPACT_PARTIAL_SHAPE_MIGRATION = 'volt-canva-compact-partial-shape-v2';
     var resetCompactPartialShape = !desktopMQ.matches &&
       ls(true, COMPACT_PARTIAL_SHAPE_MIGRATION) !== '1';
     // compact-video's "Up to", its battery icon (now inline after "hours"
