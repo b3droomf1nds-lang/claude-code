@@ -1817,6 +1817,13 @@
     white-space: normal !important;
   }
 
+  /* Bring back the quiet semibold hierarchy cue on just the two compact
+     “Up to” labels; all other text in those cards stays at its original
+     lighter weight. */
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow {
+    font-weight: 600;
+  }
+
   /* Match the reference card's complete 108px reading group: supporting
      context, a two-line display hero, then the quiet descriptor. These are
      all card-relative positions, so the group keeps its proportions at every
@@ -1831,7 +1838,7 @@
     color: #737d8b;
     font-family: var(--sans);
     font-size: 14px;
-    font-weight: 400;
+    font-weight: 600;
     letter-spacing: normal;
     line-height: 1.08;
   }

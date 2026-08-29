@@ -130,11 +130,11 @@ test.describe('responsive render', () => {
         await expect(compactFull.locator(':scope > .pdp-cmp__compact-full-detail')).toHaveCSS('font-size', '20px');
         await expect(compactFull.locator(':scope > .pdp-cmp__compact-full-detail')).toHaveCSS('color', 'rgb(115, 125, 139)');
         const compactVideo = page.locator('.pdp-cmp__card--compact-video');
+        await expect(compactVideo.locator(':scope > .pdp-cmp__eyebrow')).toHaveCSS('font-weight', '600');
+        await expect(partial.locator(':scope > .pdp-cmp__eyebrow')).toHaveCSS('font-weight', '600');
         for (const target of [
-          compactVideo.locator(':scope > .pdp-cmp__eyebrow'),
           compactVideo.locator(':scope > .pdp-cmp__compact-video-main'),
           compactVideo.locator(':scope > .pdp-cmp__sub'),
-          partial.locator(':scope > .pdp-cmp__eyebrow'),
           partial.locator(':scope > .pdp-cmp__sub')
         ]) {
           await expect(target).toHaveCSS('font-weight', '400');
@@ -250,7 +250,7 @@ test.describe('responsive render', () => {
         expect(videoLayout.eyebrowStyle).toMatchObject({
           color: partialLayout.eyebrowStyle.color,
           fontSize: partialLayout.eyebrowStyle.fontSize,
-          fontWeight: '400',
+          fontWeight: '600',
           letterSpacing: partialLayout.eyebrowStyle.letterSpacing,
           lineHeight: partialLayout.eyebrowStyle.lineHeight
         });
