@@ -1568,13 +1568,20 @@
 
   /* These three now lead the mobile stack (order 1/2/3) instead of
      trailing it (they used to be 7/8/9) — see the revert note above. */
+  /* compact-video used to share its row with compact-partial (grid-column
+     1 of 2). Now that compact-partial is a full-width row of its own,
+     compact-video spans the full row too and centers its own unchanged
+     159.125×192 shape in it, instead of leaving the other half of the row
+     empty. */
   .template-product .pdp-cmp__card--compact-video {
-    grid-column: 1;
+    grid-column: 1 / -1;
+    width: min(100%, 159.125px) !important;
+    justify-self: center;
     order: 1;
   }
 
   .template-product .pdp-cmp__card--compact-partial {
-    grid-column: 2;
+    grid-column: 1 / -1;
     order: 2;
   }
 
@@ -1600,34 +1607,23 @@
     overflow: hidden;
   }
 
-  /* The two side-by-side summaries use the measured 159.125 × 192 reference
-     shell. Keeping the shell shared prevents the matched right-hand card from
-     looking like a different component beside the video summary. */
-  .template-product .pdp-cmp__card--compact-video,
-  .template-product .pdp-cmp__card--compact-partial {
+  /* The remaining side-by-side summary uses the measured 159.125 × 192
+     reference shell. compact-partial used to share this shell too, but it
+     now matches compact-full's wide 413×242 shape instead (below). */
+  .template-product .pdp-cmp__card--compact-video {
     height: auto;
     aspect-ratio: 159.125 / 192;
     border-radius: 28px;
-    justify-content: space-between !important;
-    padding: 22px 10px !important;
-  }
-
-  /* Mirrors the reference structure: top label, centre headline, muted
-     caption, then Voltical's own battery icon. */
-  .template-product .pdp-cmp__card--compact-video {
     justify-content: center !important;
     gap: 12px;
     padding: 20px 10px !important;
   }
 
-  /* The partial-charge card is a single claim, not an eyebrow pinned above
-     a separated result. Keep its context, number, and range as one calm,
-     centred reading group. */
-  .template-product .pdp-cmp__card--compact-partial {
-    justify-content: center !important;
-    gap: 4px;
-    padding: 20px 10px !important;
-  }
+  /* compact-partial now matches compact-full's shape exactly (full-width
+     413×242 shell, flex-start flow, 24/14 padding) — see the shared rule
+     with compact-full further down for the actual values, so the two never
+     drift apart again. It keeps its own number/word colouring (plain
+     number, faded "extra") rather than compact-full's purple gradient. */
 
   .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow,
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow {
@@ -1652,32 +1648,26 @@
     flex: none;
   }
 
-  /* Match the supplied 70% faster reference: a solid numeric value with a
-     separate, blue-grey-to-ink word beneath it. The value remains a live
-     calculator output; only its presentation changes. */
-  .template-product .pdp-cmp__compact-partial-main {
-    color: #1D1D1F;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
-    font-size: 28px;
-    font-weight: 400;
-    letter-spacing: 0.007em;
-    line-height: 32px;
-    text-align: center;
+  /* Same size, weight, and inline "number extra" layout as the compact-full
+     card's hero line below it — only the colouring stays compact-partial's
+     own (plain number, faded "extra" word), not compact-full's purple
+     gradient. */
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.18em;
+    font-family: var(--sans);
+    font-size: 72px;
+    font-weight: 600;
+    letter-spacing: -0.045em;
+    line-height: .95;
+    white-space: nowrap;
+    margin-bottom: 7px;
   }
 
   .template-product .pdp-cmp__compact-partial-main span {
     font-variant-numeric: tabular-nums;
-  }
-
-  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number,
-  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra {
-    display: block;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
-    font-size: 28px;
-    font-weight: 400;
-    letter-spacing: 0.007em;
-    line-height: 32px;
-    text-align: center;
   }
 
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number {
@@ -1687,14 +1677,8 @@
     background-clip: border-box;
     color: #131316;
     -webkit-text-fill-color: #131316;
-    /* Pull the glyphs toward the decimal just like the compact video
-       statistic, without changing the spacing of the faded word. */
-    /* This live value must use the same type metrics as the neighbouring
-       compact-video value — only the characters themselves differ. */
-    font-family: var(--sans);
-    font-size: 29px;
-    font-weight: 400;
-    letter-spacing: -0.045em;
+    font-feature-settings: "pnum";
+    font-variant-numeric: proportional-nums;
   }
 
   /* The reference fades only the word: near-ink at its top into the muted
@@ -1756,7 +1740,8 @@
      full-charge claim: context, one gradient hero line, then a compact
      two-line explanation. The calculator writes only the number span, so
      the authored word "extra" never gains a misleading multiplication x. */
-  .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--compact-full {
+  .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--compact-full,
+  .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--compact-partial {
     /* Match the supplied 413×242 reference shell at every phone width while
        retaining Voltical's existing full-row width and 24px corner rhythm. */
     width: min(100%, 413px);
@@ -1834,51 +1819,32 @@
     font-weight: 600;
   }
 
-  /* Match the reference card's complete 108px reading group: supporting
-     context, a two-line display hero, then the quiet descriptor. These are
-     all card-relative positions, so the group keeps its proportions at every
-     mobile width instead of inheriting the neighbouring card's flex layout. */
+  /* compact-partial's eyebrow and caption now match compact-full's flow
+     layout and type scale exactly (same font-size/weight/colour/position-
+     in-flow) instead of the old absolute-centred small-card treatment. */
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow {
-    position: absolute !important;
-    /* Mirror the adjacent compact-video card's vertically centred flex
-       position, including its responsive battery footprint. */
-    top: calc(50% - 46.616px - 7.222vw) !important;
-    left: 0;
-    right: 0;
     color: #737d8b;
     font-family: var(--sans);
-    font-size: 14px;
+    font-size: 20px;
     font-weight: 600;
-    letter-spacing: normal;
-    line-height: 1.08;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin-bottom: 7px;
   }
 
-  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main {
-    position: absolute;
-    top: calc(50% - 45px);
-    left: 0;
-    right: 0;
-  }
-
-  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__sub {
-    position: absolute !important;
-    top: calc(50% + 23px) !important;
-    left: 0;
-    right: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-    color: #606f7f;
-    font-size: 14px;
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-detail {
+    color: #737d8b;
+    font-family: var(--sans);
+    font-size: 20px;
     font-weight: 600;
-    letter-spacing: -0.224px;
-    line-height: 18px;
-    white-space: nowrap !important;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    white-space: normal !important;
   }
 
-  /* Keep only the small-card labels light; their supporting descriptions
-     remain semibold as requested. This follows the partial-card positioning
-     block so it wins that card's later typography declaration. */
-  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow,
-  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow {
+  /* Keep only the compact-video label light; compact-partial's eyebrow is
+     now the same weight as compact-full's, set above. */
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow {
     font-weight: 400;
   }
 
