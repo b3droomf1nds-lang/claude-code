@@ -1697,14 +1697,12 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* The number now shares the same fade as the "extra" word beside it,
-     instead of the old plain-ink override. */
+  /* The live calculator number remains a solid ink value. The reference
+     treatment belongs only to the descriptive word beside it. */
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number {
-    background: linear-gradient(to top, #627283 0%, #171719 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
+    background: none;
+    color: #171719;
+    -webkit-text-fill-color: #171719;
     font-feature-settings: "pnum";
     font-variant-numeric: proportional-nums;
   }

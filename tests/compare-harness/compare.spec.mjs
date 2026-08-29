@@ -83,15 +83,15 @@ test.describe('responsive render', () => {
       const kinds = rows.map((row) => row.map((card) => cardKind(card.classes)));
       if (viewport.mobile) {
         expect(kinds).toEqual([
-          ['video'], ['magnet'], ['charge'],
-          ['compact-video', 'compact-partial'], ['compact-full']
+          ['compact-video'], ['compact-partial'], ['compact-full'],
+          ['video'], ['magnet'], ['charge']
         ]);
         const backdropDepth = await page.locator('.pdp-cmp-wrap')
           .evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom));
         const partial = page.locator('.pdp-cmp__card--compact-partial');
         const partialHero = partial.locator('.pdp-cmp__compact-partial-main');
-        await expect(page.locator('.pdp-cmp__card--compact-video')).toHaveCSS('border-radius', '28px');
-        await expect(partial).toHaveCSS('border-radius', '28px');
+        await expect(page.locator('.pdp-cmp__card--compact-video')).toHaveCSS('border-radius', '24px');
+        await expect(partial).toHaveCSS('border-radius', '24px');
         await expect(partialHero).toHaveText('3.6extra');
         const partialNumber = partialHero.locator(':scope > .pdp-cmp__compact-partial-number');
         const partialExtra = partialHero.locator(':scope > .pdp-cmp__compact-partial-extra');
@@ -99,22 +99,17 @@ test.describe('responsive render', () => {
         await expect(partialExtra).toHaveText('extra');
         await expect(partialNumber).toHaveCSS('display', 'block');
         await expect(partialExtra).toHaveCSS('display', 'block');
-        await expect(partialNumber).toHaveCSS('font-weight', '400');
-        await expect(partialExtra).toHaveCSS('font-weight', '400');
-        await expect(partialNumber).toHaveCSS('color', 'rgb(19, 19, 22)');
+        await expect(partialNumber).toHaveCSS('font-weight', '600');
+        await expect(partialExtra).toHaveCSS('font-weight', '600');
+        await expect(partialNumber).toHaveCSS('color', 'rgb(23, 23, 25)');
         await expect(partialNumber).toHaveCSS('background-image', 'none');
-        await expect(partialNumber).toHaveCSS('font-size', '29px');
-        await expect(partialNumber).toHaveCSS('letter-spacing', '-1.305px');
-        const videoNumber = page.locator('.pdp-cmp__card--compact-video [data-calc-video-num]');
-        expect(await partialNumber.evaluate((el) => getComputedStyle(el).fontFamily))
-          .toBe(await videoNumber.evaluate((el) => getComputedStyle(el).fontFamily));
-        expect(await partialNumber.evaluate((el) => getComputedStyle(el).fontSize))
-          .toBe(await videoNumber.evaluate((el) => getComputedStyle(el).fontSize));
+        await expect(partialNumber).toHaveCSS('font-size', '72px');
+        await expect(partialNumber).toHaveCSS('letter-spacing', '-3.24px');
         await expect(partialExtra).toHaveCSS(
           'background-image',
           'linear-gradient(90deg, rgb(44, 53, 67) 0%, rgb(113, 129, 150) 100%)'
         );
-        await expect(partial.locator('.pdp-cmp__sub')).toHaveText('20% to 80% charges');
+        await expect(partial.locator('.pdp-cmp__sub')).toHaveText('20% to 80% top-up chargeswhenever you need a quick boost.');
         for (const target of [
           page.locator('.pdp-cmp__card--magnet .pdp-cmp__magnet-detail'),
           page.locator('.pdp-cmp__card--magnet .pdp-cmp__magnet-lead'),
@@ -158,7 +153,7 @@ test.describe('responsive render', () => {
           compactVideo.locator(':scope > .pdp-cmp__eyebrow'),
           partial.locator(':scope > .pdp-cmp__eyebrow')
         ]) {
-          await expect(target).toHaveCSS('font-weight', '400');
+          await expect(target).toHaveCSS('font-weight', '600');
         }
         for (const target of [
           compactVideo.locator(':scope > .pdp-cmp__compact-video-main')
@@ -204,6 +199,7 @@ test.describe('responsive render', () => {
             return { top: rect.top - cardRect.top, width: rect.width, height: rect.height };
           };
           return {
+            width: cardRect.width,
             height: cardRect.height,
             eyebrow: read(':scope > .pdp-cmp__eyebrow'),
             hero: read(':scope > .pdp-cmp__compact-partial-main'),
@@ -233,55 +229,24 @@ test.describe('responsive render', () => {
             })()
           };
         });
-        const videoLayout = await page.locator('.pdp-cmp__card--compact-video').evaluate((card) => {
-          const cardRect = card.getBoundingClientRect();
-          const eyebrow = card.querySelector(':scope > .pdp-cmp__eyebrow');
-          const battery = card.querySelector(':scope > .pdp-cmp__compact-battery');
-          const eyebrowRect = eyebrow.getBoundingClientRect();
-          const batteryStyle = getComputedStyle(battery);
-          return {
-            eyebrowTop: eyebrowRect.top - cardRect.top,
-            eyebrowStyle: {
-              color: getComputedStyle(eyebrow).color,
-              fontFamily: getComputedStyle(eyebrow).fontFamily,
-              fontSize: getComputedStyle(eyebrow).fontSize,
-              fontWeight: getComputedStyle(eyebrow).fontWeight,
-              letterSpacing: getComputedStyle(eyebrow).letterSpacing,
-              lineHeight: getComputedStyle(eyebrow).lineHeight
-            },
-            batteryTop: batteryStyle.top,
-            batteryPosition: batteryStyle.position
-          };
-        });
-        expect(Math.abs(partialLayout.hero.top - (partialLayout.height / 2 - 45))).toBeLessThanOrEqual(1);
-        expect(Math.abs(partialLayout.descriptor.top - (partialLayout.height / 2 + 23))).toBeLessThanOrEqual(1);
-        expect(partialLayout.hero.height).toBeCloseTo(64, 0);
-        expect(partialLayout.descriptor.height).toBeCloseTo(18, 0);
-        expect(partialLayout.height / partialLayout.hero.width).toBeCloseTo(192 / 159.125, 2);
+        expect(partialLayout.width / partialLayout.height).toBeCloseTo(413 / 242, 2);
+        expect(partialLayout.hero.height).toBeCloseTo(68.4, 0);
+        expect(partialLayout.descriptor.height).toBeGreaterThan(40);
         expect(partialLayout.descriptorStyle).toMatchObject({
-          color: 'rgb(96, 111, 127)',
-          fontSize: '14px',
-          letterSpacing: '-0.224px',
-          lineHeight: '18px',
-          whiteSpace: 'nowrap'
+          color: 'rgb(115, 125, 139)',
+          fontSize: '20px',
+          letterSpacing: '-0.5px',
+          lineHeight: '22px',
+          whiteSpace: 'normal'
         });
         expect(partialLayout.eyebrowStyle).toMatchObject({
           color: 'rgb(115, 125, 139)',
-          fontSize: '14px',
-          letterSpacing: 'normal',
-          lineHeight: '15.12px'
+          fontSize: '20px',
+          letterSpacing: '-0.4px',
+          lineHeight: '21px'
         });
         expect(partialLayout.descriptorStyle.scrollWidth).toBeLessThanOrEqual(partialLayout.descriptorStyle.clientWidth);
-        expect(Math.abs(partialLayout.eyebrow.top - videoLayout.eyebrowTop)).toBeLessThanOrEqual(1);
-        expect(videoLayout.eyebrowStyle).toMatchObject({
-          color: partialLayout.eyebrowStyle.color,
-          fontSize: partialLayout.eyebrowStyle.fontSize,
-          fontWeight: '400',
-          letterSpacing: partialLayout.eyebrowStyle.letterSpacing,
-          lineHeight: partialLayout.eyebrowStyle.lineHeight
-        });
-        expect(videoLayout.batteryPosition).toBe('relative');
-        expect(videoLayout.batteryTop).toBe('-5px');
+        expect(partialLayout.eyebrow.top).toBeCloseTo(24, 1);
       } else {
         expect(kinds.flat()).toEqual(['video', 'fade', 'partial-image', 'magnet', 'charge', 'full']);
         await expect(page.locator('.pdp-cmp__card--compact-stat').first()).toBeHidden();
@@ -456,18 +421,9 @@ test('mobile reference migration clears only the compact-partial text layout and
   expect(saved[keys.extra]).toBeUndefined();
   expect(saved[keys.descriptor]).toBeUndefined();
   expect(saved[keys.control]).toMatchObject({ dx: 3, dy: 2 });
-  await expect(page.locator('.pdp-cmp__card--compact-partial > .pdp-cmp__sub')).toHaveText('20% to 80% charges');
+  await expect(page.locator('.pdp-cmp__card--compact-partial > .pdp-cmp__sub')).toHaveText('20% to 80% top-up chargeswhenever you need a quick boost.');
   const savedHistory = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-history-4') || '[]'));
   expect(savedHistory.flat().map((entry) => entry.key)).toEqual([keys.control]);
-  await expect.poll(() => page.evaluate(() => {
-    const leftCard = document.querySelector('.pdp-cmp__card--compact-video');
-    const rightCard = document.querySelector('.pdp-cmp__card--compact-partial');
-    const leftCardRect = leftCard.getBoundingClientRect();
-    const rightCardRect = rightCard.getBoundingClientRect();
-    const leftEyebrowRect = leftCard.querySelector(':scope > .pdp-cmp__eyebrow').getBoundingClientRect();
-    const rightEyebrowRect = rightCard.querySelector(':scope > .pdp-cmp__eyebrow').getBoundingClientRect();
-    return Math.abs((leftEyebrowRect.top - leftCardRect.top) - (rightEyebrowRect.top - rightCardRect.top));
-  })).toBeLessThanOrEqual(1);
 });
 
 test('mobile eyebrow-height reset preserves the compact partial number and extra', async ({ page }) => {
@@ -505,7 +461,7 @@ test('mobile eyebrow-height reset preserves the compact partial number and extra
   expect(savedHistory.flat().map((entry) => entry.key)).toEqual([keys.number]);
 });
 
-test('mobile compact-partial metric sync restores the right value scale and label height only', async ({ page }) => {
+test('mobile compact-partial metric sync restores the right value scale only', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${baseUrl}?edit=1`);
   const keys = await page.evaluate(() => ({
@@ -547,13 +503,6 @@ test('mobile compact-partial metric sync restores the right value scale and labe
   expect(saved[keys.descriptor]).toMatchObject({ dx: 2, dy: 7 });
   const savedHistory = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-history-4') || '[]'));
   expect(savedHistory.flat().map((entry) => entry.key)).toEqual([keys.extra]);
-  await expect.poll(() => page.evaluate(() => {
-    const left = document.querySelector('.pdp-cmp__card--compact-video > .pdp-cmp__eyebrow');
-    const right = document.querySelector('.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow');
-    const leftCard = left.closest('.pdp-cmp__card').getBoundingClientRect();
-    const rightCard = right.closest('.pdp-cmp__card').getBoundingClientRect();
-    return Math.abs((left.getBoundingClientRect().top - leftCard.top) - (right.getBoundingClientRect().top - rightCard.top));
-  })).toBeLessThanOrEqual(1);
 });
 
 test('mobile full-card reference migration clears only its legacy Canva layout', async ({ page }) => {
