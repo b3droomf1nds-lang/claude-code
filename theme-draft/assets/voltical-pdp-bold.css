@@ -1683,7 +1683,7 @@
        compact-video value — only the characters themselves differ. */
     font-family: var(--sans);
     font-size: 29px;
-    font-weight: 600;
+    font-weight: 400;
     letter-spacing: -0.045em;
   }
 
@@ -1817,14 +1817,12 @@
     white-space: normal !important;
   }
 
-  /* The three compact summaries are one type family. Keep their measured
-     sizes and layouts, but give the two smaller cards the same semibold
-     stroke as the wide full-charge card at every hierarchy level. */
+  /* Keep the compact labels and supporting copy in the same semibold family
+     as the wide full-charge card. The live values retain their lighter,
+     separately-tuned weight for their smaller card proportions. */
   .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow,
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow,
-  .template-product .pdp-cmp__compact-video-main,
   .template-product .pdp-cmp__compact-partial-main,
-  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number,
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra,
   .template-product .pdp-cmp__card--compact-video > .pdp-cmp__sub,
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__sub {

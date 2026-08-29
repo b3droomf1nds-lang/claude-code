@@ -99,7 +99,7 @@ test.describe('responsive render', () => {
         await expect(partialExtra).toHaveText('extra');
         await expect(partialNumber).toHaveCSS('display', 'block');
         await expect(partialExtra).toHaveCSS('display', 'block');
-        await expect(partialNumber).toHaveCSS('font-weight', '600');
+        await expect(partialNumber).toHaveCSS('font-weight', '400');
         await expect(partialExtra).toHaveCSS('font-weight', '600');
         await expect(partialNumber).toHaveCSS('color', 'rgb(19, 19, 22)');
         await expect(partialNumber).toHaveCSS('background-image', 'none');
@@ -132,7 +132,6 @@ test.describe('responsive render', () => {
         const compactVideo = page.locator('.pdp-cmp__card--compact-video');
         for (const target of [
           compactVideo.locator(':scope > .pdp-cmp__eyebrow'),
-          compactVideo.locator(':scope > .pdp-cmp__compact-video-main'),
           compactVideo.locator(':scope > .pdp-cmp__sub'),
           partial.locator(':scope > .pdp-cmp__eyebrow'),
           partial.locator(':scope > .pdp-cmp__sub')
