@@ -235,11 +235,14 @@
      stack instead of trailing it. To revert: swap these three back to
      1/4/5 and set the compact tiles (search "compact-video { grid-column")
      back to 7/8/9. */
-  .pdp-cmp>:nth-child(2)>:nth-child(4) { order: 4; } /* video */
+  /* Orders 2 and 3 are now the two feature tiles (MagSafe / USB-C), which
+     sit right below compact-video (order 1). Everything below them shifts
+     down by two to make room. */
+  .pdp-cmp>:nth-child(2)>:nth-child(4) { order: 6; } /* video */
   .pdp-cmp>:nth-child(2)>:nth-child(6) { order: 2; } /* fade (hidden on mobile) */
   .pdp-cmp>:nth-child(2)>:nth-child(5) { order: 3; } /* partial-image (hidden on mobile) */
-  .pdp-cmp>:nth-child(2)>:nth-child(1) { order: 5; } /* magnet */
-  .pdp-cmp>:nth-child(2)>:nth-child(2) { order: 6; } /* charge */
+  .pdp-cmp>:nth-child(2)>:nth-child(1) { order: 7; } /* magnet */
+  .pdp-cmp>:nth-child(2)>:nth-child(2) { order: 8; } /* charge */
   .pdp-cmp>:nth-child(2)>:nth-child(3) { order: 9; } /* full-charges (hidden on mobile) */
 }
 .pdp-cmp__group {
@@ -1586,12 +1589,54 @@
 
   .template-product .pdp-cmp__card--compact-partial {
     grid-column: 1 / -1;
-    order: 3;
+    order: 5;
   }
 
   .template-product .pdp-cmp__card--compact-full {
     grid-column: 1 / -1;
+    order: 4;
+  }
+
+  /* Two feature tiles (MagSafe / USB-C) sit directly below the
+     video-playback summary (order 1). Same mobile-only white-tile shell as
+     the compact-stat cards, but taller with a centred icon over a two-line
+     caption, matching the supplied reference. */
+  .template-product .pdp-cmp__card--feature-magsafe {
+    grid-column: 1 / -1;
     order: 2;
+  }
+  .template-product .pdp-cmp__card--feature-usbc {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+  .template-product .pdp-cmp__card--feature {
+    width: min(100%, 413px);
+    height: auto;
+    min-height: 300px;
+    justify-self: center;
+    justify-content: center !important;
+    gap: 20px;
+    padding: 30px 18px !important;
+  }
+  .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-icon {
+    display: block;
+    width: auto;
+    height: 112px;
+    max-width: 72%;
+    object-fit: contain;
+    margin: 0 auto;
+  }
+  .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-detail {
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: #737d8b;
+  }
+  .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-detail > span:first-child {
+    color: #131316;
+    font-weight: 600;
   }
 
   .template-product .pdp-cmp__card--compact-stat {
