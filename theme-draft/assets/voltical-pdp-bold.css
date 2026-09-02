@@ -1612,31 +1612,35 @@
   .template-product .pdp-cmp__card--feature {
     width: min(100%, 413px);
     height: auto;
-    min-height: 300px;
+    /* Wide/short shell matching the reference tile's ~1.80 width-to-height
+       ratio (measured 1034x573 in the supplied screenshot). */
+    aspect-ratio: 413 / 230;
     justify-self: center;
     justify-content: center !important;
-    gap: 20px;
-    padding: 30px 18px !important;
+    gap: 12px;
+    padding: 20px 14px !important;
   }
   .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-icon {
     display: block;
     width: auto;
-    height: 112px;
     max-width: 72%;
     object-fit: contain;
     margin: 0 auto;
   }
+  /* Per-icon heights: the two glyphs fill their transparent canvases
+     differently (the phone is tall and narrow, the USB-C port wide and
+     short), so each is sized on its own to read at a matched visual size. */
+  .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-icon { height: 70px; }
+  .template-product .pdp-cmp__card--feature-usbc > .pdp-cmp__feature-icon { height: 84px; }
+  /* Both caption lines share one treatment — same size and weight, no thin
+     secondary line — matching the reference's single two-line statement. */
   .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-detail {
     font-family: var(--sans);
     font-size: 20px;
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    line-height: 1.15;
-    color: #737d8b;
-  }
-  .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-detail > span:first-child {
-    color: #131316;
     font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: #131316;
   }
 
   .template-product .pdp-cmp__card--compact-stat {
