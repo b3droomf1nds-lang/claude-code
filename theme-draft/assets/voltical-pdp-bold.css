@@ -235,14 +235,11 @@
      stack instead of trailing it. To revert: swap these three back to
      1/4/5 and set the compact tiles (search "compact-video { grid-column")
      back to 7/8/9. */
-  /* Orders 2 and 3 are now the two feature tiles (MagSafe / USB-C), which
-     sit right below compact-video (order 1). Everything below them shifts
-     down by two to make room. */
-  .pdp-cmp>:nth-child(2)>:nth-child(4) { order: 6; } /* video */
+  .pdp-cmp>:nth-child(2)>:nth-child(4) { order: 4; } /* video */
   .pdp-cmp>:nth-child(2)>:nth-child(6) { order: 2; } /* fade (hidden on mobile) */
   .pdp-cmp>:nth-child(2)>:nth-child(5) { order: 3; } /* partial-image (hidden on mobile) */
-  .pdp-cmp>:nth-child(2)>:nth-child(1) { order: 7; } /* magnet */
-  .pdp-cmp>:nth-child(2)>:nth-child(2) { order: 8; } /* charge */
+  .pdp-cmp>:nth-child(2)>:nth-child(1) { order: 5; } /* magnet */
+  .pdp-cmp>:nth-child(2)>:nth-child(2) { order: 6; } /* charge */
   .pdp-cmp>:nth-child(2)>:nth-child(3) { order: 9; } /* full-charges (hidden on mobile) */
 }
 .pdp-cmp__group {
@@ -1589,84 +1586,12 @@
 
   .template-product .pdp-cmp__card--compact-partial {
     grid-column: 1 / -1;
-    order: 5;
+    order: 3;
   }
 
   .template-product .pdp-cmp__card--compact-full {
     grid-column: 1 / -1;
-    order: 4;
-  }
-
-  /* Two feature tiles (MagSafe / USB-C) sit directly below the
-     video-playback summary (order 1). Same mobile-only white-tile shell as
-     the compact-stat cards, but taller with a centred icon over a two-line
-     caption, matching the supplied reference. */
-  .template-product .pdp-cmp__card--feature-magsafe {
-    grid-column: 1 / -1;
     order: 2;
-  }
-  .template-product .pdp-cmp__card--feature-usbc {
-    grid-column: 1 / -1;
-    order: 3;
-  }
-  .template-product .pdp-cmp__card--feature {
-    width: min(100%, 413px);
-    height: auto;
-    /* Wide/short shell matching the reference tile's ~1.80 width-to-height
-       ratio (measured 1034x573 in the supplied screenshot). */
-    aspect-ratio: 413 / 230;
-    justify-self: center;
-    justify-content: center !important;
-    gap: 16px;
-    padding: 20px 14px !important;
-  }
-  /* Pixel-measured against the reference: its satellite icon's true ink
-     (not its bounding box) stands ~43px tall at this tile's ~180px CSS
-     height (~23.5%). Our two source PNGs are 1536x1024 canvases, but the
-     glyph fills a very different fraction of each canvas's height (magsafe
-     ~75%, usb-c ~35%) — so the same img height would render two visibly
-     different-sized icons. Fix: crop-window each icon (fixed-size,
-     overflow:hidden, glyph centred — both source glyphs are already
-     centred in their canvas) at the scaled-up img height that makes the
-     true glyph land on 43px for both. */
-  .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-icon-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    height: 43px;
-    flex: none;
-  }
-  .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-icon-wrap > .pdp-cmp__feature-icon {
-    display: block;
-    width: auto;
-    flex: none;
-  }
-  /* magsafe glyph = 75.3% of the 1024-tall canvas -> 43 / 0.753 ≈ 57px */
-  .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-icon-wrap {
-    width: 22px;
-  }
-  .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-icon-wrap > .pdp-cmp__feature-icon {
-    height: 57px;
-  }
-  /* usb-c glyph = 35.4% of the 1024-tall canvas -> 43 / 0.354 ≈ 121px */
-  .template-product .pdp-cmp__card--feature-usbc > .pdp-cmp__feature-icon-wrap {
-    width: 97px;
-  }
-  .template-product .pdp-cmp__card--feature-usbc > .pdp-cmp__feature-icon-wrap > .pdp-cmp__feature-icon {
-    height: 121px;
-  }
-  /* Both caption lines share one treatment — same size and weight, no thin
-     secondary line — matching the reference's single two-line statement. */
-  .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-detail {
-    font-family: var(--sans);
-    font-size: 20px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    /* Reference's line1-to-line2 baseline spacing measures ~20px CSS at a
-       ~19-20px font — i.e. ~1.0, tighter than the 1.1 used elsewhere. */
-    line-height: 1.0;
-    color: #131316;
   }
 
   .template-product .pdp-cmp__card--compact-stat {
