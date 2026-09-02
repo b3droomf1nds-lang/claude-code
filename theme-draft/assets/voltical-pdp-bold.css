@@ -1620,21 +1620,25 @@
     gap: 16px;
     padding: 20px 14px !important;
   }
-  /* Pixel-measured against the reference: its satellite icon's true ink
-     (not its bounding box) stands ~43px tall at this tile's ~180px CSS
-     height (~23.5%). Our two source PNGs are 1536x1024 canvases, but the
-     glyph fills a very different fraction of each canvas's height (magsafe
-     ~75%, usb-c ~35%) — so the same img height would render two visibly
-     different-sized icons. Fix: crop-window each icon (fixed-size,
-     overflow:hidden, glyph centred — both source glyphs are already
-     centred in their canvas) at the scaled-up img height that makes the
-     true glyph land on 43px for both. */
+  /* Pixel-measured BOTH reference tiles (not just the first): the
+     satellite icon is 43x42px CSS and the hard-drive icon is 42x31px CSS
+     — different shapes, but the same ~43px LARGEST dimension. Apple
+     visually contains every icon in a consistent ~43x43 box and lets the
+     glyph's own aspect ratio set the other dimension, rather than forcing
+     every icon to the same height regardless of shape (which is what an
+     earlier version of this rule did, and made the wide usb-c glyph
+     balloon out to ~97px wide — over 2x the reference's icon width).
+     Our two source PNGs are 1536x1024 canvases, but the glyph fills a very
+     different fraction of each canvas (magsafe ~75% of height, usb-c ~53%
+     of width), so crop-window each icon (fixed-size, overflow:hidden,
+     glyph centred — both source glyphs are already centred in their
+     canvas) at the scaled-up img size that makes the true glyph's LARGEST
+     dimension land on 43px. */
   .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-icon-wrap {
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    height: 43px;
     flex: none;
   }
   .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-icon-wrap > .pdp-cmp__feature-icon {
@@ -1648,23 +1652,27 @@
      (auto-width images can mis-size there); pinning both dimensions
      removes the ambiguity everywhere, including on the actual iPhone
      Safari this section targets.
-     magsafe glyph = 75.3% of the 1024-tall canvas -> 43 / 0.753 ≈ 57px;
-     width = 57 * (1536/1024) = 85.5px */
+     magsafe: height is the glyph's larger dimension (771 vs 369 wide) =
+     75.3% of the 1024-tall canvas -> 43 / 0.753 ≈ 57px;
+     width = 57 * (1536/1024) = 85.5px; true glyph 43 tall x 21 wide. */
   .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-icon-wrap {
-    width: 22px;
+    width: 21px;
+    height: 43px;
   }
   .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-icon-wrap > .pdp-cmp__feature-icon {
     width: 85.5px;
     height: 57px;
   }
-  /* usb-c glyph = 35.4% of the 1024-tall canvas -> 43 / 0.354 ≈ 121px;
-     width = 121 * (1536/1024) = 181.5px */
+  /* usb-c: width is the glyph's larger dimension (818 vs 363 tall) =
+     53.3% of the 1536-wide canvas -> 43 / 0.533 ≈ 80.7px;
+     height = 80.7 / (1536/1024) = 53.8px; true glyph 43 wide x 19 tall. */
   .template-product .pdp-cmp__card--feature-usbc > .pdp-cmp__feature-icon-wrap {
-    width: 97px;
+    width: 43px;
+    height: 19px;
   }
   .template-product .pdp-cmp__card--feature-usbc > .pdp-cmp__feature-icon-wrap > .pdp-cmp__feature-icon {
-    width: 181.5px;
-    height: 121px;
+    width: 80.7px;
+    height: 53.8px;
   }
   /* Both caption lines share one treatment — same size and weight, no thin
      secondary line — matching the reference's single two-line statement. */
