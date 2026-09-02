@@ -43,7 +43,7 @@
       },
       "block_order": ["c1", "c2", "c3"],
       "settings": {
-        "eyebrow": "Cables",
+        "eyebrow": "",
         "heading_main": "Everything you need to",
         "heading_accent": "stay charged.",
         "link_text": "Shop all cables",
