@@ -1639,21 +1639,31 @@
   }
   .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-icon-wrap > .pdp-cmp__feature-icon {
     display: block;
-    width: auto;
     flex: none;
+    object-fit: contain;
   }
-  /* magsafe glyph = 75.3% of the 1024-tall canvas -> 43 / 0.753 ≈ 57px */
+  /* Explicit width AND height on every icon (not width:auto) — relying on
+     the browser to infer width from the intrinsic ratio inside a nested
+     flex + overflow:hidden crop window is a known Safari trouble spot
+     (auto-width images can mis-size there); pinning both dimensions
+     removes the ambiguity everywhere, including on the actual iPhone
+     Safari this section targets.
+     magsafe glyph = 75.3% of the 1024-tall canvas -> 43 / 0.753 ≈ 57px;
+     width = 57 * (1536/1024) = 85.5px */
   .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-icon-wrap {
     width: 22px;
   }
   .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-icon-wrap > .pdp-cmp__feature-icon {
+    width: 85.5px;
     height: 57px;
   }
-  /* usb-c glyph = 35.4% of the 1024-tall canvas -> 43 / 0.354 ≈ 121px */
+  /* usb-c glyph = 35.4% of the 1024-tall canvas -> 43 / 0.354 ≈ 121px;
+     width = 121 * (1536/1024) = 181.5px */
   .template-product .pdp-cmp__card--feature-usbc > .pdp-cmp__feature-icon-wrap {
     width: 97px;
   }
   .template-product .pdp-cmp__card--feature-usbc > .pdp-cmp__feature-icon-wrap > .pdp-cmp__feature-icon {
+    width: 181.5px;
     height: 121px;
   }
   /* Both caption lines share one treatment — same size and weight, no thin
