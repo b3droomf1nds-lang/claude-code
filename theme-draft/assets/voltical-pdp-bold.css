@@ -1097,13 +1097,21 @@
      than approximating the look with a separate font-weight. */
   .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-lead,
   .template-product .pdp-cmp__card--charge .pdp-cmp__charge-range-lead,
-  .template-product .pdp-cmp__card--charge .pdp-cmp__range-bold,
-  .template-product .pdp-cmp__card--video .pdp-cmp__alloy-lead {
+  .template-product .pdp-cmp__card--charge .pdp-cmp__range-bold {
     color: #1d1f24;
     font-family: var(--sans);
     font-size: inherit;
     line-height: inherit;
     font-weight: 500;
+  }
+  /* Matches the "Everything you need to" showcase heading's bold weight,
+     for the same relative thickness-for-its-size. */
+  .template-product .pdp-cmp__card--video .pdp-cmp__alloy-lead {
+    color: #1d1f24;
+    font-family: var(--sans);
+    font-size: inherit;
+    line-height: inherit;
+    font-weight: 600;
   }
   /* Match the visible mobile headline size of "Strong magnet.". The charge
      caption has a separate smaller parent size, so it needs an explicit lead. */
@@ -1112,12 +1120,17 @@
     font-size: 20px !important;
     line-height: 1.08 !important;
   }
-  .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-detail,
-  .template-product .pdp-cmp__card--video .pdp-cmp__alloy-detail {
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-detail {
     color: #737d8b;
     /* The quiet supporting line on each tall card uses the same compact-card
        weight: small enough to stay secondary, but not visually frail. */
     font-weight: 600;
+  }
+  /* Matches the "stay charged." showcase accent line's regular weight, for
+     the same relative thickness-for-its-size as its bold lead line above. */
+  .template-product .pdp-cmp__card--video .pdp-cmp__alloy-detail {
+    color: #737d8b;
+    font-weight: 400;
   }
   .template-product .pdp-cmp__card {
     height: auto;
