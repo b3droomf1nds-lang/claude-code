@@ -1479,11 +1479,23 @@
      slot reveals more of the already-zoomed image that used to be
      clipped off by the old, shorter card edge — instead of changing
      the zoom itself. */
-  .template-product .pdp-cmp__card--magnet .pdp-cmp__img-slot,
-  .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__img-slot {
     top: 65.63px !important;
     bottom: auto !important;
     height: 236.09px !important;
+    min-height: 0;
+    border-radius: 0;
+  }
+  /* video/alloy tile: give the image a tall area that fills the card below
+     the caption and let object-fit:contain size the whole case to it. This
+     shows the case big AND complete — scaling it with a transform instead
+     just clips the case off (only the camera bump stays visible). */
+  .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
+    top: 92px !important;
+    bottom: auto !important;
+    left: 24px !important;
+    right: 24px !important;
+    height: 400px !important;
     min-height: 0;
     border-radius: 0;
   }
@@ -1502,7 +1514,9 @@
     transform: matrix(3.3, 0, 0, 3.3, 0, 0) translate(0px, 33.96px) scale(0.8088) !important;
   }
   .template-product .pdp-cmp .pdp-cmp__grid > .pdp-cmp__card--video > .pdp-cmp__img-slot > .pdp-cmp__img--video-crop {
-    transform: matrix(1.06, 0, 0, 1.06, 0, 0) translate(3.02px, 101.18px) scale(2.6511) !important;
+    transform: none !important;
+    object-fit: contain !important;
+    object-position: center center !important;
   }
   .template-product .pdp-cmp .pdp-cmp__grid > .pdp-cmp__card--charge > .pdp-cmp__stat-row > .pdp-cmp__battery-icon {
     transform: matrix(1, 0, 0, 1, -8.3, 3.77) translate(2.26px, -0.75px) scale(1.4456) !important;
