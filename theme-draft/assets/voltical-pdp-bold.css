@@ -220,6 +220,7 @@
      down 100px below the selector on top of that, minus 50px. */
   .pdp-cmp__select-heading {
     margin-top: 70px;
+    white-space: normal;
   }
   .pdp-cmp__select-wrap {
     margin-bottom: 54px;
@@ -1327,35 +1328,36 @@
   .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(2) { transform: translate(0px, 1.61px) scale(2.4085) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(3) { transform: translate(0px, 9.66px) scale(0.9519) !important; }
 }
-/* Mirrors the within-tile adjustments above onto mobile, at the file's
-   documented 3.2816 desktop-to-mobile scale factor (desktop's tile
-   renders at 463.6px via the grid's 4.347x transform; mobile's tile is
-   350px with no transform, so raw desktop px * 3.2816 = the matching
-   mobile px). Only nested content (captions/images/icons) is mirrored
-   here — the 6 "move tile to a different grid cell" bakes above are a
-   desktop-grid-only concept (mobile stacks all 6 tiles in one column,
-   in source order, so there's no equivalent cell to move a tile to)
-   and are intentionally left off mobile. */
+/* Mobile values below come directly from the mobile Canva export. They
+   affect nested content only; desktop's six tile-to-grid-cell moves have
+   no equivalent in the single-column mobile stack and remain desktop-only. */
 @media (max-width: 899px) {
-  .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(1) { transform: matrix(1, 0, 0, 1, -54.86, 0) translate(123.72px, 36.85px) scale(1.0936) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(2) { transform: matrix(1, 0, 0, 1, -81.92, 0) translate(0px, -33.21px) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1) { transform: matrix(3.3, 0, 0, 3.3, 0, 0) translate(0px, 33.96px) scale(0.8088) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: translate(8.3px, 0px) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2) { transform: matrix(1, 0, 0, 1, -8.3, 3.77) translate(2.26px, -0.75px) scale(1.4456) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(4) { transform: translate(0px, -6.79px) scale(0.9817) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(1) { transform: translate(3.77px, -6.79px) scale(1.3079) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(2) { transform: translate(0px, -18.11px) scale(1.3061) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(3) { transform: translate(-10.57px, 0.75px) scale(1.0277) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(4)>:nth-child(1) { transform: matrix(1.39342, 0, 0, 1.39342, -102.48, -157.42) translate(18.11px, 18.87px) scale(0.9065) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(1) { transform: matrix(1, 0, 0, 1, -84.83, 0) translate(0px, -5.28px) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(2) { transform: matrix(1, 0, 0, 1, -91.48, 0) translate(0px, -7.55px) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(3)>:nth-child(1) { transform: matrix(1.06, 0, 0, 1.06, 0, 0) translate(3.02px, 101.18px) scale(2.6511) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(1) { transform: matrix(1, 0, 0, 1, -51.48, -6.79) translate(5.28px, 0px) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(2) { transform: matrix(1.3558, 0, 0, 1.3558, -98.92, -12.08) translate(18.11px, 0px) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(4) { transform: matrix(1, 0, 0, 1, -46.75, 0) translate(-33.97px, -20.38px) scale(0.9843) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(1) { transform: translate(0px, -24.15px) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(2) { transform: translate(0px, 5.28px) scale(2.4085) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(3) { transform: translate(0px, 31.7px) scale(0.9519) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(2) { transform: translate(0px, -1.32px) scale(1.2012) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1) { transform: matrix(3.3, 0, 0, 3.3, 0, 0) translate(0.24px, 6.81px) scale(0.4776) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: translate(0px, -15.69px) scale(1.0909) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: matrix(1, 0, 0, 1, 8.3, 0) translate(-8.84px, -4.08px) scale(1.2155) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2) { transform: matrix(1.4456, 0, 0, 1.4456, -6.04, 3.02) translate(3.12px, -3.02px) scale(1.669) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(3) { transform: translate(0px, 1.27px) scale(0.9825) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(4) { transform: matrix(0.9817, 0, 0, 0.9817, 0, -6.79) translate(0px, 11.62px) scale(1.1235) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(1) { transform: translate(0px, 61.05px) scale(0.7457) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(2) { transform: translate(0px, 54.3px) scale(0.6874) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(3) { transform: translate(0px, 52.75px) scale(0.4752) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(4)>:nth-child(1) { transform: translate(8.03px, 10.28px) scale(0.9329) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(1) { transform: translate(0px, -3.36px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(2) { transform: translate(0px, -4.49px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(3)>:nth-child(1) { transform: matrix(2.810166, 0, 0, 2.810166, 3.2012, 107.2508) translate(-0.02px, 18.27px) scale(1.6738) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(1) { transform: translate(0px, 6.12px) scale(0.9124) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(2) { transform: translate(0px, 13.28px) scale(1.1915) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(3)>:nth-child(1) { transform: translate(-1.74px, 2.07px) scale(0.8301) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(4) { transform: translate(0px, -6.02px) scale(1.4825) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(1) { transform: translate(0px, -17.83px) scale(1.643) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(2) { transform: translate(0px, -1.62px) scale(0.987) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(3) { transform: translate(0px, 12px) scale(1.2329) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(7)>:nth-child(3) { transform: translate(0px, -3.46px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(10)>:nth-child(1) { transform: translate(0px, 4.48px) scale(2.2829) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(10)>:nth-child(2) { transform: translate(0px, 8.46px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(11)>:nth-child(1) { transform: translate(0px, 3.98px) scale(1.2959) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(11)>:nth-child(2) { transform: translate(0px, 4.17px) !important; }
 }
 /* CANVA-BAKED-END */
 
@@ -1486,6 +1488,12 @@
     border-radius: 0;
   }
 
+  .template-product .pdp-cmp .pdp-cmp__grid > .pdp-cmp__card--magnet > .pdp-cmp__img-slot .pdp-cmp__img--magnet-crop,
+  .template-product .pdp-cmp .pdp-cmp__grid > .pdp-cmp__card--video > .pdp-cmp__img-slot > .pdp-cmp__img--video-crop,
+  .template-product .pdp-cmp .pdp-cmp__grid > .pdp-cmp__card--charge > .pdp-cmp__stat-row > .pdp-cmp__battery-icon {
+    transform: none !important;
+  }
+
   /* ---- the other four tiles get the same tall white rounded shape ---- */
 
   /* charge + fade: plain flex-column, no absolutely-positioned children
@@ -1594,7 +1602,7 @@
 
   .template-product .pdp-cmp__card--compact-full {
     grid-column: 1 / -1;
-    order: 4;
+    order: 2;
   }
 
   /* Two feature tiles (MagSafe / USB-C) sit directly below the
@@ -1603,22 +1611,40 @@
      caption, matching the supplied reference. */
   .template-product .pdp-cmp__card--feature-magsafe {
     grid-column: 1 / -1;
-    order: 2;
+    order: 3;
   }
   .template-product .pdp-cmp__card--feature-usbc {
     grid-column: 1 / -1;
-    order: 3;
+    order: 4;
   }
-  .template-product .pdp-cmp__card--feature {
+  .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--feature {
     width: min(100%, 413px);
     height: auto;
-    /* Wide/short shell matching the reference tile's ~1.80 width-to-height
-       ratio (measured 1034x573 in the supplied screenshot). */
-    aspect-ratio: 413 / 230;
+    /* The supplied Apple mobile reference measures 817x428px from the
+       straight outside edges: 1.909:1. Keep that exact proportion as this
+       card scales with the available phone width. The combined selector is
+       intentional: the generic compact-stat rule appears later and must not
+       replace this feature-card height, spacing, or corner shape. */
+    aspect-ratio: 817 / 428;
+    border-radius: 22px;
     justify-self: center;
     justify-content: center !important;
     gap: 16px;
     padding: 20px 14px !important;
+  }
+  .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--feature-magsafe {
+    aspect-ratio: auto;
+    height: min(calc(52.3868vw + 7.0453px), 244.36px);
+  }
+  @supports (-webkit-touch-callout: none) {
+    .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--feature-magsafe {
+      height: min(calc(52.3868vw + 69.3352px), 306.6499px);
+      gap: 45px;
+    }
+    .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-icon-wrap,
+    .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-detail {
+      translate: 0 12.3551px;
+    }
   }
   /* Pixel-measured BOTH reference tiles (not just the first): the
      satellite icon is 43x42px CSS and the hard-drive icon is 42x31px CSS
@@ -1645,46 +1671,51 @@
     display: block;
     flex: none;
     object-fit: contain;
+    /* Both source WebPs have a large transparent canvas. Allow the image to
+       extend past its crop window so the visible glyph, not that canvas,
+       lands at the reference icon size. This also cancels the theme's
+       global img { max-width:100% }, which previously squeezed each icon. */
+    max-width: none !important;
+    max-height: none !important;
   }
   /* Explicit width AND height on every icon (not width:auto) — relying on
      the browser to infer width from the intrinsic ratio inside a nested
      flex + overflow:hidden crop window is a known Safari trouble spot
      (auto-width images can mis-size there); pinning both dimensions
      removes the ambiguity everywhere, including on the actual iPhone
-     Safari this section targets.
+     Safari this section targets. The Apple reference's two icons occupy an
+     approximately 50px visual box at CSS scale.
      magsafe: height is the glyph's larger dimension (771 vs 369 wide) =
-     75.3% of the 1024-tall canvas -> 43 / 0.753 ≈ 57px;
-     width = 57 * (1536/1024) = 85.5px; true glyph 43 tall x 21 wide. */
+     75.3% of the 1024-tall canvas -> 50 / 0.753 ≈ 66.4px;
+     width = 66.4 * (1536/1024) = 99.6px; true glyph 50 tall x 24 wide. */
   .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-icon-wrap {
-    width: 21px;
-    height: 43px;
+    width: 24px;
+    height: 50px;
   }
   .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-icon-wrap > .pdp-cmp__feature-icon {
-    width: 85.5px;
-    height: 57px;
+    width: 99.6px;
+    height: 66.4px;
   }
   /* usb-c: width is the glyph's larger dimension (818 vs 363 tall) =
-     53.3% of the 1536-wide canvas -> 43 / 0.533 ≈ 80.7px;
-     height = 80.7 / (1536/1024) = 53.8px; true glyph 43 wide x 19 tall. */
+     53.3% of the 1536-wide canvas -> 50 / 0.533 ≈ 93.8px;
+     height = 93.8 / (1536/1024) = 62.5px; true glyph 50 wide x 22 tall. */
   .template-product .pdp-cmp__card--feature-usbc > .pdp-cmp__feature-icon-wrap {
-    width: 43px;
-    height: 19px;
+    width: 50px;
+    height: 22px;
   }
   .template-product .pdp-cmp__card--feature-usbc > .pdp-cmp__feature-icon-wrap > .pdp-cmp__feature-icon {
-    width: 80.7px;
-    height: 53.8px;
+    width: 93.8px;
+    height: 62.5px;
   }
   /* Both caption lines share one treatment — same size and weight, no thin
      secondary line — matching the reference's single two-line statement. */
-  .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-detail {
+  .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--feature > .pdp-cmp__feature-detail {
     font-family: var(--sans);
     font-size: 20px;
     font-weight: 600;
     letter-spacing: -0.02em;
-    /* Reference's line1-to-line2 baseline spacing measures ~20px CSS at a
-       ~19-20px font — i.e. ~1.0, tighter than the 1.1 used elsewhere. */
-    line-height: 1.0;
-    color: #131316;
+    line-height: 1.15;
+    color: #737d8b;
   }
 
   .template-product .pdp-cmp__card--compact-stat {
@@ -1769,9 +1800,8 @@
   }
 
   /* Same size, weight, and inline "number extra" layout as the compact-full
-     card's hero line below it — only the colouring stays compact-partial's
-     own (plain number, faded "extra" word), not compact-full's purple
-     gradient. */
+     card's hero line below it. One continuous warm fade spans the complete
+     live value, restored from the last approved colour version. */
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main {
     display: flex;
     align-items: baseline;
@@ -1784,40 +1814,32 @@
     line-height: .95;
     white-space: nowrap;
     margin-bottom: 7px;
+    background: linear-gradient(90deg, #FAE7AA 0%, #F21D4D 52%, #E72D91 92%, #AF3FC2 100%);
+    background-size: 130% 100%;
+    background-position: left center;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
   }
 
   .template-product .pdp-cmp__compact-partial-main span {
     font-variant-numeric: tabular-nums;
   }
 
-  /* Match the reference fade exactly: the number and the word "extra" each
-     carry the same top-to-bottom gradient independently, like the
-     single-word reference, rather than splitting one fade across both. */
+  /* The parent supplies one uninterrupted gradient across both text boxes. */
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number {
-    background: linear-gradient(180deg, #2c3543 0%, #718196 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
+    background: none;
     font-feature-settings: "pnum";
     font-variant-numeric: proportional-nums;
   }
 
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra {
-    background: linear-gradient(180deg, #2c3543 0%, #718196 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
+    background: none;
   }
 
   .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra:empty::after {
     content: 'extra';
-    background: linear-gradient(180deg, #2c3543 0%, #718196 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
   }
 
   .template-product .pdp-cmp__compact-battery {

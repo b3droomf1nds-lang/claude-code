@@ -31,8 +31,9 @@
     authored position it has now, on both desktop and phone.
 
     Every visible text group inside every tile is centered horizontally
-    while keeping its vertical position, size, and wording. Images and
-    standalone icons are left exactly where you put them. The entire
+    while keeping its vertical position, size, and wording. The two feature
+    icons are centred left-to-right too, without changing their height or
+    size. Other images stay exactly where you put them. The entire
     repair is one Undo step. Phone and desktop centering corrections are
     kept separate, so aligning one layout cannot knock the other off-centre.
 
@@ -93,6 +94,8 @@
      clickable/double-clickable like everything else. */
   .cv-editing .pdp-cmp__img-slot,
   .cv-editing .pdp-cmp__img-slot img{pointer-events:auto !important;}
+  .cv-editing .pdp-cmp__feature-icon-wrap,
+  .cv-editing .pdp-cmp__feature-icon-wrap .pdp-cmp__feature-icon{pointer-events:auto !important;}
   /* Kill the browser's OWN pinch-zoom and double-tap-zoom document-wide
      while editing — without this, a two-finger pinch (meant to resize the
      selected element) and a double-tap (meant to drill into it) both also
@@ -208,17 +211,17 @@
   if (wantOff) rm('volt-canva-on');
   var ON = ls(true, 'volt-canva-on') === '1' && !wantOff;
 
-  var LKEY = 'volt-canva-layout-5';
+  var LKEY = 'volt-canva-layout-4';
   // Undo history is persisted alongside the layout so the Refresh button
   // can reload the page without throwing away the undo stack. Reset all
   // wipes both so a fresh start has nothing to undo back into.
-  var HKEY = 'volt-canva-history-5';
+  var HKEY = 'volt-canva-history-4';
   // The toolbar tip is shown once per browser. Bump this version only when
   // introducing a real new editor gesture or control, and update its copy
   // below; that gives the new feature one clear first-use introduction.
   var HINT_KEY = 'volt-canva-hint-version';
-  var HINT_VERSION = '2';
-  var HINT_COOKIE = 'volt-canva-hint-v2';
+  var HINT_VERSION = '3';
+  var HINT_COOKIE = 'volt-canva-hint-v3';
   var showHint = ls(true, HINT_KEY) !== HINT_VERSION && cookieGet(HINT_COOKIE) !== HINT_VERSION;
   if (wantResetAll){ rm(LKEY); rm(HKEY); }
   var layout = {};
@@ -227,8 +230,23 @@
   // elements once they're registered below.
   var savedHistory = [];
   try { savedHistory = JSON.parse(ls(true, HKEY) || '[]') || []; } catch(e){ savedHistory = []; }
+  // Once the copied feature-icon layout has been baked into the mobile CSS,
+  // remove that exact browser-side draft so it cannot apply a second time on
+  // top of the new defaults. The icon entries uniquely identify this export;
+  // unrelated older edits and desktop-only browser state are left alone.
+  var BAKED_MOBILE_LAYOUT_MIGRATION = 'volt-canva-baked-mobile-layout-v1';
+  var hasCopiedFeatureLayout = layout[':nth-child(2)>:nth-child(10)>:nth-child(1)'] ||
+    layout[':nth-child(2)>:nth-child(11)>:nth-child(1)'];
+  if (!window.matchMedia('(min-width:900px)').matches && hasCopiedFeatureLayout &&
+      ls(true, BAKED_MOBILE_LAYOUT_MIGRATION) !== '1'){
+    layout = {};
+    savedHistory = [];
+    rm(LKEY);
+    rm(HKEY);
+    ls(false, BAKED_MOBILE_LAYOUT_MIGRATION, '1');
+  }
 
-  var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__eyebrow, ' +
+  var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__feature-icon-wrap, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-number, .pdp-cmp__compact-partial-extra, .pdp-cmp__sub, ' +
     '.pdp-cmp__compact-video-main, .pdp-cmp__compact-video-hours, .pdp-cmp__compact-battery, ' +
     '.pdp-cmp__battery-icon, .pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__select-wrap, ' +
@@ -282,7 +300,7 @@
     // deserve the same "Align only ever straightens left/right, never
     // moves vertically" treatment as a caption.
     function isAlignHoriz(el){
-      return isTextEditable(el) || el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__stat-x, .pdp-cmp__compact-video-main');
+      return isTextEditable(el) || el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__stat-x, .pdp-cmp__compact-video-main, .pdp-cmp__feature-icon-wrap');
     }
     // The charge-time number and its battery form one deliberately composed
     // visual. Align all must leave that pair exactly where the editor placed it.
@@ -378,7 +396,7 @@
         // Deliberately insert plain phrase text here. The common range walker
         // below then creates exactly one fresh lead span in each copy, rather
         // than nesting a new wrapper inside a migration wrapper.
-        box.innerHTML = '<span class="pdp-cmp__desktop-copy">Charging time from 20% to 80% with Core for quick, reliable everyday power<br></span><span class="pdp-cmp__mobile-copy">Quick, reliable charging<br>from 20% to 80% with Core.<br></span>';
+        box.innerHTML = '<span class="pdp-cmp__desktop-copy">Charging time from 20% to 80% with Core for quick, reliable everyday power<br></span><span class="pdp-cmp__mobile-copy">Charging time to go<br>from 20% to 80% with Core for quick, reliable power<br></span>';
       }
 
       var flat = '', pieces = [];
@@ -605,11 +623,8 @@
     // layout (was a small absolutely-centred square). Clear any saved Canva
     // move/resize on its four elements once so an old drag from the previous
     // shape can't misplace them under the new layout. Text edits and other
-    // cards remain untouched. (Bumped to v2: the caption box itself
-    // ("20% to 80%...") had a stale per-device Canva scale making its text
-    // render visibly larger than the matching full-charges caption despite
-    // both sharing the same 20px CSS font-size.)
-    var COMPACT_PARTIAL_SHAPE_MIGRATION = 'volt-canva-compact-partial-shape-v2';
+    // cards remain untouched.
+    var COMPACT_PARTIAL_SHAPE_MIGRATION = 'volt-canva-compact-partial-shape-v1';
     var resetCompactPartialShape = !desktopMQ.matches &&
       ls(true, COMPACT_PARTIAL_SHAPE_MIGRATION) !== '1';
     // compact-video's "Up to", its battery icon (now inline after "hours"
@@ -631,10 +646,10 @@
     var resetCompactVideoReferenceLayout = false;
     var resetCompactVideoKeys = {};
     var resetCompactPartialReferenceLayout = false;
-    var resetCompactPartialCopyLayout = false;
     var resetCompactPartialKeys = {};
     var resetCompactFullReferenceLayout = false;
     var resetCompactFullCopyLayout = false;
+    var resetCompactPartialCopyLayout = false;
     var resetCompactFullKeys = {};
     els.forEach(function(el){
       var cs = getComputedStyle(el).transform;
@@ -736,19 +751,6 @@
           resetCompactVideoReferenceLayout = true;
         }
       }
-      if (resetCompactPartialCopy && el.matches(
-          '.pdp-cmp__card--compact-partial > .pdp-cmp__sub')){
-        resetCompactPartialKeys[el.__cvKey] = true;
-        var partialCopyEntry = layout[el.__cvKey];
-        if (partialCopyEntry && partialCopyEntry.text != null){
-          delete partialCopyEntry.text;
-          var partialCopyHasTransform = partialCopyEntry.dx || partialCopyEntry.dy ||
-            partialCopyEntry.axd || partialCopyEntry.ayd || partialCopyEntry.axm ||
-            partialCopyEntry.aym || (partialCopyEntry.s && partialCopyEntry.s !== 1);
-          if (!partialCopyHasTransform) delete layout[el.__cvKey];
-          resetCompactPartialCopyLayout = true;
-        }
-      }
       if (resetCompactPartialShape && el.matches(
           '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow, ' +
           '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main, ' +
@@ -784,6 +786,19 @@
           resetCompactFullCopyLayout = true;
         }
       }
+      if (resetCompactPartialCopy && el.matches(
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__sub')){
+        resetCompactPartialKeys[el.__cvKey] = true;
+        var partialCopyEntry = layout[el.__cvKey];
+        if (partialCopyEntry && partialCopyEntry.text != null){
+          delete partialCopyEntry.text;
+          var partialCopyHasTransform = partialCopyEntry.dx || partialCopyEntry.dy ||
+            partialCopyEntry.axd || partialCopyEntry.ayd || partialCopyEntry.axm ||
+            partialCopyEntry.aym || (partialCopyEntry.s && partialCopyEntry.s !== 1);
+          if (!partialCopyHasTransform) delete layout[el.__cvKey];
+          resetCompactPartialCopyLayout = true;
+        }
+      }
       if (el.__cvTextEditable && isChargeRangeCaption(el)){
         el.__cvOrigText = decorateChargeRangeText(el.__cvOrigText);
         var savedEntry = layout[el.__cvKey];
@@ -814,9 +829,9 @@
     if (restoreCompactPartialExtra) ls(false, COMPACT_PARTIAL_EXTRA_RESTORE_MIGRATION, '1');
     if (resetCompactPartialExtraVisibility) ls(false, COMPACT_PARTIAL_EXTRA_VISIBILITY_RESET_MIGRATION, '1');
     if (resetCompactPartialShape) ls(false, COMPACT_PARTIAL_SHAPE_MIGRATION, '1');
-    if (resetCompactPartialCopy) ls(false, COMPACT_PARTIAL_COPY_MIGRATION, '1');
     if (resetCompactFullReference) ls(false, COMPACT_FULL_REFERENCE_MIGRATION, '1');
     if (resetCompactFullCopy) ls(false, COMPACT_FULL_COPY_MIGRATION, '1');
+    if (resetCompactPartialCopy) ls(false, COMPACT_PARTIAL_COPY_MIGRATION, '1');
 
     // Rehydrate the undo stack saved before a Refresh: map each batch's
     // stored element keys back to the live elements. Any entry whose key no
@@ -929,6 +944,7 @@
       if (el.tagName === 'IMG') return 'image';
       if (el.matches('.pdp-cmp__select-heading')) return 'heading';
       if (el.matches('.pdp-cmp__select-wrap')) return 'selector';
+      if (el.matches('.pdp-cmp__feature-icon-wrap')) return 'icon';
       if (el.matches('.pdp-cmp__battery-icon')) return 'icon';
       if (el.matches('.pdp-cmp__compact-partial-main, .pdp-cmp__compact-partial-number')) return 'stat';
       if (el.matches('.pdp-cmp__stat-x')) return '×';
@@ -1570,17 +1586,17 @@
     // deliberately reordered baked layout.
     function align(){
       var tiles = els.filter(function(el){ return el.matches('.pdp-cmp__card'); });
-      var textTargets = els.filter(function(el){
+      var alignTargets = els.filter(function(el){
         return el.__cvAlignH && el.closest('.pdp-cmp__card') && !isAlignExcluded(el);
       });
       var alignXKey = desktopMQ.matches ? 'axd' : 'axm';
       var alignYKey = desktopMQ.matches ? 'ayd' : 'aym';
       var otherAlignXKey = desktopMQ.matches ? 'axm' : 'axd';
-      var directTextTargets = textTargets.filter(function(el){
+      var directAlignTargets = alignTargets.filter(function(el){
         return el.parentElement && el.parentElement.matches('.pdp-cmp__card') &&
-          el.matches('.pdp-cmp__eyebrow, .pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__sub');
+          el.matches('.pdp-cmp__eyebrow, .pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__sub, .pdp-cmp__feature-icon-wrap');
       });
-      var batch = captureBatch(tiles.concat(textTargets));
+      var batch = captureBatch(tiles.concat(alignTargets));
       var changed = {};
       function remember(el){ changed[el.__cvKey] = true; }
 
@@ -1596,7 +1612,7 @@
       // parts, plus this viewport's previous centering correction. The other
       // viewport's correction stays independent. Vertical placement, scale,
       // and edited wording are preserved.
-      textTargets.forEach(function(el){
+      alignTargets.forEach(function(el){
         var st = stateOf(el);
         if (st.dx !== 0 || st[alignXKey] !== 0 || st[alignYKey] !== 0){
           // dx is shared between viewports. Move its old value into the
@@ -1612,8 +1628,8 @@
       // zero dx is not enough. Measure each visible top-level group and move
       // its visual centre onto the card centre through the exact transform
       // inverse. Nested stat parts stay together as one group.
-      directTextTargets.forEach(function(el){
-        if (!(el.textContent || '').trim()) return;
+      directAlignTargets.forEach(function(el){
+        if (!el.matches('.pdp-cmp__feature-icon-wrap') && !(el.textContent || '').trim()) return;
         var card = el.closest('.pdp-cmp__card');
         var er = el.getBoundingClientRect(), cr = card.getBoundingClientRect();
         if (!er.width || !er.height || !cr.width) return;
@@ -1668,7 +1684,7 @@
     var tb = document.createElement('div');
     tb.className = 'cv-tb' + (showHint ? '' : ' cv-tb--compact');
     var hintText = coarse
-      ? 'Tip: tap a tile · double-tap an item · drag to move · pinch or corners resize.'
+      ? 'Tip: tap a tile · double-tap an icon or item · drag to move · pinch or corners resize.'
       : 'Tip: click a tile · double-click an item · drag to move · scroll or corners resize.';
     tb.innerHTML =
       '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
@@ -1676,7 +1692,7 @@
       '<button class="cv-btn" data-cv="undo" title="Undo the last move, resize, type, delete, Align, or Reset.">Undo</button>' +
       '<button class="cv-btn" data-cv="refresh" title="Reload the page, keeping all your changes and the undo history.">Refresh</button>' +
       '<button class="cv-btn" data-cv="edit-text" title="Type into the selected caption." hidden>Edit text</button>' +
-      '<button class="cv-btn" data-cv="align" title="Repair all six tile positions and sizes, and horizontally centre every tile text group. Images and icons stay untouched.">Align all</button>' +
+      '<button class="cv-btn" data-cv="align" title="Repair tile positions and sizes, then horizontally centre every tile text group and both feature icons.">Align all</button>' +
       '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
       '<button class="cv-btn" data-cv="reset-all">Reset all</button>' +
       '<button class="cv-btn cv-btn--go" data-cv="copy">Copy layout</button>' +
