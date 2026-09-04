@@ -1620,6 +1620,14 @@
     gap: 16px;
     padding: 20px 14px !important;
   }
+  /* MagSafe tile only: centering the whole icon+caption block left a much
+     bigger gap above the icon than the 16px gap between the icon and the
+     caption below it. Anchor to the top and match that top gap to the same
+     16px instead, pushing the leftover slack to the bottom. */
+  .template-product .pdp-cmp__card--feature-magsafe {
+    justify-content: flex-start !important;
+    padding-top: 16px !important;
+  }
   /* Pixel-measured BOTH reference tiles (not just the first): the
      satellite icon is 43x42px CSS and the hard-drive icon is 42x31px CSS
      — different shapes, but the same ~43px LARGEST dimension. Apple
