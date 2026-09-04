@@ -1333,10 +1333,10 @@
    no equivalent in the single-column mobile stack and remain desktop-only. */
 @media (max-width: 899px) {
   .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(2) { transform: translate(0px, -1.32px) scale(1.2012) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1) { transform: matrix(3.3, 0, 0, 3.3, 0, 0) translate(0.24px, 6.81px) scale(0.4776) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1) { transform: matrix(3.3, 0, 0, 3.3, 0, 0) translate(0px, 33.96px) scale(0.8088) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: translate(0px, -15.69px) scale(1.0909) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: matrix(1, 0, 0, 1, 8.3, 0) translate(-8.84px, -4.08px) scale(1.2155) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2) { transform: matrix(1.4456, 0, 0, 1.4456, -6.04, 3.02) translate(3.12px, -3.02px) scale(1.669) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2) { transform: matrix(1.4456, 0, 0, 1.4456, -6.04, 3.02) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(3) { transform: translate(0px, 1.27px) scale(0.9825) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(4) { transform: matrix(0.9817, 0, 0, 0.9817, 0, -6.79) translate(0px, 11.62px) scale(1.1235) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(1) { transform: translate(0px, 61.05px) scale(0.7457) !important; }
@@ -1345,7 +1345,7 @@
   .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(4)>:nth-child(1) { transform: translate(8.03px, 10.28px) scale(0.9329) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(1) { transform: translate(0px, -3.36px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(2) { transform: translate(0px, -4.49px) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(3)>:nth-child(1) { transform: matrix(2.810166, 0, 0, 2.810166, 3.2012, 107.2508) translate(-0.02px, 18.27px) scale(1.6738) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(3)>:nth-child(1) { transform: matrix(2.810166, 0, 0, 2.810166, 3.2012, 107.2508) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(1) { transform: translate(0px, 6.12px) scale(0.9124) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(2) { transform: translate(0px, 13.28px) scale(1.1915) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(3)>:nth-child(1) { transform: translate(-1.74px, 2.07px) scale(0.8301) !important; }
