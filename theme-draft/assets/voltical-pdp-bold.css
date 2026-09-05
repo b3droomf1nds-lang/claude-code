@@ -1814,39 +1814,41 @@
     transform: translateX(20px);
   }
 
-  /* One uninterrupted pastel fade across the complete text block, including
-     the hours word, using the same horizontal colour position throughout. */
-  .template-product .pdp-cmp__compact-video-hero {
-    display: inline-block;
-    background: none;
-  }
-
-  .template-product .pdp-cmp__compact-video-hero > span[data-calc-video-num] {
-    display: inline-block;
-    background: none;
-  }
-
-  /* The ramp belongs to the complete text block, not to an individual line.
-     That keeps every gradient-coloured glyph keyed to its horizontal x
-     position in the tile, so the line break cannot restart the fade. */
-  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main {
-    --compact-video-gradient-width: 176.421875px;
-    background: linear-gradient(90deg, #F1D2BB 0%, #EBC1BF 16%, #E8B0C2 30%, #DEAAC2 43%, #CEA4CF 56%, #C19DE2 69%, #AE98EA 82%, #9C90F0 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-  }
-
+  /* Video tile's "67 more hours" fade — identical to the 0%→50% tile: one
+     oklab pastel gradient on the whole metric block, clipped to the text,
+     with the inner number/word spans simply inline-block so the single parent
+     gradient shows through all of them (same working technique as
+     compact-charge5, replacing an earlier per-span version that rendered
+     black on iOS Safari). */
+  .template-product .pdp-cmp__compact-video-hero,
+  .template-product .pdp-cmp__compact-video-hero > span[data-calc-video-num],
   .template-product .pdp-cmp__compact-video-hours {
-    background-image: linear-gradient(90deg, #F1D2BB 0%, #EBC1BF 16%, #E8B0C2 30%, #DEAAC2 43%, #CEA4CF 56%, #C19DE2 69%, #AE98EA 82%, #9C90F0 100%);
-    background-size: var(--compact-video-gradient-width) 100%;
-    background-position: -20px 0;
-    background-repeat: no-repeat;
+    display: inline-block;
+    background: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    -webkit-text-fill-color: transparent;
+    /* No own transform: a transformed inline-block becomes its own paint layer
+       that the parent's text-clip gradient can't reach (the word would vanish),
+       so keep these spans untransformed like the compact-charge5 spans. */
+    transform: none;
+  }
+
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main {
+    background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
+  }
+
+  /* "hours" no longer carries its old +20px shift (that shift broke its fade),
+     so pull the battery image 20px left instead to keep the same tight gap
+     next to "hours". Transforming the image is safe — it isn't text, so it
+     doesn't affect the metric's gradient. */
+  .template-product .pdp-cmp__card--compact-video .pdp-cmp__compact-battery {
+    transform: translateX(-20px);
   }
 
   .template-product .pdp-cmp__compact-video-main + .pdp-cmp__sub {
