@@ -239,11 +239,11 @@
   /* Orders 2 and 3 are now the two feature tiles (MagSafe / USB-C), which
      sit right below compact-video (order 1). Everything below them shifts
      down by two to make room. */
-  .pdp-cmp>:nth-child(2)>:nth-child(4) { order: 6; } /* video */
+  .pdp-cmp>:nth-child(2)>:nth-child(4) { order: 7; } /* video */
   .pdp-cmp>:nth-child(2)>:nth-child(6) { order: 2; } /* fade (hidden on mobile) */
   .pdp-cmp>:nth-child(2)>:nth-child(5) { order: 3; } /* partial-image (hidden on mobile) */
-  .pdp-cmp>:nth-child(2)>:nth-child(1) { order: 7; } /* magnet */
-  .pdp-cmp>:nth-child(2)>:nth-child(2) { order: 8; } /* charge */
+  .pdp-cmp>:nth-child(2)>:nth-child(1) { order: 8; } /* magnet */
+  .pdp-cmp>:nth-child(2)>:nth-child(2) { order: 9; } /* charge */
   .pdp-cmp>:nth-child(2)>:nth-child(3) { order: 9; } /* full-charges (hidden on mobile) */
 }
 .pdp-cmp__group {
@@ -1479,47 +1479,13 @@
      slot reveals more of the already-zoomed image that used to be
      clipped off by the old, shorter card edge — instead of changing
      the zoom itself. */
-  .template-product .pdp-cmp__card--magnet .pdp-cmp__img-slot {
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__img-slot,
+  .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
     top: 65.63px !important;
     bottom: auto !important;
     height: 236.09px !important;
     min-height: 0;
     border-radius: 0;
-  }
-  /* video/alloy tile: give the image a tall area that fills the card below
-     the caption and let object-fit:contain size the whole case to it. This
-     shows the case big AND complete — scaling it with a transform instead
-     just clips the case off (only the camera bump stays visible). */
-  .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
-    top: 40px !important;
-    bottom: auto !important;
-    left: 0 !important;
-    right: 0 !important;
-    height: 560px !important;
-    min-height: 0;
-    border-radius: 0;
-  }
-
-  /* Restore the image zoom these three bottom-stack tiles had before the
-     mobile Canva re-export (git 59a180b, "a couple of days ago"). That
-     export left the baked transforms in a state the user didn't want, so
-     they were briefly neutralised to transform:none here — which rendered
-     the photos/icon un-zoomed (too small). These per-image rules win over
-     the CANVA-BAKED block (6 classes vs 5, and later in source), pinning
-     each image's effective zoom back to its Sep-2 value:
-       magnet photo  scale 3.3 x 0.8088   = 2.669
-       alloy photo   scale 1.06 x 2.6511  = 2.810
-       battery icon  scale 1.4456 */
-  .template-product .pdp-cmp .pdp-cmp__grid > .pdp-cmp__card--magnet > .pdp-cmp__img-slot .pdp-cmp__img--magnet-crop {
-    transform: matrix(3.3, 0, 0, 3.3, 0, 0) translate(0px, 33.96px) scale(0.8088) !important;
-  }
-  .template-product .pdp-cmp .pdp-cmp__grid > .pdp-cmp__card--video > .pdp-cmp__img-slot > .pdp-cmp__img--video-crop {
-    transform: none !important;
-    object-fit: contain !important;
-    object-position: center center !important;
-  }
-  .template-product .pdp-cmp .pdp-cmp__grid > .pdp-cmp__card--charge > .pdp-cmp__stat-row > .pdp-cmp__battery-icon {
-    transform: matrix(1, 0, 0, 1, -8.3, 3.77) translate(2.26px, -0.75px) scale(1.4456) !important;
   }
 
   /* ---- the other four tiles get the same tall white rounded shape ---- */
@@ -1630,7 +1596,7 @@
 
   .template-product .pdp-cmp__card--compact-full {
     grid-column: 1 / -1;
-    order: 2;
+    order: 6;
   }
 
   /* Two feature tiles (MagSafe / USB-C) sit directly below the
@@ -1842,9 +1808,8 @@
     line-height: .95;
     white-space: nowrap;
     margin-bottom: 7px;
-    background: linear-gradient(90deg, #FAE7AA 0%, #F21D4D 52%, #E72D91 92%, #AF3FC2 100%);
-    background-size: 130% 100%;
-    background-position: left center;
+    background: linear-gradient(90deg, #FAE7AA 0%, #F21D4D 50%, #EB2777 100%);
+    background: linear-gradient(90deg in oklab, #FAE7AA 0%, #F21D4D 50%, #EB2777 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;

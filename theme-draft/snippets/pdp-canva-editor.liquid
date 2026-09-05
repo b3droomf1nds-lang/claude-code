@@ -211,11 +211,11 @@
   if (wantOff) rm('volt-canva-on');
   var ON = ls(true, 'volt-canva-on') === '1' && !wantOff;
 
-  var LKEY = 'volt-canva-layout-6';
+  var LKEY = 'volt-canva-layout-4';
   // Undo history is persisted alongside the layout so the Refresh button
   // can reload the page without throwing away the undo stack. Reset all
   // wipes both so a fresh start has nothing to undo back into.
-  var HKEY = 'volt-canva-history-6';
+  var HKEY = 'volt-canva-history-4';
   // The toolbar tip is shown once per browser. Bump this version only when
   // introducing a real new editor gesture or control, and update its copy
   // below; that gives the new feature one clear first-use introduction.
@@ -643,8 +643,19 @@
     var COMPACT_VIDEO_REFERENCE_MIGRATION = 'volt-canva-compact-video-reference-v7';
     var resetCompactVideoReference = !desktopMQ.matches &&
       ls(true, COMPACT_VIDEO_REFERENCE_MIGRATION) !== '1';
+    // The user's final mobile crop/zoom for every legacy image tile is now
+    // baked into the stylesheet. A browser can still hold the Canva export
+    // that produced those exact defaults, which would compose the same move
+    // and scale a second time and make the artwork look over-zoomed. Clear
+    // only those saved image states once. Feature-tile icons are deliberately
+    // excluded because their newer Canva placement remains user-controlled.
+    var BAKED_ARTWORK_DEDUPE_MIGRATION = 'volt-canva-baked-artwork-dedupe-v1';
+    var resetBakedArtwork = !desktopMQ.matches &&
+      ls(true, BAKED_ARTWORK_DEDUPE_MIGRATION) !== '1';
     var resetCompactVideoReferenceLayout = false;
     var resetCompactVideoKeys = {};
+    var resetBakedArtworkLayout = false;
+    var resetBakedArtworkKeys = {};
     var resetCompactPartialReferenceLayout = false;
     var resetCompactPartialKeys = {};
     var resetCompactFullReferenceLayout = false;
@@ -751,6 +762,14 @@
           resetCompactVideoReferenceLayout = true;
         }
       }
+      if (resetBakedArtwork && el.matches(
+          '.pdp-cmp__img-slot img, .pdp-cmp__battery-icon')){
+        resetBakedArtworkKeys[el.__cvKey] = true;
+        if (layout[el.__cvKey]){
+          delete layout[el.__cvKey];
+          resetBakedArtworkLayout = true;
+        }
+      }
       if (resetCompactPartialShape && el.matches(
           '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow, ' +
           '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main, ' +
@@ -816,12 +835,14 @@
       applyState(el);
     });
     if (normalizedSavedChargeText || resetCompactVideoReferenceLayout ||
+        resetBakedArtworkLayout ||
         resetCompactPartialReferenceLayout ||
         resetCompactFullReferenceLayout || resetCompactFullCopyLayout ||
         resetCompactPartialCopyLayout) {
       ls(false, LKEY, JSON.stringify(layout));
     }
     if (resetCompactVideoReference) ls(false, COMPACT_VIDEO_REFERENCE_MIGRATION, '1');
+    if (resetBakedArtwork) ls(false, BAKED_ARTWORK_DEDUPE_MIGRATION, '1');
     if (resetCompactPartialReference) ls(false, COMPACT_PARTIAL_REFERENCE_MIGRATION, '1');
     if (resetCompactPartialEyebrowAlignment) ls(false, COMPACT_PARTIAL_EYEBROW_ALIGN_MIGRATION, '1');
     if (resetCompactPartialEyebrowHeight) ls(false, COMPACT_PARTIAL_EYEBROW_HEIGHT_RESET_MIGRATION, '1');
@@ -839,7 +860,8 @@
     // skipped so undo never hits a dead no-op step.
     history = savedHistory.map(function(batch){
       return (batch || []).map(function(b){
-        if (resetCompactPartialKeys[b.key] || resetCompactFullKeys[b.key]) return null;
+        if (resetCompactPartialKeys[b.key] || resetCompactFullKeys[b.key] ||
+            resetBakedArtworkKeys[b.key]) return null;
         var el = byKey[b.key];
         if (!el) return null;
         var prev = cloneEntry(b.prev);
