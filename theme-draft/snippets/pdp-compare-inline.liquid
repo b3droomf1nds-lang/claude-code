@@ -130,6 +130,17 @@
       <span class="pdp-cmp__feature-icon-wrap"><img class="pdp-cmp__feature-icon" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/gradient-icon-midpoint-1536x1024.webp?v=1788370970" alt="USB-C" loading="lazy" width="1536" height="1024"></span>
       <div class="pdp-cmp__sub pdp-cmp__feature-detail"><span>Recharges over USB-C.</span><br><span>Back to full, fast.</span></div>
     </div>
+    {%- comment -%} 0%→50% fast-charge summary tile. Appended LAST in the grid on
+      purpose so every existing :nth-child index (Canva baked layouts + editor
+      structural keys) stays stable; CSS order:0 pulls it to the very top of the
+      mobile stack, above the video-playback tile. The number is the live 0→50%
+      charge time in minutes, written by the calculator script (data-calc-charge5),
+      same engine as the 20→80% tile. {%- endcomment -%}
+    <div class="pdp-cmp__card pdp-cmp__card--compact-stat pdp-cmp__card--compact-charge5">
+      <div class="pdp-cmp__eyebrow">As little as</div>
+      <div class="pdp-cmp__compact-video-main"><span data-calc-charge5>&mdash;</span><br>minutes</div>
+      <div class="pdp-cmp__sub">from 0% to 50% charge</div>
+    </div>
   </div>
 </div>
 </div>
@@ -179,6 +190,7 @@
   var partialNumEls = document.querySelectorAll('[data-calc-partial-num]');
   var videoEls = document.querySelectorAll('[data-calc-video]');
   var videoNumEls = document.querySelectorAll('[data-calc-video-num]');
+  var charge5Els = document.querySelectorAll('[data-calc-charge5]');
   if (!select || !timeEl || !fullNumEls.length || !partialNumEls.length || !videoEls.length || !videoNumEls.length) return;
 
   function writeAll(els, value) {
@@ -217,6 +229,12 @@
     writeAll(videoEls, Math.round(videoHours) + 'h');
     writeAll(videoNumEls, Math.round(videoHours));
     timeEl.textContent = Math.round(minutes);
+
+    // 0%→50% charge time. The low state-of-charge range charges faster than the
+    // 20→80% average (less voltage/thermal taper), so it uses a higher effective
+    // wattage than the 20→80% figure above.
+    var effW5 = Math.min(phoneMaxW, POWERBANK_MAX_W) * 0.7;
+    if (charge5Els.length) writeAll(charge5Els, Math.round((0.5 * phoneWh) / effW5 * 60));
   }
 
   select.addEventListener('change', update);

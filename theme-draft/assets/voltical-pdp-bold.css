@@ -1745,6 +1745,31 @@
     padding: 20px 10px !important;
   }
 
+  /* New 0%→50% fast-charge tile — same 413×242 compact-stat shell/shape as the
+     compact-video tile it sits above, pulled to the very top of the mobile
+     stack via order:0. Kept fully self-contained (its own rules, not added to
+     codex's compact-video selectors) so concurrent tile edits can't collide. */
+  .template-product .pdp-cmp__card--compact-charge5 {
+    grid-column: 1 / -1;
+    width: min(100%, 413px) !important;
+    justify-self: center;
+    order: 0;
+    height: auto;
+    aspect-ratio: 413 / 242;
+    border-radius: 24px;
+    justify-content: center !important;
+    gap: 12px;
+    padding: 20px 10px !important;
+  }
+  .template-product .pdp-cmp__card--compact-charge5 > .pdp-cmp__eyebrow,
+  .template-product .pdp-cmp__card--compact-charge5 > .pdp-cmp__sub {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    flex: none;
+  }
+
   /* compact-partial now matches compact-full's shape exactly (full-width
      413×242 shell, flex-start flow, 24/14 padding) — see the shared rule
      with compact-full further down for the actual values, so the two never
