@@ -1,0 +1,137 @@
+<style>
+  .site-nav a[aria-current="page"]{ background: var(--ink-12); color: var(--ink); }
+  /* match the mobile menu's link styling (bold, full-strength ink) —
+     desktop links were thinner (500) and muted (--ink-60) before.
+     Desktop only — .site-nav is display:none below 900px anyway, but
+     scoping explicitly here to leave mobile's own background alone. */
+  @media (min-width: 900px) {
+    .site-nav a{ font-weight: 600; color: var(--ink); }
+  }
+  .site-header__logo{ font-family: Inter, var(--font-body-family, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif) !important; letter-spacing:0 !important; text-transform:none !important; font-weight:700 !important; }
+  .site-nav__ucalc{ display:inline-flex; align-items:center; }
+  .site-header__actions{ display:flex; align-items:center; }
+  .site-header__actions > a,
+  .site-header__actions > .cart-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+    margin:0;
+    border:0;
+    background:none;
+    line-height:0;
+    height:24px;
+  }
+
+  /* ---------- product page: hide the real bar ----------
+     Only the top row (.site-header__inner) is hidden here, NOT the
+     whole <header> — the clone below's menu button forwards its click
+     to this bar's real button, which toggles .mobile-nav (a sibling
+     of .site-header__inner, not inside it). Hiding the whole <header>
+     made that toggle a no-op on mobile: aria-expanded/hidden still
+     flipped correctly in JS, but the entire subtree — including the
+     now-"open" mobile-nav panel — stayed display:none right along
+     with the bar, so nothing ever appeared on screen. */
+  .site-header--hidden .site-header__inner{
+    display: none;
+  }
+
+  /* ---------- product page: transparent copy of the bar's contents,
+     sitting 100px below the real (solid) bar, overlaid on top of the
+     page content already there ---------- */
+  .site-header-clone{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: transparent;
+  }
+  /* pull the menu-toggle/logo/actions in from the edges, closer together
+     toward the middle, instead of spread to the full width — desktop
+     only, was leaking onto mobile before */
+  @media (min-width: 900px) {
+    .site-header-clone .site-header__inner{
+      justify-content: center;
+      gap: 60px;
+    }
+  }
+</style>
+<header class="site-header{% if template.name == 'product' %} site-header--hidden{% endif %}">
+  <div class="wrap wrap--wide site-header__inner">
+    <button class="menu-toggle" data-menu-toggle aria-expanded="false" aria-label="{{ 'general.menu' | t }}">
+      <span></span><span></span><span></span>
+    </button>
+
+    <a href="{{ routes.root_url }}" class="site-header__logo" aria-label="{{ shop.name }}">
+      {{ shop.name | downcase | capitalize }}
+    </a>
+
+    <nav class="site-nav" aria-label="{{ 'general.menu' | t }}">
+      {%- for link in section.settings.menu.links -%}
+        <a href="{{ link.url }}" {% if link.current %}aria-current="page"{% endif %}>{{ link.title }}</a>
+        {%- if link.title == 'Catalog' -%}
+          <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator</a>
+        {%- endif -%}
+      {%- endfor -%}
+    </nav>
+
+    <div class="site-header__actions">
+      <button class="cart-btn" data-cart-open aria-label="{{ 'cart.title' | t }}">
+        {% render 'icon', icon: 'bag' %}
+        <span class="cart-btn__count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
+      </button>
+    </div>
+  </div>
+
+  <nav class="mobile-nav" data-mobile-nav hidden aria-label="{{ 'general.menu' | t }}">
+    {%- for link in section.settings.menu.links -%}
+      <a href="{{ link.url }}">{{ link.title }}</a>
+      {%- if link.title == 'Catalog' -%}
+        <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator</a>
+      {%- endif -%}
+    {%- endfor -%}
+  </nav>
+</header>
+
+{%- if template.name == 'product' -%}
+  <div style="position:relative; height:0;">
+    <div class="site-header-clone">
+      <div class="wrap wrap--wide site-header__inner">
+        <button class="menu-toggle" aria-label="{{ 'general.menu' | t }}" onclick="document.querySelector('[data-menu-toggle]').click()">
+          <span></span><span></span><span></span>
+        </button>
+
+        <a href="{{ routes.root_url }}" class="site-header__logo" aria-label="{{ shop.name }}">
+          {{ shop.name | downcase | capitalize }}
+        </a>
+
+        <nav class="site-nav" aria-label="{{ 'general.menu' | t }}">
+          {%- for link in section.settings.menu.links -%}
+            <a href="{{ link.url }}" {% if link.current %}aria-current="page"{% endif %}>{{ link.title }}</a>
+            {%- if link.title == 'Catalog' -%}
+              <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator</a>
+            {%- endif -%}
+          {%- endfor -%}
+        </nav>
+
+        <div class="site-header__actions">
+              <button class="cart-btn" data-cart-open aria-label="{{ 'cart.title' | t }}">
+            {% render 'icon', icon: 'bag' %}
+            <span class="cart-btn__count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+    { "type": "image_picker", "id": "logo", "label": "Logo (falls back to store name)" },
+    { "type": "link_list", "id": "menu", "label": "Menu", "default": "main-menu" }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,11 @@
+<div class="wrap wrap--wide" style="padding:48px 20px 96px">
+  <h1 class="t-lg" style="margin-bottom:32px">{{ 'general.collections' | t }}</h1>
+  <div class="lineup__grid">
+    {% for collection in collections %}
+      <a class="product-card" href="{{ collection.url }}">
+        <div class="product-card__media">{% if collection.featured_image %}<img src="{{ collection.featured_image | image_url: width: 640 }}" alt="{{ collection.title | escape }}" loading="lazy">{% endif %}</div>
+        <div class="product-card__body"><span class="product-card__title">{{ collection.title }}</span></div>
+      </a>
+    {% endfor %}
+  </div>
+</div>

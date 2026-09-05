@@ -1,0 +1,247 @@
+{%- comment -%}
+  Compact "select your iPhone, see the numbers" block — same visual
+  pattern as Apple's own compare row, sized to sit inline in the narrow
+  buy column (in the gap above the stat tiles) instead of breaking out
+  full-width. The dropdown lists every iPhone generation from the X
+  onward, purely for the "which phone do you have" framing — the stat
+  grid itself is Core's own numbers and doesn't change per model since
+  Core works the same across all of them.
+{%- endcomment -%}
+<div class="pdp-cmp-wrap">
+<div class="pdp-cmp">
+  <div class="pdp-cmp__select-group">
+    <p class="pdp-cmp__select-heading"><span class="pdp-cmp__desktop-copy">Want to see how Core upgrades <br>your experience?</span><span class="pdp-cmp__mobile-copy">Want to see how Core upgrades your experience?</span></p>
+    <label class="pdp-cmp__label" for="pdp-cmp-select">Select your iPhone:</label>
+    <div class="pdp-cmp__select-wrap">
+      <select class="pdp-cmp__select" id="pdp-cmp-select">
+        <option>iPhone X</option>
+        <option>iPhone XS</option>
+        <option>iPhone XS Max</option>
+        <option>iPhone XR</option>
+        <option>iPhone 11</option>
+        <option>iPhone 11 Pro</option>
+        <option>iPhone 11 Pro Max</option>
+        <option>iPhone 12 mini</option>
+        <option>iPhone 12</option>
+        <option>iPhone 12 Pro</option>
+        <option>iPhone 12 Pro Max</option>
+        <option>iPhone 13 mini</option>
+        <option>iPhone 13</option>
+        <option>iPhone 13 Pro</option>
+        <option>iPhone 13 Pro Max</option>
+        <option>iPhone 14</option>
+        <option>iPhone 14 Plus</option>
+        <option>iPhone 14 Pro</option>
+        <option>iPhone 14 Pro Max</option>
+        <option>iPhone 15</option>
+        <option>iPhone 15 Plus</option>
+        <option>iPhone 15 Pro</option>
+        <option>iPhone 15 Pro Max</option>
+        <option>iPhone 16</option>
+        <option>iPhone 16 Plus</option>
+        <option>iPhone 16 Pro</option>
+        <option>iPhone 16 Pro Max</option>
+        <option>iPhone 16e</option>
+        <option>iPhone Air</option>
+        <option>iPhone 17</option>
+        <option selected>iPhone 17 Pro</option>
+        <option>iPhone 17 Pro Max</option>
+      </select>
+    </div>
+  </div>
+
+  {%- comment -%}
+    3 of the 6 cards are live numbers driven off the iPhone dropdown
+    above (and, on products that have one, the mAh capacity variant):
+    20->80% charge time at both devices' fastest mode, how many full
+    0->100% charges the powerbank has in it, and how many quick
+    20->80% top-ups it can do instead — with a note that the latter is
+    the realistic everyday case. See the <script> below for the math +
+    the per-model battery data it's built from.
+  {%- endcomment -%}
+  <div class="pdp-cmp__grid">
+    <div class="pdp-cmp__card pdp-cmp__card--img pdp-cmp__card--magnet">
+      <div class="pdp-cmp__sub" style="white-space:nowrap"></div>
+      <div class="pdp-cmp__sub pdp-cmp__sub--magnet-hold" style="white-space:nowrap"><span class="pdp-cmp__desktop-copy">Strong magnet&nbsp;<br>1800gs mangetic hold<br></span><span class="pdp-cmp__mobile-copy"><span class="pdp-cmp__magnet-lead">Strong magnet.</span><br><span class="pdp-cmp__magnet-detail">1800gs magnetic hold. Snaps<br>on securely every time.</span></span></div>
+      <div class="pdp-cmp__img-slot" aria-hidden="true"><picture class="pdp-cmp__magnet-picture"><source media="(max-width: 899px)" srcset="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/Untitled_design_10.webp"><img class="pdp-cmp__img--magnet-crop" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/Untitled_design_7.webp?v=1786847403" alt="Core powerbank magnet detail" width="1366" height="2048"></picture></div>
+    </div>
+    <div class="pdp-cmp__card pdp-cmp__card--img pdp-cmp__card--charge">
+      <div class="pdp-cmp__eyebrow">Up to</div>
+      <div class="pdp-cmp__stat-row"><div class="pdp-cmp__stat" data-calc-time>&mdash;</div><img class="pdp-cmp__battery-icon" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/battery-terminal-semicircle-caps.webp?v=1787084702" alt="" aria-hidden="true" width="1672" height="940"></div>
+      <div class="pdp-cmp__sub pdp-cmp__sub--unit">minutes</div>
+      <div class="pdp-cmp__sub pdp-cmp__sub--range" style="white-space:nowrap"><span class="pdp-cmp__desktop-copy">Charging time from <span class="pdp-cmp__charge-range-lead">20% to 80%</span> with Core for quick, reliable everyday power<br></span><span class="pdp-cmp__mobile-copy">Charging time to go<br>from <span class="pdp-cmp__charge-range-lead">20% to 80%</span> with Core for quick, reliable power<br></span></div>
+    </div>
+    <div class="pdp-cmp__card pdp-cmp__card--hero pdp-cmp__card--img">
+      <div class="pdp-cmp__eyebrow">Up to</div>
+      <div class="pdp-cmp__stat" data-calc-full><span data-calc-full-num>&mdash;</span></div>
+      <div class="pdp-cmp__sub"><span class="pdp-cmp__desktop-copy">full charges</span><span class="pdp-cmp__mobile-copy">more full charges<br>with Core</span></div>
+      {%- comment -%} image drops in here — leave empty until it's supplied {%- endcomment -%}
+      <div class="pdp-cmp__img-slot" aria-hidden="true"><img class="pdp-cmp__img--full-upright" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/Untitled_design_5.webp?v=1786195688" alt="Core powerbank and phone side profile" width="1366" height="2048"></div>
+    </div>
+    <div class="pdp-cmp__card pdp-cmp__card--img pdp-cmp__card--video">
+      <div class="pdp-cmp__sub"><span class="pdp-cmp__desktop-copy">Reversible magnetic fit</span><span class="pdp-cmp__mobile-copy"><span class="pdp-cmp__alloy-lead">Instant magnetic fit.</span></span></div>
+      <div class="pdp-cmp__sub pdp-cmp__sub--alloy"><span class="pdp-cmp__desktop-copy">Ultra compact alloy shell</span><span class="pdp-cmp__mobile-copy"><span class="pdp-cmp__alloy-detail">Compact alloy shell<br></span></span></div>
+      <div class="pdp-cmp__img-slot" aria-hidden="true"><img class="pdp-cmp__img--video-crop" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/Untitled_design_9_ed084930-c4cb-4447-964f-93721ebf7eec.png?v=1786927074" alt="Core Pro black case camera detail" width="1366" height="2048"></div>
+    </div>
+    <div class="pdp-cmp__card pdp-cmp__card--img pdp-cmp__card--partial-image">
+      <div class="pdp-cmp__eyebrow">Up to</div>
+      {%- comment -%}
+        The trailing "×" isn't part of what should get centered — if it's
+        included, the whole "N×" string gets centered as one block and the
+        number itself ends up looking shifted left. A hidden mirror "×" on
+        the other side balances it out, so the number lands dead-center and
+        the real "×" just hangs off it.
+      {%- endcomment -%}
+      <div class="pdp-cmp__stat" data-calc-partial><span class="pdp-cmp__stat-num" data-calc-partial-num>&mdash;</span></div>
+      <div class="pdp-cmp__img-slot" aria-hidden="true"><img class="pdp-cmp__img--partial-hand" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/core-side-hand-latest.png?v=1786145447" alt="Core powerbank held at the side" width="1448" height="1086"></div>
+      <div class="pdp-cmp__sub pdp-cmp__sub--partial-range" style="white-space:nowrap"><span class="pdp-cmp__desktop-copy">20% to 80% charges<br></span><span class="pdp-cmp__mobile-copy">20% to 80%<br>&nbsp;charges<br></span></div>
+    </div>
+    <div class="pdp-cmp__card pdp-cmp__card--hero pdp-cmp__card--img pdp-cmp__card--fade">
+      <div class="pdp-cmp__eyebrow">Up to</div>
+      <div class="pdp-cmp__stat" data-calc-video>&mdash;</div>
+      <div class="pdp-cmp__sub" style="white-space:nowrap">more video <br>playback</div>
+    </div>
+    {%- comment -%} Mobile-only visual summaries. The source tiles above remain
+      in place; CSS places these three compact, duplicate stat cards below them.
+      aria-hidden avoids repeating the same information to screen readers. {%- endcomment -%}
+    <div class="pdp-cmp__card pdp-cmp__card--compact-stat pdp-cmp__card--compact-video" aria-hidden="true">
+      <div class="pdp-cmp__eyebrow">Up to</div>
+      <div class="pdp-cmp__compact-video-main"><span class="pdp-cmp__compact-video-hero"><span data-calc-video-num>&mdash;</span> more</span><br><span class="pdp-cmp__compact-video-hours">hours</span> <img class="pdp-cmp__compact-battery" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/battery-terminal-semicircle-caps.webp?v=1787084702" alt="" width="1672" height="940"></div>
+      <div class="pdp-cmp__sub">video playback</div>
+    </div>
+    <div class="pdp-cmp__card pdp-cmp__card--compact-stat pdp-cmp__card--compact-partial" aria-hidden="true">
+      <div class="pdp-cmp__eyebrow">Up to</div>
+      <div class="pdp-cmp__compact-partial-main" data-calc-partial><span class="pdp-cmp__compact-partial-number" data-calc-partial-num>&mdash;</span><span class="pdp-cmp__compact-partial-extra">extra</span></div>
+      <div class="pdp-cmp__sub pdp-cmp__compact-partial-detail"><span>fast top-up charges for the day</span><br><span>whenever it suits you.</span></div>
+    </div>
+    <div class="pdp-cmp__card pdp-cmp__card--compact-stat pdp-cmp__card--compact-full" aria-hidden="true">
+      <div class="pdp-cmp__eyebrow">Up to</div>
+      <div class="pdp-cmp__stat pdp-cmp__compact-full-main" data-calc-full><span class="pdp-cmp__compact-full-number" data-calc-full-num>&mdash;</span><span class="pdp-cmp__compact-full-extra">extra</span></div>
+      <div class="pdp-cmp__sub pdp-cmp__compact-full-detail"><span>full iPhone charges for the day</span><br><span>wherever it takes you.</span></div>
+    </div>
+    {%- comment -%} Mobile-only feature tiles (MagSafe / USB-C), placed by CSS
+      order just below the video-playback summary. Real content, so not
+      aria-hidden. Reuse compact-stat for the mobile-only + white-tile shell. {%- endcomment -%}
+    <div class="pdp-cmp__card pdp-cmp__card--compact-stat pdp-cmp__card--feature pdp-cmp__card--feature-magsafe">
+      <span class="pdp-cmp__feature-icon-wrap"><img class="pdp-cmp__feature-icon" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/phone-magsafe-apple-style-1536x1024-reference-colours.webp?v=1788370982" alt="MagSafe" loading="lazy" width="1536" height="1024"></span>
+      <div class="pdp-cmp__sub pdp-cmp__feature-detail"><span>Snaps on with MagSafe.</span><br><span>Locked to your iPhone.</span></div>
+    </div>
+    <div class="pdp-cmp__card pdp-cmp__card--compact-stat pdp-cmp__card--feature pdp-cmp__card--feature-usbc">
+      <span class="pdp-cmp__feature-icon-wrap"><img class="pdp-cmp__feature-icon" src="https://cdn.shopify.com/s/files/1/0968/2337/8246/files/gradient-icon-midpoint-1536x1024.webp?v=1788370970" alt="USB-C" loading="lazy" width="1536" height="1024"></span>
+      <div class="pdp-cmp__sub pdp-cmp__feature-detail"><span>Recharges over USB-C.</span><br><span>Back to full, fast.</span></div>
+    </div>
+    {%- comment -%} 0%→50% fast-charge summary tile. Appended LAST in the grid on
+      purpose so every existing :nth-child index (Canva baked layouts + editor
+      structural keys) stays stable; CSS order:0 pulls it to the very top of the
+      mobile stack, above the video-playback tile. The number is the live 0→50%
+      charge time in minutes, written by the calculator script (data-calc-charge5),
+      same engine as the 20→80% tile. {%- endcomment -%}
+    <div class="pdp-cmp__card pdp-cmp__card--compact-stat pdp-cmp__card--compact-charge5">
+      <div class="pdp-cmp__eyebrow">As little as</div>
+      <div class="pdp-cmp__compact-video-main"><span data-calc-charge5>&mdash;</span><br><span class="pdp-cmp__compact-charge5-unit">minutes</span></div>
+      <div class="pdp-cmp__sub">from 0% to 50% charge</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+  /* A final Safari-safe display repair for an older saved blank Canva value.
+     Run again after the editor has started too: a previously cached editor can
+     otherwise apply its old blank value just after this snippet first renders.
+     (The old eyebrow-alignment half of this repair was removed along with the
+     compact-partial/compact-video side-by-side pairing it was aligning to —
+     compact-partial is now its own full-width row, so there's nothing left to
+     align it against.) */
+  function restoreCompactPartialExtra(){
+    document.querySelectorAll('.pdp-cmp__compact-partial-extra').forEach(function(el){
+      if (!el.textContent.trim()) el.textContent = 'extra';
+    });
+  }
+  restoreCompactPartialExtra();
+  requestAnimationFrame(restoreCompactPartialExtra);
+  setTimeout(restoreCompactPartialExtra, 250);
+  setTimeout(restoreCompactPartialExtra, 1000);
+</script>
+
+<script>
+(function () {
+  var PHONES = {
+    'iPhone X': [2.716, 18, 13], 'iPhone XS': [2.658, 18, 14], 'iPhone XS Max': [3.174, 18, 15],
+    'iPhone XR': [2.942, 18, 16], 'iPhone 11': [3.110, 18, 17], 'iPhone 11 Pro': [3.046, 18, 18],
+    'iPhone 11 Pro Max': [3.969, 18, 20], 'iPhone 12 mini': [2.227, 20, 15], 'iPhone 12': [2.815, 20, 17],
+    'iPhone 12 Pro': [2.815, 20, 17], 'iPhone 12 Pro Max': [3.687, 20, 20], 'iPhone 13 mini': [2.406, 20, 17],
+    'iPhone 13': [3.227, 20, 19], 'iPhone 13 Pro': [3.095, 20, 22], 'iPhone 13 Pro Max': [4.352, 20, 28],
+    'iPhone 14': [3.279, 20, 20], 'iPhone 14 Plus': [4.325, 20, 26], 'iPhone 14 Pro': [3.200, 27, 23],
+    'iPhone 14 Pro Max': [4.323, 27, 29], 'iPhone 15': [3.349, 20, 20], 'iPhone 15 Plus': [4.383, 20, 26],
+    'iPhone 15 Pro': [3.274, 27, 23], 'iPhone 15 Pro Max': [4.441, 27, 29], 'iPhone 16': [3.561, 20, 22],
+    'iPhone 16 Plus': [4.674, 20, 27], 'iPhone 16 Pro': [3.582, 27, 27], 'iPhone 16 Pro Max': [4.685, 27, 33],
+    'iPhone 16e': [3.961, 18, 26], 'iPhone Air': [3.100, 27, 27], 'iPhone 17': [3.700, 27, 30],
+    'iPhone 17 Pro': [3.800, 27, 31], 'iPhone 17 Pro Max': [5.000, 40, 39]
+  };
+  var POWERBANK_MAX_W = 20;
+  var DC_EFFICIENCY = 0.85;
+  var PHONE_NOMINAL_V = 3.85;
+  var TAPER_FACTOR = 0.45;
+
+  var select = document.getElementById('pdp-cmp-select');
+  var timeEl = document.querySelector('[data-calc-time]');
+  var fullNumEls = document.querySelectorAll('[data-calc-full-num]');
+  var partialNumEls = document.querySelectorAll('[data-calc-partial-num]');
+  var videoEls = document.querySelectorAll('[data-calc-video]');
+  var videoNumEls = document.querySelectorAll('[data-calc-video-num]');
+  var charge5Els = document.querySelectorAll('[data-calc-charge5]');
+  if (!select || !timeEl || !fullNumEls.length || !partialNumEls.length || !videoEls.length || !videoNumEls.length) return;
+
+  function writeAll(els, value) {
+    els.forEach(function (el) { el.textContent = value; });
+  }
+
+  function powerbankWh() {
+    var checked = document.querySelector('input[type="radio"]:checked[value*="mAh" i]')
+      || document.querySelector('input[type="radio"][value*="mAh" i]');
+    var mah = 10000;
+    if (checked) {
+      var n = checked.value.replace(/[^0-9.]/g, '');
+      if (n) mah = parseFloat(n);
+    }
+    return mah * 3.7 / 1000;
+  }
+
+  function fmt(n) {
+    return (Math.round(n * 10) / 10).toString().replace(/\.0$/, '');
+  }
+
+  function update() {
+    var phone = PHONES[select.value] || PHONES['iPhone 15'];
+    var phoneWh = phone[0] * PHONE_NOMINAL_V, phoneMaxW = phone[1], phoneVideoH = phone[2];
+    var pbWh = powerbankWh();
+
+    var full = (pbWh * DC_EFFICIENCY) / phoneWh;
+    var partial = full / 0.6;
+    var videoHours = full * phoneVideoH;
+
+    var effW = Math.min(phoneMaxW, POWERBANK_MAX_W) * TAPER_FACTOR;
+    var minutes = (0.6 * phoneWh) / effW * 60;
+
+    writeAll(fullNumEls, fmt(full));
+    writeAll(partialNumEls, fmt(partial));
+    writeAll(videoEls, Math.round(videoHours) + 'h');
+    writeAll(videoNumEls, Math.round(videoHours));
+    timeEl.textContent = Math.round(minutes);
+
+    // 0%→50% charge time. The low state-of-charge range charges faster than the
+    // 20→80% average (less voltage/thermal taper), so it uses a higher effective
+    // wattage than the 20→80% figure above.
+    var effW5 = Math.min(phoneMaxW, POWERBANK_MAX_W) * 0.7;
+    if (charge5Els.length) writeAll(charge5Els, Math.round((0.5 * phoneWh) / effW5 * 60));
+  }
+
+  select.addEventListener('change', update);
+  document.querySelectorAll('input[type="radio"][value*="mAh" i]').forEach(function (el) {
+    el.addEventListener('change', update);
+  });
+
+  update();
+})();
+</script>

@@ -1,0 +1,135 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "apple_hero": {
+      "type": "apple-hero",
+      "settings": {
+        "heading": "Voltical",
+        "subheading": "Shop the latest Voltical collection.",
+        "cta_primary": "Learn more",
+        "cta_primary_link": "",
+        "cta_secondary": "Shop the lineup",
+        "cta_secondary_link": "",
+        "product": "voltical-core-pro-5k-10k",
+        "image": "shopify://shop_images/Untitled_design_26.webp"
+      }
+    },
+    "lineup": {
+      "type": "lineup",
+      "settings": {
+        "eyebrow": "The system",
+        "heading": "One magnet. <em>Everything</em> charged.",
+        "collection": "homepage-featured",
+        "limit": 3,
+        "flag_product": "voltical-core-pro-5k-10k"
+      }
+    },
+    "spot_watch_cable": {
+      "type": "spotlight",
+      "settings": {
+        "product": "voltical-watch-charge-cable",
+        "heading": "",
+        "copy": "Your Watch, topped up from any USB-C port. Magnetic alignment, zero fiddling.",
+        "cta": "Buy now"
+      }
+    },
+    "spot_usb_cable": {
+      "type": "spotlight",
+      "settings": {
+        "product": "voltical-usb-c-charge-data-cable-new",
+        "heading": "",
+        "copy": "Fast USB-C charging and data transfer, built for the cables you use every day.",
+        "cta": "Buy now"
+      }
+    },
+    "split_core": {
+      "type": "feature-split",
+      "settings": {
+        "product": "voltical-core-5k-10k",
+        "bar_title": "Voltical Core",
+        "heading_line1": "Voltical Core",
+        "heading_line2": "Snap-on. Ultra compact.",
+        "cta": "Calculate usage"
+      }
+    },
+    "split_core_pro": {
+      "type": "feature-spotlight-dark",
+      "settings": {
+        "product": "voltical-core-pro-5k-10k",
+        "image": "shopify://shop_images/Untitled_design_14__upscayl_2x_remacri-4x_2__upscayl_2x_remacri-4x_2af1fc9c-89d4-49e5-ae83-932137d1740c.webp",
+        "use_asset_photo": false,
+        "eyebrow": "Power",
+        "heading": "Core Pro",
+        "copy": "<p>Every Core Pro ships with a live charge readout built into the shell, so you always know exactly how much power is left before you need it. Paired with 20 W two-way fast charging, it's <strong>the most capable charger in the lineup</strong> — quick to top up, and just as quick to top up whatever's plugged into it.</p>",
+        "stat_1_prefix": "Up to",
+        "stat_1_value": "10,000 mAh",
+        "stat_1_label": "Max capacity",
+        "stat_2_prefix": "",
+        "stat_2_value": "20 W",
+        "stat_2_label": "Two-way fast charge",
+        "cta": "Calculate usage"
+      }
+    },
+    "standard": {
+      "type": "standard",
+      "blocks": {
+        "t1": {
+          "type": "item",
+          "settings": {
+            "icon": "bolt",
+            "heading": "Tested before it ships",
+            "text": "Every batch is sample-tested for output, alignment and heat before it's approved to sell."
+          }
+        },
+        "t2": {
+          "type": "item",
+          "settings": {
+            "icon": "shield",
+            "heading": "12-month warranty",
+            "text": "If it fails in normal use within a year, we replace it. One email, no forms."
+          }
+        },
+        "t3": {
+          "type": "item",
+          "settings": {
+            "icon": "magnet",
+            "heading": "30-day returns",
+            "text": "Live with it for a month. If it isn't earning its place, send it back."
+          }
+        },
+        "t4": {
+          "type": "item",
+          "settings": {
+            "icon": "bolt",
+            "heading": "Human support",
+            "text": "Questions answered by people who use the products, typically within one business day."
+          }
+        }
+      },
+      "block_order": [
+        "t1",
+        "t2",
+        "t3",
+        "t4"
+      ],
+      "settings": {}
+    }
+  },
+  "order": [
+    "apple_hero",
+    "lineup",
+    "spot_watch_cable",
+    "spot_usb_cable",
+    "split_core",
+    "split_core_pro",
+    "standard"
+  ]
+}

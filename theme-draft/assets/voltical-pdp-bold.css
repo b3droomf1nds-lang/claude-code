@@ -1,0 +1,2127 @@
+/* ============================================================
+   VOLTICAL — voltical-pdp-bold.css
+   "Bold" buy-box styling for the product page, scoped under
+   .pdp--bold so nothing else in the theme is affected.
+   Uses the theme's own tokens (theme.css :root).
+   ============================================================ */
+
+/* ---------- keep the gallery slide animated even with OS-level
+   "reduce motion" on ----------
+   theme.css/theme-r2.css force `*{transition-duration:.01ms!important}`
+   under prefers-reduced-motion — a real accessibility feature, but it
+   was also silently killing the desktop arrow-click slide's JS-set
+   inline transition duration, making the photo swap look instant
+   while the (separate, JS-timed) dot update still landed ~220ms
+   later. Higher specificity than the universal `*` selector wins even
+   against another !important rule, so this carves out just the
+   gallery photo swap. */
+@media (prefers-reduced-motion: reduce) {
+  .pdp--bold .gallery__main img {
+    transition-duration: 550ms !important;
+  }
+}
+
+/* ---------- desktop-only manual spacing tweaks ----------
+   Everything in this block was unscoped before and leaking onto
+   mobile — none of it was meant to apply there. */
+@media (min-width: 900px) {
+  .pdp--bold .addon:first-of-type,
+  .pdp--bold .addon-group-label {
+    margin-top: 475px;
+  }
+
+  .pdp--bold .opt--boxed:nth-of-type(1) {
+    transform: translate(-3px, 250px);
+  }
+  .pdp--bold .opt--boxed:nth-of-type(2) {
+    transform: translate(-3px, 379px);
+  }
+
+  .pdp--bold .gallery__thumbs {
+    margin-top: -22px;
+  }
+
+  .pdp--bold .pinfo__desc {
+    margin-top: 1032px !important;
+  }
+  .pdp--bold .trust-row + .specs {
+    margin-top: 1000px;
+  }
+}
+
+.cart-btn {
+  transition: opacity .25s ease, transform .25s ease;
+}
+.cart-btn.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+}
+
+:root {
+  --mint: #F1F8F5;
+  --sky: #EDF6FB;
+  --lilac: #F1EFFB;
+  --pink: #FCF0F5;
+  --mint-m: #DFF0E8;
+  --sky-m: #D9EAF7;
+  --lilac-m: #DFD8F8;
+  --pink-m: #F9DCE8;
+  --tile: #F7FAFA;
+}
+
+.calc__fig .t-mono b,
+.calc__fig b {
+  color: var(--ink, #131316);
+  font-weight: 700;
+}
+.addon__eyebrow {
+  color: var(--focus, #8F7FDC);
+  text-transform: none;
+}
+
+.pdp--bold .addon-group-label {
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: capitalize;
+  color: var(--ink-60, rgba(19,19,22,.58));
+  margin-bottom: 10px;
+}
+.pdp--bold .addon__eyebrow {
+  display: none;
+}
+
+.pdp--bold .pinfo h1::first-letter {
+  text-transform: uppercase;
+}
+
+@media (min-width: 900px) {
+  .pdp-cmp-wrap {
+    display: flex;
+    justify-content: center;
+    transform: translate(-890px, 480px);
+  }
+  .pdp-cmp {
+    width: 340px;
+    transform: scale(3);
+    transform-origin: center;
+  }
+  .pdp-cmp__select-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    transform: scale(0.5) translateY(66.67px);
+    transform-origin: top center;
+  }
+  .pdp-cmp__select-wrap {
+    margin-bottom: 0;
+    flex: 0 0 auto;
+  }
+  .pdp-cmp__select {
+    width: 200px;
+  }
+  .pdp-cmp__select-heading {
+    margin-bottom: 0;
+    font-size: 1.27rem;
+  }
+  .pdp-cmp__grid {
+    transform: scale(1.449);
+    transform-origin: top center;
+  }
+}
+.pdp-cmp__label {
+  display: block;
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1.3;
+  color: var(--ink-60, rgba(19,19,22,.58));
+  margin: 0 0 6px;
+}
+.pdp-cmp__select-heading {
+  /* More breathing room above the selector than below it — matching
+     the reference layout's rhythm (generous gap between the caption
+     and the selector, then the nearest tile sitting close under the
+     selector) rather than the reverse, which is what this had before. */
+  margin: 0 0 28px;
+  font-size: 1.85rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--ink, #131316);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.pdp-cmp__select-wrap {
+  position: relative;
+  margin-bottom: 14px;
+}
+.pdp-cmp__select-wrap::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 1.25px solid var(--ink-60, rgba(19,19,22,.58));
+  border-bottom: 1.25px solid var(--ink-60, rgba(19,19,22,.58));
+  transform: translateY(-65%) rotate(45deg);
+  pointer-events: none;
+}
+.pdp-cmp__select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: .95rem;
+  color: var(--ink, #131316);
+  background: #FFFFFF;
+  border: 1px solid rgba(19,19,22,.12);
+  border-radius: 999px;
+  padding: 6px 34px 6px 20px;
+  box-shadow: 0 1px 2px rgba(19,19,22,.04);
+}
+.pdp-cmp__select,
+.pdp-cmp__select:focus,
+.pdp-cmp__select:focus-visible {
+  outline: none !important;
+  box-shadow: 0 1px 2px rgba(19,19,22,.04) !important;
+  -webkit-tap-highlight-color: transparent;
+}
+.pdp-cmp__select:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 var(--ink, #131316);
+}
+.pdp-cmp__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* ~6.1% of a tile's width, matching a reference (Apple-style)
+     compare grid's gap-to-tile-width ratio, tighter than the
+     previous ~9.38%. */
+  gap: 6.5px;
+}
+@media (max-width: 899px) {
+  .pdp-cmp__grid {
+    /* 1 column, all 6 tiles stacked — not 2 columns. */
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    /* Desktop's tiles sit inside a block that's scaled up 4.347x
+       (scale(3) on .pdp-cmp times scale(1.449) on this grid), so its
+       6.5px gap actually renders at ~28.3px against a ~463.6px-wide
+       tile — the same ~6.1% gap-to-tile-width ratio. Mobile isn't
+       scaled at all, and with a single column each tile is now the
+       full grid width (~350px @390px viewport), so matching that same
+       ratio takes ~21.33px here. */
+    gap: 21.33px;
+  }
+  /* Push the heading (and, since it's the next element in flow, the
+     selector along with it) down 50px + 20px, and push the tile grid
+     down 100px below the selector on top of that, minus 50px. */
+  .pdp-cmp__select-heading {
+    margin-top: 70px;
+    white-space: normal;
+  }
+  .pdp-cmp__select-wrap {
+    margin-bottom: 54px;
+  }
+  /* The canva-baked desktop layout above moves each tile onto a
+     different visual grid cell (row 1 <-> row 2, and the last two
+     tiles swap columns) rather than just nudging it — desktop's 2D
+     grid has no direct mobile equivalent, but the resulting reading
+     order does, so mobile's single-column stack is reordered to match
+     it: video, fade, partial-image, magnet, charge, full-charges. */
+  /* Moved below their old 1/2/3/4/5/6 slots to make room for the three
+     compact summary tiles (order 1/2/3 below), which now lead the mobile
+     stack instead of trailing it. To revert: swap these three back to
+     1/4/5 and set the compact tiles (search "compact-video { grid-column")
+     back to 7/8/9. */
+  /* Orders 2 and 3 are now the two feature tiles (MagSafe / USB-C), which
+     sit right below compact-video (order 1). Everything below them shifts
+     down by two to make room. */
+  .pdp-cmp>:nth-child(2)>:nth-child(4) { order: 7; } /* video */
+  .pdp-cmp>:nth-child(2)>:nth-child(6) { order: 2; } /* fade (hidden on mobile) */
+  .pdp-cmp>:nth-child(2)>:nth-child(5) { order: 3; } /* partial-image (hidden on mobile) */
+  .pdp-cmp>:nth-child(2)>:nth-child(1) { order: 8; } /* magnet */
+  .pdp-cmp>:nth-child(2)>:nth-child(2) { order: 9; } /* charge */
+  .pdp-cmp>:nth-child(2)>:nth-child(3) { order: 9; } /* full-charges (hidden on mobile) */
+}
+.pdp-cmp__group {
+  display: contents;
+}
+.pdp-cmp__group[hidden] {
+  display: none;
+}
+
+.pdp-cmp__card {
+  position: relative;
+  overflow: hidden;
+  background: var(--tile, #F4F8F8);
+  /* ~7.5% of a tile's width, matching a reference (Apple-style)
+     compare grid's corner-radius-to-tile-width ratio. Hardcoded rather
+     than the theme's shared --r-s so changing --r-s elsewhere doesn't
+     drag this along. */
+  border-radius: 8px;
+  padding: 14px 8px;
+  height: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+}
+@media (max-width: 899px) {
+  /* Matches desktop's own radius-to-tile-width ratio (rendered
+     radius ~60.86px against a ~463.6px-wide tile there, ~13.13%)
+     rather than reusing desktop's raw px radius — mobile's tile is a
+     different width (now the full grid width, since it's 1 column:
+     ~350px @390px viewport), so the radius is recalculated against
+     that width rather than copied as-is. A literal px value (not a
+     CSS % — that would use the tile's height too, and this tile
+     isn't square, so it'd draw an ellipse instead of matching
+     desktop's circular corner). */
+  .pdp-cmp__card {
+    border-radius: 26.25px;
+    /* Same scaling as everything else in this file's mobile compare
+       block: raw desktop px value × 3.2816 (desktop's tile renders
+       at 463.6px via a 4.347x transform; mobile's tile is 350px with
+       no transform at all, so this single factor converts any
+       desktop-authored px value into its mobile equivalent). */
+    padding: 45.94px 26.25px;
+  }
+  .pdp-cmp__img-slot {
+    border-radius: 39.38px;
+  }
+}
+.pdp-cmp__eyebrow {
+  display: none;
+}
+.pdp-cmp__stat {
+  position: relative;
+  font-family: var(--sans);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-size: clamp(1rem, 2.2vw, 1.25rem);
+  line-height: 1.05;
+  color: var(--ink, #131316);
+}
+.pdp-cmp__sub,
+.pdp-cmp__label-only {
+  position: relative;
+  font-size: .72rem;
+  color: var(--ink-60, rgba(19,19,22,.58));
+  line-height: 1.25;
+}
+.pdp-cmp__label-only {
+  font-weight: 600;
+}
+
+.pdp-cmp__card--img {
+  justify-content: center;
+}
+.pdp-cmp__img-slot {
+  position: relative;
+  width: 100%;
+  flex: none;
+  min-height: 0;
+  border-radius: 12px;
+}
+.pdp-cmp__img-slot:has(img) {
+  flex: 1;
+  min-height: 46px;
+  margin-top: 4px;
+}
+.pdp-cmp__img-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.pdp-cmp__info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1px solid var(--ink-60, rgba(19,19,22,.58));
+  font-size: .58rem;
+  font-style: italic;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--ink-60, rgba(19,19,22,.58));
+  cursor: help;
+  flex: none;
+  vertical-align: middle;
+  margin-left: 2px;
+}
+
+.pdp--bold .pstats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 6px 0 18px;
+}
+@media (min-width: 900px) {
+  .pdp--bold .pstats {
+    margin-top: 1250px;
+  }
+}
+.pdp--bold .pstats__tile {
+  background: var(--tile, #F4F8F8);
+  border: 1px solid var(--ink-06, rgba(19,19,22,.05));
+  border-radius: var(--r-s, 14px);
+  padding: 15px 10px 13px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.pdp--bold .pstats__tile .t-mono {
+  font-size: clamp(13px, 3.6vw, 19px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.pdp--bold .pstats__tile small {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-60, rgba(19,19,22,.58));
+  font-weight: 500;
+}
+
+.pdp--bold .pchecks {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.pdp--bold .pchecks li {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: -0.005em;
+}
+.pdp--bold .pchecks li::before {
+  content: "✓";
+  flex: 0 0 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent, #B9A9F2);
+  color: var(--ink, #131316);
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pdp--bold .price-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.pdp--bold .price-row__main {
+  font-size: clamp(26px, 2.6vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.pdp--bold .price-row__was {
+  color: var(--ink-30, rgba(19,19,22,.3));
+  font-size: 1.05rem;
+}
+.pdp--bold .price-row__badge {
+  background: var(--ink, #131316);
+  color: var(--base, #FAFAF8);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pdp--bold .pinfo__price {
+  display: none;
+}
+.pdp--bold form[data-product-form] {
+  margin-top: 20px;
+}
+
+.pdp--bold .opt__pill {
+  font-weight: 600;
+  border: 1.5px solid var(--ink-12, rgba(19,19,22,.1));
+}
+
+/* Match the selected-variant highlight to the same pale lilac used by
+   the cross-sell add-on cards right above the buy button. */
+.pdp--bold .opt input:checked + .opt__pill--box {
+  background: var(--lilac, #F1EFFB);
+  border-color: var(--lilac-m, #DFD8F8);
+  box-shadow: 0 0 0 1px var(--lilac-m, #DFD8F8);
+}
+
+.pdp--bold .atc__btn {
+  background: var(--ink, #131316);
+  color: var(--base, #FAFAF8);
+  border: none;
+  border-radius: 18px;
+  padding: 19px 26px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: transform 0.25s var(--ease, ease);
+}
+.pdp--bold .atc__btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.pdp--bold .atc__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.pdp--bold .atc__inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+.pdp--bold .atc__price {
+  /* Match the adjacent Add to bag label exactly. The markup keeps its
+     t-mono hook for other contexts, but this button's price is part of the
+     same label treatment, not a separate muted monospace annotation. */
+  font: inherit;
+  color: inherit;
+  opacity: 1;
+}
+.pdp--bold .atc__btn.is-added .atc__price {
+  opacity: 0;
+}
+
+.pdp--bold .pinfo[data-reveal] {
+  transform: none !important;
+}
+
+.pdp--bold .pinfo {
+  position: static;
+}
+.pdp--bold .atc.is-pinned {
+  position: fixed;
+  bottom: 0;
+  z-index: 40;
+  background: var(--base, #FAFAF8);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+}
+
+.pdp--bold .pdp-calc-inline {
+  margin: var(--s4, 24px) 0 0;
+}
+.pdp--bold .pdp-calc-inline .calc {
+  margin: 0;
+}
+
+/* Keep the comparison experience focused: the secondary calculator/details
+   block is intentionally hidden at every viewport size. */
+.template-product .pdp-secondary-details {
+  display: none !important;
+}
+
+.pdp--bold .gallery__thumbs {
+  justify-content: center;
+}
+
+@media (min-width: 900px) {
+  .pdp--bold .gallery__thumbs {
+    width: 121vh;
+    margin-left: auto;
+    transform: translateX(-370px);
+  }
+}
+
+.pdp--bold .gallery__main {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 2 / 3;
+  background: var(--gallery-bg-color, #FFFFFF);
+  border-radius: clamp(22px, 2.4vw, 32px);
+  box-shadow: 0 1px 2px rgba(19, 19, 22, .04), 0 18px 44px -22px rgba(19, 19, 22, .14);
+}
+.pdp--bold .gallery__main img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pdp--bold .gallery__arrow {
+  display: none;
+}
+@media (min-width: 900px) {
+  .pdp--bold .gallery__arrow {
+    display: flex;
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .88);
+    color: var(--ink, #131316);
+    box-shadow: 0 4px 16px rgba(19, 19, 22, .16);
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(-50%);
+    transition: opacity .2s, background .2s, transform .2s;
+  }
+  .pdp--bold .gallery__main:hover .gallery__arrow,
+  .pdp--bold .gallery__arrow:focus-visible {
+    opacity: 1;
+  }
+  .pdp--bold .gallery__arrow:hover {
+    background: #FFFFFF;
+    transform: translateY(-50%) scale(1.06);
+  }
+  .pdp--bold .gallery__arrow--prev { left: 18px; }
+  .pdp--bold .gallery__arrow--next { right: 18px; }
+}
+
+@media (min-width: 900px) {
+  .pdp--bold .product__grid {
+    grid-template-columns: 59% calc(41% - var(--s7));
+  }
+
+  .pdp--bold .gallery {
+    margin-top: calc(10vh - 85px);
+  }
+  .pdp--bold .gallery__main {
+    width: 121vh;
+    height: 81.675vh;
+    margin-left: auto;
+    transform: translateX(-370px);
+    padding: clamp(10px, 1.6vw, 18px);
+    box-sizing: border-box;
+  }
+  .pdp--bold .gallery__main img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .pdp--bold .pinfo {
+    transform: translate(455px, 70px);
+  }
+}
+
+@media (min-width: 900px) {
+  .pdp--bold {
+    background: linear-gradient(to right, #F0F0F3 0%, #F0F0F3 60%, var(--base, #FCFDFE) 92%);
+  }
+  .pdp--bold.pdp--core {
+    /* The bubble's real right edge, but never allowed within 40px of
+       the selector's real left edge — the bubble's width is set in vh
+       (viewport-height) units, so on a tall/narrow window it can grow
+       wide enough to reach or pass the selector. Clamping keeps the
+       gradient's stops in order (a later stop before an earlier one
+       just collapses flat) instead of degrading into a jumbled ramp
+       on those window shapes. */
+    --fade-a: min(var(--fade-bubble-right, 918px), calc(var(--fade-selector-left, 969px) - 40px));
+    /* The 20%-shade target lands just inside the selector box's own
+       left edge (past its border + padding) rather than right at the
+       outer edge, so it's the box's actual visible interior that
+       reaches that shade, not the empty page background beside it. */
+    --fade-b: calc(var(--fade-selector-left, 969px) + 20px);
+    background-color: #F0F0F3;
+    background-image:
+      /* One continuous wavy line down past the buy-column blocks
+         (Color/Capacity, the cross-sell addons) instead of a
+         dead-straight edge: small ripples the whole way down, bigger
+         swings out into the gaps between blocks. Generated and
+         positioned by the script above — --fade-wave-svg is unset
+         (falls through to `none`, i.e. nothing painted) until it has
+         real block positions to work from. */
+      var(--fade-wave-svg, none),
+      radial-gradient(ellipse at top right, rgba(252, 253, 254, 0.65) 0%, rgba(252, 253, 254, 0.3) 45%, rgba(252, 253, 254, 0) 75%),
+      linear-gradient(to bottom, rgba(240, 240, 243, 0) 0, rgba(240, 240, 243, 0) calc(81.675vh + 285px), #F0F0F3 calc(81.675vh + 435px)),
+      linear-gradient(to right,
+        #F0F0F3 0%,
+        #F0F0F3 calc(var(--fade-a) - 60px),
+        #F0F0F3 calc(var(--fade-a) - 48px),
+        #F1F1F4 calc(var(--fade-a) - 36px),
+        #F1F2F4 calc(var(--fade-a) - 24px),
+        #F2F3F5 calc(var(--fade-a) - 12px),
+        #F2F3F5 var(--fade-a),
+        #F3F4F6 calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.1667),
+        #F4F5F7 calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.3333),
+        #F6F7F8 calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.5),
+        #F8F9FA calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.6667),
+        #F9FAFB calc(var(--fade-a) + (var(--fade-b) - var(--fade-a)) * 0.8333),
+        #FAFBFC var(--fade-b),
+        #FAFBFC calc(var(--fade-b) + (100% - var(--fade-b)) * 0.2),
+        #FAFBFC calc(var(--fade-b) + (100% - var(--fade-b)) * 0.4),
+        #FCFDFE calc(var(--fade-b) + (100% - var(--fade-b)) * 0.6),
+        #FCFDFE calc(var(--fade-b) + (100% - var(--fade-b)) * 0.8),
+        #FCFDFE 100%);
+    background-size: auto, 55% 420px, auto, auto;
+    background-position: var(--fade-wave-x, 0) var(--fade-wave-y, 0), top right, 0 0, 0 0;
+    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+  }
+}
+@media (max-width: 899px) {
+  .pdp--bold .product__grid {
+    overflow: hidden;
+  }
+}
+
+.pdp--bold {
+  padding-top: 15px;
+}
+
+.pdp--core {
+  padding-top: 35px;
+  margin-top: 0;
+}
+
+.pdp--core .pinfo h1 {
+  display: none;
+}
+
+.pdp-core-buy-label {
+  display: block;
+  margin-top: 0;
+  margin-bottom: 4px;
+  font-size: 2.6rem;
+  font-weight: 600;
+  color: var(--ink, #131316);
+  transform: translate(-313px, 23px);
+}
+.pdp-core-buy-from {
+  display: block;
+  margin-bottom: 46px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink-60, rgba(19,19,22,.58));
+  transform: translate(-313px, 23px);
+}
+.pdp-core-pro-upsell {
+  display: block;
+  margin-bottom: -20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink, #131316);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.pdp-core-pro-upsell:hover {
+  color: rgba(19, 19, 22, 0.7);
+}
+
+@media (max-width: 899px) {
+  .pdp-core-buy-label,
+  .pdp-core-buy-from,
+  .pdp-core-pro-upsell {
+    display: none;
+  }
+}
+
+.pdp--bold .switch input:checked + i {
+  background: var(--focus, #8F7FDC);
+}
+
+@media (max-width: 899px) {
+  .pdp--bold .gallery__main {
+    box-shadow: none;
+  }
+}
+
+/* Core comparison squares: restore consistent tile layout */
+.template-product .pdp-cmp__card {
+  text-align: center;
+}
+.template-product .pdp-cmp__label-only,
+.template-product .pdp-cmp__eyebrow,
+.template-product .pdp-cmp__sub {
+  color: rgba(19, 19, 22, .58);
+  font-size: 10px;
+  line-height: 1.08;
+  font-weight: 400;
+  text-align: center;
+}
+.template-product .pdp-cmp__eyebrow {
+  display: block;
+}
+.template-product .pdp-cmp__stat {
+  color: #131316;
+  font-size: 17px;
+  line-height: 1.02;
+  font-weight: 500;
+  text-align: center;
+}
+.template-product .pdp-cmp__card:not(.pdp-cmp__card--img) {
+  justify-content: center;
+}
+.template-product .pdp-cmp__card--magnet {
+  position: relative;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+  padding: 0 !important;
+}
+.template-product .pdp-cmp__card--magnet .pdp-cmp__sub {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  white-space: nowrap;
+  font-size: 4.8px;
+}
+.template-product .pdp-cmp__card--magnet .pdp-cmp__sub--magnet-hold {
+  top: 14px;
+}
+.pdp-cmp__mobile-copy { display: none; }
+.pdp-cmp__desktop-copy { display: inline; }
+.template-product .pdp-cmp__magnet-picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.template-product .pdp-cmp__card--magnet .pdp-cmp__img-slot {
+  position: absolute;
+  left: 15px;
+  right: 15px;
+  top: 20px;
+  bottom: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  min-height: 0;
+  overflow: visible;
+  z-index: 1;
+  pointer-events: none;
+}
+.template-product .pdp-cmp__card--magnet .pdp-cmp__img--magnet-crop {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+}
+.template-product .pdp-cmp__card--fade .pdp-cmp__stat {
+  background: linear-gradient(180deg, #131316 0%, rgba(19, 19, 22, 0.35) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.template-product .pdp-cmp__card--img {
+  gap: 2px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.template-product .pdp-cmp__img-slot:has(img) {
+  flex-basis: 18px;
+  min-height: 18px;
+  height: 18px;
+  margin-top: 2px;
+  overflow: hidden;
+}
+.template-product .pdp-cmp__img-slot img:not(.pdp-cmp__img--full-upright):not(.pdp-cmp__img--partial-hand):not(.pdp-cmp__img--video-crop) {
+  transform: scale(3.3);
+}
+.template-product .pdp-cmp__card--charge {
+  justify-content: center;
+  gap: 1px;
+}
+.template-product .pdp-cmp__card--charge .pdp-cmp__stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+}
+.template-product .pdp-cmp__card--charge .pdp-cmp__stat {
+  font-size: 30px;
+  line-height: 1;
+}
+.template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
+  width: 31px;
+  height: auto;
+  color: #16c76a;
+  flex: 0 0 auto;
+}
+.template-product .pdp-cmp__card--charge .pdp-cmp__sub--unit {
+  color: #1d1d1f;
+  font-size: 11px;
+}
+.template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
+  font-size: 4.8px;
+  margin-top: 3px;
+  /* Keep the surrounding caption in its existing iOS-style typeface. The
+     exact 20%-to-80% phrase switches to the magnet lead's font below. */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) {
+  position: relative;
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
+  overflow: hidden;
+  padding: 0 !important;
+}
+.template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__eyebrow {
+  position: absolute;
+  top: 14px;
+  left: 32px;
+  z-index: 2;
+}
+.template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__stat {
+  position: absolute;
+  top: 34px;
+  left: 32px;
+  z-index: 2;
+  font-size: 30px;
+  line-height: 1;
+  display: flex;
+  align-items: baseline;
+}
+.template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__stat-x {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  color: var(--ink, #131316);
+}
+.template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__stat-x-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+.template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__sub {
+  position: absolute;
+  left: 32px;
+  bottom: 14px;
+  z-index: 2;
+  max-width: 96px;
+  font-size: 11px;
+}
+.template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__img-slot {
+  position: absolute;
+  top: 6px;
+  left: -20px;
+  bottom: 6px;
+  width: 72px;
+  height: auto !important;
+  min-height: 0;
+  margin: 0;
+  /* Keep the black side-phone artwork in front of this tile's stat/captions. */
+  z-index: 3;
+  display: block;
+  /* Let editor-positioned phone pixels extend throughout the card instead of
+     being cut off at the bottom edge of this smaller image slot. The card
+     itself remains the outer clipping boundary. */
+  overflow: visible;
+  pointer-events: none;
+}
+.template-product .pdp-cmp__img-slot img.pdp-cmp__img--full-upright {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  height: 100% !important;
+  max-height: none;
+  width: auto;
+  transform: translate(-50%, -50%) scale(1.14);
+  transform-origin: center center;
+}
+.template-product .pdp-cmp__card--partial-image {
+  position: relative;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+  padding: 0 !important;
+}
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__eyebrow {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__stat {
+  position: absolute;
+  top: 29px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-size: 30px;
+  line-height: 1;
+  display: flex;
+  align-items: baseline;
+}
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__stat-num {
+  background: linear-gradient(180deg, #131316 0%, rgba(19, 19, 22, 0.35) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Halves the visual gap around the decimal point versus the tile's
+     base -0.01em letter-spacing (measured via canvas ink-bounds: ~23.7px
+     of gap at 300px font-size with -0.01em, ~11.7px at -0.05em). */
+  letter-spacing: -0.05em;
+}
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__stat-x {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+}
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__stat-x-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__stat-x--mirror {
+  visibility: hidden;
+}
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__img-slot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 26px;
+  bottom: 6px;
+  width: auto;
+  height: auto;
+  transform: translateY(10px);
+  margin: 0;
+  min-height: 0;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+}
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__img--partial-hand {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  transform: scaleX(-1);
+}
+.template-product .pdp-cmp__card--partial-image .pdp-cmp__sub--partial-range {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  z-index: 2;
+  white-space: nowrap;
+  font-size: 4.8px;
+  /* iOS's own system font (SF Pro), not the theme's Instrument Sans,
+     to match the battery-percentage reference look. */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.template-product .pdp-cmp__card--video {
+  position: relative;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  overflow: hidden;
+  padding: 0 !important;
+}
+.template-product .pdp-cmp__card--video .pdp-cmp__eyebrow {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+.template-product .pdp-cmp__card--video .pdp-cmp__stat {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-size: 18px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.template-product .pdp-cmp__card--video .pdp-cmp__sub {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  white-space: nowrap;
+  font-size: 4.8px;
+}
+.template-product .pdp-cmp__card--video .pdp-cmp__sub--alloy {
+  top: 14px;
+}
+.template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
+  position: absolute;
+  left: 15px;
+  right: 15px;
+  top: 20px;
+  bottom: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  min-height: 0;
+  overflow: visible;
+  z-index: 1;
+  pointer-events: none;
+}
+.template-product .pdp-cmp__card--video .pdp-cmp__img--video-crop {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+}
+
+/* Mobile: keep desktop's card proportions exactly — 1 column now
+   (not 2), so every px value below is the desktop-authored raw value
+   × 3.2816 rather than a separately-eyeballed mobile number. That
+   factor is: (mobile tile width ÷ desktop's rendered tile width) ×
+   desktop's own transform scale — i.e. desktop renders its tile at
+   463.6px via a 4.347x transform (scale(3) on .pdp-cmp, scale(1.449)
+   on .pdp-cmp__grid) off a 106.7px raw box; mobile has no transform
+   at all and its tile is 350px, so 350/463.6 × 4.347 = 3.2816 is what
+   converts any desktop raw px into its mobile equivalent. */
+@media (max-width: 899px) {
+  .pdp-cmp__desktop-copy { display: none; }
+  .pdp-cmp__mobile-copy { display: inline; }
+  /* The charging range deliberately shares this exact rule with the two
+     established Apple-style lead lines. Add future lead phrases here rather
+     than approximating the look with a separate font-weight. */
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-lead,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__charge-range-lead,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__range-bold,
+  .template-product .pdp-cmp__card--video .pdp-cmp__alloy-lead {
+    color: #1d1f24;
+    font-family: var(--sans);
+    font-size: inherit;
+    line-height: inherit;
+    font-weight: 500;
+  }
+  /* Match the visible mobile headline size of "Strong magnet.". The charge
+     caption has a separate smaller parent size, so it needs an explicit lead. */
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range > .pdp-cmp__charge-range-lead,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range > .pdp-cmp__range-bold {
+    font-size: 20px !important;
+    line-height: 1.08 !important;
+  }
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-detail,
+  .template-product .pdp-cmp__card--video .pdp-cmp__alloy-detail {
+    color: #737d8b;
+    /* The quiet supporting line on each tall card uses the same compact-card
+       weight: small enough to stay secondary, but not visually frail. */
+    font-weight: 600;
+  }
+  .template-product .pdp-cmp__card {
+    height: auto;
+    aspect-ratio: 1.16 / 1;
+  }
+
+  .template-product .pdp-cmp__label-only,
+  .template-product .pdp-cmp__eyebrow,
+  .template-product .pdp-cmp__sub {
+    font-size: 32.82px;
+    line-height: 1.08;
+  }
+
+  .template-product .pdp-cmp__label-only {
+    max-width: 68%;
+  }
+
+  .template-product .pdp-cmp__stat {
+    font-size: 55.79px;
+    line-height: 1.02;
+  }
+
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__sub {
+    top: 26.25px;
+    font-size: 15.75px;
+  }
+
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__sub--magnet-hold {
+    top: 45.94px;
+  }
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__img-slot {
+    left: 49.22px;
+    right: 49.22px;
+    top: 65.63px;
+    bottom: 0;
+  }
+
+  .template-product .pdp-cmp__card--img {
+    gap: 6.56px;
+    padding-top: 32.82px;
+    padding-bottom: 32.82px;
+  }
+
+  .template-product .pdp-cmp__img-slot:has(img) {
+    flex-basis: 59.07px;
+    min-height: 59.07px;
+    height: 59.07px;
+    margin-top: 6.56px;
+  }
+
+  .template-product .pdp-cmp__card--charge {
+    gap: 3.28px;
+  }
+
+  .template-product .pdp-cmp__card--charge .pdp-cmp__stat-row {
+    gap: 19.69px;
+  }
+
+  .template-product .pdp-cmp__card--charge .pdp-cmp__stat {
+    font-size: 98.45px;
+  }
+
+  .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
+    width: 101.73px;
+  }
+
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--unit {
+    font-size: 36.1px;
+  }
+
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
+    font-size: 20px;
+    max-width: 280px;
+    margin-top: 8px;
+    line-height: 1.14;
+    /* Match the magnet tile's muted detail copy outside the emphasized span. */
+    color: #737d8b;
+    font-family: var(--sans);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__eyebrow {
+    top: 45.94px;
+    left: 105.01px;
+  }
+
+  .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__stat {
+    top: 111.57px;
+    left: 105.01px;
+    font-size: 98.45px;
+  }
+
+  .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__stat-x-icon {
+    width: 65.63px;
+    height: 65.63px;
+  }
+
+  .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__sub {
+    left: 105.01px;
+    bottom: 45.94px;
+    max-width: 315.03px;
+    font-size: 36.1px;
+  }
+
+  .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__img-slot {
+    top: 19.69px;
+    left: -65.63px;
+    bottom: 19.69px;
+    width: 236.27px;
+  }
+
+  .template-product .pdp-cmp__card--partial-image .pdp-cmp__eyebrow {
+    top: 45.94px;
+  }
+
+  .template-product .pdp-cmp__card--partial-image .pdp-cmp__stat {
+    top: 95.17px;
+    font-size: 98.45px;
+  }
+
+  .template-product .pdp-cmp__card--partial-image .pdp-cmp__stat-x-icon {
+    width: 65.63px;
+    height: 65.63px;
+  }
+
+  .template-product .pdp-cmp__card--partial-image .pdp-cmp__img-slot {
+    left: 0;
+    right: 0;
+    top: 85.32px;
+    bottom: 19.69px;
+    width: auto;
+    height: auto;
+    overflow: hidden;
+    transform: translateY(32.82px);
+  }
+
+
+  .template-product .pdp-cmp__card--partial-image .pdp-cmp__sub--partial-range {
+    bottom: 26.25px;
+    font-size: 20px;
+    white-space: nowrap;
+    color: #737d8b;
+    font-family: var(--sans);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .template-product .pdp-cmp__card--video .pdp-cmp__eyebrow {
+    top: 19.69px;
+  }
+
+  .template-product .pdp-cmp__card--video .pdp-cmp__stat {
+    top: 19.69px;
+    font-size: 59.07px;
+    white-space: nowrap;
+  }
+
+  .template-product .pdp-cmp__card--video .pdp-cmp__sub {
+    top: 26.25px;
+    font-size: 15.75px;
+  }
+
+  .template-product .pdp-cmp__card--video .pdp-cmp__sub--alloy {
+    top: 45.94px;
+  }
+
+  .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
+    left: 49.22px;
+    right: 49.22px;
+    top: 65.63px;
+    bottom: 0;
+  }
+}
+
+/* CANVA-BAKED-START — generated by the /canva skill; do not hand-edit */
+@media (min-width: 900px) {
+  .pdp-cmp>:nth-child(1)>:nth-child(1) { transform: matrix(1, 0, 0, 1, -322.66, 84.66) translate(30.64px, 132.01px) !important; }
+  .pdp-cmp>:nth-child(1)>:nth-child(2) { transform: translate(397.34px, 77.35px) scale(0.8687) !important; }
+  .pdp-cmp>:nth-child(1)>:nth-child(3) { transform: translate(389.99px, 68.68px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(1) { transform: translate(0px, 98.5px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(1) { transform: matrix(1, 0, 0, 1, -16.7188, 0) translate(37.7px, 11.23px) scale(1.0936) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(2) { transform: matrix(1, 0, 0, 1, -24.9635, 0) translate(0px, -10.12px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1) { transform: matrix(3.3, 0, 0, 3.3, 0, 0) translate(0px, 10.35px) scale(0.8088) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2) { transform: translate(0px, 98.5px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: translate(2.53px, 0px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2) { transform: matrix(1, 0, 0, 1, -2.53, 1.15) translate(0.69px, -0.23px) scale(1.4456) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(4) { transform: translate(0px, -2.07px) scale(0.9817) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(3) { transform: translate(0px, 98.5px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(1) { transform: translate(1.15px, -2.07px) scale(1.3079) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(2) { transform: translate(0px, -5.52px) scale(1.3061) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(3) { transform: translate(-3.22px, 0.23px) scale(1.0277) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(4)>:nth-child(1) { transform: matrix(1.39342, 0, 0, 1.39342, -31.2274, -47.972) translate(5.52px, 5.75px) scale(0.9065) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(4) { transform: translate(0px, -98.5px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(1) { transform: matrix(1, 0, 0, 1, -25.849, 0) translate(0px, -1.61px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(2) { transform: matrix(1, 0, 0, 1, -27.875, 0) translate(0px, -2.3px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(3)>:nth-child(1) { transform: matrix(1.06, 0, 0, 1.06, 0, 0) translate(0.92px, 30.83px) scale(2.6511) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(5) { transform: translate(115.5px, -98.5px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(1) { transform: matrix(1, 0, 0, 1, -15.686, -2.07) translate(1.61px, 0px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(2) { transform: matrix(1.3558, 0, 0, 1.3558, -30.1451, -3.68) translate(5.52px, 0px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(4) { transform: matrix(1, 0, 0, 1, -14.2448, 0) translate(-10.35px, -6.21px) scale(0.9843) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(6) { transform: translate(-115.5px, -98.5px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(1) { transform: translate(0px, -7.36px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(2) { transform: translate(0px, 1.61px) scale(2.4085) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(3) { transform: translate(0px, 9.66px) scale(0.9519) !important; }
+}
+/* Mobile values below come directly from the mobile Canva export. They
+   affect nested content only; desktop's six tile-to-grid-cell moves have
+   no equivalent in the single-column mobile stack and remain desktop-only. */
+@media (max-width: 899px) {
+  .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(2) { transform: translate(0px, -1.32px) scale(1.2012) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1) { transform: matrix(3.3, 0, 0, 3.3, 0, 0) translate(0.24px, 6.81px) scale(0.4776) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: translate(0px, -15.69px) scale(1.0909) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: matrix(1, 0, 0, 1, 8.3, 0) translate(-8.84px, -4.08px) scale(1.2155) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2) { transform: matrix(1.4456, 0, 0, 1.4456, -6.04, 3.02) translate(3.12px, -3.02px) scale(1.669) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(3) { transform: translate(0px, 1.27px) scale(0.9825) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(4) { transform: matrix(0.9817, 0, 0, 0.9817, 0, -6.79) translate(0px, 11.62px) scale(1.1235) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(1) { transform: translate(0px, 61.05px) scale(0.7457) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(2) { transform: translate(0px, 54.3px) scale(0.6874) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(3) { transform: translate(0px, 52.75px) scale(0.4752) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(4)>:nth-child(1) { transform: translate(8.03px, 10.28px) scale(0.9329) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(1) { transform: translate(0px, -3.36px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(2) { transform: translate(0px, -4.49px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(3)>:nth-child(1) { transform: matrix(2.810166, 0, 0, 2.810166, 3.2012, 107.2508) translate(-0.02px, 18.27px) scale(1.6738) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(1) { transform: translate(0px, 6.12px) scale(0.9124) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(2) { transform: translate(0px, 13.28px) scale(1.1915) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(3)>:nth-child(1) { transform: translate(-1.74px, 2.07px) scale(0.8301) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(4) { transform: translate(0px, -6.02px) scale(1.4825) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(1) { transform: translate(0px, -17.83px) scale(1.643) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(2) { transform: translate(0px, -1.62px) scale(0.987) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(6)>:nth-child(3) { transform: translate(0px, 12px) scale(1.2329) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(7)>:nth-child(3) { transform: translate(0px, -3.46px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(10)>:nth-child(1) { transform: translate(0px, 4.48px) scale(2.2829) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(10)>:nth-child(2) { transform: translate(0px, 8.46px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(11)>:nth-child(1) { transform: translate(0px, 3.98px) scale(1.2959) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(11)>:nth-child(2) { transform: translate(0px, 4.17px) !important; }
+}
+/* CANVA-BAKED-END */
+
+/* ==== MOBILE tall Apple-style cards for the two left-column desktop
+   tiles (video + magnet). Mobile only; desktop (min-width:900px) is
+   untouched. Text sits at the top, the long image fills the rest of a
+   tall white card edge-to-edge and is top-anchored so the taller card
+   reveals more toward the bottom of the image. Placed after the
+   CANVA-BAKED block on purpose so a future "lock it" re-bake doesn't
+   clobber it. ==== */
+@media (max-width: 899px) {
+  /* The comparison wrapper deliberately bleeds its existing tile-colour
+     backdrop to both screen edges. The generic mobile product-grid clip
+     otherwise cuts that backdrop off at the inner 20px gutters and exposes
+     the white page behind it. This is Core-only; the gallery still clips
+     within its own media frame. */
+  .pdp--bold.pdp--core .product__grid {
+    overflow: visible;
+  }
+
+  /* backdrop behind the tiles reuses the existing --tile design token
+     (also the tile's own default background elsewhere in this file)
+     rather than a new one-off value. Full-bleed to the true screen
+     edges rather than stopping at .wrap's own left/right padding.
+     Mirrors .wrap's own padding formula (clamp(20px,4vw,44px), see
+     .wrap in theme-r2.css) as a matching negative margin, rather than
+     a 100vw-based bleed trick — 100vw includes the scrollbar's width
+     wherever one is reserved, which makes that approach render a few
+     px wider on one side than the other; this doesn't touch vw at all
+     so it can't be lopsided. Padding added back inside keeps .pdp-cmp
+     itself (and everything in it) at the exact same width/position as
+     before. */
+  .pdp-cmp-wrap {
+    --compact-full-card-height: min(242px, calc((100vw - 40px) * 0.585956));
+    background: var(--tile, #F7FAFA);
+    margin-left: calc(-1 * clamp(20px, 4vw, 44px));
+    margin-right: calc(-1 * clamp(20px, 4vw, 44px));
+    padding-left: clamp(20px, 4vw, 44px);
+    padding-right: clamp(20px, 4vw, 44px);
+    /* Carry the tile-colour backdrop below the final compact tile by that
+       tile's own responsive height, so the following story section does not
+       cut the comparison panel off abruptly. */
+    padding-bottom: var(--compact-full-card-height);
+  }
+
+  /* neutralize only the baked CAPTION-position transforms for these two
+     tiles — (0,6-7,0) beats the baked (0,5,0) !important. The image's
+     OWN transform (…>:nth-child(3)>:nth-child(1)) is deliberately left
+     alone: that's the canva-baked zoom level, and the taller card below
+     reveals more of the image at that same zoom via the taller
+     overflow:hidden box, not by changing the zoom itself. */
+  .template-product .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(1),
+  .template-product .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(2),
+  .template-product .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(1),
+  .template-product .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(2) {
+    transform: none !important;
+  }
+
+  /* the cards: white, tall, rounded, contents clipped to the corners */
+  .template-product .pdp-cmp__card--magnet,
+  .template-product .pdp-cmp__card--video {
+    background: #FFFFFF;
+    width: 100%;
+    height: 470px;
+    border-radius: 28px;
+    padding: 26px 0 0 !important;
+    overflow: hidden;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+  /* video is the top tile in the mobile stack (order:1 above) — 15%
+     taller than the rest, then reduced 5% off that (470px * 1.15 * 0.95 =
+     513.475px). The image slot below stays frozen at its original size
+     (same zoom); the extra height just gives overflow:hidden more room
+     to reveal further down the image. */
+  .template-product .pdp-cmp__card--video {
+    height: 513.475px;
+  }
+  /* magnet tile matched to the same height as the top (video) tile. The
+     img-slot freeze rule below already covers this tile too, so the
+     extra height only opens up room at the bottom of the card — the
+     image's own position/zoom is untouched, it just reveals more of
+     the bottom of the image instead of shifting anything else. */
+  .template-product .pdp-cmp__card--magnet {
+    height: 513.475px;
+  }
+
+  /* captions: normal centered flow at the top of the card */
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__sub,
+  .template-product .pdp-cmp__card--video .pdp-cmp__sub {
+    position: static !important;
+    top: auto; left: auto; right: auto; bottom: auto;
+    padding: 0 20px;
+    line-height: 1.3;
+    text-align: center;
+    white-space: normal !important;
+    z-index: 2;
+  }
+
+  /* Keep the 1800gs magnet copy at its original mobile size. */
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__sub {
+    font-size: 16px !important;
+  }
+
+  /* The top black-phone tile deliberately uses the larger copy size. */
+  .template-product .pdp-cmp__card--video .pdp-cmp__sub {
+    font-size: 20px !important;
+  }
+
+  /* image slot: frozen at its ORIGINAL top offset + height (65.63px /
+     236.09px, same as the pre-tall-card mobile layout) rather than
+     stretched to fill the new taller card. That keeps the image's own
+     box — and so the baked zoom transform applied to it — rendering at
+     the exact same size/position as before (same zoom). The card
+     itself is now taller with overflow:hidden as the only thing that
+     changed around it, so the extra ~168px of room below the frozen
+     slot reveals more of the already-zoomed image that used to be
+     clipped off by the old, shorter card edge — instead of changing
+     the zoom itself. */
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__img-slot,
+  .template-product .pdp-cmp__card--video .pdp-cmp__img-slot {
+    top: 65.63px !important;
+    bottom: auto !important;
+    height: 236.09px !important;
+    min-height: 0;
+    border-radius: 0;
+  }
+
+  /* ---- the other four tiles get the same tall white rounded shape ---- */
+
+  /* charge + fade: plain flex-column, no absolutely-positioned children
+     (confirmed by measuring — nothing to freeze), so growing the card
+     just re-centers the existing content in the taller box. */
+  .template-product .pdp-cmp__card--charge,
+  .template-product .pdp-cmp__card--fade {
+    background: #FFFFFF;
+    width: 100%;
+    height: 470px;
+    border-radius: 28px;
+    min-width: 0;
+  }
+
+  /* partial-image: its image has no canva-baked zoom transform (checked
+     the CANVA-BAKED block — no entry for this tile's img-slot/img), so
+     letting its slot's top+bottom insets stretch with the taller card
+     is safe and simply shows more of the image, same as the caption
+     staying bottom-anchored to the new, lower bottom edge. */
+  .template-product .pdp-cmp__card--partial-image {
+    background: #FFFFFF;
+    width: 100%;
+    height: 470px;
+    border-radius: 28px;
+    min-width: 0;
+  }
+
+  /* full-charges: its image DOES have a canva-baked zoom transform
+     (…nth-child(3)>:nth-child(4)>:nth-child(1), matrix(1.39342…)
+     scale(0.9065)), so — same reasoning as the magnet/video tiles —
+     the image slot is frozen at its original top offset + height
+     rather than stretched, keeping that zoom exact. The "full charges"
+     caption used bottom-anchoring (bottom:45.94px) to hug the OLD,
+     shorter card's bottom edge; frozen to the same top offset it
+     already rendered at (217.02px, measured) so it doesn't slide down
+     to the new bottom and leave a gap under the stat number. */
+  .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) {
+    background: #FFFFFF;
+    width: 100%;
+    height: 470px;
+    border-radius: 28px;
+    min-width: 0;
+  }
+  .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__img-slot {
+    top: 19.69px !important;
+    bottom: auto !important;
+    height: 262.34px !important;
+  }
+  .template-product .pdp-cmp__card:has(.pdp-cmp__img--full-upright) .pdp-cmp__sub {
+    top: 217.02px !important;
+    bottom: auto !important;
+  }
+}
+
+/* ==== MOBILE compact stats cluster ========================================
+   Keep all six original cards in their existing mobile order and dimensions.
+   The three compact cards below are visual copies of the second, third and
+   sixth stats: a two-card row, then a wide half-height card. At 470px per
+   standard card, two compact rows plus the 21.33px row gap add back up to one
+   standard card's height. */
+.template-product .pdp-cmp__card--compact-stat {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  .template-product .pdp-cmp__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .template-product .pdp-cmp__card:not(.pdp-cmp__card--compact-stat) {
+    grid-column: 1 / -1;
+  }
+
+  /* The source cards represented by the new summaries stay available on
+     desktop, but are hidden from the mobile stack: vertical tiles 2 (fade),
+     3 (partial charges), and 6 (full charges). */
+  .template-product .pdp-cmp__grid > .pdp-cmp__card--fade,
+  .template-product .pdp-cmp__grid > .pdp-cmp__card--partial-image,
+  .template-product .pdp-cmp__grid > .pdp-cmp__card:has(.pdp-cmp__img--full-upright) {
+    display: none !important;
+  }
+
+  /* These three now lead the mobile stack (order 1/2/3) instead of
+     trailing it (they used to be 7/8/9) — see the revert note above. */
+  /* compact-video used to share its row with compact-partial (grid-column
+     1 of 2), then was widened to sit centred alone in the row at its old
+     159.125x192 shape. It now takes the same wide 413x242 shell as the two
+     cards below it, and its "Up to" label was later matched to their type
+     scale too (see the rules further down) — every child's own font-size
+     and the battery icon's size are still untouched throughout.
+     REVERT: change width back to min(100%, 159.125px) !important here, and
+     aspect-ratio back to 159.125 / 192 with border-radius back to 28px in
+     the block below (currently 24px, was 28px). */
+  .template-product .pdp-cmp__card--compact-video {
+    grid-column: 1 / -1;
+    width: min(100%, 413px) !important;
+    justify-self: center;
+    order: 0;
+  }
+
+  .template-product .pdp-cmp__card--compact-partial {
+    grid-column: 1 / -1;
+    order: 5;
+  }
+
+  .template-product .pdp-cmp__card--compact-full {
+    grid-column: 1 / -1;
+    order: 6;
+  }
+
+  /* Two feature tiles (MagSafe / USB-C) sit directly below the
+     video-playback summary (order 1). Same mobile-only white-tile shell as
+     the compact-stat cards, but taller with a centred icon over a two-line
+     caption, matching the supplied reference. */
+  .template-product .pdp-cmp__card--feature-magsafe {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+  .template-product .pdp-cmp__card--feature-usbc {
+    grid-column: 1 / -1;
+    order: 4;
+  }
+  .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--feature {
+    width: min(100%, 413px);
+    height: auto;
+    /* The supplied Apple mobile reference measures 817x428px from the
+       straight outside edges: 1.909:1. Keep that exact proportion as this
+       card scales with the available phone width. The combined selector is
+       intentional: the generic compact-stat rule appears later and must not
+       replace this feature-card height, spacing, or corner shape. */
+    aspect-ratio: 817 / 428;
+    border-radius: 22px;
+    justify-self: center;
+    justify-content: center !important;
+    gap: 16px;
+    padding: 20px 14px !important;
+  }
+  .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--feature-magsafe {
+    aspect-ratio: auto;
+    height: min(calc(52.3868vw + 7.0453px), 244.36px);
+  }
+  @supports (-webkit-touch-callout: none) {
+    .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--feature-magsafe {
+      height: min(calc(52.3868vw + 69.3352px), 306.6499px);
+      gap: 45px;
+    }
+    .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-icon-wrap,
+    .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-detail {
+      translate: 0 12.3551px;
+    }
+  }
+  /* Pixel-measured BOTH reference tiles (not just the first): the
+     satellite icon is 43x42px CSS and the hard-drive icon is 42x31px CSS
+     — different shapes, but the same ~43px LARGEST dimension. Apple
+     visually contains every icon in a consistent ~43x43 box and lets the
+     glyph's own aspect ratio set the other dimension, rather than forcing
+     every icon to the same height regardless of shape (which is what an
+     earlier version of this rule did, and made the wide usb-c glyph
+     balloon out to ~97px wide — over 2x the reference's icon width).
+     Our two source PNGs are 1536x1024 canvases, but the glyph fills a very
+     different fraction of each canvas (magsafe ~75% of height, usb-c ~53%
+     of width), so crop-window each icon (fixed-size, overflow:hidden,
+     glyph centred — both source glyphs are already centred in their
+     canvas) at the scaled-up img size that makes the true glyph's LARGEST
+     dimension land on 43px. */
+  .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex: none;
+  }
+  .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-icon-wrap > .pdp-cmp__feature-icon {
+    display: block;
+    flex: none;
+    object-fit: contain;
+    /* Both source WebPs have a large transparent canvas. Allow the image to
+       extend past its crop window so the visible glyph, not that canvas,
+       lands at the reference icon size. This also cancels the theme's
+       global img { max-width:100% }, which previously squeezed each icon. */
+    max-width: none !important;
+    max-height: none !important;
+  }
+  /* Explicit width AND height on every icon (not width:auto) — relying on
+     the browser to infer width from the intrinsic ratio inside a nested
+     flex + overflow:hidden crop window is a known Safari trouble spot
+     (auto-width images can mis-size there); pinning both dimensions
+     removes the ambiguity everywhere, including on the actual iPhone
+     Safari this section targets. The Apple reference's two icons occupy an
+     approximately 50px visual box at CSS scale.
+     magsafe: height is the glyph's larger dimension (771 vs 369 wide) =
+     75.3% of the 1024-tall canvas -> 50 / 0.753 ≈ 66.4px;
+     width = 66.4 * (1536/1024) = 99.6px; true glyph 50 tall x 24 wide. */
+  .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-icon-wrap {
+    width: 24px;
+    height: 50px;
+  }
+  .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-icon-wrap > .pdp-cmp__feature-icon {
+    width: 99.6px;
+    height: 66.4px;
+  }
+  /* usb-c: width is the glyph's larger dimension (818 vs 363 tall) =
+     53.3% of the 1536-wide canvas -> 50 / 0.533 ≈ 93.8px;
+     height = 93.8 / (1536/1024) = 62.5px; true glyph 50 wide x 22 tall. */
+  .template-product .pdp-cmp__card--feature-usbc > .pdp-cmp__feature-icon-wrap {
+    width: 50px;
+    height: 22px;
+  }
+  .template-product .pdp-cmp__card--feature-usbc > .pdp-cmp__feature-icon-wrap > .pdp-cmp__feature-icon {
+    width: 93.8px;
+    height: 62.5px;
+  }
+  /* Both caption lines share one treatment — same size and weight, no thin
+     secondary line — matching the reference's single two-line statement. */
+  .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--feature > .pdp-cmp__feature-detail {
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: #737d8b;
+  }
+
+  .template-product .pdp-cmp__card--compact-stat {
+    box-sizing: border-box;
+    width: 100%;
+    height: calc((470px - 21.33px) / 2);
+    min-width: 0;
+    padding: 18px 10px !important;
+    border-radius: 24px;
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px;
+    text-align: center !important;
+    overflow: hidden;
+  }
+
+  /* compact-video now matches the other two cards' 413×242 shell shape and
+     24px corner radius; every child keeps its own font-size/icon-size
+     unchanged. Back to the original 12px gap / 20px top-bottom padding now
+     that the battery icon sits inline with "hours" instead of being a 4th
+     stacked row — with only 3 rows again there's room for the original
+     spacing. REVERT: aspect-ratio back to 159.125 / 192, border-radius
+     back to 28px. */
+  .template-product .pdp-cmp__card--compact-video {
+    height: auto;
+    aspect-ratio: 413 / 242;
+    border-radius: 24px;
+    justify-content: center !important;
+    gap: 12px;
+    padding: 20px 10px !important;
+  }
+
+  /* New 0%→50% fast-charge tile — same 413×242 compact-stat shell/shape as the
+     compact-video tile it sits above, pulled to the very top of the mobile
+     stack via order:0. Kept fully self-contained (its own rules, not added to
+     codex's compact-video selectors) so concurrent tile edits can't collide. */
+  .template-product .pdp-cmp__card--compact-charge5 {
+    grid-column: 1 / -1;
+    width: min(100%, 413px) !important;
+    justify-self: center;
+    order: 1;
+    height: auto;
+    aspect-ratio: 413 / 242;
+    border-radius: 24px;
+    justify-content: center !important;
+    gap: 12px;
+    padding: 20px 10px !important;
+  }
+  .template-product .pdp-cmp__card--compact-charge5 > .pdp-cmp__eyebrow,
+  .template-product .pdp-cmp__card--compact-charge5 > .pdp-cmp__sub {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    flex: none;
+  }
+
+  /* compact-partial now matches compact-full's shape exactly (full-width
+     413×242 shell, flex-start flow, 24/14 padding) — see the shared rule
+     with compact-full further down for the actual values, so the two never
+     drift apart again. It keeps its own number/word colouring (plain
+     number, faded "extra") rather than compact-full's purple gradient. */
+
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow,
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow {
+    flex: none;
+  }
+
+  .template-product .pdp-cmp__compact-video-main {
+    color: #131316;
+    font-family: var(--sans);
+    /* Reference-matched size (measured from the target screenshot: the "67"
+       digits are ~31px cap-height => ~44px font). This is now the baked
+       default so the big "67 more hours" look no longer depends on a
+       per-device canva scale that the reset migrations would wipe. */
+    font-size: 44px;
+    font-weight: 400;
+    letter-spacing: -0.045em;
+    line-height: 1.03;
+    text-align: center;
+  }
+
+  .template-product .pdp-cmp__compact-video-main span {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Safari does not apply CSS transforms to plain inline elements — only
+     inline-block/block. Without this, canva mode's drag transform on this
+     span is set correctly in the DOM but never actually renders on an
+     iPhone, even though it visibly works in a Chromium-based test.
+     translateX(20px) bakes in the exact rightward slide the user made in
+     canva mode (measured from their approved screenshot: "hours" centre
+     moved from -59.8px to -40.0px relative to the card centre, i.e. +20px,
+     tightening the gap to the battery). Baked here as the permanent
+     default; the matching canva migration below is bumped so the user's
+     own saved drag is cleared and can't double-apply on top of this. */
+  .template-product .pdp-cmp__compact-video-hours {
+    display: inline-block;
+    transform: translateX(20px);
+  }
+
+  /* Video tile's "67 more hours" fade — identical to the 0%→50% tile: one
+     oklab pastel gradient on the whole metric block, clipped to the text,
+     with the inner number/word spans simply inline-block so the single parent
+     gradient shows through all of them (same working technique as
+     compact-charge5, replacing an earlier per-span version that rendered
+     black on iOS Safari). */
+  .template-product .pdp-cmp__compact-video-hero,
+  .template-product .pdp-cmp__compact-video-hero > span[data-calc-video-num],
+  .template-product .pdp-cmp__compact-video-hours {
+    display: inline-block;
+    background: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    -webkit-text-fill-color: transparent;
+    /* No own transform: a transformed inline-block becomes its own paint layer
+       that the parent's text-clip gradient can't reach (the word would vanish),
+       so keep these spans untransformed like the compact-charge5 spans. */
+    transform: none;
+  }
+
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main {
+    background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* "hours" no longer carries its old +20px shift (that shift broke its fade),
+     so pull the battery image 20px left instead to keep the same tight gap
+     next to "hours". Transforming the image is safe — it isn't text, so it
+     doesn't affect the metric's gradient. */
+  .template-product .pdp-cmp__card--compact-video .pdp-cmp__compact-battery {
+    transform: translateX(-20px);
+  }
+
+  .template-product .pdp-cmp__compact-video-main + .pdp-cmp__sub {
+    flex: none;
+  }
+
+  /* Same size, weight, and inline "number extra" layout as the compact-full
+     card's hero line below it. One continuous warm fade spans the complete
+     live value, restored from the last approved colour version. */
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.18em;
+    font-family: var(--sans);
+    font-size: 72px;
+    font-weight: 600;
+    letter-spacing: -0.045em;
+    line-height: .95;
+    white-space: nowrap;
+    margin-bottom: 7px;
+    background: linear-gradient(90deg, #FAE7AA 0%, #F21D4D 50%, #EB2777 100%);
+    background: linear-gradient(90deg in oklab, #FAE7AA 0%, #F21D4D 50%, #EB2777 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .template-product .pdp-cmp__compact-partial-main span {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The parent supplies one uninterrupted gradient across both text boxes. */
+  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number {
+    background: none;
+    font-feature-settings: "pnum";
+    font-variant-numeric: proportional-nums;
+  }
+
+  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra {
+    background: none;
+  }
+
+  .template-product .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra:empty::after {
+    content: 'extra';
+  }
+
+  .template-product .pdp-cmp__compact-battery {
+    /* Sits inline right after "hours" (inside the same text block) instead
+       of as its own stacked row below it, so it reads as part of the "67
+       more hours" line the way the reference layout does.
+
+       Sizing derived by measuring the reference screenshot AND the source
+       image together: in the reference the VISIBLE green battery is the
+       same height as the "hours" glyphs (~34.7 CSS px at 3x). But this
+       source WebP has transparent padding — the visible battery is only
+       ~57.4% of the image canvas height (measured: green glyph 540px tall
+       in a 940px canvas). So the img box must be 34.7 / 0.574 ≈ 60px tall
+       for the visible battery to land at the right size. max-width 108px
+       leaves room for the natural width at that height (60 * 1672/940 ≈
+       107px) so nothing gets constrained smaller. Fixed px (not em/%) so
+       it can't inherit an unexpected size from the cascade. */
+    display: inline-block !important;
+    width: auto !important;
+    max-width: 108px !important;
+    height: 60px !important;
+    max-height: 60px !important;
+    vertical-align: middle;
+    margin-left: 6px;
+  }
+
+  .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__eyebrow,
+  .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__stat,
+  .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__sub {
+    position: static !important;
+    inset: auto !important;
+    width: auto;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    transform: none !important;
+    text-align: center !important;
+  }
+
+  .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__eyebrow {
+    color: #737d8b;
+    font-size: 14px;
+    line-height: 1.08;
+  }
+
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__stat {
+    font-size: 58px;
+    line-height: .95;
+  }
+
+  /* Adapt the supplied wide performance-card hierarchy to Voltical's live
+     full-charge claim: context, one gradient hero line, then a compact
+     two-line explanation. The calculator writes only the number span, so
+     the authored word "extra" never gains a misleading multiplication x. */
+  .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--compact-full,
+  .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--compact-partial {
+    /* Match the supplied 413×242 reference shell at every phone width while
+       retaining Voltical's existing full-row width and 24px corner rhythm. */
+    width: min(100%, 413px);
+    height: auto;
+    aspect-ratio: 413 / 242;
+    justify-self: center;
+    justify-content: flex-start !important;
+    gap: 0;
+    padding: 24px 14px !important;
+  }
+
+  .template-product .pdp-cmp__card--compact-full > .pdp-cmp__eyebrow {
+    color: #737d8b;
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin-bottom: 7px;
+  }
+
+  .template-product .pdp-cmp__card--compact-full > .pdp-cmp__compact-full-main {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.18em;
+    color: transparent;
+    font-family: var(--sans);
+    font-size: 72px;
+    font-weight: 600;
+    letter-spacing: -0.045em;
+    line-height: .95;
+    white-space: nowrap;
+    margin-bottom: 7px;
+    background: linear-gradient(90deg, #EFB3F9 0%, #B043FE 52%, #7559D4 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .template-product .pdp-cmp__compact-full-number {
+    /* The calculator can produce 1, 2.1, 3.6, etc. Proportional figures
+       keep a live “1” optically natural rather than forcing a tabular slot. */
+    font-feature-settings: "pnum";
+    font-variant-numeric: proportional-nums;
+  }
+
+  .template-product .pdp-cmp__card--compact-stat > .pdp-cmp__sub {
+    color: #737d8b;
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.08;
+    white-space: normal !important;
+  }
+
+  /* This must follow the generic compact-caption rule above: the short-wide
+     card uses a deliberately larger two-line explanation as part of its
+     performance-card hierarchy. */
+  .template-product .pdp-cmp__card--compact-full > .pdp-cmp__compact-full-detail {
+    /* Preserve the muted supporting-text colour from the approved compact
+       layout; only its scale changes in this pass. */
+    color: #737d8b;
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    white-space: normal !important;
+  }
+
+  /* The compact-card framing is semibold; their live values and the faded
+     “extra” word retain their lighter, deliberately separate treatment. */
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow,
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__sub {
+    font-weight: 600;
+  }
+
+  /* compact-partial's eyebrow and caption now match compact-full's flow
+     layout and type scale exactly (same font-size/weight/colour/position-
+     in-flow) instead of the old absolute-centred small-card treatment. */
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow {
+    color: #737d8b;
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin-bottom: 7px;
+  }
+
+  .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-detail {
+    color: #737d8b;
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    white-space: normal !important;
+  }
+
+  /* compact-video's "Up to" now matches the other two cards' eyebrow type
+     scale exactly (was 14px/400, the small-card default). No margin-bottom
+     here (unlike the other two): this card already spaces its 4 stacked
+     children with its own 12px flex gap, so adding one on top would
+     overflow the box. REVERT: remove this rule to fall back to 14px/400. */
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__eyebrow {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  /* The new fast-charge tile uses the same three text roles as the video tile
+     directly below it: matched eyebrow, shared compact-video metric, and the
+     same large supporting caption instead of the generic 14px compact caption. */
+  .template-product .pdp-cmp__card--compact-charge5 > .pdp-cmp__eyebrow {
+    color: #737d8b;
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  .template-product .pdp-cmp__card--compact-charge5 > .pdp-cmp__compact-video-main > span[data-calc-charge5] {
+    font-family: Arial, sans-serif;
+    font-size: 1.06em;
+  }
+
+  .template-product .pdp-cmp__card--compact-charge5 > .pdp-cmp__compact-video-main {
+    background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .template-product .pdp-cmp__card--compact-charge5 > .pdp-cmp__compact-video-main > span[data-calc-charge5],
+  .template-product .pdp-cmp__compact-charge5-unit {
+    display: inline-block;
+  }
+
+  .template-product .pdp-cmp__card--compact-charge5 > .pdp-cmp__sub {
+    color: #737d8b;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: normal;
+    line-height: 1.08;
+  }
+
+  /* Final mobile cascade: the quiet copy in the three tall cards shares the
+     compact-card supporting weight. The range lead remains its own 500-weight
+     phrase, so only its surrounding sentence becomes more legible. */
+  .template-product .pdp-cmp__card--charge > .pdp-cmp__eyebrow,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
+    font-weight: 600;
+  }
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--unit {
+    /* Match the bottom compact-full card's large “extra” metric exactly. */
+    font-family: var(--sans);
+    font-size: 72px;
+    font-weight: 600;
+    letter-spacing: -0.045em;
+    line-height: .95;
+  }
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-lead,
+  .template-product .pdp-cmp__card--video .pdp-cmp__alloy-lead,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range .pdp-cmp__charge-range-lead {
+    font-weight: 600;
+  }
+
+}

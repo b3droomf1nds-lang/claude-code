@@ -1,0 +1,40 @@
+<aside class="drawer" data-drawer role="dialog" aria-modal="true" aria-label="{{ 'cart.title' | t }}">
+  <div class="drawer__head">
+    <h2>{{ 'cart.title' | t }}</h2>
+    <button class="drawer__close" data-drawer-close aria-label="{{ 'general.close' | t }}">&times;</button>
+  </div>
+
+  <div class="drawer__body">
+    <div class="drawer__empty" data-drawer-empty hidden>
+      <p class="t-md" style="margin-bottom:8px">{{ 'cart.empty' | t }}</p>
+      <p class="t-muted" style="font-size:.9rem;margin:0 0 24px">{{ 'cart.empty_sub' | t }}</p>
+      <a class="btn btn--ink" href="{{ routes.all_products_collection_url }}" data-drawer-close>{{ 'cart.continue' | t }}</a>
+    </div>
+
+    <div data-drawer-lines></div>
+
+    <div class="addon" data-protect hidden>
+      <span class="addon__icon">{% render 'icon', icon: 'shield' %}</span>
+      <div class="addon__body">
+        <div class="addon__title">
+          {{ 'cart.protect_title' | t }}
+          <span class="addon__price" data-protect-price></span>
+        </div>
+        <p class="addon__desc">{{ 'cart.protect_desc' | t }}</p>
+      </div>
+      <label class="switch">
+        <input type="checkbox" aria-label="{{ 'cart.protect_title' | t }}">
+        <i></i>
+      </label>
+    </div>
+  </div>
+
+  <div class="drawer__foot" data-drawer-foot hidden>
+    <div class="drawer__subtotal">
+      <span>{{ 'cart.subtotal' | t }}</span>
+      <span data-drawer-subtotal></span>
+    </div>
+    <p class="drawer__hint">{{ 'cart.taxes_note' | t }}</p>
+    <a class="btn btn--accent drawer__checkout" href="{{ routes.cart_url }}/checkout">{{ 'cart.checkout' | t }}</a>
+  </div>
+</aside>

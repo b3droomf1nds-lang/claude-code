@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FCFDFE">
+  <title>
+    {{ page_title }}{% if current_tags %} &ndash; {{ current_tags | join: ', ' }}{% endif %}{% if current_page != 1 %} &ndash; {{ 'general.page' | t }} {{ current_page }}{% endif %}{% unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless %}
+  </title>
+  {% if page_description %}<meta name="description" content="{{ page_description | escape }}">{% endif %}
+  <link rel="canonical" href="{{ canonical_url }}">
+  {% if settings.favicon %}<link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 64 }}">{% endif %}
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  {{ 'theme-r2.css' | asset_url | stylesheet_tag }}
+  {%- if template contains 'product' -%}
+    {%- comment -%} loaded in <head> (not inline in main-product.liquid,
+      where it used to sit) so it's fetched and applied before first
+      paint instead of after — a stylesheet loading mid-body still
+      blocks rendering of what comes AFTER it, but there's always a
+      chance of it landing late on a slow/uncached load, which showed
+      up as the gallery photo briefly rendering at the theme's default
+      square ratio before "popping" to its real 2:3 size a moment
+      later. {%- endcomment -%}
+    {{ 'voltical-pdp-bold.css' | asset_url | stylesheet_tag }}
+  {%- endif -%}
+  <style>
+    /* Guard: never allow sideways scrolling on any page — an
+       overflowing element gets clipped instead of widening the page. */
+    html, body { overflow-x: hidden; overflow-x: clip; }
+
+
+    /* With viewport-fit=cover, the page now extends its own background
+       under the status bar/notch safe area instead of leaving that strip
+       to the browser's own default scrim — push visible header content
+       below it so nothing sits behind the notch itself. */
+    html{ background:var(--base,#FCFDFE); }
+    body{ padding-top: env(safe-area-inset-top); }
+
+    /* Site-wide overrides: Inter as the body font, Apple-style off-white
+       canvas, white/light footer, white newsletter "Join" button. */
+    :root{ --sans:'Inter',-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif; --base:#FCFDFE; }
+    html, body, main{ background:var(--base) !important; }
+    .spotlight{ background:var(--base) !important; }
+    [id^="shopify-section-"][id$="__spot_usb_cable"] .spotlight{
+      padding-bottom:calc(clamp(64px,9vw,128px) + 25px);
+      background:linear-gradient(to bottom, var(--base) 0, var(--base) calc(100% - 35px), var(--ink-04, rgba(19,19,22,.045)) calc(100% - 35px), var(--ink-04, rgba(19,19,22,.045)) 100%) !important;
+    }
+    /* Several headings/badges explicitly set 'Voltical Relay' as the first
+       font (which wins over the --sans fallback above) — force those back
+       to Inter too so the whole store is consistently Inter. */
+    .t-hero, .t-xl, .product-card__word, .product-card::after,
+    .fdark__heading, .fdark__stat-value { font-family: var(--sans) !important; }
+    .site-footer{ background:var(--base) !important; color:var(--ink) !important; }
+    .site-footer a{ color:rgba(19,19,22,.6) !important; }
+    .site-footer a:hover{ color:var(--lilac-m) !important; }
+    .site-footer__brand .t-whisper{ color:rgba(19,19,22,.85) !important; }
+    .site-footer h4{ color:rgba(19,19,22,.45) !important; }
+    .newsletter{ background:rgba(19,19,22,.06) !important; }
+    .newsletter input{ color:var(--ink) !important; }
+    .newsletter input::placeholder{ color:rgba(19,19,22,.4) !important; }
+    .newsletter button{ background:var(--base) !important; color:var(--ink) !important; box-shadow:inset 0 0 0 1px rgba(19,19,22,.15) !important; }
+    .newsletter button:hover{ background:#fff !important; box-shadow:inset 0 0 0 1px rgba(19,19,22,.28) !important; }
+    .site-footer__legal{ color:rgba(19,19,22,.4) !important; }
+
+    /* Temporarily hiding the icons on the "benefits" row (Tested before it
+       ships / warranty / returns / support). Remove this rule to bring
+       them back — flexbox will re-open the gap for them automatically. */
+    .standard__item h3 svg{ display:none !important; }
+
+    /* ---------- shared floating CTA pill (liquid glass) ----------
+       One element, shared across every [data-ctapill] section (currently
+       Core and Core Pro). A scroll-driven controller (below) relabels and
+       re-links it in place as you move between sections, instead of
+       cross-fading two separate pills — that's what caused the "flies
+       through" glitch at the Core -> Core Pro handoff. */
+    .vt-ctapill{
+      position:fixed; left:0; right:0; bottom:89px; z-index:110;
+      display:flex; justify-content:center;
+      pointer-events:none;
+      opacity:0; transform:translateY(16px) scale(.97);
+      transition:opacity .4s cubic-bezier(.4,0,.2,1), transform .4s cubic-bezier(.4,0,.2,1);
+    }
+    .vt-ctapill.is-visible{ opacity:1; transform:none; pointer-events:auto; }
+    .vt-ctapill__inner{
+      position:relative;
+      display:inline-flex; align-items:center;
+      padding:0 68px 0 26px;
+      height:52px; border-radius:34px; corner-shape:round;
+      font-family:'Inter',var(--sans); font-weight:700; font-size:1.02rem;
+      color:#fff; text-decoration:none;
+      background:rgba(255,255,255,.001);
+      backdrop-filter:blur(8px) saturate(130%);
+      -webkit-backdrop-filter:blur(8px) saturate(130%);
+      border:1px solid rgba(255,255,255,.4);
+      box-shadow:
+        0 10px 34px rgba(0,0,0,.2),
+        inset 0 1px 0 rgba(255,255,255,.35);
+      transition:border-color .15s, color .15s, transform .25s, box-shadow .25s;
+      white-space:nowrap;
+    }
+    .vt-ctapill__inner:hover{ transform:translateY(-2px) scale(1.02); box-shadow:0 14px 40px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.4); }
+    .vt-ctapill__inner:active{ transform:scale(.97); }
+    .vt-ctapill__plus{
+      position:absolute; right:4px; top:6px;
+      width:40px; height:40px; border-radius:20px; corner-shape:round;
+      background:rgba(255,255,255,.92);
+      display:inline-flex; align-items:center; justify-content:center;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.8), 0 1px 2px rgba(0,0,0,.15);
+    }
+    .vt-ctapill__plus svg{ width:22px; height:22px; display:block; }
+    /* On a light-surface section (Core), the glass carries its own fixed
+       cream tint instead of a near-transparent fill — previously it just
+       showed whatever was directly behind it (via backdrop-filter), so it
+       looked right over the section's cream canvas but washed-out/plain
+       over the white bubble itself. A fixed tint reads the same either
+       way. */
+    .vt-ctapill[data-surface="light"] .vt-ctapill__inner{
+      color:var(--ink,#131316);
+      background:rgba(225,225,222,.55);
+      border-color:rgba(19,19,22,.18);
+      box-shadow:
+        0 10px 34px rgba(19,19,22,.12),
+        inset 0 1px 0 rgba(255,255,255,.6);
+    }
+    @media (max-width:640px){
+      .vt-ctapill{ bottom:16px; }
+      .vt-ctapill__inner{ height:48px; padding:0 62px 0 22px; font-size:.92rem; }
+      .vt-ctapill__plus{ width:36px; height:36px; top:6px; }
+      .vt-ctapill__plus svg{ width:20px; height:20px; }
+    }
+  </style>
+
+  <script>
+    window.Voltical = {
+      moneyFormat: {{ shop.money_format | json }},
+      cartUrl: {{ routes.cart_url | json }},
+      protection: {
+        handle: {{ settings.protection_handle | json }},
+        thresholds: {{ settings.protection_thresholds | default: '50,100,150' | json }},
+        enabled: {{ settings.protection_enabled | json }}
+      },
+      dispatchCutoffHour: {{ settings.dispatch_cutoff | default: 14 }}
+    };
+    window.VolticalStrings = {
+      added: {{ 'products.added' | t | json }},
+      soldOut: {{ 'products.sold_out' | t | json }},
+      unavailable: {{ 'products.unavailable' | t | json }},
+      error: {{ 'general.error' | t | json }},
+      remove: {{ 'cart.remove' | t | json }}
+    };
+  </script>
+  {{ 'voltical-data.js' | asset_url | script_tag }}
+  <script src="{{ 'theme-r3.js' | asset_url }}" defer></script>
+
+  {{ content_for_header }}
+</head>
+<body class="template-{{ template.name }}">
+  <a class="skip-link" href="#main">{{ 'general.skip_to_content' | t }}</a>
+
+  {% section 'header' %}
+
+  <main id="main" role="main">
+    {{ content_for_layout }}
+  </main>
+
+  {% section 'footer' %}
+
+  {% render 'cart-drawer' %}
+  <div class="page-scrim" data-scrim hidden></div>
+
+  <div class="vt-ctapill" id="vt-ctapill">
+    <a class="vt-ctapill__inner" id="vt-ctapill-link" href="#">
+      <span id="vt-ctapill-label"></span>
+      <span class="vt-ctapill__plus" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 5V19M5 12H19" stroke="#0a0a0c" stroke-width="3.6" stroke-linecap="round"/>
+        </svg>
+      </span>
+    </a>
+  </div>
+  <script>
+  (function(){
+    var pill = document.getElementById('vt-ctapill');
+    var link = document.getElementById('vt-ctapill-link');
+    var label = document.getElementById('vt-ctapill-label');
+    if(!pill || !link || !label) return;
+    var targets = Array.prototype.slice.call(document.querySelectorAll('[data-ctapill]'));
+    if(!targets.length) return;
+
+    function update(){
+      var vh = window.innerHeight;
+      var pillY = vh - (pill.offsetHeight || 50) / 2 - 24;
+      var best = null;
+      targets.forEach(function(el){
+        var r = el.getBoundingClientRect();
+        if(r.top <= pillY && r.bottom >= pillY) best = el;
+      });
+      if(!best){
+        // pill's own position isn't over any tracked section (e.g. the
+        // section is still scrolling in below it) — fall back to whichever
+        // is nearest viewport-center, just so it doesn't sit hidden.
+        var bestDist = Infinity;
+        targets.forEach(function(el){
+          var r = el.getBoundingClientRect();
+          if(r.bottom <= 0 || r.top >= vh) return;
+          var center = r.top + r.height / 2;
+          var dist = Math.abs(center - vh / 2);
+          if(dist < bestDist){ bestDist = dist; best = el; }
+        });
+      }
+      if(best){
+        link.href = best.getAttribute('data-cta-url');
+        label.textContent = best.getAttribute('data-cta-label');
+        pill.setAttribute('data-surface', best.getAttribute('data-cta-surface') || 'dark');
+        pill.classList.add('is-visible');
+      } else {
+        pill.classList.remove('is-visible');
+      }
+    }
+
+    var ticking = false;
+    function onScroll(){
+      if(ticking) return;
+      ticking = true;
+      requestAnimationFrame(function(){ update(); ticking = false; });
+    }
+    window.addEventListener('scroll', onScroll, { passive:true });
+    window.addEventListener('resize', update);
+    update();
+  })();
+  </script>
+  </script>
+</body>
+</html>
