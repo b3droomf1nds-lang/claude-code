@@ -1586,7 +1586,7 @@
     grid-column: 1 / -1;
     width: min(100%, 413px) !important;
     justify-self: center;
-    order: 1;
+    order: 0;
   }
 
   .template-product .pdp-cmp__card--compact-partial {
@@ -1753,7 +1753,7 @@
     grid-column: 1 / -1;
     width: min(100%, 413px) !important;
     justify-self: center;
-    order: 0;
+    order: 1;
     height: auto;
     aspect-ratio: 413 / 242;
     border-radius: 24px;
@@ -1812,6 +1812,41 @@
   .template-product .pdp-cmp__compact-video-hours {
     display: inline-block;
     transform: translateX(20px);
+  }
+
+  /* One uninterrupted pastel fade across the complete text block, including
+     the hours word, using the same horizontal colour position throughout. */
+  .template-product .pdp-cmp__compact-video-hero {
+    display: inline-block;
+    background: none;
+  }
+
+  .template-product .pdp-cmp__compact-video-hero > span[data-calc-video-num] {
+    display: inline-block;
+    background: none;
+  }
+
+  /* The ramp belongs to the complete text block, not to an individual line.
+     That keeps every gradient-coloured glyph keyed to its horizontal x
+     position in the tile, so the line break cannot restart the fade. */
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main {
+    --compact-video-gradient-width: 176.421875px;
+    background: linear-gradient(90deg, #F1D2BB 0%, #EBC1BF 16%, #E8B0C2 30%, #DEAAC2 43%, #CEA4CF 56%, #C19DE2 69%, #AE98EA 82%, #9C90F0 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .template-product .pdp-cmp__compact-video-hours {
+    background-image: linear-gradient(90deg, #F1D2BB 0%, #EBC1BF 16%, #E8B0C2 30%, #DEAAC2 43%, #CEA4CF 56%, #C19DE2 69%, #AE98EA 82%, #9C90F0 100%);
+    background-size: var(--compact-video-gradient-width) 100%;
+    background-position: -20px 0;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
   }
 
   .template-product .pdp-cmp__compact-video-main + .pdp-cmp__sub {
@@ -2024,6 +2059,46 @@
     font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.05;
+  }
+
+  /* The new fast-charge tile uses the same three text roles as the video tile
+     directly below it: matched eyebrow, shared compact-video metric, and the
+     same large supporting caption instead of the generic 14px compact caption. */
+  .template-product .pdp-cmp__card--compact-charge5 > .pdp-cmp__eyebrow {
+    color: #737d8b;
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  .template-product .pdp-cmp__card--compact-charge5 > .pdp-cmp__compact-video-main > span[data-calc-charge5] {
+    font-family: Arial, sans-serif;
+    font-size: 1.06em;
+  }
+
+  .template-product .pdp-cmp__card--compact-charge5 > .pdp-cmp__compact-video-main {
+    background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .template-product .pdp-cmp__card--compact-charge5 > .pdp-cmp__compact-video-main > span[data-calc-charge5],
+  .template-product .pdp-cmp__compact-charge5-unit {
+    display: inline-block;
+  }
+
+  .template-product .pdp-cmp__card--compact-charge5 > .pdp-cmp__sub {
+    color: #737d8b;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: normal;
+    line-height: 1.08;
   }
 
   /* Final mobile cascade: the quiet copy in the three tall cards shares the
