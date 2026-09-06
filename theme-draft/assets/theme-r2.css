@@ -146,6 +146,7 @@ h1 em,h2 em,.plp__title em{
   position:sticky;top:0;z-index:90;background:var(--base,#FCFDFE);
 }
 .site-header__inner{display:flex;align-items:center;justify-content:space-between;height:70px}
+.site-header .wrap--wide{padding-right:clamp(8px,2vw,16px)}
 .site-header__logo{font-weight:700;font-size:1.1rem;letter-spacing:.3em;text-transform:uppercase}
 .site-header__logo img{height:26px;width:auto}
 .site-nav{display:none;gap:6px}
