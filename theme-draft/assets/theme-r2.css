@@ -150,7 +150,7 @@ h1 em,h2 em,.plp__title em{
 .site-header-clone .wrap--wide{padding-right:clamp(2px,.5vw,4px)}
 .site-header .cart-btn,
 .site-header-clone .cart-btn{transform:translateY(-9px)}
-.site-header__logo{font-weight:700;font-size:1.1rem;letter-spacing:.3em;text-transform:uppercase}
+.site-header__logo{display:none;font-weight:700;font-size:1.1rem;letter-spacing:.3em;text-transform:uppercase}
 .site-header__logo img{height:26px;width:auto}
 .site-nav{display:none;gap:6px}
 .site-nav a{font-size:.9rem;font-weight:500;color:var(--ink-60);transition:color .2s,background .2s;padding:9px 16px;border-radius:999px}
