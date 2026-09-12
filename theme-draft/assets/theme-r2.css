@@ -413,8 +413,8 @@ h1 em,h2 em,.plp__title em{
 .page-scrim.is-open{opacity:1}
 .drawer{
   position:fixed;left:50%;bottom:0;width:min(452px,100vw);max-height:min(88vh,760px);background:var(--base);z-index:99;
-  transform:translateX(-50%) translateY(100%);transition:transform .5s var(--ease);display:flex;flex-direction:column;
-  border-radius:var(--r-l) var(--r-l) 0 0;box-shadow:0 -24px 64px rgba(19,19,22,.16);
+  transform:translateX(-50%) translateY(100%);transition:transform .52s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;
+  border-radius:28px 28px 0 0;box-shadow:0 -24px 64px rgba(19,19,22,.16);
 }
 .drawer::before{content:"";position:absolute;top:10px;left:50%;transform:translateX(-50%);width:38px;height:5px;border-radius:999px;background:var(--ink-12);pointer-events:none}
 .drawer.is-open{transform:translateX(-50%) translateY(0)}
