@@ -1,0 +1,68 @@
+<section class="triptych">
+  <div class="wrap wrap--wide">
+    <div class="triptych__head" data-reveal>
+      <h1 class="t-hero">{{ section.settings.heading }}</h1>
+      <p class="t-body-lg">{{ section.settings.subheading }}</p>
+      <a class="btn btn--accent" href="{{ section.settings.cta_link | default: routes.all_products_collection_url }}">{{ section.settings.cta }}</a>
+      {%- if section.settings.trust_line != blank -%}
+        <p class="hero__trustline">{{ section.settings.trust_line }}</p>
+      {%- endif -%}
+    </div>
+    <div class="triptych__grid" data-reveal>
+      {%- assign cells = 'a,b,c' | split: ',' -%}
+      {%- for cell in cells -%}
+        {%- assign img_key = 'image_' | append: cell -%}
+        {%- assign prod_key = 'product_' | append: cell -%}
+        {%- assign img = section.settings[img_key] -%}
+        {%- assign product_ref = section.settings[prod_key] -%}
+        {%- assign fallback_asset = '' -%}
+        {%- case cell -%}
+          {%- when 'a' -%}{%- assign fallback_asset = 'magnetic-black-on-white.png' -%}
+          {%- when 'b' -%}{%- assign fallback_asset = 'magnetic-side-profile.png' -%}
+          {%- when 'c' -%}{%- assign fallback_asset = 'magnetic-starlight-on-white.png' -%}
+        {%- endcase -%}
+        {%- unless product_ref.handle -%}{%- assign product_ref = all_products[product_ref] -%}{%- endunless -%}
+        <div class="triptych__cell triptych__cell--{{ cell }}">
+          {%- if product_ref -%}<a href="{{ product_ref.url }}">{%- endif -%}
+          {%- if img -%}
+            <img src="{{ img | image_url: width: 1400 }}"
+                 srcset="{{ img | image_url: width: 1000 }} 1000w, {{ img | image_url: width: 1400 }} 1400w, {{ img | image_url: width: 2000 }} 2000w"
+                 sizes="(min-width:900px) 33vw, 100vw"
+                 alt="{{ img.alt | default: product_ref.title | escape }}" {% unless forloop.first %}loading="lazy"{% endunless %}>
+          {%- elsif product_ref.featured_image -%}
+            <img src="{{ product_ref.featured_image | image_url: width: 1400 }}"
+                 srcset="{{ product_ref.featured_image | image_url: width: 1000 }} 1000w, {{ product_ref.featured_image | image_url: width: 1400 }} 1400w, {{ product_ref.featured_image | image_url: width: 2000 }} 2000w"
+                 sizes="(min-width:900px) 33vw, 100vw"
+                 alt="{{ product_ref.title | escape }}" {% unless forloop.first %}loading="lazy"{% endunless %}>
+          {%- else -%}
+            <img src="{{ fallback_asset | asset_url }}" alt="Voltical magnetic power bank" {% unless forloop.first %}loading="lazy"{% endunless %}>
+          {%- endif -%}
+          {%- if product_ref -%}</a>{%- endif -%}
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Hero triptych",
+  "settings": [
+    { "type": "textarea", "id": "heading", "label": "Heading", "default": "Voltical" },
+    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Magnetic charging, finished like it came in the box." },
+    { "type": "text", "id": "cta", "label": "CTA label", "default": "Shop the lineup" },
+    { "type": "url", "id": "cta_link", "label": "CTA link" },
+    { "type": "text", "id": "trust_line", "label": "Trust microline", "default": "12-month warranty - 30-day returns - Tracked shipping" },
+    { "type": "header", "content": "Left cell" },
+    { "type": "image_picker", "id": "image_a", "label": "Image" },
+    { "type": "product", "id": "product_a", "label": "Links to / fallback image" },
+    { "type": "header", "content": "Center cell" },
+    { "type": "image_picker", "id": "image_b", "label": "Image" },
+    { "type": "product", "id": "product_b", "label": "Links to / fallback image" },
+    { "type": "header", "content": "Right cell" },
+    { "type": "image_picker", "id": "image_c", "label": "Image" },
+    { "type": "product", "id": "product_c", "label": "Links to / fallback image" }
+  ],
+  "presets": [{ "name": "Hero triptych" }]
+}
+{% endschema %}

@@ -1,0 +1,6 @@
+<article class="page-narrow">
+  <span class="t-mono" style="color:var(--accent-deep)">{{ article.published_at | date: '%B %d, %Y' }}</span>
+  <h1 class="t-lg" style="margin:12px 0 24px">{{ article.title }}</h1>
+  {% if article.image %}<img src="{{ article.image | image_url: width: 1000 }}" alt="{{ article.image.alt | escape }}" style="border-radius:22px;margin-bottom:32px">{% endif %}
+  <div class="rte">{{ article.content }}</div>
+</article>

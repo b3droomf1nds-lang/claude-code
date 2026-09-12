@@ -1,0 +1,12 @@
+<div class="page-narrow" style="max-width:420px">
+  <h1 class="t-lg" style="margin-bottom:24px">{{ 'customer.login' | t }}</h1>
+  {% form 'customer_login' %}
+    {{ form.errors | default_errors }}
+    <label class="opt__label" for="c-email">{{ 'customer.email' | t }}</label>
+    <input id="c-email" type="email" name="customer[email]" required style="width:100%;padding:13px 16px;border:1px solid var(--ink-12);border-radius:8px;margin-bottom:16px">
+    <label class="opt__label" for="c-pass">{{ 'customer.password' | t }}</label>
+    <input id="c-pass" type="password" name="customer[password]" required style="width:100%;padding:13px 16px;border:1px solid var(--ink-12);border-radius:8px;margin-bottom:24px">
+    <button class="btn btn--ink btn--full" type="submit">{{ 'customer.login' | t }}</button>
+    <p style="margin-top:16px;font-size:.9rem"><a href="{{ routes.account_register_url }}" class="link-arrow">{{ 'customer.create_account' | t }}</a></p>
+  {% endform %}
+</div>

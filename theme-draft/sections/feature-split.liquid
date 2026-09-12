@@ -1,0 +1,246 @@
+{%- comment -%}
+  Light "bubble" banner — modeled on Apple's finish/material banners: a
+  white rounded card raised slightly off the page's own background (soft
+  shadow, tinted backdrop), text vertically centered on the left, a large
+  product image filling the right half. Below the card sits the same
+  centered pill CTA (with the "+" icon) used on the Core Pro spotlight
+  section. Keeps the same sticky Explore/Buy bar pattern too.
+{%- endcomment -%}
+<style>
+  .fsplit2{ color:var(--ink); padding:calc((clamp(64px,9vw,120px) + 90px) * 0.3) 0 clamp(72px,10vw,130px); }
+  .fsplit2 .wrap--wide{ max-width:2510px; padding:0 clamp(14px,2.5vw,24px); }
+
+  .fsplit2__banner{
+    --fsplit2-scale:1;
+    width:100%;
+    display:flex;
+    align-items:stretch;
+    min-height:clamp(0px,38vw,140px);
+    background:#FFFFFF;
+    border-radius:clamp(28px,3vw,44px);
+    corner-shape:round;
+    box-shadow:0 1px 2px rgba(19,19,22,.04),0 24px 60px -24px rgba(19,19,22,.14);
+    overflow:hidden;
+    transform:scale(var(--fsplit2-scale,1));
+    will-change:transform;
+  }
+  .fsplit2__banner-text{
+    flex:1 1 45%; min-width:260px;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:clamp(8px,1vw,14px);
+    background:#FFFFFF;
+  }
+  .fsplit2__banner-heading{
+    font-family:var(--sans);
+    font-size:clamp(1.5rem,2.4vw,2rem);
+    font-weight:600; letter-spacing:-0.03em; line-height:1.28;
+    color:var(--ink);
+    margin:0;
+  }
+  .fsplit2__banner-media{
+    flex:1 1 55%;
+    position:relative;
+    overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    background:#FFFFFF;
+    padding:clamp(6px,0.8vw,10px);
+  }
+  .fsplit2__banner-media img{
+    max-width:100%; max-height:100%;
+    width:auto; height:auto;
+    object-fit:contain;
+    display:block;
+  }
+
+
+  @media (max-width:900px){
+    .fsplit2{ background:var(--base,#FCFDFE); }
+    .fsplit2__banner{ flex-direction:column; min-height:0; border-radius:28px; }
+    .fsplit2__banner-text{ order:2; padding:28px 22px; justify-content:flex-start; margin-top:100px; }
+    .fsplit2__banner-media{ order:1; aspect-ratio:4/3; padding:20px; }
+  }
+  @media (min-width:900px){
+    .fsplit2{ background:var(--ink-04,rgba(19,19,22,.045)); min-height:100vh; padding-top:10.5px; padding-bottom:10.5px; display:flex; flex-direction:column; justify-content:center; box-sizing:content-box; }
+    .fsplit2__banner{
+      width:calc(100vw - 150px);
+      height:calc(100vh - 125px);
+      margin:75px calc(50% - 50vw + 75px);
+      box-sizing:border-box;
+      transform:translateY(-50px) scale(var(--fsplit2-scale,1));
+    }
+    .fsplit2__banner-heading{
+      font-size:clamp(1.5rem,2.4vw,2rem);
+      /* Align the heading's left edge with .spotlight__title's left edge in
+         the two sections above (Watch/USB-C cable), whose inset works out
+         to clamp(320px,18vw,520px)/2 + clamp(32px,4vw,72px) from the
+         viewport edge. This banner's text otherwise starts ~75px (banner
+         bleed) + its own small padding in from the edge — shift by the
+         difference so both line up at any viewport width. Also nudged
+         100px further down per request. */
+      transform:translate(calc(clamp(320px,18vw,520px) / 2 + clamp(32px,4vw,72px) - 75px - clamp(8px,1vw,14px)), 100px);
+    }
+  }
+  .fsplit2__stickybar{
+    position:fixed; top:9px; left:14px; right:14px; z-index:120;
+    margin:0 auto; max-width:1400px;
+    background:rgba(250,250,248,.66);
+    backdrop-filter:blur(18px) saturate(1.4); -webkit-backdrop-filter:blur(18px) saturate(1.4);
+    border:1px solid rgba(19,19,22,.1);
+    border-radius:20px;
+    box-shadow:0 12px 30px rgba(19,19,22,.1);
+    transform:translateY(-140%);
+    transition:transform .4s cubic-bezier(.4,0,.2,1);
+  }
+  .fsplit2__stickybar.is-visible{ transform:translateY(0); }
+  .fsplit2__stickybar-inner{
+    padding:12px 16px 12px 22px;
+    display:flex; align-items:center; justify-content:space-between; gap:20px;
+  }
+  .fsplit2__stickybar-title{
+    font-family:var(--sans); font-weight:600;
+    font-size:.98rem; letter-spacing:-0.01em; color:var(--ink);
+    white-space:nowrap;
+  }
+  .fsplit2__stickybar-actions{ display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+  .fsplit2__stickybar-explore,
+  .fsplit2__stickybar-buy{
+    font-family:var(--sans);
+    display:inline-flex; align-items:center; justify-content:center;
+    border-radius:999px; font-size:.86rem; font-weight:500;
+    padding:8px 20px; white-space:nowrap; line-height:1; box-sizing:border-box;
+  }
+  .fsplit2__stickybar-explore{
+    background:transparent; color:var(--ink);
+    border:1px solid rgba(19,19,22,.22);
+  }
+  .fsplit2__stickybar-explore:hover{ background:rgba(19,19,22,.06); }
+  .fsplit2__stickybar-buy{
+    background:var(--ink); color:var(--base); border:1px solid transparent;
+    font-weight:600;
+  }
+  .fsplit2__stickybar-buy:hover{ filter:brightness(1.15); }
+  @media (max-width:640px){
+    .fsplit2__stickybar{ top:5px; left:10px; right:10px; border-radius:16px; }
+    .fsplit2__stickybar-inner{ padding:10px 12px 10px 16px; }
+    .fsplit2__stickybar-title{ font-size:.86rem; }
+    .fsplit2__stickybar-explore,.fsplit2__stickybar-buy{ padding:6px 12px; font-size:.78rem; }
+  }
+
+</style>
+
+{%- assign _p = section.settings.product -%}
+{%- unless _p.handle -%}{%- assign _p = all_products[_p] -%}{%- endunless -%}
+{%- assign img = section.settings.image | default: _p.featured_image -%}
+
+<div class="fsplit2__stickybar" id="fsplit2-stickybar-{{ section.id }}">
+  <div class="fsplit2__stickybar-inner">
+    <span class="fsplit2__stickybar-title">{{ section.settings.bar_title | default: _p.title }}</span>
+    <div class="fsplit2__stickybar-actions">
+      <a href="#fsplit2-{{ section.id }}" class="fsplit2__stickybar-explore" data-fsplit2-explore="{{ section.id }}">Explore</a>
+      {%- if _p -%}
+        <a href="{{ _p.url }}" class="fsplit2__stickybar-buy">Buy</a>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+<section class="section fsplit2" id="fsplit2-{{ section.id }}"
+  {%- if _p %} data-ctapill data-cta-url="{{ _p.url }}" data-cta-label="{{ section.settings.cta | default: 'Shop now' }}" data-cta-surface="light"{% endif %}>
+  <div class="wrap wrap--wide" data-reveal>
+    <div class="fsplit2__banner">
+      <div class="fsplit2__banner-text">
+        <h2 class="fsplit2__banner-heading">
+          {{ section.settings.heading_line1 }}
+          {%- if section.settings.heading_line2 != blank -%}
+            <br>{{ section.settings.heading_line2 }}
+          {%- endif -%}
+        </h2>
+      </div>
+      <div class="fsplit2__banner-media">
+        {%- if img -%}
+          <img src="{{ img | image_url: width: 1600 }}"
+               srcset="{{ img | image_url: width: 900 }} 900w, {{ img | image_url: width: 1600 }} 1600w, {{ img | image_url: width: 2200 }} 2200w"
+               sizes="(min-width:900px) 55vw, 100vw"
+               alt="{{ img.alt | default: _p.title | escape }}" loading="lazy">
+        {%- endif -%}
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+(function(){
+  var root = document.getElementById('fsplit2-{{ section.id }}');
+  var bar = document.getElementById('fsplit2-stickybar-{{ section.id }}');
+  if(!root || !bar) return;
+
+  if('IntersectionObserver' in window){
+    var bottomMargin = Math.round(window.innerHeight * 0.7) + 300;
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        bar.classList.toggle('is-visible', entry.isIntersecting);
+      });
+    }, { rootMargin: '-72px 0px -' + bottomMargin + 'px 0px', threshold: 0 });
+    io.observe(root);
+  }
+
+  var exploreLink = bar.querySelector('[data-fsplit2-explore]');
+  if(exploreLink){
+    exploreLink.addEventListener('click', function(e){
+      e.preventDefault();
+      var barHeight = bar.offsetHeight;
+      var y = root.getBoundingClientRect().top + window.pageYOffset - barHeight - 16;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    });
+  }
+
+  /* ---------- scroll-driven zoom-out (Rhode-style) ----------
+     The banner card starts oversized and scales DOWN to its normal
+     size as the section scrolls up toward the middle of the screen —
+     then locks at that size (never shrinks further, never grows back)
+     for the rest of the scroll. Driven by a CSS custom property so it
+     composites with the section's own translate transforms instead of
+     replacing them (see .fsplit2__banner in the <style> above). */
+  var banner = root.querySelector('.fsplit2__banner');
+  if(banner){
+    var MAX_SCALE = 1.15;
+    var ticking = false;
+    function updateZoom(){
+      var rect = root.getBoundingClientRect();
+      var vh = window.innerHeight;
+      var sectionCenter = rect.top + rect.height / 2;
+      var startCenter = vh * 2.4;   // starts much earlier — well below the viewport — so there's more scroll distance to animate across
+      var endCenter = vh * 0.5;     // section centered: fully zoomed out, locks here
+      var progress = (startCenter - sectionCenter) / (startCenter - endCenter);
+      if(progress < 0) progress = 0;
+      if(progress > 1) progress = 1;
+      var scale = MAX_SCALE - (MAX_SCALE - 1) * progress;
+      banner.style.setProperty('--fsplit2-scale', scale.toFixed(4));
+      ticking = false;
+    }
+    window.addEventListener('scroll', function(){
+      if(ticking) return;
+      ticking = true;
+      requestAnimationFrame(updateZoom);
+    }, { passive: true });
+    window.addEventListener('resize', updateZoom);
+    updateZoom();
+  }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Feature split",
+  "settings": [
+    { "type": "product", "id": "product", "label": "Product" },
+    { "type": "image_picker", "id": "image", "label": "Image (fills the right half)" },
+    { "type": "text", "id": "bar_title", "label": "Sticky bar title" },
+    { "type": "text", "id": "heading_line1", "label": "Heading (line 1)", "default": "Super thin. Strikingly light." },
+    { "type": "text", "id": "heading_line2", "label": "Heading (line 2)", "default": "Shockingly strong." },
+    { "type": "text", "id": "cta", "label": "CTA label", "default": "Shop Core" }
+  ],
+  "presets": [{ "name": "Feature split" }]
+}
+{% endschema %}

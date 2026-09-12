@@ -1,0 +1,1819 @@
+{%- comment -%}
+  Canva-style live layout editor for the compare tile section.
+
+  It turns the "See how Core upgrades your experience" block into a
+  drag-and-drop canvas: click any tile / image / text / icon to select
+  it, drag to move it, and drag a corner (or scroll the wheel) to make
+  it bigger or smaller — just like moving elements around a Canva page.
+
+  HOW IT TURNS ON
+    Add ?edit=1 to the product-page URL in the theme preview. That flips
+    the section into edit mode AND remembers it (so it stays on across
+    reloads while you fine-tune). Add ?edit=0 (or hit "Done") to leave.
+    Normal visitors never see any of this — with no flag, the script only
+    re-applies a saved layout and adds zero controls.
+
+  HOW "LOCK IT" WORKS
+    Your moves are saved live in the browser (localStorage) so nothing is
+    lost on reload and the preview always shows your work-in-progress.
+    When it's positioned how you want, click "Copy layout" (or just tell
+    Claude "lock it") and hand Claude the copied code — Claude bakes those
+    exact positions/sizes permanently into the matching desktop/mobile CSS
+    and clears the temporary browser copy.
+
+  The same controls work on desktop and phone. Desktop keeps its mouse,
+  wheel, keyboard, and compact handles; phone adds tap/double-tap,
+  one-finger move, pinch resize, and larger touch handles.
+
+  ALIGN
+    Click "Align" to repair the WHOLE section, regardless of what is
+    selected. Every tile returns to its normal size and the exact
+    authored position it has now, on both desktop and phone.
+
+    Every visible text group inside every tile is centered horizontally
+    while keeping its vertical position, size, and wording. The two feature
+    icons are centred left-to-right too, without changing their height or
+    size. Other images stay exactly where you put them. The entire
+    repair is one Undo step. Phone and desktop centering corrections are
+    kept separate, so aligning one layout cannot knock the other off-centre.
+
+  EDITING TEXT
+    Double-click a caption/heading (not the live numbers, which are
+    computed by JS) to drill into it — same as any image or icon, and
+    still draggable with a single click-hold from there. Once it's
+    selected, either press Enter or just click it again (a plain click
+    that doesn't turn into a drag) to start typing into it, in its own
+    font; the cursor lands at the end of the existing text so you can
+    add more. Press Enter again to start a new line lower in the same
+    box. Click anywhere else (or press Escape) to stop typing; the
+    edit is saved live like everything else and included in "Copy
+    layout".
+
+    Click-to-type only fires on a SECOND click, once the text is
+    already selected — the double-click that first drills into/selects
+    it always just selects, so it's still possible to double-click and
+    immediately drag without getting hijacked into typing.
+
+    On phone, double-tapping text also only selects it, so it can be
+    dragged immediately like an image. A contextual "Edit text" button
+    appears in the toolbar for a selected editable caption; tap that
+    button to open the keyboard. Taps inside active text editing keep
+    their normal caret-placement behaviour.
+
+    With a text box selected (not currently being typed into), press
+    Backspace or Delete to clear it out.
+
+  UNDO
+    Click "Undo" in the toolbar to step back one action at a time —
+    a move, a resize, typing/deleting a caption, or a whole Align /
+    Reset click. Holding an arrow key or scrolling to resize counts as
+    ONE action (the whole hold/scroll), not one per tick.
+{%- endcomment -%}
+<style>
+  .cv-tb{position:fixed;top:14px;left:14px;z-index:2147483000;display:flex;gap:6px;align-items:center;
+    background:#111;color:#fff;border:1px solid #2c2c2c;border-radius:12px;padding:8px 10px;
+    font:13px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    box-shadow:0 8px 30px rgba(0,0,0,.35);user-select:none;}
+  .cv-tb__dot{width:8px;height:8px;border-radius:50%;background:#16c76a;box-shadow:0 0 8px #16c76a;flex:none;}
+  .cv-tb__title{font-weight:600;letter-spacing:.02em;margin-right:4px;}
+  .cv-tb__hint{opacity:.55;font-size:11px;max-width:280px;line-height:1.35;}
+  .cv-btn{appearance:none;border:1px solid #333;background:#1d1d1f;color:#fff;border-radius:8px;
+    padding:6px 10px;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap;}
+  .cv-btn:hover{background:#2a2a2c;}
+  .cv-btn--go{background:#0a84ff;border-color:#0a84ff;}
+  .cv-btn--go:hover{background:#0a74e0;}
+  /* Armed "are you sure" state for Reset all (a reliable two-tap confirm
+     that works even where a native confirm() dialog is suppressed). */
+  .cv-btn.is-armed{background:#c0392b;border-color:#c0392b;}
+  .cv-btn.is-armed:hover{background:#a93226;}
+
+  .cv-hover{outline:1.5px dashed rgba(10,132,255,.55) !important;outline-offset:1px;cursor:grab;}
+  /* The image wrappers are normally pointer-events:none (they're decorative,
+     aria-hidden) so clicks pass through to the tile behind them. While
+     editing, re-enable pointer events on them so the image itself is
+     clickable/double-clickable like everything else. */
+  .cv-editing .pdp-cmp__img-slot,
+  .cv-editing .pdp-cmp__img-slot img{pointer-events:auto !important;}
+  .cv-editing .pdp-cmp__feature-icon-wrap,
+  .cv-editing .pdp-cmp__feature-icon-wrap .pdp-cmp__feature-icon{pointer-events:auto !important;}
+  /* Kill the browser's OWN pinch-zoom and double-tap-zoom document-wide
+     while editing — without this, a two-finger pinch (meant to resize the
+     selected element) and a double-tap (meant to drill into it) both also
+     trigger the browser's native page-zoom at the same time, and once that
+     kicks in its own momentum/rubber-band settling and can make an image
+     look like it "flies off" after release. pan-y keeps one-finger page
+     scroll working everywhere; it only removes zoom gestures. Put it on
+     both roots because iOS and Chromium do not always choose the same one
+     as the document's gesture owner. */
+  html.cv-editing,
+  html.cv-editing body{touch-action:pan-y;}
+  /* The whole compare block lives inside [data-reveal], whose global image
+     rule eases transform for a full second. That is desirable for the
+     storefront reveal, but disastrous for an editor: each new drag sample
+     retargets the transition, so an image trails the finger and keeps
+     moving after release. Editing must always render transforms exactly. */
+  .cv-editing .pdp-cmp,
+  .cv-editing .pdp-cmp *{transition:none !important;}
+  /* Pre-warm only the one selected phone element, then suppress selection /
+     callouts while its gesture is active. Promoting every tile permanently
+     costs a surprising amount of phone memory. */
+  .cv-touch-ready,
+  .cv-touch-active{will-change:transform;}
+  .cv-touch-active{-webkit-touch-callout:none;user-select:none;}
+  .cv-box{position:fixed;z-index:2147482000;border:1.5px solid #0a84ff;pointer-events:none;
+    box-shadow:0 0 0 1px rgba(255,255,255,.6);}
+  .cv-h{position:absolute;width:12px;height:12px;background:#fff;border:1.5px solid #0a84ff;
+    border-radius:50%;pointer-events:auto;touch-action:none;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+  .cv-h--tl{top:-7px;left:-7px;cursor:nwse-resize;}
+  .cv-h--tr{top:-7px;right:-7px;cursor:nesw-resize;}
+  .cv-h--bl{bottom:-7px;left:-7px;cursor:nesw-resize;}
+  .cv-h--br{bottom:-7px;right:-7px;cursor:nwse-resize;}
+  .cv-tag{position:absolute;top:-22px;left:-1px;background:#0a84ff;color:#fff;font:11px/1 -apple-system,
+    BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:3px 6px;border-radius:5px;white-space:nowrap;
+    pointer-events:none;}
+  .cv-editing-text{outline:2px solid #0a84ff !important;outline-offset:2px;cursor:text !important;
+    /* Keep the caption's natural wrapping visible while it is being edited.
+       Explicit Enter-created <br> breaks still work normally. */
+    white-space:normal !important;}
+
+  .cv-panel{position:fixed;inset:0;z-index:2147483100;background:rgba(0,0,0,.55);display:none;
+    align-items:center;justify-content:center;padding:24px;}
+  .cv-panel.is-open{display:flex;}
+  .cv-panel__card{background:#161617;color:#fff;border:1px solid #2c2c2c;border-radius:14px;
+    width:min(640px,100%);max-height:80vh;display:flex;flex-direction:column;overflow:hidden;
+    font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+  .cv-panel__head{padding:14px 16px;border-bottom:1px solid #262628;display:flex;justify-content:space-between;align-items:center;}
+  .cv-panel__head b{font-size:14px;}
+  .cv-panel textarea{width:100%;flex:1;min-height:220px;border:0;background:#0d0d0e;color:#d6d6d8;
+    font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:14px 16px;resize:none;box-sizing:border-box;}
+  .cv-panel__foot{padding:12px 16px;border-top:1px solid #262628;display:flex;gap:8px;justify-content:flex-end;align-items:center;}
+  .cv-panel__note{margin-right:auto;opacity:.6;font-size:11px;max-width:340px;}
+
+  /* ---- phone: dock the toolbar to the bottom, let it wrap, and make the
+     corner resize handles finger-sized (the 12px desktop dots are too
+     small to grab with a fingertip). Kept to coarse pointers so a
+     touchscreen laptop with a mouse still gets the compact desktop UI. */
+  @media (max-width:899px) and (pointer:coarse){
+    html.cv-editing,
+    html.cv-editing body{overscroll-behavior-y:none;}
+    .cv-tb{top:auto;bottom:calc(10px + env(safe-area-inset-bottom));left:8px;right:8px;
+      flex-wrap:wrap;justify-content:center;padding:10px;gap:8px;}
+    /* The toolbar always stays bottom-docked. Once its one-time tip has
+       been seen, this smaller version simply takes up less vertical space
+       above that same fixed bottom edge. */
+    .cv-tb.cv-tb--compact{padding:8px;gap:7px;}
+    .cv-tb__title{margin-right:0;}
+    .cv-tb__hint{flex-basis:100%;max-width:none;text-align:center;order:9;font-size:11px;}
+    .cv-btn{padding:10px 13px;font-size:13px;}
+    .cv-tb.cv-tb--compact .cv-btn{padding:9px 12px;}
+    .cv-h{width:22px;height:22px;}
+    .cv-h--tl{top:-12px;left:-12px;} .cv-h--tr{top:-12px;right:-12px;}
+    .cv-h--bl{bottom:-12px;left:-12px;} .cv-h--br{bottom:-12px;right:-12px;}
+    .cv-tag{top:-24px;font-size:12px;padding:4px 7px;}
+  }
+</style>
+<script>
+(function(){
+  if (window.__cvCanvaInit) return;
+  window.__cvCanvaInit = true;
+
+  var qs = location.search || '';
+  var wantOn  = /[?&]edit=1(?:&|$)/.test(qs);
+  var wantOff = /[?&]edit=0(?:&|$)/.test(qs);
+  // A URL-triggered full wipe of the saved layout, for when a touch-drag
+  // has left something stranded off-screen and the on-page "Reset all"
+  // button isn't reachable (e.g. the broken element is covering it, or the
+  // page never got scrolled far enough to reach the toolbar reliably).
+  var wantResetAll = /[?&]resetall=1(?:&|$)/.test(qs);
+  // One-shot recovery link for an image accidentally dragged out of reach.
+  // It only clears the top tile image's move offset; its chosen zoom and the
+  // rest of the saved layout stay exactly as they were.
+  var recoverTopImageRequested = /[?&]recover=top-image(?:&|$)/.test(qs);
+  function ls(get, k, v){ try { return get ? localStorage.getItem(k) : localStorage.setItem(k, v); } catch(e){ return null; } }
+  function rm(k){ try { localStorage.removeItem(k); } catch(e){} }
+  // Some in-app mobile browsers temporarily deny localStorage to preview
+  // pages. The onboarding flag is harmless but should still survive a
+  // reload there, so mirror just that flag in a first-party cookie.
+  function cookieGet(k){
+    var m = document.cookie.match(new RegExp('(?:^|;\\s*)' + k.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&') + '=([^;]*)'));
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  function cookieSet(k, v){
+    document.cookie = k + '=' + encodeURIComponent(v) + '; Max-Age=31536000; Path=/; SameSite=Lax';
+  }
+  // Keep the flag in the URL so ChatGPT's "Open in browser" handoff carries
+  // it into Safari/Chrome. Each browser has separate localStorage, so this
+  // marker makes the same URL one-shot independently in each browser.
+  var RECOVER_TOP_KEY = 'volt-canva-recovered-top-image-v1';
+  var recoverTopImage = recoverTopImageRequested && ls(true, RECOVER_TOP_KEY) !== '1';
+
+  if (wantOn)  ls(false, 'volt-canva-on', '1');
+  if (wantOff) rm('volt-canva-on');
+  var ON = ls(true, 'volt-canva-on') === '1' && !wantOff;
+
+  var LKEY = 'volt-canva-layout-4';
+  // Undo history is persisted alongside the layout so the Refresh button
+  // can reload the page without throwing away the undo stack. Reset all
+  // wipes both so a fresh start has nothing to undo back into.
+  var HKEY = 'volt-canva-history-4';
+  // The toolbar tip is shown once per browser. Bump this version only when
+  // introducing a real new editor gesture or control, and update its copy
+  // below; that gives the new feature one clear first-use introduction.
+  var HINT_KEY = 'volt-canva-hint-version';
+  var HINT_VERSION = '3';
+  var HINT_COOKIE = 'volt-canva-hint-v3';
+  var showHint = ls(true, HINT_KEY) !== HINT_VERSION && cookieGet(HINT_COOKIE) !== HINT_VERSION;
+  if (wantResetAll){ rm(LKEY); rm(HKEY); }
+  var layout = {};
+  try { layout = JSON.parse(ls(true, LKEY) || '{}') || {}; } catch(e){ layout = {}; }
+  // Raw (key-based) undo batches read back from storage; remapped to live
+  // elements once they're registered below.
+  var savedHistory = [];
+  try { savedHistory = JSON.parse(ls(true, HKEY) || '[]') || []; } catch(e){ savedHistory = []; }
+  // Once the copied feature-icon layout has been baked into the mobile CSS,
+  // remove that exact browser-side draft so it cannot apply a second time on
+  // top of the new defaults. The icon entries uniquely identify this export;
+  // unrelated older edits and desktop-only browser state are left alone.
+  var BAKED_MOBILE_LAYOUT_MIGRATION = 'volt-canva-baked-mobile-layout-v1';
+  var hasCopiedFeatureLayout = layout[':nth-child(2)>:nth-child(10)>:nth-child(1)'] ||
+    layout[':nth-child(2)>:nth-child(11)>:nth-child(1)'];
+  if (!window.matchMedia('(min-width:900px)').matches && hasCopiedFeatureLayout &&
+      ls(true, BAKED_MOBILE_LAYOUT_MIGRATION) !== '1'){
+    layout = {};
+    savedHistory = [];
+    rm(LKEY);
+    rm(HKEY);
+    ls(false, BAKED_MOBILE_LAYOUT_MIGRATION, '1');
+  }
+
+  var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__feature-icon-wrap, .pdp-cmp__eyebrow, ' +
+    '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-number, .pdp-cmp__compact-partial-extra, .pdp-cmp__sub, ' +
+    '.pdp-cmp__compact-video-main, .pdp-cmp__compact-video-hours, .pdp-cmp__compact-battery, ' +
+    '.pdp-cmp__battery-icon, .pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__select-wrap, ' +
+    // The visible "×" on the partial-charges tile ("Up to 3.6× / 20% to
+    // 80%") is its own span so it can be grabbed on its own, separate from
+    // the number — but its hidden mirror twin (used to balance the
+    // centering) is aria-hidden and must stay out of reach.
+    '.pdp-cmp__stat-x:not(.pdp-cmp__stat-x--mirror)';
+
+  function start(){
+    var root = document.querySelector('.pdp-cmp');
+    if (!root) return;
+
+    function pathFor(el){
+      var parts = [], cur = el;
+      while (cur && cur !== root && cur.parentNode){
+        var p = cur.parentNode;
+        var idx = Array.prototype.indexOf.call(p.children, cur) + 1;
+        parts.unshift(':nth-child(' + idx + ')');
+        cur = p;
+      }
+      return parts.join('>');
+    }
+    // Only literal captions are safe to type into — the stat numbers
+    // (data-calc-*) are computed live by the compare script, so editing
+    // them by hand would just get overwritten on the next recalculation.
+    // The one deliberate exception is the "full charges" stat
+    // ([data-calc-full]) — made typeable on request; typing into it
+    // detaches it from the live calculator, so it'll stop updating when
+    // the iPhone-model dropdown changes and just show whatever was typed.
+    function isTextEditable(el){
+      return el.matches('.pdp-cmp__eyebrow, .pdp-cmp__sub, .pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__compact-partial-extra, .pdp-cmp__compact-video-hours, [data-calc-full]');
+    }
+    // "hours" only ever slides left/right — its vertical position stays
+    // fixed no matter how it's dragged, touch-dragged, or arrow-nudged.
+    function isVertLocked(el){
+      return el.matches('.pdp-cmp__compact-video-hours');
+    }
+    function isChargeRangeCaption(el){
+      return el.matches('.pdp-cmp__sub--range');
+    }
+    function isCompactPartialExtra(el){
+      return el.matches('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra');
+    }
+    function isBlankHtml(html){
+      return !String(html || '').replace(/<[^>]*>|&nbsp;/gi, '').trim();
+    }
+    // Wider than isTextEditable: also covers the big live-computed stat
+    // numbers (e.g. "67h"), which must NOT be made typeable (they're
+    // overwritten by the compare script on recalculation) but still
+    // deserve the same "Align only ever straightens left/right, never
+    // moves vertically" treatment as a caption.
+    function isAlignHoriz(el){
+      return isTextEditable(el) || el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__stat-x, .pdp-cmp__compact-video-main, .pdp-cmp__feature-icon-wrap');
+    }
+    // The charge-time number and its battery form one deliberately composed
+    // visual. Align all must leave that pair exactly where the editor placed it.
+    function isAlignExcluded(el){
+      return !!el.closest('.pdp-cmp__card--charge') &&
+        el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row');
+    }
+
+    var editingEl = null;
+
+    function stateOf(el){
+      var s = layout[el.__cvKey];
+      return s ? {
+        dx:s.dx||0, dy:s.dy||0, s:s.s||1,
+        axd:s.axd||0, ayd:s.ayd||0, axm:s.axm||0, aym:s.aym||0,
+        text:(s.text!=null ? s.text : null)
+      } : {dx:0,dy:0,s:1,axd:0,ayd:0,axm:0,aym:0,text:null};
+    }
+
+    // ---- carry canonical editor moves onto whatever viewport is showing ----
+    // dx/dy stay stored in the editor's established DESKTOP local-pixel
+    // coordinate system (including when a phone authors the move), because
+    // that is what existing saved layouts and the lock/export workflow use —
+    // where a tile's untransformed box is DESK_REF_W wide. Mobile lays the
+    // same tile out at its full column width (no scale transform), so a raw
+    // desktop offset would land a caption/image in completely the wrong spot.
+    // Since dx/tileWidth is the move as a fraction of its tile — and that
+    // fraction is exactly what should look identical on both — we re-express
+    // the offset for the current viewport as dx * (thisTileWidth / DESK_REF_W).
+    // offsetWidth ignores transforms, so this measures true local box widths
+    // and self-corrects to any phone width, not just one hard-coded size.
+    // scale(s) is a unitless ratio and needs no conversion; the element's own
+    // base transform is read per-viewport already, so it's right on each.
+    var desktopMQ = window.matchMedia('(min-width:900px)');
+    // Desktop's tile box width is fixed regardless of window size (its scale
+    // transform does the sizing), so measure it once on desktop and cache it;
+    // on a phone (no editor, only a restored layout) fall back to the cached
+    // value, or the known baked default if this browser never saw desktop.
+    var REFKEY = 'volt-canva-refw';
+    var DESK_REF_W = (function(){
+      if (desktopMQ.matches){
+        var t = document.querySelector('.pdp-cmp__card');
+        if (t && t.offsetWidth){ ls(false, REFKEY, String(t.offsetWidth)); return t.offsetWidth; }
+      }
+      var cached = parseFloat(ls(true, REFKEY));
+      return cached > 0 ? cached : 107;
+    })();
+    function translateFactor(el){
+      if (desktopMQ.matches) return 1; // desktop-authored state is already local
+      // A whole tile moved onto a different desktop grid cell has no meaning
+      // in mobile's single-column stack (that reordering is handled in CSS),
+      // so don't fling the tile across the screen — only its contents move.
+      if (el.matches('.pdp-cmp__card')) return 0;
+      var tile = el.closest('.pdp-cmp__card');
+      if (!tile || !tile.offsetWidth || !DESK_REF_W) return 1;
+      return tile.offsetWidth / DESK_REF_W;
+    }
+    function effTranslate(el, st){
+      var f = translateFactor(el);
+      // Align's horizontal correction is viewport-specific. The compare CSS
+      // deliberately gives a few captions different desktop/mobile bases
+      // (notably the tall phone cards), so sharing one correction would make
+      // Align on a phone move that caption off-centre on desktop, or vice
+      // versa. Ordinary hand-authored movement remains shared/canonical.
+      var ax = desktopMQ.matches ? st.axd : st.axm;
+      var ay = desktopMQ.matches ? st.ayd : st.aym;
+      return {dx: (st.dx + ax) * f, dy: (st.dy + ay) * f};
+    }
+
+    // Canva mode restores caption innerHTML from localStorage, so markup added
+    // only in Liquid can disappear on refresh. Rebuild the emphasis from the
+    // visible text every time. Walking text nodes (instead of regexing the raw
+    // HTML) also handles saved <br>, &nbsp;, or nested spans inside the phrase.
+    function decorateChargeRangeText(html){
+      var box = document.createElement('div');
+      box.innerHTML = html;
+
+      // Remove any older/partial wrappers first. This makes the operation
+      // deterministic: every saved version is rebuilt from its visible text,
+      // so a stale span around only "20%" cannot survive forever.
+      [].slice.call(box.querySelectorAll('.pdp-cmp__charge-range-lead, .pdp-cmp__range-bold')).forEach(function(span){
+        var parent = span.parentNode;
+        while (span.firstChild) parent.insertBefore(span.firstChild, span);
+        parent.removeChild(span);
+      });
+
+      // The charge caption used to be saved as either just the range or
+      // "Charging time from" plus the range. Migrate those old defaults to
+      // the current desktop/mobile copy while keeping only the range itself
+      // emphasized in each composition.
+      var visibleBefore = (box.textContent || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+      if (/^(?:Charging time from\s+)?20%\s+to\s+80%(?:\s+with Core(?:\s+for quick, (?:dependable|reliable) everyday power)?)?$/i.test(visibleBefore)){
+        // Deliberately insert plain phrase text here. The common range walker
+        // below then creates exactly one fresh lead span in each copy, rather
+        // than nesting a new wrapper inside a migration wrapper.
+        box.innerHTML = '<span class="pdp-cmp__desktop-copy">Charging time from 20% to 80% with Core for quick, reliable everyday power<br></span><span class="pdp-cmp__mobile-copy">Charging time to go<br>from 20% to 80% with Core for quick, reliable power<br></span>';
+      }
+
+      var flat = '', pieces = [];
+      function collect(node){
+        if (node.nodeType === 3){
+          var value = node.nodeValue || '';
+          pieces.push({node:node, start:flat.length, end:flat.length + value.length});
+          flat += value;
+          return;
+        }
+        if (node.nodeType !== 1) return;
+        if (node.tagName === 'BR') { flat += ' '; return; }
+        [].slice.call(node.childNodes).forEach(collect);
+      }
+      [].slice.call(box.childNodes).forEach(collect);
+
+      var matches = [], rangeRe = /20%[\s\u00a0]+to[\s\u00a0]+80%/ig, match;
+      while ((match = rangeRe.exec(flat))) matches.push({from:match.index, to:match.index + match[0].length});
+      if (!matches.length) return box.innerHTML;
+
+      // Work backwards so splitting a later text node cannot disturb offsets
+      // recorded for an earlier one. Desktop and mobile can each contain the
+      // same phrase, so rebuild every visible occurrence—not only the first.
+      matches.slice().reverse().forEach(function(range){
+        pieces.slice().reverse().forEach(function(piece){
+          var start = Math.max(range.from, piece.start);
+          var end = Math.min(range.to, piece.end);
+          if (start >= end) return;
+          var target = piece.node;
+          var localStart = start - piece.start;
+          var localLength = end - start;
+          if (localStart) target = target.splitText(localStart);
+          if (localLength < target.nodeValue.length) target.splitText(localLength);
+          var span = document.createElement('span');
+          span.className = 'pdp-cmp__charge-range-lead';
+          target.parentNode.insertBefore(span, target);
+          span.appendChild(target);
+        });
+      });
+      return box.innerHTML;
+    }
+
+    function applyState(el){
+      var st = stateOf(el);
+      var mv = effTranslate(el, st);
+      var extra = '';
+      if (mv.dx || mv.dy) extra += 'translate(' + mv.dx + 'px,' + mv.dy + 'px) ';
+      if (st.s && st.s !== 1) extra += 'scale(' + st.s + ') ';
+      // Base must come FIRST (outermost-applied last, i.e. leftmost in the
+      // CSS list is applied outermost... concretely: composing as
+      // "base extra" rather than "extra base" keeps a translate-type base
+      // (e.g. a centering translateX(-50%) baked in from the element's own
+      // CSS) from getting multiplied by the user's own scale(s) — which is
+      // what silently drags an element off-center the more it's resized.
+      // !important: once something's been baked (lock it), its position
+      // lives in the stylesheet as an !important rule (needed there to
+      // beat other, unrelated !important rules on some elements) — a
+      // plain inline style can never outrank that, so dragging/resizing
+      // anything already baked would silently do nothing. An inline
+      // !important is the one thing that outranks an external !important.
+      el.style.setProperty('transform', (el.__cvBase + ' ' + extra).trim(), 'important');
+      if (el.__cvTextEditable){
+        // Never touch innerHTML of the box currently being typed into —
+        // that would reset the cursor mid-keystroke. Otherwise it should
+        // always show whatever's saved, OR its original text if nothing
+        // is — that "OR" matters for undo: undoing a delete (or a typed
+        // edit) clears the saved text, and the box needs to actively come
+        // back to its original content, not just sit however it was left.
+        var wantText = st.text != null ? st.text : el.__cvOrigText;
+        if (isChargeRangeCaption(el)) wantText = decorateChargeRangeText(wantText);
+        // “extra” is an authored label, not optional content. Older local
+        // Canva state can contain an empty text value, so heal that state
+        // rather than leaving an invisible, hard-to-recover text box.
+        if (isCompactPartialExtra(el) && isBlankHtml(wantText)) wantText = el.__cvOrigText;
+        if (el !== editingEl && el.innerHTML !== wantText){
+          el.innerHTML = wantText;
+        }
+        // The charge caption is intentionally multi-line in both Canva and
+        // the finished preview. Override its authored nowrap so saved text
+        // cannot collapse back into one line after editing ends. Preserve
+        // the existing behavior for every other editable box.
+        el.style.whiteSpace = isChargeRangeCaption(el)
+          ? 'normal'
+          : (st.text != null ? 'nowrap' : '');
+      }
+    }
+    function writeState(el, st, persist){
+      var noTransform = !st.dx && !st.dy && !st.axd && !st.ayd && !st.axm && !st.aym && (!st.s || st.s === 1);
+      var noText = st.text == null || (el.__cvTextEditable && st.text === el.__cvOrigText);
+      if (noTransform && noText) delete layout[el.__cvKey];
+      else {
+        // Keep full sub-pixel precision during an active touch. The final
+        // persisted value still uses the established export precision, so
+        // desktop output and Copy layout stay byte-for-byte compatible.
+        var entry = persist
+          ? {dx:Math.round(st.dx*100)/100, dy:Math.round(st.dy*100)/100, s:Math.round(st.s*10000)/10000}
+          : {dx:st.dx, dy:st.dy, s:st.s};
+        // Keep these optional so old payloads stay valid and untouched
+        // elements keep the same compact/export-friendly shape.
+        if (st.axd) entry.axd = persist ? Math.round(st.axd*100)/100 : st.axd;
+        if (st.ayd) entry.ayd = persist ? Math.round(st.ayd*100)/100 : st.ayd;
+        if (st.axm) entry.axm = persist ? Math.round(st.axm*100)/100 : st.axm;
+        if (st.aym) entry.aym = persist ? Math.round(st.aym*100)/100 : st.aym;
+        if (!noText) entry.text = st.text;
+        layout[el.__cvKey] = entry;
+      }
+      if (persist) ls(false, LKEY, JSON.stringify(layout));
+      applyState(el);
+    }
+    function saveState(el, st){ writeState(el, st, true); }
+    function previewState(el, st){ writeState(el, st, false); }
+    function saveText(el){
+      var st = stateOf(el);
+      st.text = isChargeRangeCaption(el)
+        ? decorateChargeRangeText(el.innerHTML)
+        : el.innerHTML;
+      if (isCompactPartialExtra(el) && isBlankHtml(st.text)) st.text = el.__cvOrigText;
+      saveState(el, st);
+    }
+
+    // ---- undo: one entry per user action (a drag, a resize, a type, an
+    // Align/Reset click, a delete) — NOT one per intermediate saveState
+    // call, or a single drag would take dozens of undos to unwind. Call
+    // captureBatch() with the element(s) about to change BEFORE changing
+    // them, do the change(s), then commitBatch() — it only pushes to
+    // history if something in the batch actually ended up different.
+    var history = [];
+    var HISTORY_MAX = 50;
+    function cloneEntry(e){ return e ? JSON.parse(JSON.stringify(e)) : null; }
+    function captureBatch(elsArr){
+      return elsArr.map(function(el){ return { el: el, prev: cloneEntry(layout[el.__cvKey]) }; });
+    }
+    // Write the undo stack to storage as element-KEY-based batches (a live
+    // DOM element can't be serialized, but its stable __cvKey can, and it's
+    // remapped back to the element on the next page load).
+    function persistHistory(){
+      ls(false, HKEY, JSON.stringify(history.map(function(batch){
+        return batch.map(function(b){ return { key: b.el.__cvKey, prev: b.prev }; });
+      })));
+    }
+    function commitBatch(batch){
+      var changed = batch.filter(function(b){
+        return JSON.stringify(b.prev) !== JSON.stringify(layout[b.el.__cvKey] || null);
+      });
+      if (!changed.length) return;
+      history.push(changed);
+      if (history.length > HISTORY_MAX) history.shift();
+      persistHistory();
+    }
+    function undo(){
+      if (!history.length) return;
+      var batch = history.pop();
+      batch.forEach(function(b){
+        if (b.prev) layout[b.el.__cvKey] = b.prev; else delete layout[b.el.__cvKey];
+        applyState(b.el);
+      });
+      ls(false, LKEY, JSON.stringify(layout));
+      persistHistory();
+      positionBox();
+    }
+
+    // Register every editable element: record its base transform + stable key,
+    // then re-apply any saved layout (this runs even when NOT editing).
+    var els = [].slice.call(root.querySelectorAll(EDITABLE));
+    var byKey = {};
+    var normalizedSavedChargeText = false;
+    // The strict-reference layout replaces older hand-authored moves on this
+    // one compact card. Clear only its three text elements once on mobile;
+    // every other Canva adjustment remains untouched. Purging their saved
+    // history keys below also prevents Undo from reviving the stale layout.
+    var COMPACT_PARTIAL_REFERENCE_MIGRATION = 'volt-canva-compact-partial-reference-v1';
+    var resetCompactPartialReference = !desktopMQ.matches &&
+      ls(true, COMPACT_PARTIAL_REFERENCE_MIGRATION) !== '1';
+    // The label's type and responsive position were subsequently matched to
+    // the adjacent video card. Clear only its earlier hand-drag once, keeping
+    // the independently editable number, “extra”, and descriptor intact.
+    var COMPACT_PARTIAL_EYEBROW_ALIGN_MIGRATION = 'volt-canva-compact-partial-eyebrow-align-v1';
+    var resetCompactPartialEyebrowAlignment = !desktopMQ.matches &&
+      ls(true, COMPACT_PARTIAL_EYEBROW_ALIGN_MIGRATION) !== '1';
+    // The label may have been moved after the first alignment repair. Clear
+    // only this saved right-card label once more so it returns to the exact
+    // card-relative height of the adjacent compact-video "Up to" label.
+    var COMPACT_PARTIAL_EYEBROW_HEIGHT_RESET_MIGRATION = 'volt-canva-compact-partial-eyebrow-height-v2';
+    var resetCompactPartialEyebrowHeight = !desktopMQ.matches &&
+      ls(true, COMPACT_PARTIAL_EYEBROW_HEIGHT_RESET_MIGRATION) !== '1';
+    // A hand resize/move can override the authored comparison between the two
+    // compact cards. Once, return just the right card's live value to the
+    // left card's authored type scale and its “Up to” label to the shared
+    // card-relative height. The other right-card copy remains untouched.
+    var COMPACT_PARTIAL_VALUE_SYNC_MIGRATION = 'volt-canva-compact-partial-value-sync-v1';
+    var resetCompactPartialValueSync = !desktopMQ.matches &&
+      ls(true, COMPACT_PARTIAL_VALUE_SYNC_MIGRATION) !== '1';
+    // Restore the authored word “extra” if an older Canva text edit left this
+    // new standalone text box blank. Its move and scale remain untouched.
+    var COMPACT_PARTIAL_EXTRA_RESTORE_MIGRATION = 'volt-canva-compact-partial-extra-restore-v1';
+    var restoreCompactPartialExtra = !desktopMQ.matches &&
+      ls(true, COMPACT_PARTIAL_EXTRA_RESTORE_MIGRATION) !== '1';
+    // A blank label can also be caused by an accidental resize to zero, not
+    // only by an empty saved text value. Reset that one text box once more so
+    // its authored word and size are both restored without disturbing any
+    // other card or Canva adjustment.
+    var COMPACT_PARTIAL_EXTRA_VISIBILITY_RESET_MIGRATION = 'volt-canva-compact-partial-extra-visibility-v2';
+    var resetCompactPartialExtraVisibility = !desktopMQ.matches &&
+      ls(true, COMPACT_PARTIAL_EXTRA_VISIBILITY_RESET_MIGRATION) !== '1';
+    // This card now follows the supplied wide performance-card hierarchy.
+    // Clear only its old three-element mobile layout once so a saved Canva
+    // move or legacy plain stat cannot hide the new live-number + "extra"
+    // markup. Other cards and desktop state remain untouched.
+    var COMPACT_FULL_REFERENCE_MIGRATION = 'volt-canva-compact-full-reference-v3';
+    var resetCompactFullReference = !desktopMQ.matches &&
+      ls(true, COMPACT_FULL_REFERENCE_MIGRATION) !== '1';
+    // If a user already ran the reference migration, their old saved caption
+    // can still override this updated supporting sentence. Remove only that
+    // saved HTML field once, preserving any move/scale they made in Canva.
+    var COMPACT_FULL_COPY_MIGRATION = 'volt-canva-compact-full-copy-v3';
+    var resetCompactFullCopy = !desktopMQ.matches &&
+      ls(true, COMPACT_FULL_COPY_MIGRATION) !== '1';
+    // The top-up caption copy was refined after earlier Canva edits. Clear
+    // only an older saved text override once, preserving any move or scale.
+    var COMPACT_PARTIAL_COPY_MIGRATION = 'volt-canva-compact-partial-copy-v1';
+    var resetCompactPartialCopy = !desktopMQ.matches &&
+      ls(true, COMPACT_PARTIAL_COPY_MIGRATION) !== '1';
+    // This card was reshaped to compact-full's full-width shell and flow
+    // layout (was a small absolutely-centred square). Clear any saved Canva
+    // move/resize on its four elements once so an old drag from the previous
+    // shape can't misplace them under the new layout. Text edits and other
+    // cards remain untouched.
+    var COMPACT_PARTIAL_SHAPE_MIGRATION = 'volt-canva-compact-partial-shape-v1';
+    var resetCompactPartialShape = !desktopMQ.matches &&
+      ls(true, COMPACT_PARTIAL_SHAPE_MIGRATION) !== '1';
+    // compact-video's "Up to", its battery icon (now inline after "hours"
+    // instead of its own row), and its "video playback" caption have all
+    // had their default position/size change at some point this session.
+    // A previously saved drag on the caption specifically was the last bug
+    // found here: it pushed "video playback" down out of the card, clipped
+    // by the card's own overflow:hidden, leaving a blank gap where it
+    // should be. Clear any saved Canva move/resize on all four once
+    // (bumped to v7: the user's approved rightward slide of "hours" is now
+    // baked into the default CSS as translateX(20px), so their own saved
+    // canva drag on "hours" must be cleared here to avoid it double-applying
+    // on top of the baked value. The matcher now also covers the hours box.)
+    // So no leftover drag/scale can misplace, hide, oversize, or double-shift
+    // any of them. Other cards remain untouched.
+    var COMPACT_VIDEO_REFERENCE_MIGRATION = 'volt-canva-compact-video-reference-v7';
+    var resetCompactVideoReference = !desktopMQ.matches &&
+      ls(true, COMPACT_VIDEO_REFERENCE_MIGRATION) !== '1';
+    // The user's final mobile crop/zoom for every legacy image tile is now
+    // baked into the stylesheet. A browser can still hold the Canva export
+    // that produced those exact defaults, which would compose the same move
+    // and scale a second time and make the artwork look over-zoomed. Clear
+    // only those saved image states once. Feature-tile icons are deliberately
+    // excluded because their newer Canva placement remains user-controlled.
+    var BAKED_ARTWORK_DEDUPE_MIGRATION = 'volt-canva-baked-artwork-dedupe-v1';
+    var resetBakedArtwork = !desktopMQ.matches &&
+      ls(true, BAKED_ARTWORK_DEDUPE_MIGRATION) !== '1';
+    var resetCompactVideoReferenceLayout = false;
+    var resetCompactVideoKeys = {};
+    var resetBakedArtworkLayout = false;
+    var resetBakedArtworkKeys = {};
+    var resetCompactPartialReferenceLayout = false;
+    var resetCompactPartialKeys = {};
+    var resetCompactFullReferenceLayout = false;
+    var resetCompactFullCopyLayout = false;
+    var resetCompactPartialCopyLayout = false;
+    var resetCompactFullKeys = {};
+    els.forEach(function(el){
+      var cs = getComputedStyle(el).transform;
+      el.__cvBase = (cs && cs !== 'none') ? cs : '';
+      el.__cvKey  = pathFor(el);
+      byKey[el.__cvKey] = el;
+      el.__cvTextEditable = isTextEditable(el);
+      el.__cvAlignH = isAlignHoriz(el);
+      el.__cvOrigText = el.__cvTextEditable ? el.innerHTML : null;
+      // Apply this repair every load, not just in the one-time migration:
+      // Safari can retain a blank old edit after that migration has run.
+      if (isCompactPartialExtra(el)){
+        var currentExtraEntry = layout[el.__cvKey];
+        if (currentExtraEntry && currentExtraEntry.text != null && isBlankHtml(currentExtraEntry.text)){
+          delete currentExtraEntry.text;
+          var currentExtraHasTransform = currentExtraEntry.dx || currentExtraEntry.dy ||
+            currentExtraEntry.axd || currentExtraEntry.ayd || currentExtraEntry.axm ||
+            currentExtraEntry.aym || (currentExtraEntry.s && currentExtraEntry.s !== 1);
+          if (!currentExtraHasTransform) delete layout[el.__cvKey];
+          resetCompactPartialReferenceLayout = true;
+        }
+      }
+      if (resetCompactPartialReference && el.matches(
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__sub')){
+        resetCompactPartialKeys[el.__cvKey] = true;
+        if (layout[el.__cvKey]){
+          delete layout[el.__cvKey];
+          resetCompactPartialReferenceLayout = true;
+        }
+      }
+      if (resetCompactPartialEyebrowAlignment && el.matches(
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow')){
+        resetCompactPartialKeys[el.__cvKey] = true;
+        if (layout[el.__cvKey]){
+          delete layout[el.__cvKey];
+          resetCompactPartialReferenceLayout = true;
+        }
+      }
+      if (resetCompactPartialEyebrowHeight && el.matches(
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow')){
+        resetCompactPartialKeys[el.__cvKey] = true;
+        if (layout[el.__cvKey]){
+          delete layout[el.__cvKey];
+          resetCompactPartialReferenceLayout = true;
+        }
+      }
+      if (restoreCompactPartialExtra && el.matches(
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra')){
+        resetCompactPartialKeys[el.__cvKey] = true;
+        var extraEntry = layout[el.__cvKey];
+        if (extraEntry && extraEntry.text != null){
+          delete extraEntry.text;
+          var extraHasTransform = extraEntry.dx || extraEntry.dy || extraEntry.axd || extraEntry.ayd ||
+            extraEntry.axm || extraEntry.aym || (extraEntry.s && extraEntry.s !== 1);
+          if (!extraHasTransform) delete layout[el.__cvKey];
+          resetCompactPartialReferenceLayout = true;
+        }
+      }
+      if (resetCompactPartialExtraVisibility && el.matches(
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra')){
+        resetCompactPartialKeys[el.__cvKey] = true;
+        if (layout[el.__cvKey]){
+          delete layout[el.__cvKey];
+          resetCompactPartialReferenceLayout = true;
+        }
+      }
+      if (resetCompactPartialValueSync && el.matches(
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number')){
+        // A label move changes its shared visual baseline, while only the
+        // number's scale can change its typography. Do not disturb its
+        // horizontal/vertical placement or the independent “extra” text.
+        resetCompactPartialKeys[el.__cvKey] = true;
+        var syncEntry = layout[el.__cvKey];
+        if (syncEntry){
+          if (el.matches('.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow')){
+            delete layout[el.__cvKey];
+          } else {
+            delete syncEntry.s;
+            var syncHasTransform = syncEntry.dx || syncEntry.dy || syncEntry.axd || syncEntry.ayd ||
+              syncEntry.axm || syncEntry.aym || (syncEntry.s && syncEntry.s !== 1) || syncEntry.text != null;
+            if (!syncHasTransform) delete layout[el.__cvKey];
+          }
+          resetCompactPartialReferenceLayout = true;
+        }
+      }
+      if (resetCompactVideoReference && el.matches(
+          '.pdp-cmp__card--compact-video > .pdp-cmp__eyebrow, ' +
+          '.pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main, ' +
+          '.pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main > .pdp-cmp__compact-video-hours, ' +
+          '.pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main > .pdp-cmp__compact-battery, ' +
+          '.pdp-cmp__card--compact-video > .pdp-cmp__sub')){
+        resetCompactVideoKeys[el.__cvKey] = true;
+        if (layout[el.__cvKey]){
+          delete layout[el.__cvKey];
+          resetCompactVideoReferenceLayout = true;
+        }
+      }
+      if (resetBakedArtwork && el.matches(
+          '.pdp-cmp__img-slot img, .pdp-cmp__battery-icon')){
+        resetBakedArtworkKeys[el.__cvKey] = true;
+        if (layout[el.__cvKey]){
+          delete layout[el.__cvKey];
+          resetBakedArtworkLayout = true;
+        }
+      }
+      if (resetCompactPartialShape && el.matches(
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra, ' +
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-detail')){
+        resetCompactPartialKeys[el.__cvKey] = true;
+        if (layout[el.__cvKey]){
+          delete layout[el.__cvKey];
+          resetCompactPartialReferenceLayout = true;
+        }
+      }
+      if (resetCompactFullReference && el.matches(
+          '.pdp-cmp__card--compact-full > .pdp-cmp__eyebrow, ' +
+          '.pdp-cmp__card--compact-full > .pdp-cmp__stat, ' +
+          '.pdp-cmp__card--compact-full > .pdp-cmp__sub')){
+        resetCompactFullKeys[el.__cvKey] = true;
+        if (layout[el.__cvKey]){
+          delete layout[el.__cvKey];
+          resetCompactFullReferenceLayout = true;
+        }
+      }
+      if (resetCompactFullCopy && el.matches(
+          '.pdp-cmp__card--compact-full > .pdp-cmp__sub')){
+        resetCompactFullKeys[el.__cvKey] = true;
+        var fullCopyEntry = layout[el.__cvKey];
+        if (fullCopyEntry && fullCopyEntry.text != null){
+          delete fullCopyEntry.text;
+          var fullCopyHasTransform = fullCopyEntry.dx || fullCopyEntry.dy ||
+            fullCopyEntry.axd || fullCopyEntry.ayd || fullCopyEntry.axm ||
+            fullCopyEntry.aym || (fullCopyEntry.s && fullCopyEntry.s !== 1);
+          if (!fullCopyHasTransform) delete layout[el.__cvKey];
+          resetCompactFullCopyLayout = true;
+        }
+      }
+      if (resetCompactPartialCopy && el.matches(
+          '.pdp-cmp__card--compact-partial > .pdp-cmp__sub')){
+        resetCompactPartialKeys[el.__cvKey] = true;
+        var partialCopyEntry = layout[el.__cvKey];
+        if (partialCopyEntry && partialCopyEntry.text != null){
+          delete partialCopyEntry.text;
+          var partialCopyHasTransform = partialCopyEntry.dx || partialCopyEntry.dy ||
+            partialCopyEntry.axd || partialCopyEntry.ayd || partialCopyEntry.axm ||
+            partialCopyEntry.aym || (partialCopyEntry.s && partialCopyEntry.s !== 1);
+          if (!partialCopyHasTransform) delete layout[el.__cvKey];
+          resetCompactPartialCopyLayout = true;
+        }
+      }
+      if (el.__cvTextEditable && isChargeRangeCaption(el)){
+        el.__cvOrigText = decorateChargeRangeText(el.__cvOrigText);
+        var savedEntry = layout[el.__cvKey];
+        if (savedEntry && savedEntry.text != null){
+          var normalizedText = decorateChargeRangeText(savedEntry.text);
+          if (normalizedText === el.__cvOrigText){
+            delete savedEntry.text;
+            var savedHasTransform = savedEntry.dx || savedEntry.dy || savedEntry.axd || savedEntry.ayd ||
+              savedEntry.axm || savedEntry.aym || (savedEntry.s && savedEntry.s !== 1);
+            if (!savedHasTransform) delete layout[el.__cvKey];
+          } else savedEntry.text = normalizedText;
+          normalizedSavedChargeText = true;
+        }
+      }
+      applyState(el);
+    });
+    if (normalizedSavedChargeText || resetCompactVideoReferenceLayout ||
+        resetBakedArtworkLayout ||
+        resetCompactPartialReferenceLayout ||
+        resetCompactFullReferenceLayout || resetCompactFullCopyLayout ||
+        resetCompactPartialCopyLayout) {
+      ls(false, LKEY, JSON.stringify(layout));
+    }
+    if (resetCompactVideoReference) ls(false, COMPACT_VIDEO_REFERENCE_MIGRATION, '1');
+    if (resetBakedArtwork) ls(false, BAKED_ARTWORK_DEDUPE_MIGRATION, '1');
+    if (resetCompactPartialReference) ls(false, COMPACT_PARTIAL_REFERENCE_MIGRATION, '1');
+    if (resetCompactPartialEyebrowAlignment) ls(false, COMPACT_PARTIAL_EYEBROW_ALIGN_MIGRATION, '1');
+    if (resetCompactPartialEyebrowHeight) ls(false, COMPACT_PARTIAL_EYEBROW_HEIGHT_RESET_MIGRATION, '1');
+    if (resetCompactPartialValueSync) ls(false, COMPACT_PARTIAL_VALUE_SYNC_MIGRATION, '1');
+    if (restoreCompactPartialExtra) ls(false, COMPACT_PARTIAL_EXTRA_RESTORE_MIGRATION, '1');
+    if (resetCompactPartialExtraVisibility) ls(false, COMPACT_PARTIAL_EXTRA_VISIBILITY_RESET_MIGRATION, '1');
+    if (resetCompactPartialShape) ls(false, COMPACT_PARTIAL_SHAPE_MIGRATION, '1');
+    if (resetCompactFullReference) ls(false, COMPACT_FULL_REFERENCE_MIGRATION, '1');
+    if (resetCompactFullCopy) ls(false, COMPACT_FULL_COPY_MIGRATION, '1');
+    if (resetCompactPartialCopy) ls(false, COMPACT_PARTIAL_COPY_MIGRATION, '1');
+
+    // Rehydrate the undo stack saved before a Refresh: map each batch's
+    // stored element keys back to the live elements. Any entry whose key no
+    // longer resolves (markup changed) is dropped; a batch left empty is
+    // skipped so undo never hits a dead no-op step.
+    history = savedHistory.map(function(batch){
+      return (batch || []).map(function(b){
+        if (resetCompactPartialKeys[b.key] || resetCompactFullKeys[b.key] ||
+            resetBakedArtworkKeys[b.key]) return null;
+        var el = byKey[b.key];
+        if (!el) return null;
+        var prev = cloneEntry(b.prev);
+        // Old saved undo entries can contain the plain caption or Claude's
+        // temporary generic wrapper. Canonicalize those too, otherwise an
+        // Undo after Refresh can silently bring the wrong markup back.
+        if (prev && el.__cvTextEditable && isChargeRangeCaption(el) && prev.text != null){
+          prev.text = decorateChargeRangeText(prev.text);
+          if (prev.text === el.__cvOrigText) delete prev.text;
+          var prevHasTransform = prev.dx || prev.dy || prev.axd || prev.ayd ||
+            prev.axm || prev.aym || (prev.s && prev.s !== 1);
+          if (!prevHasTransform && prev.text == null) prev = null;
+        }
+        return { el: el, prev: prev };
+      }).filter(Boolean);
+    }).filter(function(batch){ return batch.length; });
+    // Also removes dead element keys and stores the canonical wrappers so the
+    // next Refresh starts from the same model Undo will actually restore.
+    persistHistory();
+
+    if (recoverTopImage){
+      // Mobile deliberately reorders the source cards, so find the visually
+      // topmost tile rather than assuming :first-child is the tile on top.
+      var topCard = [].slice.call(root.querySelectorAll('.pdp-cmp__card')).reduce(function(best, card){
+        if (!best) return card;
+        var r = card.getBoundingClientRect(), br = best.getBoundingClientRect();
+        return r.top < br.top || (Math.abs(r.top - br.top) < 1 && r.left < br.left) ? card : best;
+      }, null);
+      var topImage = topCard && topCard.querySelector('.pdp-cmp__img-slot img');
+      if (topImage && topImage.__cvKey){
+        var recoveredState = stateOf(topImage);
+        recoveredState.dx = 0;
+        recoveredState.dy = 0;
+        saveState(topImage, recoveredState);
+        ls(false, RECOVER_TOP_KEY, '1');
+      }
+    }
+
+    // Crossing the 900px line (e.g. dragging the window narrow to check the
+    // phone layout, or a device rotating) swaps every element's base
+    // transform and its tile width, so re-apply the saved moves against the
+    // new viewport — otherwise a desktop-scaled offset would linger on the
+    // mobile layout until a full reload.
+    (desktopMQ.addEventListener ? desktopMQ.addEventListener('change', reapplyAll)
+                                : desktopMQ.addListener(reapplyAll));
+    function reapplyAll(){
+      els.forEach(function(el){
+        // el.style.transform is our own inline output; strip it first so the
+        // freshly-read base is the element's real CSS for this viewport, not
+        // last viewport's composed result.
+        el.style.transform = '';
+        var cs = getComputedStyle(el).transform;
+        el.__cvBase = (cs && cs !== 'none') ? cs : '';
+        applyState(el);
+      });
+      if (sel && sel.style){
+        sel.style.touchAction = touchCanMove(sel) ? 'none' : 'pan-y';
+        sel.classList.toggle('cv-touch-ready', coarse && touchCanMove(sel));
+      }
+      if (ON) positionBox();
+    }
+
+    if (!ON) return;                 // viewer with a saved layout — no controls
+
+    // Editor controls run on phones too now (touch handlers added below).
+    // The mouse path uses cumScale(); the touch path additionally inverts the
+    // selected element's baked matrix and the mobile translation factor so a
+    // phone drag remains exactly 1:1 in screen pixels.
+    var coarse = window.matchMedia('(pointer:coarse)').matches;
+
+    document.documentElement.classList.add('cv-editing');
+
+    // Cumulative scale of an element's ANCESTOR chain (excludes the element's
+    // own transform). A screen-pixel drag delta divided by this gives the
+    // delta in the element's own local coordinate units.
+    function cumScale(el){
+      var sx = 1, sy = 1, n = el.parentNode;
+      while (n && n.nodeType === 1){
+        var t = getComputedStyle(n).transform;
+        if (t && t !== 'none'){
+          try { var m = new DOMMatrixReadOnly(t); sx *= m.a; sy *= m.d; } catch(e){}
+        }
+        n = n.parentNode;
+      }
+      return {sx: sx || 1, sy: sy || 1};
+    }
+    function centerOf(el){ var r = el.getBoundingClientRect(); return {x:r.left+r.width/2, y:r.top+r.height/2}; }
+
+    // ---- selection overlay ----
+    var box = document.createElement('div'); box.className = 'cv-box'; box.style.display = 'none';
+    var tag = document.createElement('div'); tag.className = 'cv-tag'; box.appendChild(tag);
+    ['tl','tr','bl','br'].forEach(function(c){
+      var h = document.createElement('div'); h.className = 'cv-h cv-h--' + c; h.dataset.corner = c; box.appendChild(h);
+    });
+    document.body.appendChild(box);
+
+    var sel = null;
+    var editTextBtn = null;
+    var touchInputSeen = false;
+    function label(el){
+      if (el.matches('.pdp-cmp__card')) return 'tile';
+      if (el.tagName === 'IMG') return 'image';
+      if (el.matches('.pdp-cmp__select-heading')) return 'heading';
+      if (el.matches('.pdp-cmp__select-wrap')) return 'selector';
+      if (el.matches('.pdp-cmp__feature-icon-wrap')) return 'icon';
+      if (el.matches('.pdp-cmp__battery-icon')) return 'icon';
+      if (el.matches('.pdp-cmp__compact-partial-main, .pdp-cmp__compact-partial-number')) return 'stat';
+      if (el.matches('.pdp-cmp__stat-x')) return '×';
+      return 'text';
+    }
+    function paintBox(left, top, width, height){
+      box.style.display = 'block';
+      box.style.left = left + 'px'; box.style.top = top + 'px';
+      box.style.width = width + 'px'; box.style.height = height + 'px';
+    }
+    function positionBox(){
+      if (!sel){ box.style.display = 'none'; return; }
+      var r = sel.getBoundingClientRect();
+      paintBox(r.left, r.top, r.width, r.height);
+    }
+    // On touch, a selected movable element gets touch-action:none so a
+    // finger drag ON it moves it instead of scrolling the page. Whole-card
+    // offsets are deliberately desktop-only (the phone layout is a fixed
+    // reading-order stack), so a selected card keeps pan-y: swiping the card
+    // scrolls instead of silently saving an invisible desktop offset.
+    // Inline touch-action is inert for mouse, so this does not alter desktop.
+    function touchCanMove(el){ return !!el && translateFactor(el) !== 0; }
+    function updateEditTextButton(){
+      if (!editTextBtn) return;
+      editTextBtn.hidden = !(touchInputSeen && sel && isTextEditable(sel) && !editingEl);
+    }
+    function select(el){
+      if (sel && sel !== el && sel.style){ sel.style.touchAction = ''; sel.classList.remove('cv-touch-ready'); }
+      sel = el;
+      if (el && el.style){
+        el.style.touchAction = touchCanMove(el) ? 'none' : 'pan-y';
+        el.classList.toggle('cv-touch-ready', coarse && touchCanMove(el));
+      }
+      tag.textContent = label(el); positionBox(); updateEditTextButton();
+    }
+    function deselect(){
+      if (sel && sel.style){ sel.style.touchAction = ''; sel.classList.remove('cv-touch-ready'); }
+      sel = null; positionBox(); updateEditTextButton();
+    }
+
+    // ---- inline text editing ----
+    var textEditBatch = null;
+    function enterTextEdit(el){
+      lastTap = null;
+      editingEl = el;
+      textEditBatch = captureBatch([el]);
+      el.contentEditable = 'true';
+      el.spellcheck = false;
+      el.classList.add('cv-editing-text');
+      el.focus();
+      // Cursor starts at the end of the existing text, so typing adds on
+      // rather than replacing what's already there.
+      var range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      var s = window.getSelection();
+      s.removeAllRanges();
+      s.addRange(range);
+      updateEditTextButton();
+    }
+    function exitTextEdit(){
+      if (!editingEl) return;
+      var el = editingEl;
+      editingEl = null;
+      el.contentEditable = 'false';
+      el.classList.remove('cv-editing-text');
+      saveText(el);
+      if (textEditBatch){ commitBatch(textEditBatch); textEditBatch = null; }
+      updateEditTextButton();
+    }
+    function insertLineBreak(){
+      // Not a hand-rolled Range insertion: browsers get ambiguous about
+      // caret placement when a <br> ends up as the last child (the next
+      // typed character can land BEFORE it instead of after) — the native
+      // command already handles that quirk correctly, since browsers use
+      // this same routine internally for shift+Enter in real editors.
+      if (!document.execCommand('insertLineBreak')){
+        document.execCommand('insertHTML', false, '<br>');
+      }
+    }
+
+    // ---- hover outline (shows the whole tile — what a single click grabs) ----
+    root.addEventListener('mousemove', function(e){
+      if (dragging || editingEl) return;
+      var hit = e.target.closest(EDITABLE);
+      var t = hit ? (hit.closest('.pdp-cmp__card') || hit) : null;
+      if (lastHover && lastHover !== t) lastHover.classList.remove('cv-hover');
+      if (t && t !== sel) t.classList.add('cv-hover');
+      lastHover = t;
+    });
+    var lastHover = null;
+    root.addEventListener('mouseleave', function(){ if (lastHover){ lastHover.classList.remove('cv-hover'); lastHover = null; } });
+
+    // Swallow native clicks (links, the <select> dropdown, etc.) while editing.
+    root.addEventListener('click', function(e){ if (e.target.closest(EDITABLE)){ e.preventDefault(); e.stopPropagation(); } }, true);
+
+    // ---- drag: move ----
+    var dragging = null;
+    function onDown(e){
+      // A field is currently being typed into: clicks inside it just place
+      // the cursor (native behavior); clicks anywhere else save + close it
+      // before doing anything else, so a click on the toolbar or another
+      // tile never loses an in-progress edit.
+      if (editingEl && !editingEl.contains(e.target)) exitTextEdit();
+      if (e.target.closest('.cv-tb, .cv-panel')) return;
+      if (editingEl) return;
+      var handle = e.target.closest('.cv-h');
+      if (handle && sel){ startResize(e, handle.dataset.corner); return; }
+      var hit = e.target.closest(EDITABLE);
+      if (!hit || !root.contains(hit)){ deselect(); return; }
+      // Canva model: single click grabs the whole tile; double-click drills
+      // into the exact element under the cursor (text / image / icon); and once
+      // something is drilled into, pressing on it again keeps it selected so it
+      // can be dragged (instead of snapping back to the whole tile).
+      var card = hit.closest('.pdp-cmp__card');
+      var drilledOnSel = sel && sel !== card && (sel === hit || sel.contains(hit));
+      var t;
+      if (!card) t = hit;              // heading / selector — direct
+      else if (e.detail >= 2) t = hit; // double-click drills to the exact element
+      else if (drilledOnSel) t = sel;  // keep a drilled child selected so it can be dragged
+      else t = card;                   // single click grabs the whole tile
+
+      // A click that doesn't turn into a drag, landing on a text box that's
+      // ALREADY selected (i.e. this is a repeat click on it, not the click
+      // that first drilled into it), starts typing — same effect as
+      // pressing Enter. This has to be a *second* click on an already-
+      // selected text box rather than any click, or double-clicking to
+      // drill/select a caption for dragging would get hijacked into typing
+      // every time, same bug as before.
+      var wasSelected = (sel === t);
+
+      e.preventDefault();
+      select(t);
+      if (lastHover){ lastHover.classList.remove('cv-hover'); lastHover = null; }
+      var sc = cumScale(t), st = stateOf(t);
+      dragging = {el:t, mode:'move', sx:e.clientX, sy:e.clientY, dx0:st.dx, dy0:st.dy, s0:st.s, scx:sc.sx, scy:sc.sy, moved:false, wasSelected:wasSelected, batch:captureBatch([t])};
+    }
+    function startResize(e, corner){
+      e.preventDefault(); e.stopPropagation();
+      var c = centerOf(sel), st = stateOf(sel);
+      var d0 = Math.hypot(e.clientX - c.x, e.clientY - c.y) || 1;
+      dragging = {el:sel, mode:'scale', d0:d0, s0:st.s, dx0:st.dx, dy0:st.dy, cx:c.x, cy:c.y, batch:captureBatch([sel])};
+    }
+    function onMove(e){
+      if (!dragging) return;
+      var d = dragging, st = stateOf(d.el);
+      if (d.mode === 'move'){
+        if (Math.abs(e.clientX - d.sx) > 3 || Math.abs(e.clientY - d.sy) > 3) d.moved = true;
+        st.dx = d.dx0 + (e.clientX - d.sx) / d.scx;
+        st.dy = isVertLocked(d.el) ? d.dy0 : d.dy0 + (e.clientY - d.sy) / d.scy;
+      } else {
+        var dist = Math.hypot(e.clientX - d.cx, e.clientY - d.cy);
+        var ns = d.s0 * (dist / d.d0);
+        st.s = Math.max(0.15, Math.min(10, ns));
+      }
+      saveState(d.el, st);
+      positionBox();
+    }
+    function onUp(){
+      if (dragging && !dragging.moved && dragging.wasSelected && dragging.el.__cvTextEditable && dragging.el !== editingEl){
+        enterTextEdit(dragging.el);
+      }
+      if (dragging && dragging.batch) commitBatch(dragging.batch);
+      dragging = null;
+    }
+
+    document.addEventListener('mousedown', onDown, true);
+    document.addEventListener('mousemove', onMove, true);
+    document.addEventListener('mouseup', onUp, true);
+
+    // ---- touch: the phone equivalent of the mouse flow above ----
+    // The desktop path (mouse) is left exactly as-is; this is a separate,
+    // additive set of handlers so nothing about the proven desktop editor
+    // changes. On a touch-only phone only these fire; on desktop only the
+    // mouse ones do.
+    //
+    // Model (a finger can't hover, right-click, scroll-wheel, or press
+    // arrow keys, so it can't be identical):
+    //   • tap a tile                → select it (whole tile)
+    //   • tap the selected tile      → deselect it
+    //   • double-tap inside a tile   → drill into that image/icon/text
+    //   • tap that drilled item      → deselect it
+    //   • tap Edit text              → type into a selected caption
+    //   • drag a selected child     → move it (it alone is touch-action:none)
+    //   • swipe a card / elsewhere  → the page scrolls normally
+    //   • pinch / drag a corner     → resize the selected element
+    // Everything commits to the same undo/localStorage/"Copy layout" as the
+    // mouse path — it's the same state, just a different input.
+    var pendingTap = null; // a touch that may become a tap (select) or a scroll
+    var lastTap = null;    // {el, card, x, y, t} for double-tap detection
+    var pinch = null;      // an active two-finger resize gesture
+    var touchFrame = 0;    // at most one visual update per painted frame
+    var touchSample = null;
+    var touchActiveEl = null;
+    function findTouch(list, id){
+      for (var i = 0; i < list.length; i++) if (list[i].identifier === id) return list[i];
+      return null;
+    }
+
+    // A saved dx/dy is inserted AFTER the element's baked base transform,
+    // so the base matrix (including a zoom or scaleX(-1)), every ancestor
+    // transform, and mobile's desktop-to-phone factor all project that saved
+    // delta into screen pixels. Invert that exact 2D linear projection so one
+    // finger pixel always produces one visual pixel — even for a zoomed or
+    // mirrored image. Touch drags and full-section text centering share this
+    // inverse; the established mouse drag math is left unchanged.
+    function linearOf(transform){
+      if (!transform || transform === 'none') return {a:1,b:0,c:0,d:1};
+      try {
+        var m = new DOMMatrixReadOnly(transform);
+        return {a:m.a,b:m.b,c:m.c,d:m.d};
+      } catch(e){ return {a:1,b:0,c:0,d:1}; }
+    }
+    function multiplyLinear(left, right){
+      return {
+        a:left.a*right.a + left.c*right.b,
+        b:left.b*right.a + left.d*right.b,
+        c:left.a*right.c + left.c*right.d,
+        d:left.b*right.c + left.d*right.d
+      };
+    }
+    function screenDeltaInverse(el){
+      var projected = linearOf(el.__cvBase);
+      var n = el.parentNode;
+      while (n && n.nodeType === 1){
+        projected = multiplyLinear(linearOf(getComputedStyle(n).transform), projected);
+        n = n.parentNode;
+      }
+      var f = translateFactor(el);
+      if (!f) return null; // whole-card movement is intentionally desktop-only
+      projected.a *= f; projected.b *= f; projected.c *= f; projected.d *= f;
+      var det = projected.a*projected.d - projected.b*projected.c;
+      if (!isFinite(det) || Math.abs(det) < 0.000001) return null;
+      return {
+        xx: projected.d/det, xy: -projected.c/det,
+        yx: -projected.b/det, yy: projected.a/det
+      };
+    }
+    function setTouchActive(el){
+      if (touchActiveEl === el) return;
+      if (touchActiveEl) touchActiveEl.classList.remove('cv-touch-active');
+      touchActiveEl = el || null;
+      if (touchActiveEl) touchActiveEl.classList.add('cv-touch-active');
+    }
+    function renderTouchSample(){
+      var sample = touchSample;
+      touchSample = null;
+      if (!sample) return;
+      if (sample.kind === 'pinch'){
+        if (pinch !== sample.gesture) return;
+        var pst = stateOf(pinch.el);
+        pst.s = Math.max(0.15, Math.min(10, pinch.s0 * (sample.dist / pinch.d0)));
+        previewState(pinch.el, pst);
+        positionBox();
+        return;
+      }
+      if (sample.kind !== 'drag' || dragging !== sample.gesture) return;
+      var d = dragging, st = stateOf(d.el);
+      var moveX = 0, moveY = 0;
+      if (d.mode === 'move'){
+        var screenX = sample.x - d.sx, screenY = sample.y - d.sy;
+        if (Math.hypot(screenX, screenY) > 3) d.moved = true;
+        st.dx = d.dx0 + d.inv.xx*screenX + d.inv.xy*screenY;
+        st.dy = isVertLocked(d.el) ? d.dy0 : d.dy0 + d.inv.yx*screenX + d.inv.yy*screenY;
+        moveX = screenX; moveY = screenY;
+      } else {
+        var dist = Math.hypot(sample.x - d.cx, sample.y - d.cy);
+        st.s = Math.max(0.15, Math.min(10, d.s0 * (dist / d.d0)));
+      }
+      previewState(d.el, st);
+      // A move is guaranteed to project to this exact screen delta, so move
+      // the already-measured overlay directly. Avoiding getBoundingClientRect
+      // after the transform write removes a forced style/layout sync from the
+      // hottest phone path. Scale gestures still measure because their box
+      // dimensions change.
+      if (d.mode === 'move' && d.box0){
+        paintBox(d.box0.left + moveX, d.box0.top + moveY, d.box0.width, d.box0.height);
+      } else positionBox();
+    }
+    function queueTouchSample(sample){
+      touchSample = sample; // a burst only needs its newest finger position
+      if (!touchFrame){
+        touchFrame = requestAnimationFrame(function(){ touchFrame = 0; renderTouchSample(); });
+      }
+    }
+    function flushTouchSample(){
+      if (touchFrame){ cancelAnimationFrame(touchFrame); touchFrame = 0; }
+      renderTouchSample();
+    }
+    function discardTouchSample(){
+      if (touchFrame){ cancelAnimationFrame(touchFrame); touchFrame = 0; }
+      touchSample = null;
+    }
+    // A selected element begins visually tracking at the very first movement
+    // pixel, before we know whether the gesture will end up being a tap. If
+    // it does end as a tap, put its preview-only state back exactly where it
+    // started instead of saving a tiny accidental nudge.
+    function restorePreviewBatch(batch){
+      (batch || []).forEach(function(b){
+        if (b.prev) layout[b.el.__cvKey] = cloneEntry(b.prev);
+        else delete layout[b.el.__cvKey];
+        applyState(b.el);
+      });
+    }
+    function makeMoveT(el, cx, cy, wasSelected, id){
+      var inv = screenDeltaInverse(el);
+      if (!inv) return null;
+      var st = stateOf(el);
+      var r = el.getBoundingClientRect();
+      return {el:el, mode:'move', id:id, sx:cx, sy:cy, dx0:st.dx, dy0:st.dy, s0:st.s,
+              inv:inv, box0:{left:r.left,top:r.top,width:r.width,height:r.height},
+              moved:false, wasSelected:wasSelected, batch:captureBatch([el])};
+    }
+    function startResizeT(cx, cy, corner, id){
+      var c = centerOf(sel), st = stateOf(sel);
+      var d0 = Math.hypot(cx - c.x, cy - c.y) || 1;
+      dragging = {el:sel, mode:'scale', id:id, d0:d0, s0:st.s, dx0:st.dx, dy0:st.dy, cx:c.x, cy:c.y, batch:captureBatch([sel])};
+      setTouchActive(sel);
+    }
+    function endDragging(cancelled){
+      flushTouchSample();
+      if (!dragging){ setTouchActive(null); return; }
+      var ended = dragging;
+      saveState(ended.el, stateOf(ended.el));
+      positionBox();
+      if (ended.batch) commitBatch(ended.batch);
+      dragging = null;
+      setTouchActive(null);
+    }
+    function startPinch(t0, t1){
+      pinch = {el:sel, id1:t0.identifier, id2:t1.identifier,
+               d0: Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY) || 1,
+               s0: stateOf(sel).s, batch: captureBatch([sel])};
+      setTouchActive(sel);
+    }
+    function endPinch(){
+      flushTouchSample();
+      if (!pinch){ setTouchActive(null); return; }
+      var ended = pinch;
+      saveState(ended.el, stateOf(ended.el));
+      positionBox();
+      if (ended.batch) commitBatch(ended.batch);
+      pinch = null;
+      setTouchActive(null);
+    }
+    function resolveTap(p){
+      var hit = p.el, card = p.card, now = Date.now();
+      // A clean tap on the same drilled child toggles its selection off.
+      // This runs only after touchend, so pressing and moving still starts a
+      // drag; whole tiles keep their normal one-tap selection behaviour.
+      // Forget the previous tap as well, otherwise the next fresh tap could
+      // be mistaken for the second half of the old double-tap.
+      if (card && sel && sel !== card && (sel === hit || sel.contains(hit))){
+        lastTap = null;
+        deselect();
+        return;
+      }
+      // Treat two nearby taps in the same tile as a double even if finger
+      // jitter lands on a neighbouring nested node. A whole-tile tap can
+      // optimistically deselect immediately; retaining this tap record lets
+      // a fast second tap still drill into the intended child.
+      var sameArea = lastTap && (card ? lastTap.card === card : lastTap.el === hit);
+      var closeEnough = lastTap && Math.hypot(p.x - lastTap.x, p.y - lastTap.y) < 48;
+      var dbl = !!(sameArea && closeEnough && (now - lastTap.t) < 340);
+      lastTap = {el:hit, card:card, x:p.x, y:p.y, t:now};
+      if (card && sel === card && !dbl){
+        deselect();
+        return;
+      }
+      // A rapid second tap on blank card space has nothing deeper to drill
+      // into, so it is still a tile toggle rather than a no-op double-tap.
+      if (card && sel === card && dbl && hit === card){
+        lastTap = null;
+        deselect();
+        return;
+      }
+      var t;
+      if (!card) t = hit;                       // heading / selector
+      else if (dbl) t = hit;                    // double-tap drills any child, including text
+      else if (sel && sel !== card && (sel === hit || sel.contains(hit))) t = sel; // keep drilled child
+      else t = card;                            // single tap → whole tile
+      select(t);
+    }
+    function onTouchStart(e){
+      if (!touchInputSeen){ touchInputSeen = true; updateEditTextButton(); }
+      if (e.touches.length > 1){
+        lastTap = null;
+        // Once an editor pinch exists, suppress native handling before any
+        // reads/writes. A third finger does not restart the tracked pair.
+        if (sel) e.preventDefault();
+        if (pinch) return;
+        // Commit an active caption edit before opening the pinch undo batch.
+        // Otherwise the two histories overlap and a later text undo can also
+        // roll back the scale change made by this gesture.
+        if (editingEl) exitTextEdit();
+        // A second finger landing — whatever single-finger gesture was in
+        // progress ends cleanly right here (committed, not abandoned mid-
+        // motion) and a fresh two-finger pinch-resize takes over. Without
+        // this, a stray extra finger (e.g. a resting thumb) mid-drag would
+        // leave touches[0] pointing at a DIFFERENT finger than the one
+        // actually being tracked, which is what made a dragged image
+        // suddenly jump/"fly" — every gesture below is now tracked by its
+        // own touch identifier instead of always trusting touches[0].
+        pendingTap = null;
+        if (dragging){
+          var handoff = findTouch(e.touches, dragging.id);
+          if (handoff) queueTouchSample({kind:'drag', gesture:dragging, x:handoff.clientX, y:handoff.clientY});
+        }
+        endDragging();
+        if (sel) startPinch(e.touches[0], e.touches[1]);
+        return;
+      }
+      var pt = e.touches[0];
+      var target = document.elementFromPoint(pt.clientX, pt.clientY) || e.target;
+      if (editingEl && !editingEl.contains(target)) exitTextEdit();
+      if (target.closest('.cv-tb, .cv-panel')){ lastTap = null; return; } // toolbar taps behave natively
+      if (editingEl) return;
+      var handle = target.closest('.cv-h');
+      if (handle && sel){ lastTap = null; e.preventDefault(); startResizeT(pt.clientX, pt.clientY, handle.dataset.corner, pt.identifier); return; }
+      var hit = target.closest(EDITABLE);
+      if (!hit || !root.contains(hit)){ lastTap = null; pendingTap = null; deselect(); return; }
+      var touchingSelection = sel && (sel === hit || sel.contains(hit));
+      // Claim a selected movable element at touchstart, before Safari can
+      // begin a scroll chain. Its transform now starts from this exact point
+      // too, rather than waiting for the tap threshold and then jumping.
+      // Unselected content stays native so it scrolls.
+      if (touchingSelection && touchCanMove(sel)){
+        e.preventDefault();
+        dragging = makeMoveT(sel, pt.clientX, pt.clientY, true, pt.identifier);
+        if (dragging) setTouchActive(sel);
+      }
+      pendingTap = {el:hit, card:hit.closest('.pdp-cmp__card'), x:pt.clientX, y:pt.clientY, id:pt.identifier};
+    }
+    function onTouchMove(e){
+      if (pinch){
+        e.preventDefault();
+        var pt0 = findTouch(e.touches, pinch.id1), pt1 = findTouch(e.touches, pinch.id2);
+        if (!pt0 || !pt1) return; // one of the two tracked fingers isn't in this event — ignore, wait for touchend
+        var dist = Math.hypot(pt1.clientX - pt0.clientX, pt1.clientY - pt0.clientY);
+        queueTouchSample({kind:'pinch', gesture:pinch, dist:dist});
+        return;
+      }
+      if (dragging){
+        e.preventDefault();
+        var p = findTouch(e.touches, dragging.id); if (!p) return; // not the tracked finger
+        // Keep the small threshold only for classifying a clean tap. The
+        // rendered drag itself already began at touchstart, so crossing it
+        // cannot produce a delayed jump under the finger.
+        if (pendingTap && pendingTap.id === dragging.id &&
+            Math.hypot(p.clientX - pendingTap.x, p.clientY - pendingTap.y) > 4){
+          pendingTap = null;
+          lastTap = null;
+        }
+        queueTouchSample({kind:'drag', gesture:dragging, x:p.clientX, y:p.clientY});
+        return;
+      }
+      if (pendingTap){
+        var q = findTouch(e.touches, pendingTap.id); if (!q) return;
+        if (Math.hypot(q.clientX - pendingTap.x, q.clientY - pendingTap.y) > 4){
+          lastTap = null;
+          // moved past the tap threshold: if it's on the current selection,
+          // this is a move-drag; otherwise it's a page scroll — let it go.
+          if (sel && touchCanMove(sel) && (sel === pendingTap.el || sel.contains(pendingTap.el))){
+            e.preventDefault();
+            // Start from the original finger-down point, not this threshold-
+            // crossing sample. Replaying the full delta removes the old
+            // permanent 8px finger/element offset.
+            dragging = makeMoveT(sel, pendingTap.x, pendingTap.y, true, pendingTap.id);
+            if (dragging){
+              setTouchActive(sel);
+              queueTouchSample({kind:'drag', gesture:dragging, x:q.clientX, y:q.clientY});
+            }
+          }
+          pendingTap = null;
+        }
+      }
+    }
+    function onTouchEnd(e){
+      if (pinch){
+        e.preventDefault();
+        var live0 = findTouch(e.touches, pinch.id1);
+        var live1 = findTouch(e.touches, pinch.id2);
+        // End as soon as either tracked finger lifts. Two unrelated fingers
+        // may still be down, but silently switching the tracked pair would
+        // introduce a scale jump.
+        if (!live0 || !live1){
+          var p0 = live0 || findTouch(e.changedTouches, pinch.id1);
+          var p1 = live1 || findTouch(e.changedTouches, pinch.id2);
+          if (p0 && p1){
+            queueTouchSample({kind:'pinch', gesture:pinch,
+              dist:Math.hypot(p1.clientX - p0.clientX, p1.clientY - p0.clientY)});
+          }
+          endPinch();
+        }
+        return;
+      }
+      if (pendingTap){
+        // Suppress the compatibility mouse/click sequence; without this a
+        // phone tap also runs the desktop handlers after resolveTap().
+        e.preventDefault();
+        var tapped = pendingTap;
+        pendingTap = null;
+        // A tap may have produced a few pixels of live preview while the
+        // finger settled. It was never a deliberate move, so discard that
+        // preview before resolving the normal select/deselect action.
+        if (dragging && dragging.id === tapped.id){
+          discardTouchSample();
+          restorePreviewBatch(dragging.batch);
+          dragging = null;
+        }
+        resolveTap(tapped);
+        setTouchActive(null);
+        return;
+      }
+      if (dragging && !findTouch(e.touches, dragging.id)){
+        e.preventDefault();
+        var last = findTouch(e.changedTouches, dragging.id);
+        if (last) queueTouchSample({kind:'drag', gesture:dragging, x:last.clientX, y:last.clientY});
+        endDragging(false);
+      }
+    }
+    function onTouchCancel(e){
+      lastTap = null;
+      pendingTap = null; // a cancelled touch is never a tap/double-tap
+      if (pinch){
+        var live0 = findTouch(e.touches, pinch.id1);
+        var live1 = findTouch(e.touches, pinch.id2);
+        if (live0 && live1) return; // only an untracked third touch cancelled
+        e.preventDefault();
+        var p0 = live0 || findTouch(e.changedTouches, pinch.id1);
+        var p1 = live1 || findTouch(e.changedTouches, pinch.id2);
+        if (p0 && p1){
+          queueTouchSample({kind:'pinch', gesture:pinch,
+            dist:Math.hypot(p1.clientX - p0.clientX, p1.clientY - p0.clientY)});
+        }
+        endPinch();
+        return;
+      }
+      if (dragging){
+        if (findTouch(e.touches, dragging.id)) return; // unrelated touch cancelled
+        e.preventDefault();
+        var last = findTouch(e.changedTouches, dragging.id);
+        if (last) queueTouchSample({kind:'drag', gesture:dragging, x:last.clientX, y:last.clientY});
+        endDragging(true);
+        return;
+      }
+      discardTouchSample();
+      setTouchActive(null);
+    }
+    document.addEventListener('touchstart', onTouchStart, {passive:false, capture:true});
+    document.addEventListener('touchmove', onTouchMove, {passive:false, capture:true});
+    document.addEventListener('touchend', onTouchEnd, {passive:false, capture:true});
+    document.addEventListener('touchcancel', onTouchCancel, {passive:false, capture:true});
+
+    window.addEventListener('scroll', positionBox, true);
+    window.addEventListener('resize', positionBox);
+
+    // ---- wheel to resize the selected element ----
+    // A scroll gesture fires many wheel events in a burst — treat the whole
+    // burst as one undo step (capture once at the start, commit once
+    // ~400ms after the wheel goes quiet) instead of one per tick.
+    var wheelBatch = null, wheelIdleTimer = null;
+    document.addEventListener('wheel', function(e){
+      if (!sel || editingEl) return;
+      var r = sel.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
+      e.preventDefault();
+      if (!wheelBatch) wheelBatch = captureBatch([sel]);
+      clearTimeout(wheelIdleTimer);
+      wheelIdleTimer = setTimeout(function(){ commitBatch(wheelBatch); wheelBatch = null; }, 400);
+      var st = stateOf(sel);
+      st.s = Math.max(0.15, Math.min(10, st.s * (e.deltaY < 0 ? 1.05 : 0.9524)));
+      saveState(sel, st); positionBox();
+    }, {passive:false});
+
+    // ---- arrow-key nudge (and typing, when a caption is being edited) ----
+    document.addEventListener('keydown', function(e){
+      if (editingEl){
+        if (e.key === 'Enter'){
+          e.preventDefault();
+          insertLineBreak();
+          saveText(editingEl);
+        } else if (e.key === 'Escape'){
+          e.preventDefault();
+          exitTextEdit();
+        }
+        return; // every other key (letters, backspace, arrow-to-move-cursor...) behaves natively
+      }
+      if (!sel) return;
+      // A selected caption is still draggable by holding the mouse on it
+      // (same as any other selected element) — Enter is what switches it
+      // into typing, so the two never compete for the same click.
+      if (e.key === 'Enter' && isTextEditable(sel)){ e.preventDefault(); enterTextEdit(sel); return; }
+      // Backspace/Delete on a SELECTED (not currently-typed-into) text box
+      // clears it — same idea as pressing Enter to type, just the opposite:
+      // one keypress, not held down, no confirm dialog, because it's a
+      // single undo-able step either way.
+      if ((e.key === 'Backspace' || e.key === 'Delete') && isTextEditable(sel)){
+        e.preventDefault();
+        var delBatch = captureBatch([sel]);
+        sel.innerHTML = '';
+        var delSt = stateOf(sel);
+        delSt.text = '';
+        saveState(sel, delSt);
+        commitBatch(delBatch);
+        positionBox();
+        return;
+      }
+      if (e.key === 'Escape'){ deselect(); return; }
+      // Holding an arrow key fires many keydown events — coalesce a whole
+      // hold into one undo step the same way the wheel-resize burst does.
+      var step = e.shiftKey ? 10 : 1, st = stateOf(sel), moved = true;
+      if (e.key === 'ArrowLeft') st.dx -= step; else if (e.key === 'ArrowRight') st.dx += step;
+      else if (e.key === 'ArrowUp'){ if (!isVertLocked(sel)) st.dy -= step; else moved = false; }
+      else if (e.key === 'ArrowDown'){ if (!isVertLocked(sel)) st.dy += step; else moved = false; }
+      else moved = false;
+      if (moved){
+        e.preventDefault();
+        if (!nudgeBatch) nudgeBatch = captureBatch([sel]);
+        clearTimeout(nudgeIdleTimer);
+        nudgeIdleTimer = setTimeout(function(){ commitBatch(nudgeBatch); nudgeBatch = null; }, 400);
+        saveState(sel, st);
+        positionBox();
+      }
+    });
+    var nudgeBatch = null, nudgeIdleTimer = null;
+
+    // Live-save while typing (covers the case where a click elsewhere is
+    // the very first event caught, so nothing is lost between keystrokes
+    // and the eventual exit-save).
+    root.addEventListener('input', function(e){
+      if (editingEl && e.target === editingEl) saveText(editingEl);
+    });
+
+    // ---- align: repair the complete tile system in one undoable action ----
+    // A tile's existing CSS/CANVA-BAKED transform lives in __cvBase. Clearing
+    // only the editor-authored delta therefore returns every card to exactly
+    // the position and size the current theme defines, without disturbing the
+    // deliberately reordered baked layout.
+    function align(){
+      var tiles = els.filter(function(el){ return el.matches('.pdp-cmp__card'); });
+      var alignTargets = els.filter(function(el){
+        return el.__cvAlignH && el.closest('.pdp-cmp__card') && !isAlignExcluded(el);
+      });
+      var alignXKey = desktopMQ.matches ? 'axd' : 'axm';
+      var alignYKey = desktopMQ.matches ? 'ayd' : 'aym';
+      var otherAlignXKey = desktopMQ.matches ? 'axm' : 'axd';
+      var directAlignTargets = alignTargets.filter(function(el){
+        return el.parentElement && el.parentElement.matches('.pdp-cmp__card') &&
+          el.matches('.pdp-cmp__eyebrow, .pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__sub, .pdp-cmp__feature-icon-wrap');
+      });
+      var batch = captureBatch(tiles.concat(alignTargets));
+      var changed = {};
+      function remember(el){ changed[el.__cvKey] = true; }
+
+      tiles.forEach(function(el){
+        var st = stateOf(el);
+        if (st.dx !== 0 || st.dy !== 0 || st.s !== 1){
+          st.dx = 0; st.dy = 0; st.s = 1;
+          saveState(el, st); remember(el);
+        }
+      });
+
+      // First remove every stored sideways text nudge, including nested stat
+      // parts, plus this viewport's previous centering correction. The other
+      // viewport's correction stays independent. Vertical placement, scale,
+      // and edited wording are preserved.
+      alignTargets.forEach(function(el){
+        var st = stateOf(el);
+        if (st.dx !== 0 || st[alignXKey] !== 0 || st[alignYKey] !== 0){
+          // dx is shared between viewports. Move its old value into the
+          // inactive viewport's private correction before clearing it, so
+          // repairing this viewport leaves the other one visually unchanged.
+          st[otherAlignXKey] += st.dx;
+          st.dx = 0; st[alignXKey] = 0; st[alignYKey] = 0;
+          saveState(el, st); remember(el);
+        }
+      });
+
+      // Authored CSS intentionally places a few text groups off-centre, so a
+      // zero dx is not enough. Measure each visible top-level group and move
+      // its visual centre onto the card centre through the exact transform
+      // inverse. Nested stat parts stay together as one group.
+      directAlignTargets.forEach(function(el){
+        if (!el.matches('.pdp-cmp__feature-icon-wrap') && !(el.textContent || '').trim()) return;
+        var card = el.closest('.pdp-cmp__card');
+        var er = el.getBoundingClientRect(), cr = card.getBoundingClientRect();
+        if (!er.width || !er.height || !cr.width) return;
+        var screenDx = (cr.left + cr.width/2) - (er.left + er.width/2);
+        if (Math.abs(screenDx) < 0.25) return;
+        var inv = screenDeltaInverse(el);
+        if (!inv) return;
+        var st = stateOf(el);
+        st[alignXKey] += inv.xx * screenDx;
+        st[alignYKey] += inv.yx * screenDx;
+        saveState(el, st); remember(el);
+      });
+
+      commitBatch(batch);
+      positionBox();
+      return Object.keys(changed).length;
+    }
+
+    // ---- export payload for "lock it" ----
+    function exportCode(){
+      var out = [];
+      var activeViewport = desktopMQ.matches ? 'desktop' : 'mobile';
+      function round2(n){ return Math.round(n*100)/100; }
+      els.forEach(function(el){
+        var s = layout[el.__cvKey];
+        if (!s) return;
+        var st = stateOf(el);
+        // Keep the legacy dx/dy fields as the active viewport for existing
+        // lock workflows, while retaining both viewport corrections whenever
+        // they differ so neither layout is silently lost in the copied JSON.
+        var desktopDx = round2(st.dx + st.axd), desktopDy = round2(st.dy + st.ayd);
+        var mobileDx = round2(st.dx + st.axm), mobileDy = round2(st.dy + st.aym);
+        var dx = desktopMQ.matches ? desktopDx : mobileDx;
+        var dy = desktopMQ.matches ? desktopDy : mobileDy;
+        var hasTransform = desktopDx || desktopDy || mobileDx || mobileDy || (st.s && st.s !== 1);
+        var hasText = st.text != null;
+        if (!hasTransform && !hasText) return;
+        var item = { sel: '.pdp-cmp>' + el.__cvKey, kind: label(el), dx: dx, dy: dy, s: st.s||1, base: el.__cvBase || 'none' };
+        if (desktopDx !== mobileDx || desktopDy !== mobileDy){
+          item.viewportOffsets = {
+            desktop:{dx:desktopDx,dy:desktopDy},
+            mobile:{dx:mobileDx,dy:mobileDy}
+          };
+        }
+        if (hasText) item.text = st.text;
+        out.push(item);
+      });
+      return JSON.stringify({ v:1, viewport:activeViewport, note:'Voltical compare-grid layout — ' + activeViewport, items: out }, null, 2);
+    }
+
+    // ---- toolbar ----
+    var tb = document.createElement('div');
+    tb.className = 'cv-tb' + (showHint ? '' : ' cv-tb--compact');
+    var hintText = coarse
+      ? 'Tip: tap a tile · double-tap an icon or item · drag to move · pinch or corners resize.'
+      : 'Tip: click a tile · double-click an item · drag to move · scroll or corners resize.';
+    tb.innerHTML =
+      '<span class="cv-tb__dot"></span><span class="cv-tb__title">Canva mode</span>' +
+      (showHint ? '<span class="cv-tb__hint">' + hintText + '</span>' : '') +
+      '<button class="cv-btn" data-cv="undo" title="Undo the last move, resize, type, delete, Align, or Reset.">Undo</button>' +
+      '<button class="cv-btn" data-cv="refresh" title="Reload the page, keeping all your changes and the undo history.">Refresh</button>' +
+      '<button class="cv-btn" data-cv="edit-text" title="Type into the selected caption." hidden>Edit text</button>' +
+      '<button class="cv-btn" data-cv="align" title="Repair tile positions and sizes, then horizontally centre every tile text group and both feature icons.">Align all</button>' +
+      '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
+      '<button class="cv-btn" data-cv="reset-all">Reset all</button>' +
+      '<button class="cv-btn cv-btn--go" data-cv="copy">Copy layout</button>' +
+      '<button class="cv-btn" data-cv="done">Done</button>';
+    document.body.appendChild(tb);
+    if (showHint){
+      ls(false, HINT_KEY, HINT_VERSION);
+      cookieSet(HINT_COOKIE, HINT_VERSION);
+    }
+    editTextBtn = tb.querySelector('[data-cv="edit-text"]');
+    updateEditTextButton();
+
+    // ---- export panel ----
+    var panel = document.createElement('div'); panel.className = 'cv-panel';
+    panel.innerHTML =
+      '<div class="cv-panel__card">' +
+        '<div class="cv-panel__head"><b>Layout code</b><button class="cv-btn" data-cv="close">Close</button></div>' +
+        '<textarea readonly spellcheck="false"></textarea>' +
+        '<div class="cv-panel__foot"><span class="cv-panel__note">Copied to your clipboard. Paste this to Claude and say “lock it”.</span>' +
+        '<button class="cv-btn cv-btn--go" data-cv="copy2">Copy again</button></div>' +
+      '</div>';
+    document.body.appendChild(panel);
+    var ta = panel.querySelector('textarea');
+
+    function copyToClipboard(text){ try { navigator.clipboard.writeText(text); } catch(e){ try { ta.focus(); ta.select(); document.execCommand('copy'); } catch(_){} } }
+
+    // ---- Reset all two-tap confirmation ----
+    var resetAllTimer = null;
+    function armResetAll(btn){
+      if (btn.dataset.label == null) btn.dataset.label = btn.textContent;
+      btn.classList.add('is-armed');
+      btn.textContent = 'Sure? Reset all';
+      clearTimeout(resetAllTimer);
+      resetAllTimer = setTimeout(disarmResetAll, 4000);
+    }
+    function disarmResetAll(){
+      clearTimeout(resetAllTimer);
+      var btn = tb.querySelector('[data-cv="reset-all"]');
+      if (btn && btn.classList.contains('is-armed')){
+        btn.classList.remove('is-armed');
+        if (btn.dataset.label != null) btn.textContent = btn.dataset.label;
+      }
+    }
+
+    tb.addEventListener('click', function(e){
+      var b = e.target.closest('[data-cv]'); if (!b) return;
+      var a = b.dataset.cv;
+      // Any toolbar tap other than Reset all itself cancels a pending
+      // Reset-all confirmation.
+      if (a !== 'reset-all') disarmResetAll();
+      if (a === 'undo'){ undo(); }
+      else if (a === 'refresh'){
+        // Layout + undo history are already persisted on every change, so a
+        // plain reload comes back with everything intact. Commit any caption
+        // currently being typed first so it isn't lost on the way out.
+        if (editingEl) exitTextEdit();
+        location.reload();
+      }
+      else if (a === 'edit-text' && sel && isTextEditable(sel)){ enterTextEdit(sel); }
+      else if (a === 'align'){ align(); }
+      else if (a === 'reset-sel' && sel){
+        var resetBatch = captureBatch([sel]);
+        saveState(sel, {dx:0, dy:0, s:1, text:null});
+        commitBatch(resetBatch);
+        positionBox();
+      }
+      else if (a === 'reset-all'){
+        // Two-tap "are you sure": the first tap arms the button (turns it
+        // red and relabels it); only a second tap within a few seconds
+        // actually resets. More reliable than a native confirm() dialog,
+        // which some mobile in-app browsers silently suppress.
+        if (!b.classList.contains('is-armed')){
+          armResetAll(b);
+          return;
+        }
+        disarmResetAll();
+        var resetAllBatch = captureBatch(els.filter(function(el){ return layout[el.__cvKey]; }));
+        layout = {};
+        ls(false, LKEY, JSON.stringify(layout));
+        commitBatch(resetAllBatch);
+        els.forEach(applyState);
+        deselect();
+      }
+      else if (a === 'copy'){ ta.value = exportCode(); copyToClipboard(ta.value); panel.classList.add('is-open'); }
+      else if (a === 'done'){
+        rm('volt-canva-on');
+        var search = location.search.replace(/([?&])edit=\d+/g, '').replace(/^&/, '?').replace(/^\?$/, '');
+        location.href = location.pathname + search + location.hash;
+      }
+    });
+    panel.addEventListener('click', function(e){
+      var b = e.target.closest('[data-cv]');
+      if (b && b.dataset.cv === 'close'){ panel.classList.remove('is-open'); return; }
+      if (b && b.dataset.cv === 'copy2'){ copyToClipboard(ta.value); return; }
+      if (e.target === panel) panel.classList.remove('is-open');
+    });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+</script>

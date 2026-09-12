@@ -1,0 +1,42 @@
+{%- comment -%}
+  Apple-style full-width spotlight: one huge product image on white,
+  title on the left, minimal copy + Buy now pill on the right.
+{%- endcomment -%}
+{%- assign _p = section.settings.product -%}
+{%- unless _p.handle -%}{%- assign _p = all_products[_p] -%}{%- endunless -%}
+<section class="spotlight">
+  <div class="wrap wrap--wide spotlight__grid">
+    <h2 class="spotlight__title" data-reveal>{{ section.settings.heading | default: _p.title }}</h2>
+    <div class="spotlight__media" data-reveal>
+      {%- assign img = section.settings.image | default: _p.featured_image -%}
+      {%- if img -%}
+        {%- if _p -%}<a href="{{ _p.url }}">{%- endif -%}
+        <img src="{{ img | image_url: width: 1600 }}"
+             srcset="{{ img | image_url: width: 1600 }} 1600w, {{ img | image_url: width: 2400 }} 2400w, {{ img | image_url: width: 3200 }} 3200w"
+             sizes="(min-width:900px) 60vw, 100vw"
+             alt="{{ img.alt | default: _p.title | escape }}" loading="lazy">
+        {%- if _p -%}</a>{%- endif -%}
+      {%- endif -%}
+    </div>
+    <div class="spotlight__aside" data-reveal>
+      <p>{{ section.settings.copy }}</p>
+      {%- if _p -%}
+        <a class="btn btn--ink" href="{{ _p.url }}">{{ section.settings.cta | default: 'Buy now' }}</a>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Product spotlight",
+  "settings": [
+    { "type": "product", "id": "product", "label": "Product" },
+    { "type": "image_picker", "id": "image", "label": "Image override (defaults to product image)" },
+    { "type": "text", "id": "heading", "label": "Heading override" },
+    { "type": "textarea", "id": "copy", "label": "Side copy (keep minimal)", "default": "Fast charging. Built to last. Designed for every day." },
+    { "type": "text", "id": "cta", "label": "CTA label", "default": "Buy now" }
+  ],
+  "presets": [{ "name": "Product spotlight" }]
+}
+{% endschema %}
