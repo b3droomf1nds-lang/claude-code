@@ -239,9 +239,9 @@
   /* Orders 2 and 3 are now the two feature tiles (MagSafe / USB-C), which
      sit right below compact-video (order 1). Everything below them shifts
      down by two to make room. */
-  .pdp-cmp>:nth-child(2)>:nth-child(4) { order: 7; } /* video */
+  .pdp-cmp>:nth-child(2)>:nth-child(4) { order: 3; } /* video */
   .pdp-cmp>:nth-child(2)>:nth-child(6) { order: 2; } /* fade (hidden on mobile) */
-  .pdp-cmp>:nth-child(2)>:nth-child(5) { order: 3; } /* partial-image (hidden on mobile) */
+  .pdp-cmp>:nth-child(2)>:nth-child(5) { order: 4; } /* partial-image (hidden on mobile) */
   .pdp-cmp>:nth-child(2)>:nth-child(1) { order: 8; } /* magnet */
   .pdp-cmp>:nth-child(2)>:nth-child(2) { order: 9; } /* charge */
   .pdp-cmp>:nth-child(2)>:nth-child(3) { order: 9; } /* full-charges (hidden on mobile) */
@@ -1599,17 +1599,18 @@
     order: 6;
   }
 
-  /* Two feature tiles (MagSafe / USB-C) sit directly below the
-     video-playback summary (order 1). Same mobile-only white-tile shell as
+  /* Two feature tiles (MagSafe / USB-C) finish the mobile stack after the
+     other compact and source tiles.
+     Same mobile-only white-tile shell as
      the compact-stat cards, but taller with a centred icon over a two-line
      caption, matching the supplied reference. */
   .template-product .pdp-cmp__card--feature-magsafe {
     grid-column: 1 / -1;
-    order: 3;
+    order: 10;
   }
   .template-product .pdp-cmp__card--feature-usbc {
     grid-column: 1 / -1;
-    order: 4;
+    order: 11;
   }
   .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--feature {
     width: min(100%, 413px);
@@ -1660,11 +1661,37 @@
     justify-content: center;
     overflow: hidden;
     flex: none;
+    position: relative;
+  }
+  .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-icon-wrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+  .template-product .pdp-cmp__card--feature-magsafe > .pdp-cmp__feature-icon-wrap::before {
+    -webkit-mask-image: url("https://cdn.shopify.com/s/files/1/0968/2337/8246/files/phone-magsafe-apple-style-1536x1024-reference-colours.webp?v=1788370982");
+    mask-image: url("https://cdn.shopify.com/s/files/1/0968/2337/8246/files/phone-magsafe-apple-style-1536x1024-reference-colours.webp?v=1788370982");
+    -webkit-mask-size: 99.6px 66.4px;
+    mask-size: 99.6px 66.4px;
+  }
+  .template-product .pdp-cmp__card--feature-usbc > .pdp-cmp__feature-icon-wrap::before {
+    -webkit-mask-image: url("https://cdn.shopify.com/s/files/1/0968/2337/8246/files/gradient-icon-midpoint-1536x1024.webp?v=1788370970");
+    mask-image: url("https://cdn.shopify.com/s/files/1/0968/2337/8246/files/gradient-icon-midpoint-1536x1024.webp?v=1788370970");
+    -webkit-mask-size: 93.8px 62.5px;
+    mask-size: 93.8px 62.5px;
   }
   .template-product .pdp-cmp__card--feature > .pdp-cmp__feature-icon-wrap > .pdp-cmp__feature-icon {
     display: block;
     flex: none;
     object-fit: contain;
+    opacity: 0;
     /* Both source WebPs have a large transparent canvas. Allow the image to
        extend past its crop window so the visible glyph, not that canvas,
        lands at the reference icon size. This also cancels the theme's
@@ -1814,41 +1841,56 @@
     transform: translateX(20px);
   }
 
-  /* Video tile's "67 more hours" fade — identical to the 0%→50% tile: one
-     oklab pastel gradient on the whole metric block, clipped to the text,
-     with the inner number/word spans simply inline-block so the single parent
-     gradient shows through all of them (same working technique as
-     compact-charge5, replacing an earlier per-span version that rendered
-     black on iOS Safari). */
-  .template-product .pdp-cmp__compact-video-hero,
-  .template-product .pdp-cmp__compact-video-hero > span[data-calc-video-num],
-  .template-product .pdp-cmp__compact-video-hours {
+  /* One uninterrupted pastel fade across the complete text block, including
+     the hours word, using the same horizontal colour position throughout. */
+  .template-product .pdp-cmp__compact-video-hero {
     display: inline-block;
     background: none;
-    -webkit-background-clip: border-box;
-    background-clip: border-box;
-    -webkit-text-fill-color: transparent;
-    /* No own transform: a transformed inline-block becomes its own paint layer
-       that the parent's text-clip gradient can't reach (the word would vanish),
-       so keep these spans untransformed like the compact-charge5 spans. */
-    transform: none;
   }
 
+  .template-product .pdp-cmp__compact-video-hero > span[data-calc-video-num] {
+    display: inline-block;
+    background: none;
+  }
+
+  /* Match the live top-tile digit to the charge tile's corrected numeral
+     shape without changing the shared fade or any surrounding type. */
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main > .pdp-cmp__compact-video-hero > span[data-calc-video-num] {
+    font-family: Arial, sans-serif;
+  }
+
+  /* The ramp belongs to the complete text block, not to an individual line.
+     That keeps every gradient-coloured glyph keyed to its horizontal x
+     position in the tile, so the line break cannot restart the fade. */
   .template-product .pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main {
-    background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
-    background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    --compact-video-gradient-width: 176.421875px;
+    background: linear-gradient(90deg, #F1D2BB 0%, #EBC1BF 16%, #E8B0C2 30%, #DEAAC2 43%, #CEA4CF 56%, #C19DE2 69%, #AE98EA 82%, #9C90F0 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
   }
 
-  /* "hours" no longer carries its old +20px shift (that shift broke its fade),
-     so pull the battery image 20px left instead to keep the same tight gap
-     next to "hours". Transforming the image is safe — it isn't text, so it
-     doesn't affect the metric's gradient. */
-  .template-product .pdp-cmp__card--compact-video .pdp-cmp__compact-battery {
-    transform: translateX(-20px);
+  .template-product .pdp-cmp__compact-video-hours {
+    background-image: linear-gradient(90deg, #F1D2BB 0%, #EBC1BF 16%, #E8B0C2 30%, #DEAAC2 43%, #CEA4CF 56%, #C19DE2 69%, #AE98EA 82%, #9C90F0 100%);
+    background-size: var(--compact-video-gradient-width) 100%;
+    background-position: -20px 0;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Temporary solid-text state: the complete fade remains directly above so
+     it can be restored without rebuilding its shared horizontal positioning. */
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main,
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main > .pdp-cmp__compact-video-hero,
+  .template-product .pdp-cmp__card--compact-video > .pdp-cmp__compact-video-main > .pdp-cmp__compact-video-hero > span[data-calc-video-num],
+  .template-product .pdp-cmp__compact-video-hours {
+    background: none;
+    color: #131316;
+    -webkit-text-fill-color: #131316;
   }
 
   .template-product .pdp-cmp__compact-video-main + .pdp-cmp__sub {

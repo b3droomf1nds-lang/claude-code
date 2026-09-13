@@ -300,7 +300,7 @@
     // deserve the same "Align only ever straightens left/right, never
     // moves vertically" treatment as a caption.
     function isAlignHoriz(el){
-      return isTextEditable(el) || el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__stat-x, .pdp-cmp__compact-video-main, .pdp-cmp__feature-icon-wrap');
+      return isTextEditable(el) || el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__stat-x, .pdp-cmp__compact-video-main, .pdp-cmp__feature-icon-wrap, .pdp-cmp__img-slot img');
     }
     // The charge-time number and its battery form one deliberately composed
     // visual. Align all must leave that pair exactly where the editor placed it.
@@ -1615,8 +1615,8 @@
       var alignYKey = desktopMQ.matches ? 'ayd' : 'aym';
       var otherAlignXKey = desktopMQ.matches ? 'axm' : 'axd';
       var directAlignTargets = alignTargets.filter(function(el){
-        return el.parentElement && el.parentElement.matches('.pdp-cmp__card') &&
-          el.matches('.pdp-cmp__eyebrow, .pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__sub, .pdp-cmp__feature-icon-wrap');
+        return el.parentElement && (el.parentElement.matches('.pdp-cmp__card') || el.parentElement.matches('.pdp-cmp__img-slot')) &&
+          el.matches('.pdp-cmp__eyebrow, .pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__sub, .pdp-cmp__feature-icon-wrap, .pdp-cmp__img-slot img');
       });
       var batch = captureBatch(tiles.concat(alignTargets));
       var changed = {};
