@@ -1592,12 +1592,12 @@
 
   .template-product .pdp-cmp__card--compact-partial {
     grid-column: 1 / -1;
-    order: 5;
+    order: 6;
   }
 
   .template-product .pdp-cmp__card--compact-full {
     grid-column: 1 / -1;
-    order: 6;
+    order: 5;
   }
 
   /* Two feature tiles (MagSafe / USB-C) finish the mobile stack after the
