@@ -13,13 +13,17 @@
     Normal visitors never see any of this — with no flag, the script only
     re-applies a saved layout and adds zero controls.
 
-  HOW "LOCK IT" WORKS
+  HOW "LOCK IT IN" WORKS
     Your moves are saved live in the browser (localStorage) so nothing is
     lost on reload and the preview always shows your work-in-progress.
-    When it's positioned how you want, click "Copy layout" (or just tell
-    Claude "lock it") and hand Claude the copied code — Claude bakes those
+    localStorage is per-browser, though, so an unbaked layout only shows in
+    the browser you edited in — that's why it can look right in Chrome but
+    wrong on iPhone Safari until it's baked.
+    When it's positioned how you want, click "Lock it in" (or just tell
+    the agent "lock it") and hand the agent the copied code — it bakes those
     exact positions/sizes permanently into the matching desktop/mobile CSS
-    and clears the temporary browser copy.
+    and clears the temporary browser copy, so it then renders the same on
+    every browser.
 
   The same controls work on desktop and phone. Desktop keeps its mouse,
   wheel, keyboard, and compact handles; phone adds tap/double-tap,
@@ -1717,7 +1721,7 @@
       '<button class="cv-btn" data-cv="align" title="Repair tile positions and sizes, then horizontally centre every tile text group and both feature icons.">Align all</button>' +
       '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
       '<button class="cv-btn" data-cv="reset-all">Reset all</button>' +
-      '<button class="cv-btn cv-btn--go" data-cv="copy">Copy layout</button>' +
+      '<button class="cv-btn cv-btn--go" data-cv="copy" title="Copy your finished layout so it can be baked permanently into the theme — then it shows the same on every browser (including iPhone Safari).">Lock it in</button>' +
       '<button class="cv-btn" data-cv="done">Done</button>';
     document.body.appendChild(tb);
     if (showHint){
@@ -1733,7 +1737,7 @@
       '<div class="cv-panel__card">' +
         '<div class="cv-panel__head"><b>Layout code</b><button class="cv-btn" data-cv="close">Close</button></div>' +
         '<textarea readonly spellcheck="false"></textarea>' +
-        '<div class="cv-panel__foot"><span class="cv-panel__note">Copied to your clipboard. Paste this to Claude and say “lock it”.</span>' +
+        '<div class="cv-panel__foot"><span class="cv-panel__note">Copied to your clipboard. Paste this to your agent (Claude or codex) and say “bake this layout”.</span>' +
         '<button class="cv-btn cv-btn--go" data-cv="copy2">Copy again</button></div>' +
       '</div>';
     document.body.appendChild(panel);
