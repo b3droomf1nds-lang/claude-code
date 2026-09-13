@@ -573,11 +573,16 @@
        there normally, in its actual place in the buy column. This
        toggles the SAME button between normal flow and position:fixed
        (see .pdp--bold .atc.is-pinned in voltical-pdp-bold.css) —
-       there is no second/cloned button anywhere. While pinned, the
-       sentinel below is grown to hold open exactly the space the button
-       vacated, so the buy column keeps the same total height and nothing
-       above or below shifts — pinning and unpinning are seamless, with
-       no page jump. */
+       there is no second/cloned button anywhere. No placeholder is left
+       behind in its normal spot while pinned — that space just closes up
+       and the page gets shorter for as long as it's pinned, which is the
+       point: the empty spot where the button used to be is hidden.
+       A pin only ever starts while that spot is ABOVE the viewport, so
+       left alone the browser would keep scrollY put and shove everything
+       below the spot — the whole visible screen — upward by the collapsed
+       height. Instead pin()/unpin() nudge scrollY by that same amount, so
+       the part of the page you're actually looking at holds still and the
+       shortening is absorbed above the fold. */
     document.addEventListener('DOMContentLoaded', function () {
       // Desktop no longer gets the sticky/pinned Add to cart bar at
       // all — mobile keeps it untouched.
@@ -614,25 +619,35 @@
         var rect = atc.getBoundingClientRect();
         atc.style.left = rect.left + 'px';
         atc.style.width = rect.width + 'px';
-        /* Removing the button from flow would collapse the space it
-           occupied and shrink the page, shifting everything below up —
-           the visible "jump" when the bar appears. Measure the exact
-           footprint lost to going fixed and hand it to the sentinel so
-           the buy column's total height is unchanged and nothing moves. */
+        /* Going fixed pulls the button out of flow, so its old spot in the
+           buy column collapses and the page gets shorter — which is what
+           we want. The pin always starts while that spot is above the
+           viewport, so the collapse happens above the fold: scroll up by
+           exactly the height that vanished so the content we're looking at
+           doesn't move, and the shortening is taken up above instead of
+           lurching the visible screen upward. */
         var beforeH = document.documentElement.scrollHeight;
         atc.classList.add('is-pinned');
-        var afterH = document.documentElement.scrollHeight;
-        sentinel.style.height = (1 + Math.max(0, beforeH - afterH)) + 'px';
+        var collapsed = beforeH - document.documentElement.scrollHeight;
+        if (collapsed > 0) window.scrollTo(0, window.scrollY - collapsed);
         pinned = true;
       }
       function unpin() {
         if (!pinned) return;
         pinned = false;
+        /* Re-adding the button to flow grows the page back. If its resting
+           spot is above the viewport (a "scroll down, never mind" while it
+           was still catching up), that growth is above the fold and would
+           otherwise shove the visible screen down — so scroll down by the
+           restored height to hold the view still. When the spot is at the
+           bottom edge instead (the normal catch-up finish), it's below us:
+           the real button just appears where the fixed bar was, so the
+           scroll is left untouched. */
+        var spotAboveViewport = (sentinel.getBoundingClientRect().top + marginTop) < 0;
+        var beforeH = document.documentElement.scrollHeight;
         atc.classList.remove('is-pinned');
-        /* Button re-enters flow and reclaims its own space; release the
-           placeholder in the same frame so the height stays constant and
-           unpinning is just as seamless as pinning. */
-        sentinel.style.height = '1px';
+        var grew = document.documentElement.scrollHeight - beforeH;
+        if (spotAboveViewport && grew > 0) window.scrollTo(0, window.scrollY + grew);
         atc.style.left = '';
         atc.style.width = '';
       }
@@ -701,12 +716,7 @@
       function update() {
         var y = window.scrollY;
         var scrollingDown = y > lastY;
-        /* Measure from the sentinel's TOP, not its bottom: while pinned
-           the sentinel is grown into a placeholder, so its bottom moves
-           down with the reserved space, but its top always marks where
-           the button's margin-box begins in flow — the true resting spot
-           in both the 1px (unpinned) and grown (pinned) states. */
-        var restingTop = sentinel.getBoundingClientRect().top + marginTop;
+        var restingTop = sentinel.getBoundingClientRect().bottom + marginTop;
         var restingBottom = restingTop + naturalHeight;
         var pinnedBottomLine = window.innerHeight - marginBottom;
         var belowSpot = restingBottom < pinnedBottomLine;
@@ -725,7 +735,11 @@
             pin();
           }
         }
-        lastY = y;
+        /* pin()/unpin() may have adjusted scrollY to hold the view still,
+           so read the live position rather than the value sampled at the
+           top — otherwise the compensating scroll looks like a real user
+           scroll to the next event and skews the direction check. */
+        lastY = window.scrollY;
         ticking = false;
       }
       window.addEventListener('scroll', function () {
