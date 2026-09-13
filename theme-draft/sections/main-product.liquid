@@ -573,10 +573,11 @@
        there normally, in its actual place in the buy column. This
        toggles the SAME button between normal flow and position:fixed
        (see .pdp--bold .atc.is-pinned in voltical-pdp-bold.css) —
-       there is no second/cloned button anywhere. No placeholder is
-       left behind in its normal spot while pinned — that space just
-       closes up, so the rest of the buy column shifts up to fill the
-       gap and the page gets shorter for as long as it's pinned. */
+       there is no second/cloned button anywhere. While pinned, the
+       sentinel below is grown to hold open exactly the space the button
+       vacated, so the buy column keeps the same total height and nothing
+       above or below shifts — pinning and unpinning are seamless, with
+       no page jump. */
     document.addEventListener('DOMContentLoaded', function () {
       // Desktop no longer gets the sticky/pinned Add to cart bar at
       // all — mobile keeps it untouched.
@@ -610,16 +611,28 @@
       var pinned = false;
       function pin() {
         if (pinned) return;
-        pinned = true;
         var rect = atc.getBoundingClientRect();
         atc.style.left = rect.left + 'px';
         atc.style.width = rect.width + 'px';
+        /* Removing the button from flow would collapse the space it
+           occupied and shrink the page, shifting everything below up —
+           the visible "jump" when the bar appears. Measure the exact
+           footprint lost to going fixed and hand it to the sentinel so
+           the buy column's total height is unchanged and nothing moves. */
+        var beforeH = document.documentElement.scrollHeight;
         atc.classList.add('is-pinned');
+        var afterH = document.documentElement.scrollHeight;
+        sentinel.style.height = (1 + Math.max(0, beforeH - afterH)) + 'px';
+        pinned = true;
       }
       function unpin() {
         if (!pinned) return;
         pinned = false;
         atc.classList.remove('is-pinned');
+        /* Button re-enters flow and reclaims its own space; release the
+           placeholder in the same frame so the height stays constant and
+           unpinning is just as seamless as pinning. */
+        sentinel.style.height = '1px';
         atc.style.left = '';
         atc.style.width = '';
       }
@@ -688,7 +701,12 @@
       function update() {
         var y = window.scrollY;
         var scrollingDown = y > lastY;
-        var restingTop = sentinel.getBoundingClientRect().bottom + marginTop;
+        /* Measure from the sentinel's TOP, not its bottom: while pinned
+           the sentinel is grown into a placeholder, so its bottom moves
+           down with the reserved space, but its top always marks where
+           the button's margin-box begins in flow — the true resting spot
+           in both the 1px (unpinned) and grown (pinned) states. */
+        var restingTop = sentinel.getBoundingClientRect().top + marginTop;
         var restingBottom = restingTop + naturalHeight;
         var pinnedBottomLine = window.innerHeight - marginBottom;
         var belowSpot = restingBottom < pinnedBottomLine;
