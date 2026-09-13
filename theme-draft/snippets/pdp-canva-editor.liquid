@@ -249,6 +249,34 @@
     rm(HKEY);
     ls(false, BAKED_MOBILE_LAYOUT_MIGRATION, '1');
   }
+  // A second mobile layout (the user's "Lock it in" export) has since been
+  // baked into the CANVA-BAKED mobile CSS. Drop those exact browser-side drafts
+  // so they can't apply a second time on top of the freshly baked defaults —
+  // that double application is what made the baked tile images (e.g. the magnet
+  // tile) render more/less transformed in the editing browser while other
+  // browsers, which never held the draft, already looked correct. Targeted to
+  // the baked keys so any unrelated edits are left intact.
+  var BAKED_MOBILE_LAYOUT_MIGRATION_2 = 'volt-canva-baked-mobile-layout-v2';
+  var BAKED_KEYS_V2 = [
+    ':nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1)>:nth-child(2)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2)',
+    ':nth-child(2)>:nth-child(4)>:nth-child(3)>:nth-child(1)',
+    ':nth-child(2)>:nth-child(11)>:nth-child(1)',
+    ':nth-child(2)>:nth-child(11)>:nth-child(2)'
+  ];
+  if (!window.matchMedia('(min-width:900px)').matches &&
+      ls(true, BAKED_MOBILE_LAYOUT_MIGRATION_2) !== '1'){
+    var removedBakedV2 = false;
+    for (var iV2 = 0; iV2 < BAKED_KEYS_V2.length; iV2++){
+      if (layout[BAKED_KEYS_V2[iV2]]){ delete layout[BAKED_KEYS_V2[iV2]]; removedBakedV2 = true; }
+    }
+    if (removedBakedV2){
+      ls(false, LKEY, JSON.stringify(layout));
+      savedHistory = [];
+      rm(HKEY);
+    }
+    ls(false, BAKED_MOBILE_LAYOUT_MIGRATION_2, '1');
+  }
 
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__feature-icon-wrap, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-number, .pdp-cmp__compact-partial-extra, .pdp-cmp__sub, ' +
