@@ -1,0 +1,7 @@
+<div class="page-narrow">
+  <h1 class="t-lg" style="margin-bottom:24px">{{ 'customer.order' | t }} {{ order.name }}</h1>
+  {% for line_item in order.line_items %}
+    <p style="padding:12px 0;border-bottom:1px solid var(--ink-12)">{{ line_item.quantity }} × {{ line_item.title }} — {{ line_item.final_line_price | money }}</p>
+  {% endfor %}
+  <p style="margin-top:16px;font-weight:600">{{ 'cart.subtotal' | t }}: {{ order.total_price | money }}</p>
+</div>
