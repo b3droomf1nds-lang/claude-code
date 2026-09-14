@@ -2171,3 +2171,16 @@
   }
 
 }
+
+/* Video tile heading weight: bump to bold so "Instant magnetic fit." /
+   "Compact alloy shell" read as thick as the Apple headline reference.
+   Measured ink weight was already near-identical (both semibold), but
+   light-on-dark reads bolder, so the black-on-white tile steps up to 700.
+   Scoped to the video card only, mobile-only — magnet/charge cards keep
+   their 600 weight. Last in source order to win over the 600 rule above. */
+@media (max-width: 899px) {
+  .template-product .pdp-cmp__card--video .pdp-cmp__alloy-lead,
+  .template-product .pdp-cmp__card--video .pdp-cmp__alloy-detail {
+    font-weight: 700;
+  }
+}
