@@ -110,10 +110,8 @@ test.describe('responsive render', () => {
           'linear-gradient(90deg, rgb(44, 53, 67) 0%, rgb(113, 129, 150) 100%)'
         );
         const partialDetailLines = partial.locator('.pdp-cmp__compact-partial-detail > span');
-        await expect(partial.locator('.pdp-cmp__sub')).toHaveText('20% to 80% charges for your daywhenever you need one.');
+        await expect(partial.locator('.pdp-cmp__sub')).toHaveText('20–80% top-ups to last the daywhenever it suits you.');
         await expect(partialDetailLines).toHaveCount(2);
-        expect(await partialDetailLines.evaluateAll((lines) => lines.map((line) => line.textContent.length)))
-          .toEqual([31, 22]);
         for (const target of [
           page.locator('.pdp-cmp__card--magnet .pdp-cmp__magnet-detail'),
           page.locator('.pdp-cmp__card--magnet .pdp-cmp__magnet-lead'),
@@ -290,13 +288,16 @@ test('compact partial caption stays balanced without changing its sibling', asyn
     await page.goto(`${baseUrl}?frame=1`);
     const partial = page.locator('.pdp-cmp__card--compact-partial');
     const partialLines = partial.locator('.pdp-cmp__compact-partial-detail > span');
+    const fullLines = page.locator('.pdp-cmp__compact-full-detail > span');
     await expect(partial).toBeVisible();
     await expect(partialLines).toHaveText([
-      '20% to 80% charges for your day',
-      'whenever you need one.'
+      '20–80% top-ups to last the day',
+      'whenever it suits you.'
     ]);
-    expect(await partialLines.evaluateAll((lines) => lines.map((line) => line.textContent.length)))
-      .toEqual([31, 22]);
+    const partialWidths = await partialLines.evaluateAll((lines) => lines.map((line) => line.getBoundingClientRect().width));
+    const fullWidths = await fullLines.evaluateAll((lines) => lines.map((line) => line.getBoundingClientRect().width));
+    expect(Math.abs(partialWidths[0] - fullWidths[0])).toBeLessThanOrEqual(1);
+    expect(Math.abs(partialWidths[1] - fullWidths[1])).toBeLessThanOrEqual(1);
     await expect(page.locator('.pdp-cmp__compact-full-detail')).toHaveText(
       'full iPhone charges for the daywherever it takes you.'
     );
@@ -452,7 +453,7 @@ test('mobile reference migration clears only the compact-partial text layout and
   expect(saved[keys.extra]).toBeUndefined();
   expect(saved[keys.descriptor]).toBeUndefined();
   expect(saved[keys.control]).toMatchObject({ dx: 3, dy: 2 });
-  await expect(page.locator('.pdp-cmp__card--compact-partial > .pdp-cmp__sub')).toHaveText('20% to 80% charges for your daywhenever you need one.');
+  await expect(page.locator('.pdp-cmp__card--compact-partial > .pdp-cmp__sub')).toHaveText('20–80% top-ups to last the daywhenever it suits you.');
   const savedHistory = await page.evaluate(() => JSON.parse(localStorage.getItem('volt-canva-history-4') || '[]'));
   expect(savedHistory.flat().map((entry) => entry.key)).toEqual([keys.control]);
 });
