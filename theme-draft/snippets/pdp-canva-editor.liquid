@@ -345,11 +345,22 @@
 
     function stateOf(el){
       var s = layout[el.__cvKey];
-      return s ? {
+      var st = s ? {
         dx:s.dx||0, dy:s.dy||0, s:s.s||1,
         axd:s.axd||0, ayd:s.ayd||0, axm:s.axm||0, aym:s.aym||0,
         text:(s.text!=null ? s.text : null)
       } : {dx:0,dy:0,s:1,axd:0,ayd:0,axm:0,aym:0,text:null};
+      // The lower "3.6 extra" caption (compact-partial-detail) must always
+      // render at its authored 20px — identical to the matching compact-full
+      // caption above it. Font-size is fixed in CSS, so the ONLY thing that can
+      // enlarge it is a scale() transform. Pin its scale to 1 on every apply,
+      // regardless of any stored, cached, or in-session Canva scale: this makes
+      // the size mismatch impossible without depending on localStorage being
+      // cleared. Move (dx/dy) is left intact so it can still be repositioned.
+      if (el.__cvIsCPD == null) el.__cvIsCPD = !!(el.matches &&
+        el.matches('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-detail'));
+      if (el.__cvIsCPD) st.s = 1;
+      return st;
     }
 
     // ---- carry canonical editor moves onto whatever viewport is showing ----
