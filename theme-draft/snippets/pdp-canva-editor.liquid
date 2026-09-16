@@ -720,6 +720,18 @@
           resetCompactPartialReferenceLayout = true;
         }
       }
+      // Every load (not a one-time migration): the compact-partial caption must
+      // always render at its authored default — the same 20px size and position
+      // as the identical compact-full caption above it (both are 20px in CSS
+      // with no transform). A stale saved Canva scale/move on it renders it
+      // visibly larger than its twin, and Safari can retain that saved entry
+      // even after the shape migration above has run. Clearing any saved entry
+      // for this one caption on every load keeps the two captions matched.
+      if (el.matches('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-detail') &&
+          layout[el.__cvKey]){
+        delete layout[el.__cvKey];
+        resetCompactPartialReferenceLayout = true;
+      }
       if (resetCompactPartialReference && el.matches(
           '.pdp-cmp__card--compact-partial > .pdp-cmp__eyebrow, ' +
           '.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-number, ' +
