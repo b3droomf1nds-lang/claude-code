@@ -580,9 +580,19 @@
        A pin only ever starts while that spot is ABOVE the viewport, so
        left alone the browser would keep scrollY put and shove everything
        below the spot — the whole visible screen — upward by the collapsed
-       height. Instead pin()/unpin() nudge scrollY by that same amount, so
-       the part of the page you're actually looking at holds still and the
-       shortening is absorbed above the fold. */
+       height. Nudging scrollY to counter that (the old approach) is fought
+       by mobile momentum scrolling and shows up as a visible skip. Instead
+       we absorb the collapse ENTIRELY above the fold with no scroll change
+       at all: an invisible spacer (topPad, pinned to the very top of the
+       page) grows by exactly the height the spot gave up, so the total page
+       height is unchanged and — because both the vanished spot and the added
+       spacer sit above the viewport while scrollY stays put — the part of
+       the page you're looking at doesn't move a pixel. The top quietly gets
+       taller; the bottom never jumps. On release the spacer is removed
+       again: when the spot is still above the viewport the removal and the
+       button re-entering flow cancel out (no scroll needed), and only in the
+       rare case where you scroll all the way up until the real button lands
+       back in its spot is a single, measured scroll correction used. */
     document.addEventListener('DOMContentLoaded', function () {
       // Desktop no longer gets the sticky/pinned Add to cart bar at
       // all — mobile keeps it untouched.
@@ -599,6 +609,20 @@
       sentinel.setAttribute('aria-hidden', 'true');
       sentinel.style.height = '1px';
       atc.parentNode.insertBefore(sentinel, atc);
+
+      /* An invisible spacer pinned to the very top of the page. While the
+         button is pinned this grows to exactly the height its normal spot
+         gave up, so the page's total height never changes and the collapse
+         is absorbed above the fold instead of by nudging the scroll position
+         (which mobile momentum scrolling fights, causing the skip). It stays
+         0px tall — and therefore invisible and inert — whenever the button
+         is not pinned. */
+      var topPad = document.createElement('div');
+      topPad.setAttribute('aria-hidden', 'true');
+      topPad.style.height = '0px';
+      topPad.style.width = '100%';
+      var padH = 0;
+      document.body.insertBefore(topPad, document.body.firstChild);
 
       /* Cache the button's own natural (unpinned) height/margins up
          front, before it's ever pinned — the pinned state adds its own
@@ -620,34 +644,54 @@
         atc.style.left = rect.left + 'px';
         atc.style.width = rect.width + 'px';
         /* Going fixed pulls the button out of flow, so its old spot in the
-           buy column collapses and the page gets shorter — which is what
-           we want. The pin always starts while that spot is above the
-           viewport, so the collapse happens above the fold: scroll up by
-           exactly the height that vanished so the content we're looking at
-           doesn't move, and the shortening is taken up above instead of
-           lurching the visible screen upward. */
+           buy column collapses. The pin always starts while that spot is
+           above the viewport, so rather than nudging the scroll position to
+           hide the collapse (which mobile momentum scrolling fights, causing
+           the skip), grow the top spacer by exactly the height the spot lost.
+           The vanished spot and the grown spacer both sit above the viewport
+           and scrollY is left untouched, so the total page height is unchanged
+           and the screen you're looking at doesn't move — the collapse is
+           absorbed above the fold and the top simply gets taller. */
         var beforeH = document.documentElement.scrollHeight;
         atc.classList.add('is-pinned');
         var collapsed = beforeH - document.documentElement.scrollHeight;
-        if (collapsed > 0) window.scrollTo(0, window.scrollY - collapsed);
+        if (collapsed > 0) { padH += collapsed; topPad.style.height = padH + 'px'; }
         pinned = true;
       }
       function unpin() {
         if (!pinned) return;
         pinned = false;
-        /* Re-adding the button to flow grows the page back. If its resting
-           spot is above the viewport (a "scroll down, never mind" while it
-           was still catching up), that growth is above the fold and would
-           otherwise shove the visible screen down — so scroll down by the
-           restored height to hold the view still. When the spot is at the
-           bottom edge instead (the normal catch-up finish), it's below us:
-           the real button just appears where the fixed bar was, so the
-           scroll is left untouched. */
+        /* Releasing reverses the pin: the button rejoins the flow in its
+           spot and the top spacer is removed. Whether the view needs holding
+           depends on where the spot is now:
+
+           - Spot still ABOVE the viewport (a "scroll down, never mind" while
+             it was still catching up): the button re-entering flow shoves
+             everything below it — the whole screen — DOWN by its height,
+             while removing the spacer above pulls everything back UP by the
+             same amount. They cancel exactly, so the view holds still with no
+             scroll change at all and momentum scrolling has nothing to fight.
+
+           - Spot down at the bottom edge (the rare finish where you scroll
+             all the way up until the real button lands back in its place):
+             the button reappears below the fold, so re-adding it doesn't move
+             the screen, but removing the top spacer still lifts everything by
+             its height. Measure the spot before and after the change so the
+             correction is exact whether or not the browser runs its own
+             scroll-anchoring, and hold the view right there. */
         var spotAboveViewport = (sentinel.getBoundingClientRect().top + marginTop) < 0;
-        var beforeH = document.documentElement.scrollHeight;
-        atc.classList.remove('is-pinned');
-        var grew = document.documentElement.scrollHeight - beforeH;
-        if (spotAboveViewport && grew > 0) window.scrollTo(0, window.scrollY + grew);
+        if (spotAboveViewport) {
+          atc.classList.remove('is-pinned');
+          padH = 0;
+          topPad.style.height = '0px';
+        } else {
+          var beforeTop = sentinel.getBoundingClientRect().top;
+          atc.classList.remove('is-pinned');
+          padH = 0;
+          topPad.style.height = '0px';
+          var delta = sentinel.getBoundingClientRect().top - beforeTop;
+          if (delta) window.scrollBy(0, delta);
+        }
         atc.style.left = '';
         atc.style.width = '';
       }
