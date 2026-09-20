@@ -638,8 +638,29 @@
       var marginBottom = parseFloat(atcStyle.marginBottom) || 0;
 
       var pinned = false;
+      function cleanupPad() {
+        /* Remove a leftover top spacer (from a bottom-edge release) while
+           holding the view exactly where it is. This is deliberately kept OUT
+           of the release itself — the release stays completely scroll-free so
+           the bar settles back into its spot without a catch — and deferred to
+           a later downward scroll, where a single one-frame hold is masked by
+           the motion instead of jarring the delicate landing. Measured before
+           and after so it's exact whether or not the browser runs its own
+           scroll-anchoring. */
+        if (padH <= 0) return;
+        var beforeTop = sentinel.getBoundingClientRect().top;
+        padH = 0;
+        topPad.style.height = '0px';
+        var delta = sentinel.getBoundingClientRect().top - beforeTop;
+        if (delta) window.scrollBy(0, delta);
+      }
       function pin() {
         if (pinned) return;
+        /* Safety net: if a deferred spacer is somehow still around (e.g. you
+           released at the bottom edge and scrolled straight back up without a
+           downward scroll in between to clear it), clear it first so the spacer
+           math below starts from a clean slate and can never accumulate. */
+        if (padH > 0) cleanupPad();
         var rect = atc.getBoundingClientRect();
         atc.style.left = rect.left + 'px';
         atc.style.width = rect.width + 'px';
@@ -661,36 +682,28 @@
       function unpin() {
         if (!pinned) return;
         pinned = false;
-        /* Releasing reverses the pin: the button rejoins the flow in its
-           spot and the top spacer is removed. Whether the view needs holding
-           depends on where the spot is now:
+        /* Releasing reverses the pin. How the top spacer comes off depends on
+           where the spot is now:
 
            - Spot still ABOVE the viewport (a "scroll down, never mind" while
-             it was still catching up): the button re-entering flow shoves
-             everything below it — the whole screen — DOWN by its height,
-             while removing the spacer above pulls everything back UP by the
-             same amount. They cancel exactly, so the view holds still with no
-             scroll change at all and momentum scrolling has nothing to fight.
+             it was still catching up): the button re-entering flow shoves the
+             whole screen DOWN by its height, while removing the spacer above
+             pulls it back UP by the same amount. They cancel exactly, so the
+             view holds still with no scroll change at all.
 
-           - Spot down at the bottom edge (the rare finish where you scroll
-             all the way up until the real button lands back in its place):
-             the button reappears below the fold, so re-adding it doesn't move
-             the screen, but removing the top spacer still lifts everything by
-             its height. Measure the spot before and after the change so the
-             correction is exact whether or not the browser runs its own
-             scroll-anchoring, and hold the view right there. */
+           - Spot down at the bottom edge (you scroll all the way up until the
+             real button lands back in its spot): the button reappears below the
+             fold, so the swap itself doesn't move the screen — the bar simply
+             settles into place. Removing the top spacer HERE would lift the
+             view and need a scroll nudge to counter it (the "slows down /
+             clicks into place" catch), so instead the spacer is LEFT in place
+             and cleared later, on a downward scroll, by cleanupPad(). That
+             keeps the landing completely free of any scroll nudge. */
         var spotAboveViewport = (sentinel.getBoundingClientRect().top + marginTop) < 0;
+        atc.classList.remove('is-pinned');
         if (spotAboveViewport) {
-          atc.classList.remove('is-pinned');
           padH = 0;
           topPad.style.height = '0px';
-        } else {
-          var beforeTop = sentinel.getBoundingClientRect().top;
-          atc.classList.remove('is-pinned');
-          padH = 0;
-          topPad.style.height = '0px';
-          var delta = sentinel.getBoundingClientRect().top - beforeTop;
-          if (delta) window.scrollBy(0, delta);
         }
         atc.style.left = '';
         atc.style.width = '';
@@ -771,6 +784,11 @@
         if (scrollingDown) {
           upDistance = 0;
           unpin();
+          /* A bottom-edge release leaves its top spacer in place so the
+             landing stays scroll-free; clear it now, while scrolling down and
+             away from the spot, where the one-frame hold is masked by the
+             motion. */
+          if (!pinned && padH > 0) cleanupPad();
         } else {
           upDistance += lastY - y;
           if (pinned) {
