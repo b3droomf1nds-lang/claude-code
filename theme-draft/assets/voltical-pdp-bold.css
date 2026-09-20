@@ -2186,21 +2186,22 @@
 }
 
 /* ---------- compare / "Select your iPhone" calculator: one-at-a-time reveal ----------
-   The whole comparison block used to fade in at once (a single [data-reveal]
-   on .pinfo__below, now removed) and only after it was already well up the
-   screen. Instead each piece — the heading text, then the iPhone picker, then
-   each stat tile — fades in as it scrolls into view, matching how the rest of
-   the site reveals, and earlier. OPACITY ONLY: the tiles and .pdp-cmp__grid
-   position themselves with transform (scale/translate), so this must never
-   animate transform or the layout breaks. The small per-piece observer in
-   sections/main-product.liquid adds .is-shown to each piece as it enters. */
+   Each piece — the heading text, then the iPhone picker, then each stat tile —
+   reveals as it scrolls into view (per-piece observer in main-product.liquid
+   adds .is-shown), using the SAME slide-up + fade the rest of the site's cards
+   use: translateY + opacity over --dur/--ease, triggered at the same 12% point.
+
+   The SLIDE (transform) is applied on MOBILE ONLY. On desktop the tiles and
+   .pdp-cmp__grid position themselves with transform (scale/translate), so there
+   the reveal stays opacity-only and never touches transform — otherwise the
+   layout would break. */
 .pdp--bold .pinfo__below { overflow-anchor: none; }
 .pdp--bold .pdp-cmp__select-heading,
 .pdp--bold .pdp-cmp__label,
 .pdp--bold .pdp-cmp__select-wrap,
 .pdp--bold .pdp-cmp__grid > .pdp-cmp__card {
   opacity: 0;
-  transition: opacity .5s var(--ease, cubic-bezier(.4, 0, .2, 1));
+  transition: opacity var(--dur, .8s) var(--ease, cubic-bezier(.22, .61, .21, 1));
 }
 .pdp--bold .pdp-cmp__select-heading.is-shown,
 .pdp--bold .pdp-cmp__label.is-shown,
@@ -2208,8 +2209,31 @@
 .pdp--bold .pdp-cmp__grid > .pdp-cmp__card.is-shown {
   opacity: 1;
 }
+/* The slide uses the independent `translate` property, NOT `transform`: the
+   compare tiles' `transform` is owned by the Canva editor, which snapshots each
+   tile's computed transform on load and pins it inline with !important — a
+   transform-based slide gets frozen at its start value. `translate` composes
+   with (does not replace) that transform and Canva never touches it, so the
+   tiles can slide freely. Mobile only (matches the 36px card slide); desktop
+   stays opacity-only. */
+@media (max-width: 899px) {
+  .pdp--bold .pdp-cmp__select-heading,
+  .pdp--bold .pdp-cmp__label,
+  .pdp--bold .pdp-cmp__select-wrap,
+  .pdp--bold .pdp-cmp__grid > .pdp-cmp__card {
+    translate: 0 36px;
+    transition: opacity var(--dur, .8s) var(--ease, cubic-bezier(.22, .61, .21, 1)),
+                translate var(--dur, .8s) var(--ease, cubic-bezier(.22, .61, .21, 1));
+  }
+  .pdp--bold .pdp-cmp__select-heading.is-shown,
+  .pdp--bold .pdp-cmp__label.is-shown,
+  .pdp--bold .pdp-cmp__select-wrap.is-shown,
+  .pdp--bold .pdp-cmp__grid > .pdp-cmp__card.is-shown {
+    translate: 0 0;
+  }
+}
 /* If motion is reduced, or JavaScript never arms the observer, everything
-   stays fully visible rather than stuck invisible. */
+   stays fully visible rather than stuck invisible or shifted. */
 @media (prefers-reduced-motion: reduce) {
   .pdp--bold .pdp-cmp__select-heading,
   .pdp--bold .pdp-cmp__label,
@@ -2217,5 +2241,13 @@
   .pdp--bold .pdp-cmp__grid > .pdp-cmp__card {
     opacity: 1 !important;
     transition: none !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) and (max-width: 899px) {
+  .pdp--bold .pdp-cmp__select-heading,
+  .pdp--bold .pdp-cmp__label,
+  .pdp--bold .pdp-cmp__select-wrap,
+  .pdp--bold .pdp-cmp__grid > .pdp-cmp__card {
+    translate: 0 0 !important;
   }
 }

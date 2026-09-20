@@ -418,10 +418,10 @@
 
     /* Reveal the compare / "Select your iPhone" calculator one piece at a time
        as it scrolls into view — the heading, then the picker, then each stat
-       tile — instead of the whole block fading in at once (and late). The CSS
-       sets the initial hidden state (opacity only: the tiles use transform for
-       layout, so this never touches transform); this observer adds .is-shown to
-       each piece as it enters, cascading top-to-bottom. */
+       tile. This mirrors the site-wide [data-reveal] reveal exactly (same 12%
+       trigger point; the CSS gives it the same slide-up + fade over --dur), but
+       runs as its own observer so it can be opacity-only on desktop where the
+       tiles' layout transforms must not be touched. */
     document.addEventListener('DOMContentLoaded', function () {
       var cmp = document.querySelector('.pdp--bold .pdp-cmp');
       if (!cmp) return;
@@ -433,17 +433,12 @@
         return;
       }
       var io = new IntersectionObserver(function (entries) {
-        /* Reveal the pieces that just entered in top-to-bottom order, one
-           shortly after the next, so a group that appears together still
-           cascades one at a time rather than popping in all at once. */
-        entries.filter(function (e) { return e.isIntersecting; })
-          .sort(function (a, b) { return a.boundingClientRect.top - b.boundingClientRect.top; })
-          .forEach(function (e, i) {
-            var el = e.target;
-            io.unobserve(el);
-            setTimeout(function () { el.classList.add('is-shown'); }, i * 90);
-          });
-      }, { threshold: 0.15 });
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          e.target.classList.add('is-shown');
+          io.unobserve(e.target);
+        });
+      }, { threshold: 0.12 });
       pieces.forEach(function (el) {
         /* Compact tile variants that aren't rendered at this viewport
            (display:none) can never intersect — reveal them immediately so they
