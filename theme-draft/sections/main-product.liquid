@@ -568,31 +568,24 @@
     })();
 
     /* Add to cart only ever catches at the bottom of the screen while
-       actively scrolling UP and below its normal spot in the buy
-       column — scrolling down never shows it, it only ever appears
-       there normally, in its actual place in the buy column. This
-       toggles the SAME button between normal flow and position:fixed
-       (see .pdp--bold .atc.is-pinned in voltical-pdp-bold.css) —
-       there is no second/cloned button anywhere. No placeholder is left
-       behind in its normal spot while pinned — that space just closes up
-       and the page gets shorter for as long as it's pinned, which is the
-       point: the empty spot where the button used to be is hidden.
-       A pin only ever starts while that spot is ABOVE the viewport, so
-       left alone the browser would keep scrollY put and shove everything
-       below the spot — the whole visible screen — upward by the collapsed
-       height. Nudging scrollY to counter that (the old approach) is fought
-       by mobile momentum scrolling and shows up as a visible skip. Instead
-       we absorb the collapse ENTIRELY above the fold with no scroll change
-       at all: an invisible spacer (topPad, pinned to the very top of the
-       page) grows by exactly the height the spot gave up, so the total page
-       height is unchanged and — because both the vanished spot and the added
-       spacer sit above the viewport while scrollY stays put — the part of
-       the page you're looking at doesn't move a pixel. The top quietly gets
-       taller; the bottom never jumps. On release the spacer is removed
-       again: when the spot is still above the viewport the removal and the
-       button re-entering flow cancel out (no scroll needed), and only in the
-       rare case where you scroll all the way up until the real button lands
-       back in its spot is a single, measured scroll correction used. */
+       actively scrolling UP and below its normal spot in the buy column —
+       scrolling down never shows it, it only ever appears there normally, in
+       its actual place in the buy column. This toggles the SAME button between
+       normal flow and position:fixed (see .pdp--bold .atc.is-pinned in
+       voltical-pdp-bold.css) — there is no second/cloned button anywhere.
+
+       The hard constraint: on iOS any programmatic scroll cancels the user's
+       momentum, so if pinning shortened the page and we nudged scrollY to
+       compensate, the page would "stop going up" mid-flick and the user would
+       have to swipe again. So we never touch the scroll position at all.
+       Instead, when the button floats to the bottom, a placeholder in its buy-
+       column spot EXPANDS to exactly the height the button gave up, holding the
+       page's total height constant. Nothing below the spot moves, no
+       compensation is needed, and pin/release are pure show/hide — momentum is
+       never interrupted, and there is no skip or jump. The only visible
+       trade-off is that the button's spot shows as a brief empty slot while it
+       floats; the slot closes seamlessly the instant the button lands back
+       into it at the bottom edge. */
     document.addEventListener('DOMContentLoaded', function () {
       // Desktop no longer gets the sticky/pinned Add to cart bar at
       // all — mobile keeps it untouched.
@@ -600,109 +593,73 @@
       var atc = document.querySelector('.pdp--bold .atc');
       if (!atc) return;
 
-      /* The sentinel marks where the button's normal spot is, so
-         scrolling can tell whether we're above or below it — it has to
-         sit right where the button itself would otherwise be, so
-         insert it in the button's place BEFORE the button leaves flow
-         the first time it pins. */
+      /* A placeholder that sits exactly where the button lives in the buy
+         column. It does double duty:
+           1. It marks the button's resting spot so the scroll handler can tell
+              whether we're above or below it.
+           2. While the button is pinned (floating at the bottom of the screen)
+              it EXPANDS to hold that spot's space open, so pulling the button
+              out of flow doesn't shorten the page. Because the page height
+              never changes, nothing below the spot ever moves and NO
+              compensating scroll is required — which is the whole point: on iOS
+              any programmatic scroll cancels the user's momentum, so the page
+              "stops going up" and they have to swipe again. Reserving the space
+              in place means the pin and the release are pure show/hide with
+              zero scroll, so momentum is never interrupted. The only trade-off
+              is the spot shows as a brief empty slot while the button floats;
+              it closes seamlessly the instant the button lands back into it. */
       var sentinel = document.createElement('div');
       sentinel.setAttribute('aria-hidden', 'true');
-      sentinel.style.height = '1px';
+      sentinel.style.height = '0px';
       atc.parentNode.insertBefore(sentinel, atc);
 
-      /* An invisible spacer pinned to the very top of the page. While the
-         button is pinned this grows to exactly the height its normal spot
-         gave up, so the page's total height never changes and the collapse
-         is absorbed above the fold instead of by nudging the scroll position
-         (which mobile momentum scrolling fights, causing the skip). It stays
-         0px tall — and therefore invisible and inert — whenever the button
-         is not pinned. */
-      var topPad = document.createElement('div');
-      topPad.setAttribute('aria-hidden', 'true');
-      topPad.style.height = '0px';
-      topPad.style.width = '100%';
-      var padH = 0;
-      document.body.insertBefore(topPad, document.body.firstChild);
-
-      /* Cache the button's own natural (unpinned) height/margins up
-         front, before it's ever pinned — the pinned state adds its own
-         wrapper padding for the bottom bar's background, which makes
-         .atc taller than it sits normally in the buy column. Using that
-         pinned height to decide when to unpin would land the real
-         button's bottom edge in the wrong place, so this is measured
-         once while still unpinned and reused for the rest of the page's
-         life. */
+      /* Cache the button's own natural (unpinned) height/margins up front,
+         before it's ever pinned — the pinned state adds its own wrapper padding
+         for the bottom bar's background, which makes .atc taller than it sits
+         normally in the buy column. Measured once while still unpinned and
+         reused for the rest of the page's life. */
       var atcStyle = getComputedStyle(atc);
       var naturalHeight = atc.getBoundingClientRect().height;
       var marginTop = parseFloat(atcStyle.marginTop) || 0;
       var marginBottom = parseFloat(atcStyle.marginBottom) || 0;
 
       var pinned = false;
-      /* This page sets scroll-behavior:smooth on <html>, so a plain
-         window.scrollBy() ANIMATES — it glides over several frames and fights
-         whatever scrolling the user is doing, which reads as a jump/stutter.
-         Every compensating scroll here must be instantaneous, so force
-         scroll-behavior to auto for the one call and then restore it. */
-      function instantScrollBy(dy) {
-        if (!dy) return;
-        var root = document.documentElement;
-        var prev = root.style.scrollBehavior;
-        root.style.scrollBehavior = 'auto';
-        window.scrollBy(0, dy);
-        root.style.scrollBehavior = prev;
-      }
       function pin() {
         if (pinned) return;
         var rect = atc.getBoundingClientRect();
         atc.style.left = rect.left + 'px';
         atc.style.width = rect.width + 'px';
-        /* Going fixed pulls the button out of flow, so its old spot in the
-           buy column collapses. The pin always starts while that spot is
-           above the viewport, so rather than nudging the scroll position to
-           hide the collapse (which mobile momentum scrolling fights, causing
-           the skip), grow the top spacer by exactly the height the spot lost.
-           The vanished spot and the grown spacer both sit above the viewport
-           and scrollY is left untouched, so the total page height is unchanged
-           and the screen you're looking at doesn't move — the collapse is
-           absorbed above the fold and the top simply gets taller. */
+        /* Float the button to the bottom of the screen, but reserve exactly the
+           space it gives up in the buy column with the placeholder, in the SAME
+           frame, so the page's total height doesn't change. Measuring the
+           collapse via scrollHeight captures the real amount (margins and all).
+           Nothing below the spot moves, so no scroll compensation is needed. */
         var beforeH = document.documentElement.scrollHeight;
         atc.classList.add('is-pinned');
         var collapsed = beforeH - document.documentElement.scrollHeight;
-        if (collapsed > 0) { padH = collapsed; topPad.style.height = padH + 'px'; }
+        sentinel.style.height = (collapsed > 0 ? collapsed : 0) + 'px';
+        /* The placeholder is a plain div, so its margins don't collapse with
+           neighbours the way the button's did — reserving the raw collapsed
+           height can be off by a few px. Measure the leftover difference and
+           fold it in so the page height is restored EXACTLY (an inexact reserve
+           would leave a small jump). All synchronous, so it paints once. */
+        var resid = beforeH - document.documentElement.scrollHeight;
+        if (resid) {
+          var h = (parseFloat(sentinel.style.height) || 0) + resid;
+          sentinel.style.height = (h > 0 ? h : 0) + 'px';
+        }
         pinned = true;
       }
       function unpin() {
         if (!pinned) return;
         pinned = false;
-        /* Releasing reverses the pin: the button rejoins the flow in its spot
-           and the top spacer is removed. Whether the view needs holding
-           depends on where the spot is now:
-
-           - Spot still ABOVE the viewport (a "scroll down, never mind" while
-             it was still catching up): the button re-entering flow shoves the
-             whole screen DOWN by its height, while removing the spacer above
-             pulls it back UP by the same amount. They cancel exactly, so no
-             scroll is needed.
-
-           - Spot down at the bottom edge (you scroll all the way up until the
-             real button lands back in its spot): the button reappears below the
-             fold, so the swap itself doesn't move the screen, but removing the
-             top spacer lifts everything by its height. Measure the spot before
-             and after and hold it with an INSTANT scroll — with the page's
-             scroll-behavior:smooth this would otherwise glide into the "slows
-             down / clicks into place" catch. */
-        var spotAboveViewport = (sentinel.getBoundingClientRect().top + marginTop) < 0;
-        if (spotAboveViewport) {
-          atc.classList.remove('is-pinned');
-          padH = 0;
-          topPad.style.height = '0px';
-        } else {
-          var beforeTop = sentinel.getBoundingClientRect().top;
-          atc.classList.remove('is-pinned');
-          padH = 0;
-          topPad.style.height = '0px';
-          instantScrollBy(sentinel.getBoundingClientRect().top - beforeTop);
-        }
+        /* Reverse it: the button rejoins the flow in its spot and the
+           placeholder closes back to nothing — both at the same location and in
+           the same frame, so they cancel exactly. The page height is unchanged,
+           nothing moves, and again no scroll is needed: at the bottom-edge
+           finish the real button simply reappears where the floating bar was. */
+        atc.classList.remove('is-pinned');
+        sentinel.style.height = '0px';
         atc.style.left = '';
         atc.style.width = '';
       }
@@ -771,7 +728,10 @@
       function update() {
         var y = window.scrollY;
         var scrollingDown = y > lastY;
-        var restingTop = sentinel.getBoundingClientRect().bottom + marginTop;
+        /* Use the placeholder's TOP (not bottom): it stays put whether the
+           placeholder is closed (0px) or expanded to hold the pinned button's
+           spot, so the resting-spot geometry is stable across pin/unpin. */
+        var restingTop = sentinel.getBoundingClientRect().top + marginTop;
         var restingBottom = restingTop + naturalHeight;
         var pinnedBottomLine = window.innerHeight - marginBottom;
         var belowSpot = restingBottom < pinnedBottomLine;
@@ -797,10 +757,9 @@
             pin();
           }
         }
-        /* pin()/unpin() may have adjusted scrollY to hold the view still,
-           so read the live position rather than the value sampled at the
-           top — otherwise the compensating scroll looks like a real user
-           scroll to the next event and skews the direction check. */
+        /* pin()/unpin() no longer touch the scroll position (the placeholder
+           reserves the space in flow), but read the live value anyway to stay
+           robust to any layout-driven scroll adjustment between frames. */
         lastY = window.scrollY;
         ticking = false;
       }
