@@ -638,29 +638,21 @@
       var marginBottom = parseFloat(atcStyle.marginBottom) || 0;
 
       var pinned = false;
-      function cleanupPad() {
-        /* Remove a leftover top spacer (from a bottom-edge release) while
-           holding the view exactly where it is. This is deliberately kept OUT
-           of the release itself — the release stays completely scroll-free so
-           the bar settles back into its spot without a catch — and deferred to
-           a later downward scroll, where a single one-frame hold is masked by
-           the motion instead of jarring the delicate landing. Measured before
-           and after so it's exact whether or not the browser runs its own
-           scroll-anchoring. */
-        if (padH <= 0) return;
-        var beforeTop = sentinel.getBoundingClientRect().top;
-        padH = 0;
-        topPad.style.height = '0px';
-        var delta = sentinel.getBoundingClientRect().top - beforeTop;
-        if (delta) window.scrollBy(0, delta);
+      /* This page sets scroll-behavior:smooth on <html>, so a plain
+         window.scrollBy() ANIMATES — it glides over several frames and fights
+         whatever scrolling the user is doing, which reads as a jump/stutter.
+         Every compensating scroll here must be instantaneous, so force
+         scroll-behavior to auto for the one call and then restore it. */
+      function instantScrollBy(dy) {
+        if (!dy) return;
+        var root = document.documentElement;
+        var prev = root.style.scrollBehavior;
+        root.style.scrollBehavior = 'auto';
+        window.scrollBy(0, dy);
+        root.style.scrollBehavior = prev;
       }
       function pin() {
         if (pinned) return;
-        /* Safety net: if a deferred spacer is somehow still around (e.g. you
-           released at the bottom edge and scrolled straight back up without a
-           downward scroll in between to clear it), clear it first so the spacer
-           math below starts from a clean slate and can never accumulate. */
-        if (padH > 0) cleanupPad();
         var rect = atc.getBoundingClientRect();
         atc.style.left = rect.left + 'px';
         atc.style.width = rect.width + 'px';
@@ -676,34 +668,40 @@
         var beforeH = document.documentElement.scrollHeight;
         atc.classList.add('is-pinned');
         var collapsed = beforeH - document.documentElement.scrollHeight;
-        if (collapsed > 0) { padH += collapsed; topPad.style.height = padH + 'px'; }
+        if (collapsed > 0) { padH = collapsed; topPad.style.height = padH + 'px'; }
         pinned = true;
       }
       function unpin() {
         if (!pinned) return;
         pinned = false;
-        /* Releasing reverses the pin. How the top spacer comes off depends on
-           where the spot is now:
+        /* Releasing reverses the pin: the button rejoins the flow in its spot
+           and the top spacer is removed. Whether the view needs holding
+           depends on where the spot is now:
 
            - Spot still ABOVE the viewport (a "scroll down, never mind" while
              it was still catching up): the button re-entering flow shoves the
              whole screen DOWN by its height, while removing the spacer above
-             pulls it back UP by the same amount. They cancel exactly, so the
-             view holds still with no scroll change at all.
+             pulls it back UP by the same amount. They cancel exactly, so no
+             scroll is needed.
 
            - Spot down at the bottom edge (you scroll all the way up until the
              real button lands back in its spot): the button reappears below the
-             fold, so the swap itself doesn't move the screen — the bar simply
-             settles into place. Removing the top spacer HERE would lift the
-             view and need a scroll nudge to counter it (the "slows down /
-             clicks into place" catch), so instead the spacer is LEFT in place
-             and cleared later, on a downward scroll, by cleanupPad(). That
-             keeps the landing completely free of any scroll nudge. */
+             fold, so the swap itself doesn't move the screen, but removing the
+             top spacer lifts everything by its height. Measure the spot before
+             and after and hold it with an INSTANT scroll — with the page's
+             scroll-behavior:smooth this would otherwise glide into the "slows
+             down / clicks into place" catch. */
         var spotAboveViewport = (sentinel.getBoundingClientRect().top + marginTop) < 0;
-        atc.classList.remove('is-pinned');
         if (spotAboveViewport) {
+          atc.classList.remove('is-pinned');
           padH = 0;
           topPad.style.height = '0px';
+        } else {
+          var beforeTop = sentinel.getBoundingClientRect().top;
+          atc.classList.remove('is-pinned');
+          padH = 0;
+          topPad.style.height = '0px';
+          instantScrollBy(sentinel.getBoundingClientRect().top - beforeTop);
         }
         atc.style.left = '';
         atc.style.width = '';
@@ -777,18 +775,20 @@
         var restingBottom = restingTop + naturalHeight;
         var pinnedBottomLine = window.innerHeight - marginBottom;
         var belowSpot = restingBottom < pinnedBottomLine;
-        var outOfView = restingBottom <= 0;
+        /* Don't summon the sticky bar the instant the real button's bottom
+           edge slips past the top of the screen — only once it's comfortably
+           gone (a full button-height above the top). Otherwise a small scroll
+           up while the real button is basically still in place flashes the
+           sticky bar on for a moment before the real one settles back, which
+           looks like a glitch. The wide gap between this engage point and the
+           bottom-edge release also keeps the two from oscillating. */
+        var outOfView = restingBottom <= -naturalHeight;
         var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
         var nearBottomEdge = (maxScroll - Math.max(y, lastY)) < BOUNCE_ZONE_PX;
         var recentUpInput = Date.now() - lastUpInputTime < UP_INPUT_WINDOW_MS;
         if (scrollingDown) {
           upDistance = 0;
           unpin();
-          /* A bottom-edge release leaves its top spacer in place so the
-             landing stays scroll-free; clear it now, while scrolling down and
-             away from the spot, where the one-frame hold is masked by the
-             motion. */
-          if (!pinned && padH > 0) cleanupPad();
         } else {
           upDistance += lastY - y;
           if (pinned) {
