@@ -332,15 +332,12 @@
 
           {% render 'cross-sell', section: section, product: product %}
 
-          {%- comment -%} This is the ONLY Add to cart button on the page —
-            no separate cloned/fixed copy. A small script further down
-            pins THIS SAME button to the bottom of the screen (position:
-            fixed) once it scrolls out of its normal spot in the buy
-            column, and releases it again once scrolled back up to that
-            spot — see the "Add to cart isn't visible..." script and
-            .pdp--bold .atc.is-pinned in voltical-pdp-bold.css. It keeps
-            the form="pdp-form-..." attribute below so it still submits
-            correctly even while pinned. {%- endcomment -%}
+          {%- comment -%} The real, in-flow Add to cart button. It never moves.
+            On mobile a small script further down builds a FIXED CLONE of it that
+            appears at the bottom of the screen only while this button is
+            scrolled up off the top (see the "Add to cart sticky bar" script).
+            The clone submits this same form via its form="pdp-form-..." so Add
+            to cart behaves identically; keep that attribute below. {%- endcomment -%}
           <div class="atc">
             <button type="submit" form="pdp-form-{{ section.id }}" class="atc__btn" data-atc {% unless current_variant.available %}disabled{% endunless %}>
               <span class="atc__fill" aria-hidden="true"></span>
@@ -599,158 +596,99 @@
       window.addEventListener('load', update);
     })();
 
-    /* Add to cart only ever catches at the bottom of the screen while
-       actively scrolling UP and below its normal spot in the buy column —
-       scrolling down never shows it, it only ever appears there normally, in
-       its actual place in the buy column. This toggles the SAME button between
-       normal flow and position:fixed (see .pdp--bold .atc.is-pinned in
-       voltical-pdp-bold.css) — there is no second/cloned button anywhere.
-
-       The hard constraint: on iOS any programmatic scroll cancels the user's
-       momentum, so if pinning shortened the page and we nudged scrollY to
-       compensate, the page would "stop going up" mid-flick and the user would
-       have to swipe again. So we never touch the scroll position at all.
-       Instead, when the button floats to the bottom, a placeholder in its buy-
-       column spot EXPANDS to exactly the height the button gave up, holding the
-       page's total height constant. Nothing below the spot moves, no
-       compensation is needed, and pin/release are pure show/hide — momentum is
-       never interrupted, and there is no skip or jump. The only visible
-       trade-off is that the button's spot shows as a brief empty slot while it
-       floats; the slot closes seamlessly the instant the button lands back
-       into it at the bottom edge. */
+    /* Add to cart sticky bar. The real button stays exactly where it is in the
+       buy column — it is never moved, collapsed, or reserved — so the page
+       layout never changes. That means there is nothing to compensate: no
+       scroll nudge (which would cancel iOS momentum and make the page "stop
+       going up"), no jump, and no empty gap left where the button was. Instead
+       a lightweight FIXED CLONE of the button is shown at the bottom of the
+       screen while the real button is scrolled up off the top, and hidden the
+       moment the real button is back in view. It only ever appears while
+       scrolling UP (scrolling down is a "never mind" that hides it). The clone
+       submits the same product form, so Add to cart behaves identically, and it
+       mirrors the real button's label / price / added state. Mobile only. */
     document.addEventListener('DOMContentLoaded', function () {
-      // Desktop no longer gets the sticky/pinned Add to cart bar at
-      // all — mobile keeps it untouched.
+      // Desktop keeps the normal in-flow button only.
       if (window.matchMedia('(min-width:900px)').matches) return;
       var atc = document.querySelector('.pdp--bold .atc');
       if (!atc) return;
+      var realBtn = atc.querySelector('.atc__btn');
+      if (!realBtn) return;
 
-      /* A placeholder that sits exactly where the button lives in the buy
-         column. It does double duty:
-           1. It marks the button's resting spot so the scroll handler can tell
-              whether we're above or below it.
-           2. While the button is pinned (floating at the bottom of the screen)
-              it EXPANDS to hold that spot's space open, so pulling the button
-              out of flow doesn't shorten the page. Because the page height
-              never changes, nothing below the spot ever moves and NO
-              compensating scroll is required — which is the whole point: on iOS
-              any programmatic scroll cancels the user's momentum, so the page
-              "stops going up" and they have to swipe again. Reserving the space
-              in place means the pin and the release are pure show/hide with
-              zero scroll, so momentum is never interrupted. The only trade-off
-              is the spot shows as a brief empty slot while the button floats;
-              it closes seamlessly the instant the button lands back into it. */
-      var sentinel = document.createElement('div');
-      sentinel.setAttribute('aria-hidden', 'true');
-      sentinel.style.height = '0px';
-      atc.parentNode.insertBefore(sentinel, atc);
-
-      /* Cache the button's own natural (unpinned) height/margins up front,
-         before it's ever pinned — the pinned state adds its own wrapper padding
-         for the bottom bar's background, which makes .atc taller than it sits
-         normally in the buy column. Measured once while still unpinned and
-         reused for the rest of the page's life. */
-      var atcStyle = getComputedStyle(atc);
       var naturalHeight = atc.getBoundingClientRect().height;
-      var marginTop = parseFloat(atcStyle.marginTop) || 0;
-      var marginBottom = parseFloat(atcStyle.marginBottom) || 0;
 
-      var pinned = false;
-      function pin() {
-        if (pinned) return;
+      /* Build the fixed clone bar. It carries the class 'pdp--bold' so the
+         button styling (.pdp--bold .atc__btn …) applies, and lives on <body> so
+         position:fixed is relative to the viewport regardless of any
+         transformed ancestor of the section. It sits OUTSIDE the product form,
+         but its button gets the form="pdp-form-…" attribute, so tapping it
+         submits that same form and runs the exact same add-to-cart handler. */
+      var bar = document.createElement('div');
+      bar.className = 'pdp--bold atc-sticky-clone';
+      bar.setAttribute('aria-hidden', 'true');
+      bar.style.cssText = 'position:fixed;left:0;bottom:0;z-index:40;display:none;' +
+        'background:var(--base,#FAFAF8);padding:8px 0 calc(8px + env(safe-area-inset-bottom));';
+      var cloneBtn = document.createElement('button');
+      cloneBtn.type = 'submit';
+      var formId = realBtn.getAttribute('form');
+      if (formId) cloneBtn.setAttribute('form', formId);
+      cloneBtn.tabIndex = -1;
+      bar.appendChild(cloneBtn);
+      document.body.appendChild(bar);
+
+      /* Keep the clone identical to the real button: same classes (so states
+         like is-added apply), same inner markup (label + live price), same
+         disabled state. Observing the real button covers every variant change,
+         price update and add-to-cart morph. */
+      function syncClone() {
+        cloneBtn.className = realBtn.className;
+        cloneBtn.innerHTML = realBtn.innerHTML;
+        cloneBtn.disabled = realBtn.disabled;
+      }
+      syncClone();
+      new MutationObserver(syncClone).observe(realBtn, { attributes: true, childList: true, subtree: true, characterData: true });
+
+      function placeBar() {
         var rect = atc.getBoundingClientRect();
-        atc.style.left = rect.left + 'px';
-        atc.style.width = rect.width + 'px';
-        /* Float the button to the bottom of the screen, but reserve exactly the
-           space it gives up in the buy column with the placeholder, in the SAME
-           frame, so the page's total height doesn't change. Measuring the
-           collapse via scrollHeight captures the real amount (margins and all).
-           Nothing below the spot moves, so no scroll compensation is needed. */
-        var beforeH = document.documentElement.scrollHeight;
-        atc.classList.add('is-pinned');
-        var collapsed = beforeH - document.documentElement.scrollHeight;
-        sentinel.style.height = (collapsed > 0 ? collapsed : 0) + 'px';
-        /* The placeholder is a plain div, so its margins don't collapse with
-           neighbours the way the button's did — reserving the raw collapsed
-           height can be off by a few px. Measure the leftover difference and
-           fold it in so the page height is restored EXACTLY (an inexact reserve
-           would leave a small jump). All synchronous, so it paints once. */
-        var resid = beforeH - document.documentElement.scrollHeight;
-        if (resid) {
-          var h = (parseFloat(sentinel.style.height) || 0) + resid;
-          sentinel.style.height = (h > 0 ? h : 0) + 'px';
-        }
-        pinned = true;
-      }
-      function unpin() {
-        if (!pinned) return;
-        pinned = false;
-        /* Reverse it: the button rejoins the flow in its spot and the
-           placeholder closes back to nothing — both at the same location and in
-           the same frame, so they cancel exactly. The page height is unchanged,
-           nothing moves, and again no scroll is needed: at the bottom-edge
-           finish the real button simply reappears where the floating bar was. */
-        atc.classList.remove('is-pinned');
-        sentinel.style.height = '0px';
-        atc.style.left = '';
-        atc.style.width = '';
+        bar.style.left = rect.left + 'px';
+        bar.style.width = rect.width + 'px';
       }
 
-      /* A pin only ever STARTS when both: (a) actively scrolling up, and
-         (b) the button's natural spot is genuinely out of view (its
-         resting bottom edge is above the top of the viewport) — meaning
-         you'd already scrolled past it earlier and are now catching
-         back up. If the real button is already visible in its normal
-         spot (e.g. you scrolled down, it came into view normally, and
-         you nudge back up a little while it's still on screen) it must
-         NOT switch to the sticky bar — it just stays the regular button,
-         same as any other in-flow content.
+      var shown = false;
+      function showClone() {
+        if (shown) return;
+        placeBar();
+        bar.style.display = 'block';
+        shown = true;
+      }
+      function hideClone() {
+        if (!shown) return;
+        bar.style.display = 'none';
+        shown = false;
+      }
 
-         While actively scrolling up, it stays pinned until the resting
-         bottom edge scrolls all the way down to the same line the
-         pinned bar's bottom sits on — that's the ONLY way it ends: exact
-         alignment, no gap, no jump, the real button appearing right
-         where the sticky one was.
+      /* The clone only ever appears while (a) actively scrolling up and (b) the
+         real button is genuinely off the top of the screen — meaning you
+         scrolled past it earlier and are now heading back up. It hides again the
+         instant the real button is back in view, and immediately on any downward
+         scroll ("never mind").
 
-         The instant you reverse to scrolling down, though, the sticky
-         bar goes away immediately regardless of position — scrolling
-         down is a "never mind" signal, so it always drops straight back
-         to the regular button rather than continuing to chase the
-         catch-up point.
-
-         One exception: right at the bottom of the page, the browser's
-         own elastic overscroll bounces the view back up on its own —
-         nothing to do with the user actually scrolling up — and that
-         rebound must NOT start a pin (this is the main scenario the
-         sticky bar exists for, so it can't just be disabled near the
-         bottom; the bounce itself has to be told apart from a real
-         upward scroll). A time- or distance-based delay on EVERY pin
-         start was the wrong tool here — it made the button noticeably
-         slow to appear even for a real, deliberate upward scroll. The
-         actual bounce has a specific, detectable fingerprint that a
-         real scroll never produces: for the split second of the rubber-
-         band stretch itself, scrollY briefly reports a value OUTSIDE
-         the valid [0, max] range (mobile Safari/Chrome-on-iOS do this
-         even though the visual "position" never really leaves the
-         page). Catching that moment directly — instead of guessing from
-         motion alone — means a genuine upward scroll pins the instant
-         it crosses the distance threshold below, with no added delay,
-         while a real bounce (which always passes through that
-         out-of-range state) gets a short cooldown right when it
-         happens. */
+         One exception: right at the bottom of the page, the browser's own
+         elastic overscroll bounces the view back up on its own — nothing to do
+         with the user actually scrolling up — and that rebound must NOT trigger
+         the clone (the bottom is the main place the sticky bar is wanted, so it
+         can't just be disabled there; the bounce has to be told apart from a
+         real upward scroll). The bounce has a detectable fingerprint: for the
+         split second of the rubber-band stretch, scrollY briefly reports a value
+         OUTSIDE the valid [0, max] range (mobile Safari/Chrome-on-iOS do this).
+         So near the bottom we additionally require a recent genuine upward
+         wheel/touch input, which the passive bounce can't produce, while a real
+         drag/flick starting at the bottom still does. */
       var PIN_START_DISTANCE = 10;
-      /* The bottom bounce only ever happens within a small band right at
-         the very bottom of the page (the elastic overscroll stretch and
-         its spring-back). Everywhere else, a pin-start only needs to
-         clear the small distance threshold above, same as always — no
-         extra gating, so catching up to a button you scrolled past
-         higher up the page still pins instantly like before.
-
-         Only inside that bottom band do we also require a recent,
-         genuine upward wheel/touch event before pinning. The bounce is a
-         passive spring effect — scrollY moves back up on its own with no
-         live upward input behind it — so it can't satisfy this, while a
-         real drag or flick starting right at the bottom still does. */
+      /* The bottom bounce only happens within a small band at the very bottom of
+         the page. Everywhere else, showing the clone just needs the small
+         upward-distance threshold above; only inside this band do we also
+         require recent genuine upward input. */
       var BOUNCE_ZONE_PX = 120;
       var UP_INPUT_WINDOW_MS = 400;
       var lastUpInputTime = 0;
@@ -760,38 +698,29 @@
       function update() {
         var y = window.scrollY;
         var scrollingDown = y > lastY;
-        /* Use the placeholder's TOP (not bottom): it stays put whether the
-           placeholder is closed (0px) or expanded to hold the pinned button's
-           spot, so the resting-spot geometry is stable across pin/unpin. */
-        var restingTop = sentinel.getBoundingClientRect().top + marginTop;
-        var restingBottom = restingTop + naturalHeight;
-        var pinnedBottomLine = window.innerHeight - marginBottom;
-        var belowSpot = restingBottom < pinnedBottomLine;
-        /* Don't summon the sticky bar the instant the real button's bottom
-           edge slips past the top of the screen — only once it's comfortably
-           gone (a full button-height above the top). Otherwise a small scroll
-           up while the real button is basically still in place flashes the
-           sticky bar on for a moment before the real one settles back, which
-           looks like a glitch. The wide gap between this engage point and the
-           bottom-edge release also keeps the two from oscillating. */
+        /* The real button is always in flow, so read its live position
+           directly. restingBottom is its bottom edge in viewport coordinates. */
+        var restingBottom = atc.getBoundingClientRect().bottom;
+        /* Only show the clone once the real button is comfortably gone (a full
+           button-height above the top of the screen), and hide it again as soon
+           as the real button is back in view — the wide gap between the two
+           thresholds keeps it from flickering on a small scroll near the spot. */
         var outOfView = restingBottom <= -naturalHeight;
+        var backInView = restingBottom >= 0;
         var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
         var nearBottomEdge = (maxScroll - Math.max(y, lastY)) < BOUNCE_ZONE_PX;
         var recentUpInput = Date.now() - lastUpInputTime < UP_INPUT_WINDOW_MS;
         if (scrollingDown) {
           upDistance = 0;
-          unpin();
+          hideClone();
         } else {
           upDistance += lastY - y;
-          if (pinned) {
-            if (!belowSpot) unpin();
+          if (shown) {
+            if (backInView) hideClone();
           } else if (outOfView && upDistance >= PIN_START_DISTANCE && (!nearBottomEdge || recentUpInput)) {
-            pin();
+            showClone();
           }
         }
-        /* pin()/unpin() no longer touch the scroll position (the placeholder
-           reserves the space in flow), but read the live value anyway to stay
-           robust to any layout-driven scroll adjustment between frames. */
         lastY = window.scrollY;
         ticking = false;
       }
@@ -801,17 +730,12 @@
         window.requestAnimationFrame(update);
       }, { passive: true });
 
-      /* Pinning shrinks the page (the gap closes up), so if you were
-         already at the very bottom of the page when it pinned, there's
-         nowhere further down left to scroll to — no "scroll" event ever
-         fires from a downward drag/wheel in that state, so the listener
-         above would never see it and the sticky bar would get stuck
-         pinned forever. These two listeners catch a downward scroll
-         ATTEMPT directly (wheel delta, or a touch drag moving content
-         down) so unpin() still fires even when scrollY itself can't
-         move any further. */
+      /* At the very bottom of the page a downward drag/wheel may not move
+         scrollY (nowhere left to go), so no "scroll" event fires. These
+         listeners catch the downward intent directly so the clone still hides,
+         and record genuine upward input for the bottom-bounce guard above. */
       window.addEventListener('wheel', function (e) {
-        if (e.deltaY > 0) unpin();
+        if (e.deltaY > 0) hideClone();
         else if (e.deltaY < 0) lastUpInputTime = Date.now();
       }, { passive: true });
       var touchY = null;
@@ -820,16 +744,15 @@
       }, { passive: true });
       window.addEventListener('touchmove', function (e) {
         if (touchY === null || !e.touches || !e.touches.length) return;
-        var y = e.touches[0].clientY;
-        if (touchY - y > 4) unpin();
-        else if (y - touchY > 4) lastUpInputTime = Date.now();
-        touchY = y;
+        var ty = e.touches[0].clientY;
+        if (touchY - ty > 4) hideClone();
+        else if (ty - touchY > 4) lastUpInputTime = Date.now();
+        touchY = ty;
       }, { passive: true });
 
       window.addEventListener('resize', function () {
-        if (!pinned) return;
-        unpin();
-        pin();
+        naturalHeight = atc.getBoundingClientRect().height;
+        if (shown) placeBar();
       });
     });
 

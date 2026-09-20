@@ -2231,6 +2231,18 @@
   .pdp--bold .pdp-cmp__grid > .pdp-cmp__card.is-shown {
     translate: 0 0;
   }
+  /* Match the homepage cards' image settle: the tile artwork eases from a
+     slight zoom back to rest as the tile appears, which is what makes the
+     reveal read as rich rather than a plain fade. Uses `scale` (independent
+     property) so it composes with each image's own crop transform and stays
+     clear of the Canva-owned `transform`; the card's overflow:hidden clips it. */
+  .pdp--bold .pdp-cmp__grid > .pdp-cmp__card img {
+    scale: 1.06;
+    transition: scale 1s var(--ease, cubic-bezier(.22, .61, .21, 1));
+  }
+  .pdp--bold .pdp-cmp__grid > .pdp-cmp__card.is-shown img {
+    scale: 1;
+  }
 }
 /* If motion is reduced, or JavaScript never arms the observer, everything
    stays fully visible rather than stuck invisible or shifted. */
@@ -2249,5 +2261,8 @@
   .pdp--bold .pdp-cmp__select-wrap,
   .pdp--bold .pdp-cmp__grid > .pdp-cmp__card {
     translate: 0 0 !important;
+  }
+  .pdp--bold .pdp-cmp__grid > .pdp-cmp__card img {
+    scale: 1 !important;
   }
 }
