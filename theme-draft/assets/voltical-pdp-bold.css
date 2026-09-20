@@ -2184,3 +2184,38 @@
     font-weight: 700;
   }
 }
+
+/* ---------- compare / "Select your iPhone" calculator: one-at-a-time reveal ----------
+   The whole comparison block used to fade in at once (a single [data-reveal]
+   on .pinfo__below, now removed) and only after it was already well up the
+   screen. Instead each piece — the heading text, then the iPhone picker, then
+   each stat tile — fades in as it scrolls into view, matching how the rest of
+   the site reveals, and earlier. OPACITY ONLY: the tiles and .pdp-cmp__grid
+   position themselves with transform (scale/translate), so this must never
+   animate transform or the layout breaks. The small per-piece observer in
+   sections/main-product.liquid adds .is-shown to each piece as it enters. */
+.pdp--bold .pinfo__below { overflow-anchor: none; }
+.pdp--bold .pdp-cmp__select-heading,
+.pdp--bold .pdp-cmp__label,
+.pdp--bold .pdp-cmp__select-wrap,
+.pdp--bold .pdp-cmp__grid > .pdp-cmp__card {
+  opacity: 0;
+  transition: opacity .5s var(--ease, cubic-bezier(.4, 0, .2, 1));
+}
+.pdp--bold .pdp-cmp__select-heading.is-shown,
+.pdp--bold .pdp-cmp__label.is-shown,
+.pdp--bold .pdp-cmp__select-wrap.is-shown,
+.pdp--bold .pdp-cmp__grid > .pdp-cmp__card.is-shown {
+  opacity: 1;
+}
+/* If motion is reduced, or JavaScript never arms the observer, everything
+   stays fully visible rather than stuck invisible. */
+@media (prefers-reduced-motion: reduce) {
+  .pdp--bold .pdp-cmp__select-heading,
+  .pdp--bold .pdp-cmp__label,
+  .pdp--bold .pdp-cmp__select-wrap,
+  .pdp--bold .pdp-cmp__grid > .pdp-cmp__card {
+    opacity: 1 !important;
+    transition: none !important;
+  }
+}

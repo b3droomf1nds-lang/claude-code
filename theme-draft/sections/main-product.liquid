@@ -356,7 +356,7 @@
           </p>
         </form>
 
-        <div class="pinfo__below" data-reveal>
+        <div class="pinfo__below">
           {% render 'pdp-compare-inline' %}
           {% render 'pdp-canva-editor' %}
           <div class="pdp-secondary-details" hidden>
@@ -415,6 +415,43 @@
       new MutationObserver(sync).observe(main, { childList: true, characterData: true, subtree: true });
       sync();
     })();
+
+    /* Reveal the compare / "Select your iPhone" calculator one piece at a time
+       as it scrolls into view — the heading, then the picker, then each stat
+       tile — instead of the whole block fading in at once (and late). The CSS
+       sets the initial hidden state (opacity only: the tiles use transform for
+       layout, so this never touches transform); this observer adds .is-shown to
+       each piece as it enters, cascading top-to-bottom. */
+    document.addEventListener('DOMContentLoaded', function () {
+      var cmp = document.querySelector('.pdp--bold .pdp-cmp');
+      if (!cmp) return;
+      var sel = '.pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__select-wrap, .pdp-cmp__grid > .pdp-cmp__card';
+      var pieces = [].slice.call(cmp.querySelectorAll(sel));
+      if (!pieces.length) return;
+      if (!('IntersectionObserver' in window)) {
+        pieces.forEach(function (el) { el.classList.add('is-shown'); });
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        /* Reveal the pieces that just entered in top-to-bottom order, one
+           shortly after the next, so a group that appears together still
+           cascades one at a time rather than popping in all at once. */
+        entries.filter(function (e) { return e.isIntersecting; })
+          .sort(function (a, b) { return a.boundingClientRect.top - b.boundingClientRect.top; })
+          .forEach(function (e, i) {
+            var el = e.target;
+            io.unobserve(el);
+            setTimeout(function () { el.classList.add('is-shown'); }, i * 90);
+          });
+      }, { threshold: 0.15 });
+      pieces.forEach(function (el) {
+        /* Compact tile variants that aren't rendered at this viewport
+           (display:none) can never intersect — reveal them immediately so they
+           can't get stuck invisible if the viewport later changes to show them. */
+        if (el.offsetParent === null) { el.classList.add('is-shown'); return; }
+        io.observe(el);
+      });
+    });
 
     /* The side background fade (.pdp--bold.pdp--core in
        voltical-pdp-bold.css) has to line up with two actual rendered
