@@ -320,6 +320,9 @@
     function isChargeRangeCaption(el){
       return el.matches('.pdp-cmp__sub--range');
     }
+    function isMagnetCaption(el){
+      return el.matches('.pdp-cmp__sub--magnet-hold');
+    }
     function isCompactPartialExtra(el){
       return el.matches('.pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main > .pdp-cmp__compact-partial-extra');
     }
@@ -481,6 +484,42 @@
       });
       return box.innerHTML;
     }
+    // The magnet caption's "1800gs" figure reads in the black lead ink rather
+    // than the grey supporting line. Rebuild that wrapper from the visible text
+    // on every render so it survives a Canva text edit (which otherwise saves
+    // the caption's innerHTML without it) — same idea as decorateChargeRangeText.
+    function decorateMagnetText(html){
+      var box = document.createElement('div');
+      box.innerHTML = html;
+      // Strip any existing wrappers first so the operation is idempotent.
+      [].slice.call(box.querySelectorAll('.pdp-cmp__magnet-gs')).forEach(function(span){
+        var parent = span.parentNode;
+        while (span.firstChild) parent.insertBefore(span.firstChild, span);
+        parent.removeChild(span);
+      });
+      // Collect text nodes up front, then wrap — mutating a node while walking
+      // the live tree would skip or double-process siblings. Both the desktop
+      // and mobile copies carry a "1800gs", so wrap every occurrence.
+      var texts = [];
+      (function collect(node){
+        [].slice.call(node.childNodes).forEach(function(ch){
+          if (ch.nodeType === 3) texts.push(ch);
+          else if (ch.nodeType === 1) collect(ch);
+        });
+      })(box);
+      texts.forEach(function(t){
+        var m = /1800\s*gs/i.exec(t.nodeValue);
+        if (!m) return;
+        var target = t;
+        if (m.index) target = target.splitText(m.index);
+        if (m[0].length < target.nodeValue.length) target.splitText(m[0].length);
+        var span = document.createElement('span');
+        span.className = 'pdp-cmp__magnet-gs';
+        target.parentNode.insertBefore(span, target);
+        span.appendChild(target);
+      });
+      return box.innerHTML;
+    }
 
     function applyState(el){
       var st = stateOf(el);
@@ -510,6 +549,7 @@
         // back to its original content, not just sit however it was left.
         var wantText = st.text != null ? st.text : el.__cvOrigText;
         if (isChargeRangeCaption(el)) wantText = decorateChargeRangeText(wantText);
+        if (isMagnetCaption(el)) wantText = decorateMagnetText(wantText);
         // “extra” is an authored label, not optional content. Older local
         // Canva state can contain an empty text value, so heal that state
         // rather than leaving an invisible, hard-to-recover text box.
@@ -555,7 +595,9 @@
       var st = stateOf(el);
       st.text = isChargeRangeCaption(el)
         ? decorateChargeRangeText(el.innerHTML)
-        : el.innerHTML;
+        : isMagnetCaption(el)
+          ? decorateMagnetText(el.innerHTML)
+          : el.innerHTML;
       if (isCompactPartialExtra(el) && isBlankHtml(st.text)) st.text = el.__cvOrigText;
       saveState(el, st);
     }
