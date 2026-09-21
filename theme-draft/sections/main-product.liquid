@@ -789,7 +789,10 @@
         // never stranded short. Start a little before it would reach the fold.
         if (!pinned && !goingDown) {
           var sp = spacerH();
-          if (sp > 0 && y <= sp + naturalHeight / 2) closeSpacerToTop();
+          // Start early enough that the 150ms slide has finished before the
+          // fling reaches scrollY 0 — otherwise the page is still shrinking at
+          // the top boundary and the momentum over-arrives into a rubber-band.
+          if (sp > 0 && y <= sp + naturalHeight * 2) closeSpacerToTop();
         }
         // Re-read scrollY rather than trusting `y`: pinning/unpinning can change
         // the page height above the fold, and browsers with scroll anchoring
