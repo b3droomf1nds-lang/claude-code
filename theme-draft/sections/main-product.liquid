@@ -606,15 +606,22 @@
        already above the top of the screen would shorten the page above the fold
        and make everything on screen lurch UP by a button-height. Nudging the
        scroll back to compensate would cancel iOS momentum ("the page stops going
-       up"); reserving the slot would leave the gap. So instead, in the SAME
-       layout frame that the button lifts out, an off-screen spacer above the
-       fold grows by exactly that height — the page's total height is unchanged,
-       nothing on screen moves, and it's pure layout (no scroll write), so
-       momentum is untouched. That borrowed height is reclaimed later, on the
-       first scroll-idle moment (no momentum left to kill), with a compensating
-       scroll adjustment that is invisible.
+       up"); reserving the slot on screen would leave a gap.
 
-       Behaviour (scroll listener + a zero-height flow marker, not
+       The trick: a filler that lives in the button's OWN slot, not off at the
+       top of the page. In the same layout frame the button lifts out, the
+       zero-height marker sitting in its slot grows by exactly the height that
+       vanished — the page keeps its total height, nothing on screen moves, and
+       it is pure layout (no scroll write), so momentum is untouched. When the
+       button drops back into flow the marker shrinks to zero in the same frame,
+       at the very same spot: the button re-appears exactly where the filler was,
+       the filler disappears as the button fills it, and they cancel perfectly.
+       Because the borrow and the return happen at the button's own position,
+       nothing is ever left parked at the top of the page to reclaim later — so
+       there is no gap over the header, no end-of-scroll jump, and no scroll
+       nudge that could strand the fling short of the top. No scrollTo anywhere.
+
+       Behaviour (scroll listener + the in-slot flow marker, not
        IntersectionObserver):
         1. Never pins while scrolling down.
         2. Pins only while scrolling UP and once its natural slot is fully above
@@ -633,36 +640,29 @@
       if (!atc) return;
       var realBtn = atc.querySelector('.atc__btn');
       if (!realBtn) return;
-      var section = atc.closest('.pdp--bold') || atc;
 
       /* Turn off the browser's scroll anchoring on the scroller. Without this,
-         Chrome/Firefox react to the spacer growing/shrinking above the fold by
-         silently shifting scrollY to hold content in place — a jump that isn't a
-         user gesture and would confuse the up/down direction test below. iOS
-         Safari has no scroll anchoring at all, so switching it off here just
-         makes every browser behave the way iOS already does: the spacer's own
-         net-zero layout does all the compensation, and scrollY only ever moves
-         from a real scroll (or our own deliberate reclaim). */
+         Chrome/Firefox react to any above-the-fold height change by silently
+         shifting scrollY to hold content in place — a jump that isn't a user
+         gesture and would confuse the up/down direction test below. iOS Safari
+         has no scroll anchoring at all, so switching it off here just makes
+         every browser behave the way iOS already does: our net-zero in-slot
+         layout does all the compensation and scrollY only ever moves from a
+         real scroll. */
       document.documentElement.style.overflowAnchor = 'none';
 
-      /* A zero-height marker sits in the DOM right where the button lives. It is
-         never removed and never reserves space, so its position always reports
-         where the button's natural in-flow slot is — even while the button
-         itself is lifted out of flow by position:fixed. */
+      /* A marker sits in the DOM right where the button lives. At rest it is
+         zero-height and reserves no space, so its top always reports where the
+         button's natural in-flow slot is — even while the button itself is
+         lifted out of flow by position:fixed. While pinned it grows to exactly
+         the height the button vacated, filling the slot in place so the page
+         never lurches, and shrinks back to zero the instant the button returns. */
       var marker = document.createElement('div');
       marker.setAttribute('aria-hidden', 'true');
       marker.style.cssText = 'height:0;margin:0;padding:0;border:0;pointer-events:none;';
       atc.parentNode.insertBefore(marker, atc);
 
-      /* The off-screen spacer, above everything, that borrows the button's
-         height while it is pinned so the page keeps the same total height and
-         nothing on screen lurches. Height 0 until needed. */
-      var spacer = document.createElement('div');
-      spacer.setAttribute('aria-hidden', 'true');
-      spacer.style.cssText = 'height:0;margin:0;padding:0;border:0;pointer-events:none;';
-      section.parentNode.insertBefore(spacer, section);
-
-      // The flow height the button occupies (so the spacer replaces it exactly).
+      // The button's natural flow height, kept as a fallback filler height.
       function measure() {
         var cs = getComputedStyle(atc);
         return atc.offsetHeight + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
@@ -671,80 +671,48 @@
       var barBtnTop = 0;      // viewport Y of the pinned button's top (set on pin)
 
       var pinned = false;
-      function spacerH() { return parseFloat(spacer.style.height) || 0; }
       function pin() {
         if (pinned) return;
+        // Read the button's exact box AND its own margins WHILE it is still in
+        // flow. The filler must be a true stand-in: same height, same top and
+        // bottom margins, at the same DOM spot — so it collapses with its
+        // neighbours exactly the way the button did. Matching only the height
+        // (or the full margin-box) leaves a margin-collapse residual that lurches
+        // the page by a dozen-odd pixels; matching the margins removes it.
+        var cs = getComputedStyle(atc);
+        var mt = cs.marginTop, mb = cs.marginBottom, h = atc.offsetHeight;
         // Freeze the fixed bar to the button's current box so its width/left
         // don't reflow when it leaves the flow.
         var rect = atc.getBoundingClientRect();
         atc.style.setProperty('--atc-left', rect.left + 'px');
         atc.style.setProperty('--atc-width', rect.width + 'px');
         // Lift the button out of flow and, in the SAME frame (no paint between),
-        // grow the off-screen spacer by the EXACT height that just vanished from
-        // the page — measured, not computed, so margin-collapsing can't leave a
-        // residual lurch. Reading scrollHeight forces layout but not a paint, so
-        // the screen only ever shows the net-zero end state. We ADD to the
-        // spacer (never overwrite): a still-standing spacer from a previous
-        // hand-back that hasn't been reclaimed yet must keep its height, or this
-        // pin would shorten the page and lurch.
-        var beforeH = document.documentElement.scrollHeight;
+        // stand the filler in its exact place. Net-zero layout: nothing on
+        // screen moves, and no scroll is written, so momentum is untouched.
         atc.classList.add('is-pinned');
-        var removed = beforeH - document.documentElement.scrollHeight;
-        if (removed <= 0) removed = naturalHeight;
-        spacer.style.height = (spacerH() + removed) + 'px';
+        marker.style.marginTop = mt;
+        marker.style.marginBottom = mb;
+        marker.style.height = h + 'px';
         pinned = true;
         // Where the button now sits, fixed to the bottom — the line the natural
         // slot must rise back to for a seamless hand-back.
         barBtnTop = realBtn.getBoundingClientRect().top;
       }
-      // dropSpacer: true dismisses — the button re-enters ABOVE the fold, so in
-      // the same frame we shrink the spacer by exactly the height the button
-      // adds back, and nothing on screen moves. false is the seamless release —
-      // the button re-enters at the bottom (on screen), so the spacer can't be
-      // shrunk here without a jump; it stays and is reclaimed on the next idle.
-      function unpin(dropSpacer) {
+      // Drop back into flow. In the SAME frame, the button re-enters at the slot
+      // (adds its box there) and the filler collapses to nothing (removes the
+      // same box at the same spot) — they cancel, so nothing on screen moves.
+      // This is identical whether the slot is above the fold (dismiss) or on
+      // screen (seamless release): the button simply reappears exactly where the
+      // filler was. Nothing is left parked anywhere to reclaim.
+      function unpin() {
         if (!pinned) return;
-        var beforeH = document.documentElement.scrollHeight;
         atc.classList.remove('is-pinned');
         atc.style.removeProperty('--atc-left');
         atc.style.removeProperty('--atc-width');
-        if (dropSpacer) {
-          var added = document.documentElement.scrollHeight - beforeH;
-          if (added <= 0) added = naturalHeight;
-          var next = spacerH() - added;
-          spacer.style.height = (next > 0 ? next : 0) + 'px';
-        }
+        marker.style.height = '0px';
+        marker.style.marginTop = '0px';
+        marker.style.marginBottom = '0px';
         pinned = false;
-      }
-
-      /* Reclaim the borrowed spacer height once scrolling has settled. With no
-         momentum left to cancel, we can shrink the spacer and adjust the scroll
-         by the same amount in one frame — the two cancel, so it is invisible. */
-      var cleanupTimer = null;
-      // landAtTop: the reclaim was triggered by an upward scroll heading to the
-      // very top of the page. A programmatic scrollTo cancels an in-progress
-      // touch fling, so a compensated stop (y - h) would strand the user a few
-      // px short of the top — they'd have to flick again to close the last gap.
-      // When we know the fling is bound for the top, land it exactly at 0
-      // instead: the tiny uncompensated remainder settles in one frame, and the
-      // page finishes flush at the top the way the gesture intended. The idle
-      // (mid-page) reclaim keeps the compensated stop, so it stays invisible.
-      function reclaimSpacer(landAtTop) {
-        if (pinned) return;
-        var h = parseFloat(spacer.style.height) || 0;
-        if (h <= 0) return;
-        var y = window.scrollY;
-        var html = document.documentElement;
-        var prev = html.style.scrollBehavior;
-        html.style.scrollBehavior = 'auto';   // no smooth-scroll animation here
-        spacer.style.height = '0px';
-        window.scrollTo(0, landAtTop ? 0 : Math.max(0, y - h));
-        html.style.scrollBehavior = prev;
-        lastY = window.scrollY;
-      }
-      function scheduleCleanup() {
-        if (cleanupTimer) clearTimeout(cleanupTimer);
-        cleanupTimer = setTimeout(reclaimSpacer, 160);
       }
 
       var lastY = window.scrollY;
@@ -761,33 +729,19 @@
           // Dismiss only once the slot is back above the top, so the button
           // never drops into the middle of the page. Reversing down while the
           // slot is still on screen keeps it pinned (no early switch-on).
-          if (slotAboveTop) unpin(true);
+          if (slotAboveTop) unpin();
         } else if (slotTop >= barBtnTop) {
           // The slot has risen to the pinned bar — hand back in place, seamless.
-          unpin(false);
+          unpin();
         }
-        // Reclaim the borrowed spacer as the top of the page approaches, BEFORE
-        // it can peek above the fold as a gap over the header images. It starts
-        // to show once scrollY nears its height, so reclaim it (compensated, so
-        // nothing on screen moves) a little before that. Waiting for the scroll
-        // to go fully idle isn't enough: a fling all the way to the top keeps
-        // scroll events firing through the whole fling-and-bounce, which would
-        // leave the gap parked on screen for a second or two before it collapses.
-        if (!pinned && !goingDown) {
-          var sp = spacerH();
-          if (sp > 0 && y <= sp + naturalHeight / 2) reclaimSpacer(true);
-        }
-        // Re-read scrollY rather than trusting `y`: pinning/unpinning can change
-        // the page height above the fold, and browsers with scroll anchoring
-        // (Chrome/Firefox) compensate by shifting scrollY. That compensating
-        // jump is not a user gesture, so anchor `lastY` to the post-change value
-        // — otherwise the next frame would read it as a downward scroll and fire
-        // a spurious dismiss.
+        // Re-read scrollY rather than trusting `y`: browsers with scroll
+        // anchoring (Chrome/Firefox) could otherwise misread a layout-driven
+        // shift as a gesture. Our pin/unpin are net-zero so there is nothing to
+        // compensate, but re-reading keeps direction detection honest.
         lastY = window.scrollY;
         ticking = false;
       }
       window.addEventListener('scroll', function () {
-        scheduleCleanup();
         if (ticking) return;
         ticking = true;
         window.requestAnimationFrame(update);
@@ -799,7 +753,7 @@
          top down there, so the "slot back above the top" guard is already met. */
       window.addEventListener('wheel', function (e) {
         if (e.deltaY > 0 && pinned &&
-            (marker.getBoundingClientRect().top + naturalHeight) <= 0) unpin(true);
+            (marker.getBoundingClientRect().top + naturalHeight) <= 0) unpin();
       }, { passive: true });
       var touchY = null;
       window.addEventListener('touchstart', function (e) {
@@ -810,7 +764,7 @@
         var ty = e.touches[0].clientY;
         // Finger moving up the screen = scrolling down.
         if (touchY - ty > 4 && pinned &&
-            (marker.getBoundingClientRect().top + naturalHeight) <= 0) unpin(true);
+            (marker.getBoundingClientRect().top + naturalHeight) <= 0) unpin();
         touchY = ty;
       }, { passive: true });
 
