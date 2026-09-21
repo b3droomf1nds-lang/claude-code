@@ -758,6 +758,17 @@
           // The slot has risen to the pinned bar — hand back in place, seamless.
           unpin(false);
         }
+        // Reclaim the borrowed spacer as the top of the page approaches, BEFORE
+        // it can peek above the fold as a gap over the header images. It starts
+        // to show once scrollY nears its height, so reclaim it (compensated, so
+        // nothing on screen moves) a little before that. Waiting for the scroll
+        // to go fully idle isn't enough: a fling all the way to the top keeps
+        // scroll events firing through the whole fling-and-bounce, which would
+        // leave the gap parked on screen for a second or two before it collapses.
+        if (!pinned && !goingDown) {
+          var sp = spacerH();
+          if (sp > 0 && y <= sp + naturalHeight / 2) reclaimSpacer();
+        }
         // Re-read scrollY rather than trusting `y`: pinning/unpinning can change
         // the page height above the fold, and browsers with scroll anchoring
         // (Chrome/Firefox) compensate by shifting scrollY. That compensating
