@@ -518,10 +518,15 @@
 .pdp--bold .atc.is-pinned {
   position: fixed;
   bottom: 0;
+  left: var(--atc-left, 0);
+  width: var(--atc-width, 100%);
   z-index: 40;
   background: var(--base, #FAFAF8);
   padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
 }
+/* Keep the button the same full width it had in flow, so the hand-back lines
+   up exactly. */
+.pdp--bold .atc.is-pinned .atc__btn { width: 100%; }
 
 .pdp--bold .pdp-calc-inline {
   margin: var(--s4, 24px) 0 0;
