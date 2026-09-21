@@ -1109,6 +1109,11 @@
     line-height: inherit;
     font-weight: 500;
   }
+  /* The "1800gs" figure reads in the same black ink as "Strong magnet."
+     beside it, rather than the grey supporting line it sits in. */
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__magnet-gs {
+    color: #1d1f24;
+  }
   /* Match the visible mobile headline size of "Strong magnet.". The charge
      caption has a separate smaller parent size, so it needs an explicit lead. */
   .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range > .pdp-cmp__charge-range-lead,
