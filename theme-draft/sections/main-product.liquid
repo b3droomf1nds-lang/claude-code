@@ -693,16 +693,6 @@
       var UP_INPUT_WINDOW_MS = 400;
       var lastUpInputTime = 0;
       var upDistance = 0;
-      /* After ANY downward movement we require a fresh, GENUINE upward input
-         (a real wheel tick or finger drag) before the clone may reappear.
-         On iOS a downward flick keeps the page gliding on momentum after the
-         finger lifts, and the tail of that glide wobbles scrollY upward by a
-         few pixels — which used to look like "scrolling up" and flash the clone
-         back on, so it seemed never to disappear. Momentum produces no wheel or
-         touch input, so gating the re-show on real input tells the two apart:
-         the clone stays gone through the whole downward glide and only returns
-         when the user actually scrolls up again. */
-      var needFreshUpInput = false;
       var lastY = window.scrollY;
       var ticking = false;
       function update() {
@@ -722,14 +712,12 @@
         var recentUpInput = Date.now() - lastUpInputTime < UP_INPUT_WINDOW_MS;
         if (scrollingDown) {
           upDistance = 0;
-          needFreshUpInput = true;
           hideClone();
         } else {
           upDistance += lastY - y;
           if (shown) {
             if (backInView) hideClone();
-          } else if (outOfView && upDistance >= PIN_START_DISTANCE &&
-                     (!nearBottomEdge || recentUpInput) && !needFreshUpInput) {
+          } else if (outOfView && upDistance >= PIN_START_DISTANCE && (!nearBottomEdge || recentUpInput)) {
             showClone();
           }
         }
@@ -747,8 +735,8 @@
          listeners catch the downward intent directly so the clone still hides,
          and record genuine upward input for the bottom-bounce guard above. */
       window.addEventListener('wheel', function (e) {
-        if (e.deltaY > 0) { needFreshUpInput = true; hideClone(); }
-        else if (e.deltaY < 0) { lastUpInputTime = Date.now(); needFreshUpInput = false; }
+        if (e.deltaY > 0) hideClone();
+        else if (e.deltaY < 0) lastUpInputTime = Date.now();
       }, { passive: true });
       var touchY = null;
       window.addEventListener('touchstart', function (e) {
@@ -757,8 +745,8 @@
       window.addEventListener('touchmove', function (e) {
         if (touchY === null || !e.touches || !e.touches.length) return;
         var ty = e.touches[0].clientY;
-        if (touchY - ty > 4) { needFreshUpInput = true; hideClone(); }
-        else if (ty - touchY > 4) { lastUpInputTime = Date.now(); needFreshUpInput = false; }
+        if (touchY - ty > 4) hideClone();
+        else if (ty - touchY > 4) lastUpInputTime = Date.now();
         touchY = ty;
       }, { passive: true });
 
