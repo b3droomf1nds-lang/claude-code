@@ -721,7 +721,15 @@
          momentum left to cancel, we can shrink the spacer and adjust the scroll
          by the same amount in one frame — the two cancel, so it is invisible. */
       var cleanupTimer = null;
-      function reclaimSpacer() {
+      // landAtTop: the reclaim was triggered by an upward scroll heading to the
+      // very top of the page. A programmatic scrollTo cancels an in-progress
+      // touch fling, so a compensated stop (y - h) would strand the user a few
+      // px short of the top — they'd have to flick again to close the last gap.
+      // When we know the fling is bound for the top, land it exactly at 0
+      // instead: the tiny uncompensated remainder settles in one frame, and the
+      // page finishes flush at the top the way the gesture intended. The idle
+      // (mid-page) reclaim keeps the compensated stop, so it stays invisible.
+      function reclaimSpacer(landAtTop) {
         if (pinned) return;
         var h = parseFloat(spacer.style.height) || 0;
         if (h <= 0) return;
@@ -730,7 +738,7 @@
         var prev = html.style.scrollBehavior;
         html.style.scrollBehavior = 'auto';   // no smooth-scroll animation here
         spacer.style.height = '0px';
-        window.scrollTo(0, Math.max(0, y - h));
+        window.scrollTo(0, landAtTop ? 0 : Math.max(0, y - h));
         html.style.scrollBehavior = prev;
         lastY = window.scrollY;
       }
@@ -767,7 +775,7 @@
         // leave the gap parked on screen for a second or two before it collapses.
         if (!pinned && !goingDown) {
           var sp = spacerH();
-          if (sp > 0 && y <= sp + naturalHeight / 2) reclaimSpacer();
+          if (sp > 0 && y <= sp + naturalHeight / 2) reclaimSpacer(true);
         }
         // Re-read scrollY rather than trusting `y`: pinning/unpinning can change
         // the page height above the fold, and browsers with scroll anchoring
