@@ -949,14 +949,10 @@
         if (state === 'flow') { measureSlotToBtn(); calibrate(); }
       });
 
-      /* Diagnostics: a small readout of the sticky cart's state, recent
-         events and any script error, for testing on a phone. Shown only when
-         previewing an unpublished theme (never on the live store), or with
-         ?atcdebug=1; ?atcdebug=0 hides it. */
-      var shopTheme = window.Shopify && window.Shopify.theme;
-      var previewing = !!(shopTheme && shopTheme.role && shopTheme.role !== 'main');
-      var qs = window.location.search;
-      if (!/[?&]atcdebug=0/.test(qs) && (previewing || /[?&]atcdebug=1/.test(qs))) {
+      /* Diagnostics only with ?atcdebug=1 in the URL: a small readout of the
+         sticky cart's state, recent events and any script error, for testing
+         on a phone. */
+      if (/[?&]atcdebug=1/.test(window.location.search)) {
         var dbg = document.createElement('div');
         dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,0,0,.75);color:#fff;font:11px/1.3 monospace;padding:4px 6px;pointer-events:none;white-space:pre-wrap;';
         document.body.appendChild(dbg);
