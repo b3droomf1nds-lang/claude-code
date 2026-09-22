@@ -674,6 +674,7 @@
         events.push(((Date.now() - t0) / 1000).toFixed(1) + 's ' + msg);
         if (events.length > 6) events.shift();
       }
+      var trace = /[?&]atcdebug=1/.test(window.location.search) ? (window.__atcTrace = []) : null;
       var canAnchor = !!(window.CSS && CSS.supports && CSS.supports('overflow-anchor', 'auto'));
       var barHidden = false;  // pinned but hidden by a downward scroll
 
@@ -710,7 +711,7 @@
         helper = document.createElement('div');
         helper.setAttribute('aria-hidden', 'true');
         helper.style.cssText = 'position:absolute;left:0;width:1px;height:1px;margin:0;padding:0;border:0;opacity:0;pointer-events:none;overflow-anchor:auto;';
-        below.appendChild(helper);
+        below.insertBefore(helper, below.firstChild);   // first in page order: the browser tries candidates in order
       }
       var belowAnchoring = false;
       function setBelowAnchoring(on) {
@@ -787,7 +788,7 @@
         // scroll anchoring keeps the content you see exactly where it is.
         state = 'reserved';
         note('pinned');
-        if (canAnchor) window.requestAnimationFrame(tryClose);
+        if (canAnchor) { keepAnchorFresh(); window.requestAnimationFrame(tryClose); }
         else how = 'waiting-for-still';   // no scroll anchoring here
       }
       /* One attempt per frame. Anything animating layout on the page (e.g.
@@ -797,13 +798,40 @@
          seen — and retried on the next one. Only while the space is still
          above the screen; if it never gets a clean frame it is closed at the
          next still moment instead (see onRest). */
+      /* WebKit only picks its scroll anchor in the browser's own rendering
+         step, and only when that step has layout to do. If the only layout is
+         the one that closes the space, it picks the anchor from the
+         already-closed page and corrects nothing. So while a close may be
+         needed, give every frame a trivial layout of the page as it is:
+         change the text of an invisible, zero-size fixed-position node
+         (affects nothing else on the page). */
+      var poke = document.createElement('div');
+      poke.setAttribute('aria-hidden', 'true');
+      poke.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none;';
+      document.body.appendChild(poke);
+      var pokeN = 0;
+      function freshAnchor() {
+        poke.textContent = String(++pokeN % 2);
+        return afterTop();
+      }
+      var pokeLoop = false;
+      function keepAnchorFresh() {
+        if (pokeLoop) return;
+        pokeLoop = true;
+        (function frame() {
+          if (state !== 'reserved') { pokeLoop = false; return; }
+          poke.textContent = String(++pokeN % 2);
+          window.requestAnimationFrame(frame);
+        })();
+      }
       function tryClose() {
         if (state !== 'reserved') return;
         if (spacer.getBoundingClientRect().bottom > 0) return;
-        var before = afterTop();
+        var before = freshAnchor();
         var y0 = window.scrollY;
         spacer.style.display = 'none';
         var moved = before - afterTop();           // reading layout applies anchoring
+        if (trace) trace.push({ y: Math.round(y0), moved: Math.round(moved * 10) / 10, adj: Math.round(window.scrollY - y0), helper: Math.round(helper ? helper.getBoundingClientRect().top : -1), anims: document.getAnimations ? document.getAnimations().filter(function (a) { return a.playState === 'running'; }).length : -1 });
         if (Math.abs(moved) <= 1.5) {
           anchorY += window.scrollY - y0;          // engine's correction, not the user
           state = 'pinned';
@@ -888,7 +916,11 @@
 
         // Anchoring on the content below only while the slot is above the
         // screen (or the bar is up); the theme's own setting otherwise.
-        if (state === 'flow') setBelowAnchoring(slotFullyAbove());
+        if (state === 'flow') {
+          var above = slotFullyAbove();
+          setBelowAnchoring(above);
+          if (above && canAnchor) poke.textContent = String(++pokeN % 2);   // anchor ready before a pin
+        }
         else if (state === 'reserved' && how === 'retrying') tryCloseSoon();
 
         if (state !== 'flow') {
