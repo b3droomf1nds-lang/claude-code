@@ -688,24 +688,34 @@
       }
       // Close the slot and move the scroll position up by exactly the closed
       // height in the same frame. Only ever called while the page is still.
+      // Instant scroll that works on every iOS version: the plain (x, y) form
+      // (older Safari throws on {behavior:'instant'}), with the theme's
+      // html{scroll-behavior:smooth} switched off for the call so it can't
+      // turn into a glide.
+      function jumpTo(top) {
+        var de = document.documentElement;
+        var prev = de.style.scrollBehavior;
+        de.style.scrollBehavior = 'auto';
+        try { window.scrollTo(0, top); } finally { de.style.scrollBehavior = prev; }
+      }
       function closeSlot(apply) {
         var before = afterTop();
         apply();
         var shift = before - afterTop();
         if (shift) {
-          window.scrollTo({ top: window.scrollY - shift, behavior: 'instant' });
-          var rest = before - afterTop();
-          if (rest) window.scrollTo({ top: window.scrollY - rest, behavior: 'instant' });
           anchorY -= shift;   // our correction, not user movement
+          jumpTo(window.scrollY - shift);
+          var rest = before - afterTop();
+          if (rest) jumpTo(window.scrollY - rest);
         }
       }
 
       function toWaiting() {           // flow -> waiting (at rest)
+        state = 'waiting';
         closeSlot(function () {
           liftOut();
           atc.style.visibility = 'hidden';
         });
-        state = 'waiting';
       }
       function show() {                // waiting -> pinned (no layout change)
         atc.style.visibility = '';
@@ -718,8 +728,8 @@
         state = 'reserved';
       }
       function dropReservation() {     // reserved -> pinned (at rest)
-        closeSlot(function () { slot.style.height = '0px'; });
         state = 'pinned';
+        closeSlot(function () { slot.style.height = '0px'; });
       }
       function fuse() {                // reserved/pinned -> flow
         atc.classList.remove('is-pinned');
@@ -812,6 +822,24 @@
       window.addEventListener('resize', function () {
         if (state === 'flow') measureSlotToBtn();
       });
+
+      /* Diagnostics only with ?atcdebug=1 in the URL: a small readout of the
+         sticky cart's state, plus any script error, for testing on a phone. */
+      if (/[?&]atcdebug=1/.test(window.location.search)) {
+        var dbg = document.createElement('div');
+        dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,0,0,.75);color:#fff;font:11px/1.3 monospace;padding:4px 6px;pointer-events:none;white-space:pre-wrap;';
+        document.body.appendChild(dbg);
+        var lastErr = '';
+        window.addEventListener('error', function (e) { lastErr = String(e.message || e); });
+        (function tick() {
+          dbg.textContent = 'state=' + state + ' dir=' + dir + ' armed=' + armed +
+            ' touching=' + touching + ' y=' + Math.round(window.scrollY) +
+            ' slotH=' + slot.style.height + ' slotTop=' + Math.round(slot.getBoundingClientRect().top) +
+            ' btnTop=' + Math.round(realBtn.getBoundingClientRect().top) + ' s2b=' + Math.round(slotToBtn) +
+            (lastErr ? '\nERR ' + lastErr : '');
+          window.requestAnimationFrame(tick);
+        })();
+      }
     });
 
     /* Arriving from the usage-calculator page (product cards link with
