@@ -645,6 +645,17 @@
          from a real scroll (or our own deliberate reclaim). */
       document.documentElement.style.overflowAnchor = 'none';
 
+      /* Tell the browser not to run its elastic overscroll bounce at the top
+         boundary. When the borrowed spacer's height animates to zero as an
+         upward fling nears the top, the page shortens under the moving
+         momentum, so the fling reaches scrollY 0 with velocity to spare and
+         the leftover momentum spills into the rubber-band. Suppressing the
+         overscroll bounce here (Chrome/Firefox/iOS 16+ all honour this on the
+         root scroller) means that leftover momentum has nowhere to go and the
+         top just stops flat instead of springing. Purely a browser behaviour
+         hint — safe to drop if it doesn't help on the device. */
+      document.documentElement.style.overscrollBehaviorY = 'none';
+
       /* A zero-height marker sits in the DOM right where the button lives. It is
          never removed and never reserves space, so its position always reports
          where the button's natural in-flow slot is — even while the button
@@ -668,6 +679,16 @@
         return atc.offsetHeight + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
       }
       var naturalHeight = measure();
+      // Distance from the marker (top of the natural slot) down to the real
+      // button's top, in normal flow: the .atc top margin + padding + button
+      // margin. Constant, so measure it once while nothing is pinned. The
+      // seamless hand-back must compare the natural BUTTON's top to the pinned
+      // button's top — not the slot-box top — or it hands back with the button
+      // that many px below the pinned bar and drops on fusion.
+      function measureSlotToBtn() {
+        return realBtn.getBoundingClientRect().top - marker.getBoundingClientRect().top;
+      }
+      var slotToBtn = measureSlotToBtn();
       var barBtnTop = 0;      // viewport Y of the pinned button's top (set on pin)
 
       var pinned = false;
@@ -779,8 +800,9 @@
           // never drops into the middle of the page. Reversing down while the
           // slot is still on screen keeps it pinned (no early switch-on).
           if (slotAboveTop) unpin(true);
-        } else if (slotTop >= barBtnTop) {
-          // The slot has risen to the pinned bar — hand back in place, seamless.
+        } else if (slotTop + slotToBtn >= barBtnTop) {
+          // The natural button (slot top + its in-flow offset) has risen to the
+          // pinned bar's button — hand back in place, seamless, button-to-button.
           unpin(false);
         }
         // As the top of the page approaches on the way up, close the borrowed
@@ -832,7 +854,7 @@
       }, { passive: true });
 
       window.addEventListener('resize', function () {
-        if (!pinned) naturalHeight = measure();
+        if (!pinned) { naturalHeight = measure(); slotToBtn = measureSlotToBtn(); }
       });
     });
 
