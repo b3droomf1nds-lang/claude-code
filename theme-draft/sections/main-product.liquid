@@ -597,176 +597,144 @@
 
     /* Add to cart sticky bar — ONE button, no clone. The real Add to cart
        button toggles between normal flow and position:fixed at the bottom of
-       the screen. Nothing reserves its spot on screen, so its gap closes and it
-       hands back into the flow exactly where the pinned bar sat — a seamless
-       swap with no second button and no visible placeholder. Because it is the
-       same element it keeps all of its own add-to-cart wiring. Mobile only.
+       the screen, so it keeps all of its own add-to-cart wiring. Mobile only;
+       desktop keeps the plain in-flow button.
 
-       No placeholder, by design: when the button pins it simply leaves the
-       flow, so the page genuinely shortens and its slot closes — exactly what
-       the spec asks for. We do NOT borrow the height back with a spacer: an
-       off-screen spacer above the fold has to be reclaimed as you near the top,
-       and near scrollY 0 that is impossible to do cleanly — a compensating
-       scrollTo cancels the iOS fling and strands it short, an uncompensated
-       removal jumps, and an animated close collides with the arriving momentum
-       and rubber-bands. Every one of those was tried and each just moved the
-       artefact around. Letting the page shorten avoids all of it and matches
-       the requirement. The pin fires only once the slot is fully above the top
-       of the screen, so the button is off-screen at that moment and the slot
-       closing reads as the gap closing, not a jump in front of you.
+       Height-neutral by design: the instant the button leaves the flow, an
+       invisible zero-content reservation of EXACTLY the same height takes its
+       place (corrected in the same frame against the next element's position,
+       so margin collapsing can't make it a pixel off). The page therefore never
+       changes height at any point — nothing shifts when it pins, nothing grows
+       or shrinks when it fuses, there is nothing to reclaim near the top, so
+       there is no scroll correction, gap, jump or rubber-band. When it fuses the
+       reservation is removed in the same frame the button returns, so the page
+       is left exactly as it was before scrolling.
 
-       Behaviour (scroll listener + a zero-height flow marker, not
-       IntersectionObserver):
+       Behaviour:
         1. Never pins while scrolling down.
-        2. Pins only while scrolling UP and once its natural slot is fully above
-           the top of the screen (you scrolled past it and are heading back up).
-        3. While pinned, a downward scroll dismisses it — but only once its slot
-           is back above the top, so the real button never pops into the middle
-           of the page ("switches on early"). If you reverse downward while the
-           slot is still on screen it stays pinned.
-        4. While pinned and scrolling up, it drops back into the flow the instant
-           its natural slot rises to meet the pinned bar, so the real button
-           lands exactly where the pinned one sat — seamless, no gap, no jump. */
+        2. Pins only on an upward scroll, and only once the button's natural
+           slot is completely above the top of the screen.
+        3. While pinned and scrolling up it fuses back — no click — the moment
+           the natural button rises to the pinned bar's line (or has passed it,
+           after a fast fling), landing where the pinned one sat.
+        4. Once pinned it stays pinned through any direction changes; fusing
+           is its only way back into the flow.
+        5. After fusing it cannot pin again until a genuine downward scroll.
+        6. Elastic overscroll (iOS rubber-band at the top or bottom) is ignored:
+           scroll positions are clamped to the real range, and direction only
+           changes after a few px of consistent travel, so bounces, jitter and
+           quick reversals can't flicker it. */
     document.addEventListener('DOMContentLoaded', function () {
-      // Desktop keeps the normal in-flow button only.
       if (window.matchMedia('(min-width:900px)').matches) return;
       var atc = document.querySelector('.pdp--bold .atc');
       if (!atc) return;
       var realBtn = atc.querySelector('.atc__btn');
       if (!realBtn) return;
-      var section = atc.closest('.pdp--bold') || atc;
 
-      /* Turn off the browser's scroll anchoring. When the button pins/unpins the
-         page height changes above the fold; Chrome/Firefox would silently shift
-         scrollY to hold content in place — a move that isn't a user gesture and
-         would confuse the up/down direction test below. iOS Safari has no scroll
-         anchoring at all, so switching it off here just makes every browser
-         behave the way iOS already does: scrollY only ever moves from a real
-         scroll, and the page simply shortens/lengthens as the button toggles. */
+      /* Scroll anchoring off: the swap is height-neutral anyway, but this
+         guarantees scrollY only ever moves from a real user scroll. */
       document.documentElement.style.overflowAnchor = 'none';
 
-      /* Tell the browser not to run its elastic overscroll bounce at the top
-         boundary — a pure behaviour hint (Chrome/Firefox/iOS 16+ honour it on
-         the root scroller), safe to drop if the device shows no change. */
-      document.documentElement.style.overscrollBehaviorY = 'none';
+      /* The reservation. Zero height (and invisible) whenever the button is in
+         flow, so the page is untouched; it only takes height while pinned. Its
+         top always reports where the button's natural slot begins. */
+      var slot = document.createElement('div');
+      slot.setAttribute('aria-hidden', 'true');
+      slot.style.cssText = 'display:block;height:0;margin:0;padding:0;border:0;visibility:hidden;pointer-events:none;';
+      atc.parentNode.insertBefore(slot, atc);
 
-      /* A zero-height marker sits in the DOM right where the button lives. It is
-         never removed and never reserves space, so its position always reports
-         where the button's natural in-flow slot is — even while the button
-         itself is lifted out of flow by position:fixed. */
-      var marker = document.createElement('div');
-      marker.setAttribute('aria-hidden', 'true');
-      marker.style.cssText = 'height:0;margin:0;padding:0;border:0;pointer-events:none;';
-      atc.parentNode.insertBefore(marker, atc);
-
-      // The flow height the button occupies — used only by the direction guard.
-      function measure() {
-        var cs = getComputedStyle(atc);
-        return atc.offsetHeight + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
-      }
-      var naturalHeight = measure();
-      // Distance from the marker (top of the natural slot) down to the real
-      // button's top in normal flow: the .atc top margin + padding + button
-      // margin. Constant, so measure it once while nothing is pinned. The
-      // seamless hand-back must line up the natural BUTTON with the pinned
-      // button — not the slot-box top — or it hands back with the button that
-      // many px below the pinned bar and drops on fusion.
+      // Offset from the slot top to the button top while in flow.
+      var slotToBtn = 0;
       function measureSlotToBtn() {
-        return realBtn.getBoundingClientRect().top - marker.getBoundingClientRect().top;
+        slotToBtn = realBtn.getBoundingClientRect().top - slot.getBoundingClientRect().top;
       }
-      var slotToBtn = measureSlotToBtn();
-      var barBtnTop = 0;      // viewport Y of the pinned button's top (set on pin)
+      measureSlotToBtn();
+
+      // Page position of the first rendered thing after the button (skipping
+      // hidden/empty elements, climbing out of the form if needed) — used to
+      // make the swap exact to the pixel.
+      function afterTop() {
+        for (var el = atc; el && el !== document.body; el = el.parentElement) {
+          for (var n = el.nextElementSibling; n; n = n.nextElementSibling) {
+            var r = n.getBoundingClientRect();
+            if (r.height > 0 && getComputedStyle(n).position !== 'fixed') return r.top;
+          }
+        }
+        return document.documentElement.scrollHeight - window.scrollY;
+      }
 
       var pinned = false;
       function pin() {
         if (pinned) return;
-        // Freeze the fixed bar to the button's current box so its width/left
-        // don't reflow when it leaves the flow.
         var rect = atc.getBoundingClientRect();
+        var before = afterTop();
+        var h0 = (rect.height + (parseFloat(getComputedStyle(atc).marginTop) || 0) +
+                  (parseFloat(getComputedStyle(atc).marginBottom) || 0));
         atc.style.setProperty('--atc-left', rect.left + 'px');
         atc.style.setProperty('--atc-width', rect.width + 'px');
-        // Lift the button out of flow. No spacer, no scroll write: the page
-        // simply gets a button-height shorter (its slot closes) — which is what
-        // the spec wants. The pin only fires once the slot is fully above the
-        // top of the screen, so the button itself is off-screen at this instant.
         atc.classList.add('is-pinned');
+        slot.style.height = h0 + 'px';
+        // Exact correction (margin collapsing etc.), same frame, before paint.
+        var drift = before - afterTop();
+        if (drift) slot.style.height = Math.max(0, h0 + drift) + 'px';
         pinned = true;
-        // Where the button now sits, fixed to the bottom — the line the natural
-        // slot must rise back to for a seamless hand-back.
-        barBtnTop = realBtn.getBoundingClientRect().top;
       }
       function unpin() {
         if (!pinned) return;
-        // Drop back into flow. The slot re-opens at its natural place; the
-        // button lands exactly where the fixed bar sat (see the caller's guard),
-        // so the swap is seamless.
         atc.classList.remove('is-pinned');
         atc.style.removeProperty('--atc-left');
         atc.style.removeProperty('--atc-width');
+        slot.style.height = '0px';
         pinned = false;
       }
 
-      var lastY = window.scrollY;
-      var ticking = false;
-      function update() {
+      function clampedY() {
+        var max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
         var y = window.scrollY;
-        var goingDown = y > lastY;
-        var slotTop = marker.getBoundingClientRect().top;   // natural button top
-        var slotAboveTop = (slotTop + naturalHeight) <= 0;  // slot fully off the top
-        if (!pinned) {
-          // Pin only heading up, once the slot is fully above the screen.
-          if (!goingDown && slotAboveTop) pin();
-        } else if (goingDown) {
-          // Dismiss only once the slot is back above the top, so the button
-          // never drops into the middle of the page. Reversing down while the
-          // slot is still on screen keeps it pinned (no early switch-on).
-          if (slotAboveTop) unpin();
-        } else if (slotTop + slotToBtn >= barBtnTop) {
-          // The natural button (slot top + its in-flow offset) has risen to the
-          // pinned bar's button — hand back in place, button-to-button, seamless.
-          // The slot re-opens at the bottom of the screen, so the page grows by
-          // one button-height BELOW the fusion line and only the off-screen
-          // content beneath it moves down; nothing on screen shifts.
-          unpin();
-        }
-        // Re-read scrollY rather than trusting `y`: pinning/unpinning changes the
-        // page height, and a browser with scroll anchoring (Chrome/Firefox, but
-        // not iOS) could shift scrollY to compensate. That shift is not a user
-        // gesture, so anchor `lastY` to the post-change value — otherwise the
-        // next frame would read it as a downward scroll and fire a spurious
-        // dismiss. (Anchoring is off here anyway, to match iOS.)
-        lastY = window.scrollY;
-        ticking = false;
+        return y < 0 ? 0 : (y > max ? max : y);
       }
+
+      var THRESH = 6;         // px of consistent travel before a direction counts
+      var anchorY = clampedY();
+      var dir = 0;            // 1 = down, -1 = up, 0 = undecided
+      var armed = true;       // false after fusing, until a genuine down scroll
+
+      function update() {
+        ticking = false;
+        var y = clampedY();
+        // anchorY is the furthest point reached in the current direction; the
+        // direction flips only after THRESH px of travel back from it.
+        if (dir === 1) {
+          if (y > anchorY) anchorY = y;
+          else if (anchorY - y >= THRESH) { dir = -1; anchorY = y; }
+        } else if (dir === -1) {
+          if (y < anchorY) anchorY = y;
+          else if (y - anchorY >= THRESH) { dir = 1; anchorY = y; }
+        } else if (Math.abs(y - anchorY) >= THRESH) {
+          dir = y > anchorY ? 1 : -1; anchorY = y;
+        }
+
+        if (dir === 1) armed = true;
+
+        if (!pinned) {
+          // Button completely above the top of the screen, heading up.
+          if (dir === -1 && armed && atc.getBoundingClientRect().bottom <= 0) pin();
+        } else if (slot.getBoundingClientRect().top + slotToBtn >= realBtn.getBoundingClientRect().top) {
+          // Natural button has reached (or, after a fling, passed) the pinned
+          // one: fuse. Height-neutral, so nothing else on the page moves.
+          unpin();
+          armed = false;
+        }
+      }
+      var ticking = false;
       window.addEventListener('scroll', function () {
         if (ticking) return;
         ticking = true;
         window.requestAnimationFrame(update);
       }, { passive: true });
 
-      /* At the very bottom of the page a downward drag may not move scrollY
-         (nothing left to scroll), so no scroll event fires — catch the downward
-         intent here so a pinned bar still dismisses. The slot is far above the
-         top down there, so the "slot back above the top" guard is already met. */
-      window.addEventListener('wheel', function (e) {
-        if (e.deltaY > 0 && pinned &&
-            (marker.getBoundingClientRect().top + naturalHeight) <= 0) unpin();
-      }, { passive: true });
-      var touchY = null;
-      window.addEventListener('touchstart', function (e) {
-        touchY = e.touches && e.touches.length ? e.touches[0].clientY : null;
-      }, { passive: true });
-      window.addEventListener('touchmove', function (e) {
-        if (touchY === null || !e.touches || !e.touches.length) return;
-        var ty = e.touches[0].clientY;
-        // Finger moving up the screen = scrolling down.
-        if (touchY - ty > 4 && pinned &&
-            (marker.getBoundingClientRect().top + naturalHeight) <= 0) unpin();
-        touchY = ty;
-      }, { passive: true });
-
       window.addEventListener('resize', function () {
-        if (!pinned) { naturalHeight = measure(); slotToBtn = measureSlotToBtn(); }
+        if (!pinned) measureSlotToBtn();
       });
     });
 
