@@ -600,44 +600,41 @@
        the screen, so it keeps all of its own add-to-cart wiring. Mobile only;
        desktop keeps the plain in-flow button.
 
-       The button's space must already be closed by the time it scrolls back
-       into view, without anything on screen ever jumping. Closing space above
-       the screen only stays invisible if the scroll position moves up by the
-       same amount in the same frame, and iOS only applies that cleanly when
-       the page is completely still (no finger down, no momentum) — during a
-       drag or fling it lands late and the whole page visibly jumps. So the
-       space is only ever closed at rest:
+       Its space closes as soon as it pins, long before the slot scrolls back
+       into view, and nothing on screen ever moves:
+        1. Pin frame: the button goes position:fixed and an invisible spacer of
+           exactly its flow height takes its place in the same layout, so the
+           page doesn't change at all.
+        2. Following frames: the spacer is switched off (display:none). The
+           slot is above the screen, so this would pull everything you can see
+           up by the button's height — but the browser's own scroll anchoring
+           cancels that inside the engine, in the same layout, by moving the
+           scroll position with it. It is native, so it works mid-drag and
+           mid-fling. (A script scrollTo can't: on iOS it lands late during a
+           gesture and the page visibly jumps.) If a frame doesn't anchor —
+           e.g. while the compare cards are animating in — the switch is undone
+           in that same frame, unseen, and retried on the next.
+        3. Last resort, if it never got an anchored frame: close it at the next
+           moment the page is completely still, with an exact scroll correction.
+       See the anchoring notes below for what this page needs for (2).
 
-        - Scrolled down past the button and paused: the slot (fully above the
-          screen) closes and the scroll position is corrected by exactly that
-          height in the same frame. Nothing is moving and nothing on screen
-          changes. The button waits out of flow, invisible, at the bottom.
-        - Then scrolling up: the waiting button just becomes visible as the
-          sticky bar. No layout change at all at activation, so no jump.
-        - Reversed without ever pausing: the bar pins with an invisible
-          same-height reservation in its slot (height-neutral, no jump), and
-          that reservation is closed at the next still moment while it is
-          still above the screen.
-        - Fusing: when the natural slot rises to the pinned bar's line at the
-          bottom of the screen the button drops back into flow right there;
-          the page grows only below that line, off-screen. The page is then in
-          its original shape, so the top of the page is untouched.
+       Fusing: when the natural slot rises to the pinned bar's line at the
+       bottom of the screen the button drops back into flow right there; the
+       page grows only below that line, off-screen, and is back in its original
+       shape — so the top of the page is untouched.
 
        Rules: never pins while scrolling down; pins only on an upward scroll
        with the slot fully above the screen; once pinned stays pinned through
        direction changes until it fuses; after fusing it cannot pin again until
        a genuine downward scroll; iOS elastic overscroll is ignored (clamped
-       positions plus a few px of direction hysteresis). */
+       positions plus a few px of direction hysteresis). Add ?atcdebug=1 to the
+       URL for an on-screen state readout. */
     document.addEventListener('DOMContentLoaded', function () {
       if (window.matchMedia('(min-width:900px)').matches) return;
       var atc = document.querySelector('.pdp--bold .atc');
       if (!atc) return;
       var realBtn = atc.querySelector('.atc__btn');
       if (!realBtn) return;
-
-      /* Scroll anchoring off: the one correction (at rest) is done here,
-         exactly, so the browser must not add its own on top of it. */
-      document.documentElement.style.overflowAnchor = 'none';
 
       /* Marker right where the button lives. Zero height except while it is
          holding the fallback reservation; its top always reports where the
@@ -666,77 +663,178 @@
       }
 
       /* state: 'flow'     – normal in-flow button
-                'waiting'  – out of flow, slot closed, invisible (not sticky yet)
-                'reserved' – sticky, slot held by an invisible reservation
+                'reserved' – sticky, slot held open (no-anchoring fallback)
                 'pinned'   – sticky, slot closed */
       var state = 'flow';
       var anchorY = 0;        // direction anchor (declared here; set below)
+      var how = '';           // debug: how the last pin closed its slot
 
-      function liftOut() {
-        var rect = atc.getBoundingClientRect();
-        atc.style.setProperty('--atc-left', rect.left + 'px');
-        atc.style.setProperty('--atc-width', rect.width + 'px');
-        atc.classList.add('is-pinned');
-      }
-      // Hold the slot at exactly its flow height (pixel-corrected in the same
-      // frame) so lifting the button out changes nothing on the page.
-      function reserve(before) {
-        var h = atc.offsetHeight;
-        slot.style.height = h + 'px';
-        var drift = before - afterTop();
-        if (drift) slot.style.height = Math.max(0, h + drift) + 'px';
-      }
-      // Close the slot and move the scroll position up by exactly the closed
-      // height in the same frame. Only ever called while the page is still.
-      // Instant scroll that works on every iOS version: the plain (x, y) form
-      // (older Safari throws on {behavior:'instant'}), with the theme's
-      // html{scroll-behavior:smooth} switched off for the call so it can't
-      // turn into a glide.
+      // Instant scroll that works on every iOS version, with the theme's
+      // html{scroll-behavior:smooth} switched off for the call. Used only by
+      // the at-rest fallback, never while scrolling.
       function jumpTo(top) {
         var de = document.documentElement;
         var prev = de.style.scrollBehavior;
         de.style.scrollBehavior = 'auto';
         try { window.scrollTo(0, top); } finally { de.style.scrollBehavior = prev; }
       }
-      function closeSlot(apply) {
+
+      /* Scroll anchoring needs something on screen, below the slot, that it
+         is allowed to anchor to. On this page there usually isn't:
+         .pinfo__below (everything below the button) is overflow-anchor:none
+         in the compare section's CSS, and the compare cards that fill the
+         screen further down are overflow:hidden boxes the browser won't
+         anchor inside. So:
+         - .pinfo__below is set back to overflow-anchor:auto only while the
+           button's slot is above the screen (the only time the bar can pin),
+           and restored otherwise;
+         - an invisible 1px helper (absolutely positioned, so it takes no space
+           and moves nothing) lives inside .pinfo__below and is parked in the
+           middle of the screen while the slot is above it. It sits below the
+           slot, so when the slot closes it moves with the content you are
+           looking at, and the browser anchors to it — keeping that content
+           exactly where it was.
+         The browser picks its anchor as you scroll, so both are in place
+         before the pin, not switched on in the pin frame itself. */
+      var below = atc.closest('.pinfo') && atc.closest('.pinfo').querySelector('.pinfo__below');
+      var helper = null;
+      if (below) {
+        helper = document.createElement('div');
+        helper.setAttribute('aria-hidden', 'true');
+        helper.style.cssText = 'position:absolute;left:0;width:1px;height:1px;margin:0;padding:0;border:0;opacity:0;pointer-events:none;overflow-anchor:auto;';
+        below.appendChild(helper);
+      }
+      var belowAnchoring = false;
+      function setBelowAnchoring(on) {
+        if (!below) return;
+        if (on) {
+          // Park the helper mid-screen, but never past the end of .pinfo__below
+          // (it must not extend the page).
+          var mt = parseFloat(helper.style.marginTop) || 0;
+          var want = mt + (window.innerHeight / 2 - helper.getBoundingClientRect().top);
+          var bb = below.getBoundingClientRect();
+          var maxDown = mt + (bb.bottom - 2 - helper.getBoundingClientRect().top);
+          var minUp = mt + (bb.top - helper.getBoundingClientRect().top);
+          want = Math.round(Math.max(minUp, Math.min(maxDown, want)));
+          if (want !== mt) helper.style.marginTop = want + 'px';
+        }
+        if (on === belowAnchoring) return;
+        below.style.overflowAnchor = on ? 'auto' : '';
+        if (!on) helper.style.marginTop = '';
+        belowAnchoring = on;
+      }
+
+      /* Spacer that stands in for the button during the pin frame. It is
+         display:none except for that one frame (and in the no-anchoring
+         fallback), and it is closed by switching display — not by changing
+         its height — because a height or position change anywhere makes the
+         browser skip anchoring for that layout. */
+      var spacer = document.createElement('div');
+      spacer.setAttribute('aria-hidden', 'true');
+      spacer.style.cssText = 'display:none;margin:0;padding:0;border:0;visibility:hidden;pointer-events:none;';
+      atc.parentNode.insertBefore(spacer, atc);
+
+      /* The exact space the button takes in the flow (its box plus however
+         its margins collapse with its neighbours), measured up front so the
+         pin frame never has an intermediate mismatch for the browser to
+         anchor. Measured synchronously (nothing paints in between) and only
+         while the button is in flow; any anchoring nudge is undone. */
+      var spacerH = 0;
+      function calibrate() {
+        if (state !== 'flow') return;
+        var y0 = window.scrollY;
         var before = afterTop();
-        apply();
+        var h = atc.offsetHeight;
+        spacer.style.height = h + 'px';
+        spacer.style.display = 'block';
+        atc.style.display = 'none';
+        h += before - afterTop();
+        spacer.style.height = h + 'px';
+        atc.style.display = '';
+        spacer.style.display = 'none';
+        if (window.scrollY !== y0) jumpTo(y0);
+        spacerH = Math.max(0, h);
+      }
+      calibrate();
+      window.addEventListener('load', calibrate);
+
+      function pin() {                 // flow -> pinned (via a one-frame spacer)
+        var rect = atc.getBoundingClientRect();
+        var before = afterTop();
+        spacer.style.height = spacerH + 'px';
+        how = 'pinning';
+        // Frame 1: lift the button out and show the spacer in the same layout,
+        // pixel-corrected, so nothing moves. (This layout changes 'position',
+        // so the browser won't anchor in it — nothing needs anchoring yet.)
+        atc.style.setProperty('--atc-left', rect.left + 'px');
+        atc.style.setProperty('--atc-width', rect.width + 'px');
+        atc.classList.add('is-pinned');
+        spacer.style.display = 'block';
+        var drift = before - afterTop();
+        if (Math.abs(drift) > 0.5) {
+          spacerH = Math.max(0, spacerH + drift);
+          spacer.style.height = spacerH + 'px';
+        }
+        // From the next frame: close the space with a display switch only, so
+        // scroll anchoring keeps the content you see exactly where it is.
+        state = 'reserved';
+        window.requestAnimationFrame(tryClose);
+      }
+      /* One attempt per frame. Anything animating layout on the page (e.g.
+         the compare cards sliding in as they reveal) also makes the browser
+         skip anchoring for that frame, so an attempt that isn't anchored is
+         undone in the same frame — before anything paints, so it is never
+         seen — and retried on the next one. Only while the space is still
+         above the screen; if it never gets a clean frame it is closed at the
+         next still moment instead (see onRest). */
+      function tryClose() {
+        if (state !== 'reserved') return;
+        if (spacer.getBoundingClientRect().bottom > 0) return;
+        var before = afterTop();
+        var y0 = window.scrollY;
+        spacer.style.display = 'none';
+        var moved = before - afterTop();           // reading layout applies anchoring
+        if (Math.abs(moved) <= 1.5) {
+          anchorY += window.scrollY - y0;          // engine's correction, not the user
+          state = 'pinned';
+          how = 'anchored';
+          return;
+        }
+        spacer.style.display = 'block';
+        // If the browser anchored only partly, undo that too (same frame).
+        var left = before - afterTop();
+        if (Math.abs(left) > 1.5) jumpTo(window.scrollY - left);
+        how = 'retrying';
+        window.requestAnimationFrame(tryClose);
+      }
+      // A retry loop stops once the space reaches the screen; if you then
+      // scroll back up so it is above the screen again, start it again.
+      var retryQueued = false;
+      function tryCloseSoon() {
+        if (retryQueued) return;
+        retryQueued = true;
+        window.requestAnimationFrame(function () { retryQueued = false; tryClose(); });
+      }
+      function dropReservation() {     // reserved -> pinned (at rest only)
+        state = 'pinned';
+        var before = afterTop();
+        var y0 = window.scrollY;
+        spacer.style.display = 'none';
         var shift = before - afterTop();
-        if (shift) {
-          anchorY -= shift;   // our correction, not user movement
+        anchorY += window.scrollY - y0;
+        if (Math.abs(shift) > 1.5) {
+          anchorY -= shift;
           jumpTo(window.scrollY - shift);
           var rest = before - afterTop();
           if (rest) jumpTo(window.scrollY - rest);
         }
-      }
-
-      function toWaiting() {           // flow -> waiting (at rest)
-        state = 'waiting';
-        closeSlot(function () {
-          liftOut();
-          atc.style.visibility = 'hidden';
-        });
-      }
-      function show() {                // waiting -> pinned (no layout change)
-        atc.style.visibility = '';
-        state = 'pinned';
-      }
-      function pinReserved() {         // flow -> reserved (no rest happened)
-        var before = afterTop();
-        liftOut();
-        reserve(before);
-        state = 'reserved';
-      }
-      function dropReservation() {     // reserved -> pinned (at rest)
-        state = 'pinned';
-        closeSlot(function () { slot.style.height = '0px'; });
+        how = 'reserved>closed';
       }
       function fuse() {                // reserved/pinned -> flow
         atc.classList.remove('is-pinned');
         atc.style.removeProperty('--atc-left');
         atc.style.removeProperty('--atc-width');
-        atc.style.visibility = '';
-        slot.style.height = '0px';
+        spacer.style.display = 'none';
         state = 'flow';
       }
 
@@ -753,7 +851,7 @@
 
       function slotFullyAbove() {
         if (state === 'flow') return atc.getBoundingClientRect().bottom <= 0;
-        return slot.getBoundingClientRect().bottom <= 0;
+        return spacer.getBoundingClientRect().bottom <= 0 && slot.getBoundingClientRect().top <= 0;
       }
 
       function update() {
@@ -772,10 +870,13 @@
         }
         if (dir === 1) armed = true;
 
+        // Anchoring on the content below only while the slot is above the
+        // screen (or the bar is up); the theme's own setting otherwise.
+        if (state === 'flow') setBelowAnchoring(slotFullyAbove());
+        else if (state === 'reserved' && how === 'retrying') tryCloseSoon();
+
         if (state === 'flow') {
-          if (dir === -1 && armed && slotFullyAbove()) pinReserved();
-        } else if (state === 'waiting') {
-          if (dir === -1) show();
+          if (dir === -1 && armed && slotFullyAbove()) pin();
         } else if (slot.getBoundingClientRect().top + slotToBtn >= realBtn.getBoundingClientRect().top) {
           // Natural button has reached (or, after a fling, passed) the pinned
           // one: fuse. The page grows only below this line, off-screen.
@@ -792,7 +893,7 @@
       }, { passive: true });
 
       /* Rest detection: no finger on the screen and no scroll event for a
-         while (so no drag and no momentum). Only then is the slot closed. */
+         while (so no drag and no momentum) — the last-resort close uses it. */
       var touching = false;
       var restTimer = null;
       function scheduleRest() {
@@ -801,11 +902,7 @@
       }
       function onRest() {
         if (touching) return;
-        if (state === 'flow') {
-          if (armed && slotFullyAbove()) toWaiting();
-        } else if (state === 'reserved') {
-          if (slotFullyAbove()) dropReservation();
-        }
+        if (state === 'reserved' && slotFullyAbove()) dropReservation();
       }
       window.addEventListener('touchstart', function () {
         touching = true;
@@ -820,7 +917,7 @@
       window.addEventListener('touchcancel', touchEnd, { passive: true });
 
       window.addEventListener('resize', function () {
-        if (state === 'flow') measureSlotToBtn();
+        if (state === 'flow') { measureSlotToBtn(); calibrate(); }
       });
 
       /* Diagnostics only with ?atcdebug=1 in the URL: a small readout of the
@@ -834,9 +931,9 @@
         osv = osv ? 'iOS ' + osv.replace(/_/g, '.') : navigator.platform;
         window.addEventListener('error', function (e) { lastErr = String(e.message || e); });
         (function tick() {
-          dbg.textContent = 'state=' + state + ' dir=' + dir + ' armed=' + armed +
+          dbg.textContent = 'state=' + state + ' pin=' + how + ' dir=' + dir + ' armed=' + armed +
             ' touching=' + touching + ' y=' + Math.round(window.scrollY) +
-            ' slotH=' + slot.style.height + ' slotTop=' + Math.round(slot.getBoundingClientRect().top) +
+            ' spacer=' + spacer.style.display + ' slotTop=' + Math.round(slot.getBoundingClientRect().top) +
             ' btnTop=' + Math.round(realBtn.getBoundingClientRect().top) + ' s2b=' + Math.round(slotToBtn) +
             ' | ' + osv + (lastErr ? '\nERR ' + lastErr : '');
           window.requestAnimationFrame(tick);
