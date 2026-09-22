@@ -600,15 +600,25 @@
        the screen, so it keeps all of its own add-to-cart wiring. Mobile only;
        desktop keeps the plain in-flow button.
 
-       Height-neutral by design: the instant the button leaves the flow, an
-       invisible zero-content reservation of EXACTLY the same height takes its
-       place (corrected in the same frame against the next element's position,
-       so margin collapsing can't make it a pixel off). The page therefore never
-       changes height at any point — nothing shifts when it pins, nothing grows
-       or shrinks when it fuses, there is nothing to reclaim near the top, so
-       there is no scroll correction, gap, jump or rubber-band. When it fuses the
-       reservation is removed in the same frame the button returns, so the page
-       is left exactly as it was before scrolling.
+       The button's space collapses the moment it pins, and that is made
+       invisible: pinning only happens once the button's slot is completely
+       above the top of the screen, so every piece of content you can see sits
+       BELOW the slot. In the same frame the slot closes, the scroll position
+       moves up by exactly the closed height (measured to the pixel), so all of
+       that visible content stays exactly where it was — no skip. From then on
+       the slot is simply gone: when it comes back into view from the top, the
+       content above and below it meet with no gap.
+
+       Fusing happens at the bottom of the screen, where the natural slot rises
+       to meet the pinned bar. The button drops back into flow right there, so
+       the page grows only BELOW that line — content that is off-screen (behind
+       the bar) — and nothing you can see moves. The page is then back to its
+       original shape, so scrolling on to the top needs no further correction:
+       no reclaim, no jump, no rubber-band.
+
+       Pinning always starts an upward scroll (you have to put a finger down to
+       reverse direction), so the one scroll correction happens during a drag,
+       not in the middle of a momentum fling.
 
        Behaviour:
         1. Never pins while scrolling down.
@@ -631,13 +641,13 @@
       var realBtn = atc.querySelector('.atc__btn');
       if (!realBtn) return;
 
-      /* Scroll anchoring off: the swap is height-neutral anyway, but this
-         guarantees scrollY only ever moves from a real user scroll. */
+      /* Scroll anchoring off: the one scroll correction (on pin) is done here,
+         exactly, so the browser must not add its own on top of it. */
       document.documentElement.style.overflowAnchor = 'none';
 
-      /* The reservation. Zero height (and invisible) whenever the button is in
-         flow, so the page is untouched; it only takes height while pinned. Its
-         top always reports where the button's natural slot begins. */
+      /* Zero-height marker right where the button lives. Never takes space;
+         its top always reports where the button's natural slot begins, even
+         while the button itself is lifted out by position:fixed. */
       var slot = document.createElement('div');
       slot.setAttribute('aria-hidden', 'true');
       slot.style.cssText = 'display:block;height:0;margin:0;padding:0;border:0;visibility:hidden;pointer-events:none;';
@@ -650,9 +660,9 @@
       }
       measureSlotToBtn();
 
-      // Page position of the first rendered thing after the button (skipping
-      // hidden/empty elements, climbing out of the form if needed) — used to
-      // make the swap exact to the pixel.
+      // Screen position of the first rendered thing after the button (skipping
+      // hidden/empty elements, climbing out of the form if needed) — the
+      // reference that must not move when the slot closes.
       function afterTop() {
         for (var el = atc; el && el !== document.body; el = el.parentElement) {
           for (var n = el.nextElementSibling; n; n = n.nextElementSibling) {
@@ -664,27 +674,35 @@
       }
 
       var pinned = false;
+      // Returns how far the scroll position was moved to hide the collapse.
       function pin() {
-        if (pinned) return;
+        if (pinned) return 0;
         var rect = atc.getBoundingClientRect();
         var before = afterTop();
-        var h0 = (rect.height + (parseFloat(getComputedStyle(atc).marginTop) || 0) +
-                  (parseFloat(getComputedStyle(atc).marginBottom) || 0));
         atc.style.setProperty('--atc-left', rect.left + 'px');
         atc.style.setProperty('--atc-width', rect.width + 'px');
         atc.classList.add('is-pinned');
-        slot.style.height = h0 + 'px';
-        // Exact correction (margin collapsing etc.), same frame, before paint.
-        var drift = before - afterTop();
-        if (drift) slot.style.height = Math.max(0, h0 + drift) + 'px';
         pinned = true;
+        // The slot has closed, so everything below it (all you can see) moved
+        // up by `shift`. Move the scroll position up by the same amount in
+        // this same frame, before anything paints: visible content stays put.
+        // behavior:'instant' — the theme sets html{scroll-behavior:smooth},
+        // which would otherwise turn this correction into a visible glide.
+        var shift = before - afterTop();
+        if (shift) {
+          window.scrollTo({ top: window.scrollY - shift, behavior: 'instant' });
+          // Sub-pixel safety: correct any remainder from rounding.
+          var rest = before - afterTop();
+          if (rest) window.scrollTo({ top: window.scrollY - rest, behavior: 'instant' });
+        }
+        return shift;
       }
       function unpin() {
         if (!pinned) return;
+        // Back into flow at the bar's line; the page grows below it only.
         atc.classList.remove('is-pinned');
         atc.style.removeProperty('--atc-left');
         atc.style.removeProperty('--atc-width');
-        slot.style.height = '0px';
         pinned = false;
       }
 
@@ -718,10 +736,14 @@
 
         if (!pinned) {
           // Button completely above the top of the screen, heading up.
-          if (dir === -1 && armed && atc.getBoundingClientRect().bottom <= 0) pin();
+          if (dir === -1 && armed && atc.getBoundingClientRect().bottom <= 0) {
+            // Our own scroll correction is not user movement: shift the
+            // direction anchor with it so it isn't read as scrolling.
+            anchorY -= pin();
+          }
         } else if (slot.getBoundingClientRect().top + slotToBtn >= realBtn.getBoundingClientRect().top) {
           // Natural button has reached (or, after a fling, passed) the pinned
-          // one: fuse. Height-neutral, so nothing else on the page moves.
+          // one: fuse. The page grows only below this line, off-screen.
           unpin();
           armed = false;
         }
