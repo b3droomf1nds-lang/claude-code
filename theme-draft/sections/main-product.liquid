@@ -830,13 +830,15 @@
         dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,0,0,.75);color:#fff;font:11px/1.3 monospace;padding:4px 6px;pointer-events:none;white-space:pre-wrap;';
         document.body.appendChild(dbg);
         var lastErr = '';
+        var osv = (navigator.userAgent.match(/OS (\d+[_\d]*) like Mac/) || [])[1];
+        osv = osv ? 'iOS ' + osv.replace(/_/g, '.') : navigator.platform;
         window.addEventListener('error', function (e) { lastErr = String(e.message || e); });
         (function tick() {
           dbg.textContent = 'state=' + state + ' dir=' + dir + ' armed=' + armed +
             ' touching=' + touching + ' y=' + Math.round(window.scrollY) +
             ' slotH=' + slot.style.height + ' slotTop=' + Math.round(slot.getBoundingClientRect().top) +
             ' btnTop=' + Math.round(realBtn.getBoundingClientRect().top) + ' s2b=' + Math.round(slotToBtn) +
-            (lastErr ? '\nERR ' + lastErr : '');
+            ' | ' + osv + (lastErr ? '\nERR ' + lastErr : '');
           window.requestAnimationFrame(tick);
         })();
       }
