@@ -721,17 +721,28 @@
         pinned = false;
       }
 
-      /* Reclaim the borrowed spacer height once scrolling has settled somewhere
-         in the middle of the page. With no momentum left to cancel, we can
-         shrink the spacer and adjust the scroll by the same amount in one frame
-         — the two cancel, so it is completely invisible. This is the mid-page
-         path only; the top of the page has its own path below. */
+      /* Reclaim the borrowed spacer height once scrolling has settled. Fired on
+         idle only (160ms after the last scroll), so there is never a fling in
+         flight here. Mid-page (enough room above us) we shrink the spacer and
+         adjust the scroll by the same amount in one frame — the two cancel, so
+         it is completely invisible. Near the top (no room to compensate) we hand
+         off to the smooth height slide, which is safe now precisely because we
+         are idle: no momentum for the shrink to collide with and bounce. */
       var cleanupTimer = null;
       function reclaimSpacer() {
         if (pinned) return;
         var h = parseFloat(spacer.style.height) || 0;
         if (h <= 0) return;
         var y = window.scrollY;
+        if (y < h) {
+          // Near the top there is not enough scroll room above us to compensate
+          // the removal, so a scrollTo can't hide it. Close the gap as a smooth
+          // height slide instead. We only get here on idle (160ms after the last
+          // scroll), so there is no fling in flight for the shrink to collide
+          // with — that collision is exactly what used to bounce at the top.
+          closeSpacerToTop();
+          return;
+        }
         var html = document.documentElement;
         var prev = html.style.scrollBehavior;
         html.style.scrollBehavior = 'auto';   // no smooth-scroll animation here
@@ -783,17 +794,10 @@
           // The slot has risen to the pinned bar — hand back in place, seamless.
           unpin(false);
         }
-        // As the top of the page approaches on the way up, close the borrowed
-        // spacer with a smooth slide (no scroll write) so the fling reaches the
-        // very top and the gap closes as it lands — never parked, never jumped,
-        // never stranded short. Start a little before it would reach the fold.
-        if (!pinned && !goingDown) {
-          var sp = spacerH();
-          // Start early enough that the 150ms slide has finished before the
-          // fling reaches scrollY 0 — otherwise the page is still shrinking at
-          // the top boundary and the momentum over-arrives into a rubber-band.
-          if (sp > 0 && y <= sp + naturalHeight * 2) closeSpacerToTop();
-        }
+        // NOTE: the borrowed spacer is NOT closed here, mid-fling. Shrinking the
+        // page while momentum is carrying up toward the top boundary makes the
+        // content over-arrive and rubber-band. The close happens only once the
+        // scroll has settled — see reclaimSpacer(), fired on idle.
         // Re-read scrollY rather than trusting `y`: pinning/unpinning can change
         // the page height above the fold, and browsers with scroll anchoring
         // (Chrome/Firefox) compensate by shifting scrollY. That compensating
