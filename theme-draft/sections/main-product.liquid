@@ -668,6 +668,14 @@
       var state = 'flow';
       var anchorY = 0;        // direction anchor (declared here; set below)
       var how = '';           // debug: how the last pin closed its slot
+      var events = [];        // debug: recent transitions, for the readout
+      var t0 = Date.now();
+      function note(msg) {
+        events.push(((Date.now() - t0) / 1000).toFixed(1) + 's ' + msg);
+        if (events.length > 6) events.shift();
+      }
+      var canAnchor = !!(window.CSS && CSS.supports && CSS.supports('overflow-anchor', 'auto'));
+      var barHidden = false;  // pinned but hidden by a downward scroll
 
       // Instant scroll that works on every iOS version, with the theme's
       // html{scroll-behavior:smooth} switched off for the call. Used only by
@@ -778,7 +786,9 @@
         // From the next frame: close the space with a display switch only, so
         // scroll anchoring keeps the content you see exactly where it is.
         state = 'reserved';
-        window.requestAnimationFrame(tryClose);
+        note('pinned');
+        if (canAnchor) window.requestAnimationFrame(tryClose);
+        else how = 'waiting-for-still';   // no scroll anchoring here
       }
       /* One attempt per frame. Anything animating layout on the page (e.g.
          the compare cards sliding in as they reveal) also makes the browser
@@ -798,9 +808,11 @@
           anchorY += window.scrollY - y0;          // engine's correction, not the user
           state = 'pinned';
           how = 'anchored';
+          note('closed (anchored)');
           return;
         }
         spacer.style.display = 'block';
+        if (how !== 'retrying') note('anchor attempt failed, retrying');
         // If the browser anchored only partly, undo that too (same frame).
         var left = before - afterTop();
         if (Math.abs(left) > 1.5) jumpTo(window.scrollY - left);
@@ -829,13 +841,17 @@
           if (rest) jumpTo(window.scrollY - rest);
         }
         how = 'reserved>closed';
+        note('closed at rest');
       }
       function fuse() {                // reserved/pinned -> flow
         atc.classList.remove('is-pinned');
         atc.style.removeProperty('--atc-left');
         atc.style.removeProperty('--atc-width');
         spacer.style.display = 'none';
+        atc.style.visibility = '';
+        barHidden = false;
         state = 'flow';
+        note('fused');
       }
 
       function clampedY() {
@@ -875,6 +891,17 @@
         if (state === 'flow') setBelowAnchoring(slotFullyAbove());
         else if (state === 'reserved' && how === 'retrying') tryCloseSoon();
 
+        if (state !== 'flow') {
+          /* A genuine downward scroll hides the bar; scrolling up shows it
+             again. It stays out of the flow while hidden, so its closed space
+             doesn't reopen and nothing on the page moves. */
+          if (dir === 1 && !barHidden) {
+            barHidden = true; atc.style.visibility = 'hidden'; note('hidden (scrolling down)');
+          } else if (dir === -1 && barHidden) {
+            barHidden = false; atc.style.visibility = ''; note('shown (scrolling up)');
+          }
+        }
+
         if (state === 'flow') {
           if (dir === -1 && armed && slotFullyAbove()) pin();
         } else if (slot.getBoundingClientRect().top + slotToBtn >= realBtn.getBoundingClientRect().top) {
@@ -901,8 +928,10 @@
         restTimer = setTimeout(onRest, 180);
       }
       function onRest() {
-        if (touching) return;
-        if (state === 'reserved' && slotFullyAbove()) dropReservation();
+        if (state !== 'reserved') return;
+        if (touching) { note('still, but finger down'); return; }
+        if (slotFullyAbove()) dropReservation();
+        else note('still, but space already on screen');
       }
       window.addEventListener('touchstart', function () {
         touching = true;
@@ -920,9 +949,14 @@
         if (state === 'flow') { measureSlotToBtn(); calibrate(); }
       });
 
-      /* Diagnostics only with ?atcdebug=1 in the URL: a small readout of the
-         sticky cart's state, plus any script error, for testing on a phone. */
-      if (/[?&]atcdebug=1/.test(window.location.search)) {
+      /* Diagnostics: a small readout of the sticky cart's state, recent
+         events and any script error, for testing on a phone. Shown only when
+         previewing an unpublished theme (never on the live store), or with
+         ?atcdebug=1; ?atcdebug=0 hides it. */
+      var shopTheme = window.Shopify && window.Shopify.theme;
+      var previewing = !!(shopTheme && shopTheme.role && shopTheme.role !== 'main');
+      var qs = window.location.search;
+      if (!/[?&]atcdebug=0/.test(qs) && (previewing || /[?&]atcdebug=1/.test(qs))) {
         var dbg = document.createElement('div');
         dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,0,0,.75);color:#fff;font:11px/1.3 monospace;padding:4px 6px;pointer-events:none;white-space:pre-wrap;';
         document.body.appendChild(dbg);
@@ -931,11 +965,12 @@
         osv = osv ? 'iOS ' + osv.replace(/_/g, '.') : navigator.platform;
         window.addEventListener('error', function (e) { lastErr = String(e.message || e); });
         (function tick() {
-          dbg.textContent = 'state=' + state + ' pin=' + how + ' dir=' + dir + ' armed=' + armed +
+          dbg.textContent = 'STICKY DEBUG | state=' + state + (barHidden ? '(hidden)' : '') + ' pin=' + how +
+            ' anchoring=' + (canAnchor ? 'yes' : 'NO') + ' dir=' + dir + ' armed=' + armed +
             ' touching=' + touching + ' y=' + Math.round(window.scrollY) +
             ' spacer=' + spacer.style.display + ' slotTop=' + Math.round(slot.getBoundingClientRect().top) +
             ' btnTop=' + Math.round(realBtn.getBoundingClientRect().top) + ' s2b=' + Math.round(slotToBtn) +
-            ' | ' + osv + (lastErr ? '\nERR ' + lastErr : '');
+            ' | ' + osv + '\n' + events.join('\n') + (lastErr ? '\nERR ' + lastErr : '');
           window.requestAnimationFrame(tick);
         })();
       }
