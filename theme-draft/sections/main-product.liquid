@@ -1039,6 +1039,56 @@
       }
     });
 
+    /* Scroll bar (mobile only). iPhone Safari's own scroll bar runs up behind
+       its see-through address bar, so near the top of the page it squeezes
+       into the top-right corner and disappears. A page can't move Safari's
+       bar, so it is hidden and this one drawn instead: same look, but its
+       track always stays inside the visible screen. Transform and opacity
+       only, so it never affects the page's layout or scrolling. */
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.matchMedia('(min-width:900px)').matches) return;
+      var css = document.createElement('style');
+      css.textContent =
+        'html{scrollbar-width:none}' +
+        'html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}' +
+        '.v-sbar{position:fixed;top:6px;bottom:6px;right:2px;width:3px;z-index:2147483000;pointer-events:none}' +
+        '.v-sbar i{position:absolute;left:0;top:0;width:3px;border-radius:2px;background:rgba(0,0,0,.4);' +
+          'box-shadow:0 0 0 .5px rgba(255,255,255,.35);opacity:0;transition:opacity .35s;will-change:transform,opacity}' +
+        '.v-sbar.on i{opacity:1;transition:opacity .1s}';
+      document.head.appendChild(css);
+      var track = document.createElement('div');
+      track.className = 'v-sbar';
+      track.setAttribute('aria-hidden', 'true');
+      var thumb = document.createElement('i');
+      track.appendChild(thumb);
+      document.body.appendChild(track);
+
+      var hideTimer = null, queued = false, lastLen = -1;
+      function draw() {
+        queued = false;
+        var de = document.documentElement;
+        var trackH = track.clientHeight;
+        var view = window.innerHeight, total = de.scrollHeight;
+        var range = Math.max(1, total - view);
+        var len = Math.max(36, Math.round(trackH * view / total));
+        var y = window.scrollY;
+        // Safari-style squeeze when pulled past either end.
+        var over = y < 0 ? -y : (y > range ? y - range : 0);
+        len = Math.max(8, len - over);
+        var p = Math.min(1, Math.max(0, y / range));
+        if (len !== lastLen) { thumb.style.height = len + 'px'; lastLen = len; }
+        thumb.style.transform = 'translateY(' + Math.round(p * (trackH - len)) + 'px)';
+      }
+      window.addEventListener('scroll', function () {
+        if (!queued) { queued = true; window.requestAnimationFrame(draw); }
+        track.classList.add('on');
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(function () { track.classList.remove('on'); }, 700);
+      }, { passive: true });
+      window.addEventListener('resize', draw);
+      draw();
+    });
+
     /* Arriving from the usage-calculator page (product cards link with
        ?jump=calc): land straight on the calculator section instead of
        the top of the product page, with a smooth scroll rather than an
