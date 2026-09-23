@@ -951,16 +951,20 @@
         window.requestAnimationFrame(update);
       }, { passive: true });
 
-      /* Rest detection: no finger on the screen and no scroll event for a
-         while (so no drag and no momentum) — the last-resort close uses it. */
+      /* Rest detection: no scroll event for a moment, so the page isn't
+         moving — no drag in progress and no momentum. A finger resting on the
+         screen doesn't matter: catching the page with a finger stops it, and
+         while it is held still the page's position is settled, so the close
+         below is just as invisible then. (Waiting for the finger to lift
+         missed the common "flick down, catch, swipe back up" pattern.) */
       var touching = false;
       var restTimer = null;
+      var REST_MS = 120;
       function scheduleRest() {
         clearTimeout(restTimer);
-        restTimer = setTimeout(onRest, 180);
+        restTimer = setTimeout(onRest, REST_MS);
       }
       function onRest() {
-        if (touching) { if (state === 'reserved') note('still, but finger down'); return; }
         if (state === 'flow') {
           /* Scrolled down past the button and the page has come to rest:
              close its space now, while nothing is moving, before you ever
@@ -982,7 +986,7 @@
       }
       window.addEventListener('touchstart', function () {
         touching = true;
-        clearTimeout(restTimer);
+        scheduleRest();      // a touch that stops momentum starts the still period
       }, { passive: true });
       function touchEnd(e) {
         if (e.touches && e.touches.length) return;
