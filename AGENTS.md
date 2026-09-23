@@ -9,9 +9,11 @@ These rules apply to every task in this repository, whether or not a design skil
 - Theme source is `theme-draft/`. The separate `theme/` tree is out of scope and must not be edited.
 - Work on branch `claude/shopify-cli-setup-5ih4po`. Inspect the branch and working tree before editing; preserve unrelated user changes.
 - Push only explicitly changed theme-relative files, from `theme-draft/`, with:
-  `shopify theme push --store imraiy-tv.myshopify.com --theme 193289027910 --only <file> --path .`
+  `shopify theme push --store imraiy-tv.myshopify.com --theme 193289027910 --only <file> --path . --nodelete`
 - Before a theme upload, verify that theme `193289027910` is still unpublished. Do not perform a bulk theme push when a file-scoped push can complete the request.
+- After every theme push, pull the pushed file back to a temp folder and diff it against the working tree (ignoring whitespace and line endings); only report the change as deployed if they match.
 - Commit the completed, verified change to the required branch and push that branch to GitHub. Never commit credentials or Theme Access passwords.
+- Before pushing, run `git fetch` and `git log origin/claude/shopify-cli-setup-5ih4po..HEAD`, confirm every commit listed belongs to this task, and rebase onto the remote branch if it has moved. Other agents push to this branch too. Never force-push.
 
 ## Core comparison-section invariants
 
@@ -31,6 +33,7 @@ These rules apply to every task in this repository, whether or not a design skil
 - For mobile-only work, edit inside the final applicable `max-width:899px` cascade and prove the desktop computed result is unchanged. Earlier declarations may be dead because later compact-card rules win.
 - Do not infer visible artwork size from an image element's box when the asset has transparent padding. Measure the non-transparent pixel bounds.
 - A revert must be surgical: inspect the current diff and preserve unrelated work that landed before or after the change being reversed.
+- For any work on the mobile sticky Add-to-bag bar, read `docs/sticky-cart-prompt.md` first.
 
 ## Verification before handoff
 
