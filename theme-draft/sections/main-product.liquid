@@ -765,7 +765,12 @@
         spacerH = Math.max(0, h);
       }
       calibrate();
-      window.addEventListener('load', calibrate);
+      /* Later re-measures (page finished loading, iPhone toolbar resizing the
+         screen mid-scroll) wait for the page to be still: calibrating briefly
+         changes the layout, which must never happen during a scroll. */
+      var needCal = false;
+      function calibrateWhenStill() { needCal = true; scheduleRest(); }
+      window.addEventListener('load', calibrateWhenStill);
 
       function pin() {                 // flow -> pinned (via a one-frame spacer)
         var rect = atc.getBoundingClientRect();
@@ -965,13 +970,15 @@
         restTimer = setTimeout(onRest, REST_MS);
       }
       function onRest() {
+        if (state === 'flow' && needCal) { needCal = false; measureSlotToBtn(); calibrate(); }
         if (state === 'flow') {
-          /* Scrolled down past the button and the page has come to rest:
+          /* The page is at rest with the button above the screen (scrolled
+             down past it, or reopened / refreshed already down the page):
              close its space now, while nothing is moving, before you ever
              scroll back up. The button waits out of the flow, invisible, and
              simply appears as the sticky bar when you start scrolling up —
              no layout change at that moment. */
-          if (armed && dir === 1 && slotFullyAbove()) {
+          if (armed && slotFullyAbove()) {
             barHidden = true;
             atc.style.visibility = 'hidden';
             pin();
@@ -984,6 +991,8 @@
         if (slotFullyAbove()) dropReservation();
         else note('still, but space already on screen');
       }
+      scheduleRest();          // the page may open already scrolled past the button
+      window.addEventListener('pageshow', scheduleRest);
       window.addEventListener('touchstart', function () {
         touching = true;
         scheduleRest();      // a touch that stops momentum starts the still period
@@ -997,7 +1006,7 @@
       window.addEventListener('touchcancel', touchEnd, { passive: true });
 
       window.addEventListener('resize', function () {
-        if (state === 'flow') { measureSlotToBtn(); calibrate(); }
+        if (state === 'flow') calibrateWhenStill();
       });
 
       /* Diagnostics only with ?atcdebug=1 in the URL: a small readout of the
