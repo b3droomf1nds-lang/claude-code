@@ -1042,8 +1042,9 @@
     /* Scroll bar (mobile only). iPhone Safari's own scroll bar runs up behind
        its see-through address bar, so near the top of the page it squeezes
        into the top-right corner and disappears. A page can't move Safari's
-       bar, so it is hidden and this one drawn instead: same look, but its
-       track always stays inside the visible screen. Transform and opacity
+       bar, so it is hidden and this one drawn instead: same look, but at the
+       top of the page it starts flat right at the address bar's edge (its
+       rounded end tucked just off-screen) instead of vanishing behind it. Transform and opacity
        only, so it never affects the page's layout or scrolling. */
     document.addEventListener('DOMContentLoaded', function () {
       if (window.matchMedia('(min-width:900px)').matches) return;
@@ -1051,7 +1052,7 @@
       css.textContent =
         'html{scrollbar-width:none}' +
         'html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}' +
-        '.v-sbar{position:fixed;top:15px;bottom:6px;right:2px;width:3px;z-index:2147483000;pointer-events:none}' +
+        '.v-sbar{position:fixed;top:-3px;bottom:6px;right:2px;width:3px;z-index:2147483000;pointer-events:none}' +
         '.v-sbar i{position:absolute;left:0;top:0;width:3px;border-radius:2px;background:rgba(0,0,0,.52);' +
           'box-shadow:0 0 0 .5px rgba(255,255,255,.35);opacity:0;transition:opacity .35s;will-change:transform,opacity}' +
         '.v-sbar.on i{opacity:1;transition:opacity .1s}';
