@@ -1051,8 +1051,8 @@
       css.textContent =
         'html{scrollbar-width:none}' +
         'html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}' +
-        '.v-sbar{position:fixed;top:6px;bottom:6px;right:2px;width:3px;z-index:2147483000;pointer-events:none}' +
-        '.v-sbar i{position:absolute;left:0;top:0;width:3px;border-radius:2px;background:rgba(0,0,0,.4);' +
+        '.v-sbar{position:fixed;top:15px;bottom:6px;right:2px;width:3px;z-index:2147483000;pointer-events:none}' +
+        '.v-sbar i{position:absolute;left:0;top:0;width:3px;border-radius:2px;background:rgba(0,0,0,.52);' +
           'box-shadow:0 0 0 .5px rgba(255,255,255,.35);opacity:0;transition:opacity .35s;will-change:transform,opacity}' +
         '.v-sbar.on i{opacity:1;transition:opacity .1s}';
       document.head.appendChild(css);
@@ -1070,7 +1070,7 @@
         var trackH = track.clientHeight;
         var view = window.innerHeight, total = de.scrollHeight;
         var range = Math.max(1, total - view);
-        var len = Math.max(36, Math.round(trackH * view / total));
+        var len = Math.max(30, Math.round(0.68 * trackH * view / total));
         var y = window.scrollY;
         // Safari-style squeeze when pulled past either end.
         var over = y < 0 ? -y : (y > range ? y - range : 0);
