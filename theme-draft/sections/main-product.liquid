@@ -960,8 +960,23 @@
         restTimer = setTimeout(onRest, 180);
       }
       function onRest() {
+        if (touching) { if (state === 'reserved') note('still, but finger down'); return; }
+        if (state === 'flow') {
+          /* Scrolled down past the button and the page has come to rest:
+             close its space now, while nothing is moving, before you ever
+             scroll back up. The button waits out of the flow, invisible, and
+             simply appears as the sticky bar when you start scrolling up —
+             no layout change at that moment. */
+          if (armed && dir === 1 && slotFullyAbove()) {
+            barHidden = true;
+            atc.style.visibility = 'hidden';
+            pin();
+            dropReservation();
+            note('closed early (page at rest), waiting');
+          }
+          return;
+        }
         if (state !== 'reserved') return;
-        if (touching) { note('still, but finger down'); return; }
         if (slotFullyAbove()) dropReservation();
         else note('still, but space already on screen');
       }
