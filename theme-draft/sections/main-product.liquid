@@ -965,11 +965,15 @@
       var touching = false;
       var restTimer = null;
       var REST_MS = 120;
-      function scheduleRest() {
+      var restY = 0;
+      function scheduleRest(ms) {
         clearTimeout(restTimer);
-        restTimer = setTimeout(onRest, REST_MS);
+        restY = window.scrollY;
+        restTimer = setTimeout(onRest, ms || REST_MS);
       }
       function onRest() {
+        // Still moving but its scroll events are lagging (busy page): wait.
+        if (window.scrollY !== restY) { scheduleRest(); return; }
         if (state === 'flow' && needCal) { needCal = false; measureSlotToBtn(); calibrate(); }
         if (state === 'flow') {
           /* The page is at rest with the button above the screen (scrolled
@@ -992,10 +996,13 @@
         else note('still, but space already on screen');
       }
       scheduleRest();          // the page may open already scrolled past the button
-      window.addEventListener('pageshow', scheduleRest);
+      window.addEventListener('pageshow', function () { scheduleRest(); });
       window.addEventListener('touchstart', function () {
         touching = true;
-        scheduleRest();      // a touch that stops momentum starts the still period
+        // A touch that stops momentum starts the still period. It is kept short
+        // here so the space can close in the moment between catching the page
+        // and swiping back up (the page stops within a frame or two).
+        scheduleRest(60);
       }, { passive: true });
       function touchEnd(e) {
         if (e.touches && e.touches.length) return;
@@ -1021,7 +1028,7 @@
         osv = osv ? 'iOS ' + osv.replace(/_/g, '.') : navigator.platform;
         window.addEventListener('error', function (e) { lastErr = String(e.message || e); });
         (function tick() {
-          dbg.textContent = 'STICKY DEBUG | state=' + state + (barHidden ? '(hidden)' : '') + ' pin=' + how +
+          dbg.textContent = 'STICKY DEBUG build 7 | state=' + state + (barHidden ? '(hidden)' : '') + ' pin=' + how +
             ' anchoring=' + (canAnchor ? 'yes' : 'NO') + ' dir=' + dir + ' armed=' + armed +
             ' touching=' + touching + ' y=' + Math.round(window.scrollY) +
             ' spacer=' + spacer.style.display + ' slotTop=' + Math.round(slot.getBoundingClientRect().top) +
