@@ -791,14 +791,137 @@
       }
     });
 
-    const open = () => { el.classList.add('is-open'); scrim.hidden = false; requestAnimationFrame(() => scrim.classList.add('is-open')); document.body.style.overflow = 'hidden'; $('[data-drawer-close]', el).focus(); };
-    const close = () => { el.classList.remove('is-open'); scrim.classList.remove('is-open'); setTimeout(() => { scrim.hidden = true; }, 350); document.body.style.overflow = ''; };
+    /* Sheet motion, modelled on Apple's own sheets ("Designing Fluid
+       Interfaces", WWDC 2018): the sheet tracks the finger 1:1, pulling up
+       past fully open rubber-bands, and on release the finger's velocity is
+       projected forward (as a scroll view's deceleration would carry it) to
+       decide open vs closed. The sheet then finishes on a critically damped
+       spring that starts at the finger's velocity — no jolt on release, no
+       overshoot. Everything moves via transform/opacity only. */
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const body = $('.drawer__body', el);
+    let y = 0;              // sheet offset from fully open, px (down = positive)
+    let h = 1;              // sheet height, px
+    let raf = 0;
+    let isOpen = false;
+    el.style.transition = 'none';
+    el.style.willChange = 'transform';
+    scrim.style.transition = 'none';
+    if (body) body.style.overscrollBehavior = 'contain';
+    const place = (v) => {
+      y = v;
+      el.style.transform = 'translateX(-50%) translate3d(0,' + v + 'px,0)';
+      scrim.style.opacity = String(Math.max(0, Math.min(1, 1 - v / h)));
+    };
+    const stop = () => { if (raf) cancelAnimationFrame(raf); raf = 0; };
+    // Critically damped spring toward `to`, starting at velocity v0 (px/s).
+    const springTo = (to, v0, done) => {
+      stop();
+      if (reduceMotion.matches) { place(to); if (done) done(); return; }
+      const w = 2 * Math.PI / 0.42;       // Apple-style response of ~0.42s
+      const x0 = y - to;
+      const t0 = performance.now();
+      const step = (now) => {
+        const t = (now - t0) / 1000;
+        const e = Math.exp(-w * t);
+        const x = (x0 + (v0 + w * x0) * t) * e;
+        const v = (v0 - w * (v0 + w * x0) * t) * e;
+        if (Math.abs(x) < 0.4 && Math.abs(v) < 12) { place(to); raf = 0; if (done) done(); return; }
+        place(to + x);
+        raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    };
+    const open = () => {
+      stop();
+      h = el.offsetHeight || 1;
+      if (!isOpen) place(h);
+      isOpen = true;
+      el.classList.add('is-open');
+      scrim.hidden = false;
+      document.body.style.overflow = 'hidden';
+      springTo(0, 0);
+      $('[data-drawer-close]', el).focus({ preventScroll: true });
+    };
+    const close = (v0) => {
+      h = el.offsetHeight || 1;
+      isOpen = false;
+      el.classList.remove('is-open');
+      document.body.style.overflow = '';
+      springTo(h, typeof v0 === 'number' ? v0 : 0, () => {
+        if (isOpen) return;
+        scrim.hidden = true;
+        el.style.transform = '';          // rest closed via the stylesheet
+        scrim.style.opacity = '';
+      });
+    };
+
+    /* Drag. The sheet can be dragged from anywhere on it. In the item list it
+       drags only when the list is scrolled to its top and the finger moves
+       down (like iOS); otherwise the list scrolls. iOS won't let a gesture be
+       taken over once it has started scrolling, so that is decided on the
+       very first move. Taps on the close button and form controls are left
+       alone, and links/buttons (checkout) need a clear 8px drag first so a
+       slightly shaky tap still works. */
+    let drag = null;
+    const rubber = (d) => (1 - 1 / (d * 0.55 / h + 1)) * h;   // Apple's rubber-band
+    el.addEventListener('touchstart', (e) => {
+      if (!isOpen || e.touches.length !== 1) return;
+      if (e.target.closest('[data-drawer-close], input, label, select, textarea')) { drag = null; return; }
+      stop();
+      h = el.offsetHeight || 1;
+      drag = {
+        y0: e.touches[0].clientY, s0: y, active: false, samples: [],
+        inBody: !!(body && body.contains(e.target)),
+        control: !!e.target.closest('a, button'),
+      };
+    }, { passive: true });
+    el.addEventListener('touchmove', (e) => {
+      if (!drag) return;
+      const cy = e.touches[0].clientY;
+      const dy = cy - drag.y0;
+      if (!drag.active) {
+        if (drag.inBody) {
+          if (dy > 0 && body.scrollTop <= 0) drag.active = true;
+          else { drag = null; return; }           // let the list scroll
+        } else if (drag.control) {
+          if (Math.abs(dy) < 8) return;
+          drag.active = true;
+        } else {
+          drag.active = true;
+        }
+        // Measure from where the finger first touched, so the sheet stays
+        // exactly under it (no distance lost to the start-of-drag checks).
+      }
+      e.preventDefault();
+      const raw = drag.s0 + (cy - drag.y0);
+      place(raw >= 0 ? raw : -rubber(-raw));
+      const now = performance.now();
+      drag.samples.push({ t: now, y: cy });
+      while (drag.samples.length > 2 && now - drag.samples[0].t > 90) drag.samples.shift();
+    }, { passive: false });
+    const endDrag = () => {
+      if (!drag) return;
+      const d = drag; drag = null;
+      if (!d.active) { if (isOpen && y !== 0) springTo(0, 0); return; }
+      const s = d.samples;
+      let v = 0;                                  // px/s, down = positive
+      if (s.length > 1) {
+        const a = s[0], b = s[s.length - 1];
+        if (performance.now() - b.t < 80 && b.t > a.t) v = (b.y - a.y) / (b.t - a.t) * 1000;
+      }
+      const projected = y + v * 0.998 / (1 - 0.998) / 1000;   // Apple's projection
+      if (projected > h * 0.5) close(v);
+      else springTo(0, v);
+    };
+    el.addEventListener('touchend', endDrag, { passive: true });
+    el.addEventListener('touchcancel', endDrag, { passive: true });
     const refresh = (openAfter) => fetchJSON('/cart.js').then((c) => { cart = c; render(); if (openAfter) open(); });
 
     $$('[data-cart-open]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); refresh(true); }));
-    $('[data-drawer-close]', el).addEventListener('click', close);
-    scrim.addEventListener('click', close);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && el.classList.contains('is-open')) close(); });
+    $('[data-drawer-close]', el).addEventListener('click', () => close());
+    scrim.addEventListener('click', () => close());
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen) close(); });
 
     refresh(false);
     return { refresh, open, close };
