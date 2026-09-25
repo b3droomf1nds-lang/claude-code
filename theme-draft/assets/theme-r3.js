@@ -867,6 +867,8 @@
       scrim.hidden = true;
       scrim.style.opacity = '';
       document.body.style.overflow = '';
+      scroller.style.overflowY = '';
+      scroller.style.scrollSnapType = '';
       stopAnims();
     };
     const atRest = () => { if (isOpen && !closing && scroller.scrollTop <= 1) finishClose(); };
@@ -874,6 +876,14 @@
       if (!painting) { painting = true; requestAnimationFrame(paint); }
       clearTimeout(restTimer);
       restTimer = setTimeout(atRest, 120);
+      // Swiped three quarters of the way down: it's going. Take the card
+      // away from the finger (no more scrolling or snapping) and slide it
+      // off, so it can't be pulled back up.
+      if (isOpen && !closing && scroller.scrollTop < maxTop() * 0.25) {
+        scroller.style.scrollSnapType = 'none';
+        scroller.style.overflowY = 'hidden';
+        close();
+      }
     }, { passive: true });
     const open = () => {
       if (closing) finishClose();                   // reopened while sliding away
