@@ -93,7 +93,11 @@ held by an invisible spacer) and `pinned` (sticky, space closed).
    isn't moving. The space is closed then with an exact `scrollTo`
    correction, which is invisible because nothing is moving. **This works
    with a finger resting on the screen.** Waiting for the finger to lift
-   missed the common "flick down, catch, swipe up" pattern.
+   missed the common "flick down, catch, swipe up" pattern. While a close
+   is pending, a per-frame watch (`watchStill`) also treats **two frames in
+   a row with under 0.5px of movement** as still. That catches the turning
+   point of a quick reversal, which is too brief for the timer and was the
+   last way the gap could stay open on an iPhone.
 4. **Close early:** if the page comes to rest with the button above the screen
    while still in `flow` (the user scrolled down past it, or the page was
    opened or refreshed partway down), the space is closed right then. The
