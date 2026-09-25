@@ -2289,3 +2289,13 @@
     line-height: 1.3 !important;
   }
 }
+
+/* Compare heading, mobile only: "See how Core / upgrades your experience?"
+   on exactly two lines. The second line is the longer one, so the size
+   follows the screen width (never larger than the original 29.6px) to keep
+   it on one line down to 320px-wide phones. */
+@media (max-width: 899px) {
+  .pdp--bold .pdp-cmp__select-heading {
+    font-size: min(29.6px, 7vw);
+  }
+}
