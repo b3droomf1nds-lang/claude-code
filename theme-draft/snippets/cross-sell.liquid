@@ -8,6 +8,12 @@
   set in section settings.
   Note: with JS disabled the form still adds the main product; the
   add-on toggle is JS-enhanced only.
+  Images: forced to progressive JPEG. Left to itself Shopify's CDN sends
+  these small thumbnails to iPhone Safari as JPEG XL / AVIF, which some
+  iPhones fail to decode (a "?" box). The source images have no
+  transparency, so JPEG looks identical. 180px wide covers the 56px box
+  at 3x, and they load eagerly — they're tiny and sit right by the
+  Add to bag button.
 {%- endcomment -%}
 {%- assign lt = product.title | downcase -%}
 {%- assign _ref = nil -%}
@@ -28,7 +34,7 @@
 <div class="addon" data-addon data-addon-variant="{{ pair.selected_or_first_available_variant.id }}">
   <a class="addon__img" href="{{ pair.url }}" tabindex="-1" aria-hidden="true">
     {%- if pair.featured_image -%}
-      <img src="{{ pair.featured_image | image_url: width: 120 }}" alt="" loading="lazy">
+      <img src="{{ pair.featured_image | image_url: width: 180, format: 'pjpg' }}" alt="" width="56" height="56" loading="eager" decoding="async">
     {%- endif -%}
   </a>
   <div class="addon__body">
@@ -50,7 +56,7 @@
 <div class="addon" data-addon data-addon-variant="{{ pair2.selected_or_first_available_variant.id }}">
   <a class="addon__img" href="{{ pair2.url }}" tabindex="-1" aria-hidden="true">
     {%- if pair2.featured_image -%}
-      <img src="{{ pair2.featured_image | image_url: width: 120 }}" alt="" loading="lazy">
+      <img src="{{ pair2.featured_image | image_url: width: 180, format: 'pjpg' }}" alt="" width="56" height="56" loading="eager" decoding="async">
     {%- endif -%}
   </a>
   <div class="addon__body">
