@@ -791,30 +791,68 @@
       }
     });
 
-    /* Sheet motion comes from the phone itself. The drawer is placed inside
-       a full-screen scroll container (.drawer-scroller, see theme-r2.css)
-       whose two snap points are "closed" (the empty space above the sheet)
-       and "open" (the sheet). Dragging or flicking the sheet is ordinary
-       scrolling, so iOS/Android supply the finger tracking, momentum and
-       where it comes to rest. Script only starts it, fades the backdrop
-       with it, and tidies up once it has come to rest closed. */
+    /* On iPhone Safari (17.4+) the protection toggle is the native iOS
+       switch, the phone's own control rather than a drawn copy. */
+    if (protectToggle && 'switch' in protectToggle) {
+      protectToggle.switch = true;
+      protectToggle.parentNode.classList.add('is-native');
+    }
+
+    /* The card, styled after the iPhone's AirPods pop-up (theme-r2.css).
+       Its swipe comes from the phone itself: the drawer is placed inside a
+       full-screen scroll container (.drawer-scroller) whose two snap
+       points are "closed" (the empty space above the card) and "open" (the
+       card). Dragging, flicking or pulling the card is ordinary scrolling,
+       so iOS/Android supply the finger tracking, momentum, rubber-band and
+       where it comes to rest. Script adds the spring that pops it up, the
+       slide away when it's closed by tapping, and the backdrop fade. */
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    /* A spring described the way SwiftUI and UIKit describe theirs:
+       response (seconds) and damping ratio (below 1 overshoots). Its curve
+       is sampled into plain keyframes, which every browser can hand to the
+       compositor (Core Animation on iPhone), so it runs off the main
+       thread. */
+    const spring = (response, damping) => {
+      const w = (2 * Math.PI) / response;
+      const k = damping * w;
+      const wd = w * Math.sqrt(Math.max(0, 1 - damping * damping));
+      const at = (t) => (wd
+        ? 1 - Math.exp(-k * t) * (Math.cos(wd * t) + (k / wd) * Math.sin(wd * t))
+        : 1 - Math.exp(-w * t) * (1 + w * t));
+      const secs = Math.log(1000) / k;
+      const pts = [];
+      for (let i = 0; i < 64; i++) pts.push(at((secs * i) / 64));
+      pts.push(1);
+      return { pts, duration: Math.round(secs * 1000) };
+    };
+    const POP = spring(0.46, 0.78);                 // pops up with a little overshoot, like the AirPods card
+    const AWAY = spring(0.36, 1);                   // leaves without bouncing
+    const slide = (s, from, to, fill) => el.animate(
+      s.pts.map((x, i) => ({ transform: 'translateY(' + (from + (to - from) * x).toFixed(2) + 'px)', offset: i / (s.pts.length - 1) })),
+      { duration: s.duration, easing: 'linear', fill: fill || 'none' });
     const scroller = document.createElement('div');
     scroller.className = 'drawer-scroller';
     scroller.hidden = true;
     const space = document.createElement('div');
     space.className = 'drawer-scroller__space';
     space.setAttribute('aria-hidden', 'true');
+    const end = document.createElement('div');
+    end.className = 'drawer-scroller__end';
+    end.setAttribute('aria-hidden', 'true');
     el.parentNode.insertBefore(scroller, el);
     scroller.appendChild(space);
     scroller.appendChild(el);
+    scroller.appendChild(end);
     scrim.classList.add('is-sheet');
     let isOpen = false;
-    let opening = false;
+    let closing = false;
     let restTimer = 0;
     let painting = false;
-    const maxTop = () => Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-    const behavior = () => (reduceMotion.matches ? 'auto' : 'smooth');
+    let anims = [];
+    const stopAnims = () => { anims.forEach((a) => a.cancel()); anims = []; };
+    // Measured from the layout, not scrollHeight: while the card is
+    // springing, its transform adds to the scrollable area.
+    const maxTop = () => Math.max(0, end.offsetTop + end.offsetHeight - scroller.clientHeight);
     const paint = () => {
       painting = false;
       const m = maxTop();
@@ -822,44 +860,59 @@
     };
     const finishClose = () => {
       isOpen = false;
-      opening = false;
+      closing = false;
       el.classList.remove('is-open');
       scroller.hidden = true;
       scrim.hidden = true;
       scrim.style.opacity = '';
       document.body.style.overflow = '';
+      stopAnims();
     };
-    const atRest = () => {
-      if (!isOpen) return;
-      if (scroller.scrollTop >= maxTop() - 1) opening = false;
-      if (!opening && scroller.scrollTop <= 1) finishClose();
-    };
+    const atRest = () => { if (isOpen && !closing && scroller.scrollTop <= 1) finishClose(); };
     scroller.addEventListener('scroll', () => {
       if (!painting) { painting = true; requestAnimationFrame(paint); }
       clearTimeout(restTimer);
       restTimer = setTimeout(atRest, 120);
     }, { passive: true });
     const open = () => {
+      if (closing) finishClose();                   // reopened while sliding away
       if (!isOpen) {
         isOpen = true;
-        opening = true;
         el.classList.add('is-open');
-        scrim.style.opacity = '0';
         scrim.hidden = false;
         scroller.hidden = false;
-        scroller.scrollTop = 0;
         document.body.style.overflow = 'hidden';
-        setTimeout(() => { opening = false; }, 1500);   // safety net
+        scroller.scrollTop = maxTop();              // at rest, fully open…
+        paint();
+        if (el.animate) {                           // …and popped up from just below the screen
+          const below = scroller.clientHeight - el.getBoundingClientRect().top;
+          anims = reduceMotion.matches
+            ? [el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 }),
+              scrim.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 })]
+            : [slide(POP, below, 0),
+              scrim.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: 'ease-out' })];
+        }
+      } else if (scroller.scrollTop < maxTop() - 1) {
+        scroller.scrollTo({ top: maxTop(), behavior: reduceMotion.matches ? 'auto' : 'smooth' });
       }
-      requestAnimationFrame(() => scroller.scrollTo({ top: maxTop(), behavior: behavior() }));
       $('[data-drawer-close]', el).focus({ preventScroll: true });
     };
     const close = () => {
-      if (!isOpen) return;
-      opening = false;
-      scroller.scrollTo({ top: 0, behavior: behavior() });
-      clearTimeout(restTimer);
-      restTimer = setTimeout(atRest, 400);          // in case no scroll happens
+      if (!isOpen || closing) return;
+      if (!el.animate) { finishClose(); return; }
+      closing = true;
+      // Leave from exactly where the card is, even mid-pop.
+      const tf = getComputedStyle(el).transform;
+      const from = tf && tf !== 'none' ? new DOMMatrix(tf).m42 : 0;
+      const to = scroller.clientHeight - el.getBoundingClientRect().top + from + 48;
+      const fade = scrim.animate([{ opacity: getComputedStyle(scrim).opacity }, { opacity: 0 }],
+        { duration: reduceMotion.matches ? 200 : 260, easing: 'ease-out', fill: 'forwards' });
+      stopAnims();
+      const away = reduceMotion.matches
+        ? el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: 'forwards' })
+        : slide(AWAY, from, to, 'forwards');
+      anims = [away, fade];
+      away.onfinish = () => { if (closing) finishClose(); };
     };
     space.addEventListener('click', close);          // tap outside the sheet
     const refresh = (openAfter) => fetchJSON('/cart.js').then((c) => { cart = c; render(); if (openAfter) open(); });

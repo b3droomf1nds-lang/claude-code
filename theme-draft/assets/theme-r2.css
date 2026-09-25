@@ -832,17 +832,115 @@ h1.t-hero em,
   }
 }
 
-/* ---------- cart drawer as a natively scrolled sheet ----------
+/* ---------- cart drawer: a floating card like the iPhone's AirPods pop-up ----------
    The drawer lives inside a full-screen scroll container with two snap
-   points: the empty space above it (closed) and the sheet itself (open).
-   Swiping the sheet is ordinary scrolling, so the phone's own touch
-   tracking, momentum and snapping move it — no scripted
-   animation. No rubber-band on this container, so pulling past fully open
-   never opens a gap under the sheet. (Built by theme-r3.js around
-   [data-drawer].) */
-.drawer-scroller{position:fixed;inset:0;z-index:99;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;overscroll-behavior:none;scrollbar-width:none}
+   points: the empty space above it (closed) and the card itself (open).
+   Swiping the card is ordinary scrolling, so the phone's own touch
+   tracking, momentum, snapping and rubber-band move it; theme-r3.js only
+   adds the spring that pops it up and the slide away when it's closed.
+   Like the AirPods card it floats 8px in from the screen edges with big
+   round corners and no grab handle. It's drawn with the iPhone's own
+   parts where Safari offers them (the @supports blocks at the end): the
+   system font at the text size set on the phone (Dynamic Type) and the
+   iOS system colours. Other browsers get the same values written out.
+   (Built by theme-r3.js around [data-drawer].) */
+.drawer-scroller{
+  position:fixed;inset:0;z-index:113;overflow-y:auto;overflow-x:hidden;
+  scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none;
+  color-scheme:light;-webkit-tap-highlight-color:transparent;
+  --sys-bg:#fff;--sys-bg-2:#f2f2f7;--sys-label:#000;--sys-label-2:rgba(60,60,67,.6);
+  --sys-sep:rgba(60,60,67,.29);--sys-fill:rgba(118,118,128,.12);
+}
 .drawer-scroller::-webkit-scrollbar{display:none}
 .drawer-scroller[hidden]{display:none}
 .drawer-scroller__space{height:100%;scroll-snap-align:start}
-.drawer-scroller .drawer{position:relative;left:auto;bottom:auto;margin:0 auto;transform:none;transition:none;scroll-snap-align:end}
-.page-scrim.is-sheet{transition:none;pointer-events:none}
+/* the "open" snap point is this 8px strip under the card, not the card:
+   a snap point on the card would follow its transform while it springs */
+.drawer-scroller__end{height:8px;scroll-snap-align:end}
+.drawer-scroller .drawer{
+  position:relative;left:auto;bottom:auto;transform:none;transition:none;
+  width:min(452px,calc(100% - 16px));margin:0 auto;
+  max-height:min(760px,calc(100% - 8px - max(44px,env(safe-area-inset-top) + 12px)));
+  border-radius:40px;background:var(--sys-bg);color:var(--sys-label);box-shadow:0 8px 40px rgba(0,0,0,.16);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+  font-size:17px;line-height:1.29;letter-spacing:normal;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+}
+.drawer-scroller .drawer::before{display:none}
+/* above the floating CTA pill (z-index 110, layout/theme.liquid), like a system pop-up */
+.page-scrim.is-sheet{z-index:112;transition:none;pointer-events:none;background:rgba(0,0,0,.4)}
+
+.drawer-scroller .drawer__head{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding:18px 18px 4px}
+.drawer-scroller .drawer__head h2{grid-column:2;text-align:center;font-family:inherit;font-size:20px;font-weight:700;line-height:1.25;letter-spacing:normal}
+.drawer-scroller .drawer__close{grid-column:3;justify-self:end;position:relative;display:grid;place-items:center;width:30px;height:30px;padding:0;border-radius:50%;background:var(--sys-fill);color:var(--sys-label-2);transition:opacity .2s}
+.drawer-scroller .drawer__close::after{content:"";position:absolute;inset:-7px}
+.drawer-scroller .drawer__close:hover{background:var(--sys-fill);color:var(--sys-label-2)}
+.drawer-scroller .drawer__close:active{opacity:.5;transition:none}
+.drawer-scroller .drawer__close svg{display:block;width:12px;height:12px}
+.drawer-scroller .drawer__body{padding:4px 20px 6px}
+
+.drawer-scroller .cart-line{gap:14px;padding:14px 0}
+.drawer-scroller .cart-line+.cart-line{border-top:.5px solid var(--sys-sep)}
+.drawer-scroller .cart-line__img{width:72px;height:72px;border-radius:14px}
+.drawer-scroller .cart-line__title{font-size:17px;font-weight:600;line-height:1.29}
+.drawer-scroller .cart-line__variant{font-size:15px;line-height:1.33;color:var(--sys-label-2);margin-top:1px}
+.drawer-scroller .cart-line__row{margin-top:10px}
+.drawer-scroller .qty{align-items:center;background:var(--sys-fill)}
+.drawer-scroller .qty button{width:36px;height:32px;font-size:20px;font-weight:500;line-height:1;color:var(--sys-label);transition:opacity .2s}
+.drawer-scroller .qty button:hover{background:none;color:var(--sys-label)}
+.drawer-scroller .qty button:active{opacity:.35;transition:none}
+.drawer-scroller .qty output{min-width:18px;font-size:17px;font-weight:600;line-height:32px}
+.drawer-scroller .cart-line__price{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.drawer-scroller .cart-line__remove{font-size:13px;color:var(--sys-label-2);text-decoration:none;margin-top:6px;padding:4px 0}
+.drawer-scroller .cart-line__remove:hover{color:var(--sys-label-2)}
+
+.drawer-scroller .addon{background:var(--sys-bg-2);border-radius:22px;padding:12px 14px 12px 16px;margin:10px 0 4px;gap:12px}
+.drawer-scroller .addon__title{font-size:15px;font-weight:600;line-height:1.33}
+.drawer-scroller .addon__price{font-family:inherit;font-size:15px;color:var(--sys-label-2)}
+.drawer-scroller .addon__desc{font-size:13px;line-height:1.38;color:var(--sys-label-2)}
+/* the real iOS switch (Safari 17.4+ draws <input switch> natively; theme-r3.js turns it on) */
+.drawer-scroller .switch.is-native{width:auto;height:auto;display:flex}
+.drawer-scroller .switch.is-native input{position:static;opacity:1;margin:0}
+.drawer-scroller .switch.is-native i{display:none}
+
+.drawer-scroller .drawer__foot{padding:12px 20px 20px}
+.drawer-scroller .drawer__subtotal{font-size:17px;font-weight:600;margin-bottom:2px}
+.drawer-scroller .drawer__hint{font-size:13px;line-height:1.38;color:var(--sys-label-2);margin:0 0 14px}
+.drawer-scroller .drawer__checkout,
+.drawer-scroller .drawer__empty .btn{min-height:50px;padding:14px 28px;font-size:17px;font-weight:600;line-height:1.29;letter-spacing:normal}
+.drawer-scroller .drawer__empty{padding:26px 4px 18px;color:var(--sys-label-2)}
+.drawer-scroller .drawer__empty .t-md{font-size:20px;font-weight:700;letter-spacing:normal;color:var(--sys-label)}
+.drawer-scroller .drawer__empty .t-muted{font-size:15px!important;color:var(--sys-label-2)}
+
+/* iPhone text sizes: the Dynamic Type styles iOS apps use, so the card's
+   text follows the size chosen in Settings, like the AirPods card does. */
+@supports (font:-apple-system-body){
+  .drawer-scroller .drawer{font:-apple-system-body}
+  .drawer-scroller .cart-line__title,
+  .drawer-scroller .cart-line__price,
+  .drawer-scroller .drawer__subtotal,
+  .drawer-scroller .drawer__checkout,
+  .drawer-scroller .drawer__empty .btn{font:-apple-system-headline}
+  .drawer-scroller .cart-line__price{font-variant-numeric:tabular-nums}
+  .drawer-scroller .qty output{font:-apple-system-headline;line-height:32px}
+  .drawer-scroller .cart-line__variant,
+  .drawer-scroller .addon__price{font:-apple-system-subheadline}
+  .drawer-scroller .addon__title{font:-apple-system-subheadline;font-weight:600}
+  .drawer-scroller .drawer__empty .t-muted{font:-apple-system-subheadline!important}
+  .drawer-scroller .cart-line__remove,
+  .drawer-scroller .drawer__hint,
+  .drawer-scroller .addon__desc{font:-apple-system-footnote}
+}
+@supports (font:-apple-system-title3){
+  .drawer-scroller .drawer__head h2,
+  .drawer-scroller .drawer__empty .t-md{font:-apple-system-title3;font-weight:700}
+}
+/* iOS system colours, all or none (a light label on a card that stayed
+   white would be unreadable). color-scheme above keeps them light. */
+@supports (color:-apple-system-background) and (color:-apple-system-secondary-background) and (color:-apple-system-label) and (color:-apple-system-secondary-label) and (color:-apple-system-separator) and (color:-apple-system-tertiary-fill){
+  .drawer-scroller{
+    --sys-bg:-apple-system-background;--sys-bg-2:-apple-system-secondary-background;
+    --sys-label:-apple-system-label;--sys-label-2:-apple-system-secondary-label;
+    --sys-sep:-apple-system-separator;--sys-fill:-apple-system-tertiary-fill;
+  }
+}
