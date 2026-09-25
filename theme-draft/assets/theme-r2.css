@@ -867,6 +867,7 @@ h1.t-hero em,
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
 }
 .drawer-scroller .drawer::before{display:none}
+.drawer-scroller .drawer:focus{outline:none}
 /* above the floating CTA pill (z-index 110, layout/theme.liquid), like a system pop-up */
 .page-scrim.is-sheet{z-index:112;transition:none;pointer-events:none;background:rgba(0,0,0,.4)}
 

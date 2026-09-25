@@ -844,6 +844,7 @@
     scroller.appendChild(el);
     scroller.appendChild(end);
     scrim.classList.add('is-sheet');
+    el.tabIndex = -1;
     let isOpen = false;
     let closing = false;
     let restTimer = 0;
@@ -895,7 +896,7 @@
       } else if (scroller.scrollTop < maxTop() - 1) {
         scroller.scrollTo({ top: maxTop(), behavior: reduceMotion.matches ? 'auto' : 'smooth' });
       }
-      $('[data-drawer-close]', el).focus({ preventScroll: true });
+      el.focus({ preventScroll: true });            // the card itself, so the X doesn't show a focus ring
     };
     const close = () => {
       if (!isOpen || closing) return;
