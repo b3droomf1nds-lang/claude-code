@@ -831,3 +831,18 @@ h1.t-hero em,
     font-size:9px;
   }
 }
+
+/* ---------- cart drawer as a natively scrolled sheet ----------
+   The drawer lives inside a full-screen scroll container with two snap
+   points: the empty space above it (closed) and the sheet itself (open).
+   Swiping the sheet is ordinary scrolling, so the phone's own touch
+   tracking, momentum and snapping move it — no scripted
+   animation. No rubber-band on this container, so pulling past fully open
+   never opens a gap under the sheet. (Built by theme-r3.js around
+   [data-drawer].) */
+.drawer-scroller{position:fixed;inset:0;z-index:99;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;overscroll-behavior:none;scrollbar-width:none}
+.drawer-scroller::-webkit-scrollbar{display:none}
+.drawer-scroller[hidden]{display:none}
+.drawer-scroller__space{height:100%;scroll-snap-align:start}
+.drawer-scroller .drawer{position:relative;left:auto;bottom:auto;margin:0 auto;transform:none;transition:none;scroll-snap-align:end}
+.page-scrim.is-sheet{transition:none;pointer-events:none}
