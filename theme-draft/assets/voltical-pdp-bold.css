@@ -2276,3 +2276,16 @@
     scale: 1 !important;
   }
 }
+
+/* Charge card caption ("Charging time to go from 20% to 80% ..."), mobile
+   only: same size and line spacing as the compact card's "from 0% to 50%
+   charge" line (.pdp-cmp__card--compact-charge5 > .pdp-cmp__sub), including
+   the bold range phrase. Last in source order so it wins the mobile cascade. */
+@media (max-width: 899px) {
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range .pdp-cmp__charge-range-lead,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range .pdp-cmp__range-bold {
+    font-size: 14px !important;
+    line-height: 1.08 !important;
+  }
+}
