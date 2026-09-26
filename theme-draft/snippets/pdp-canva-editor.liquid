@@ -1776,7 +1776,10 @@
           inkCache[src] = l < 0 ? null : { l: l / W, r: r / W };
         } catch(e){ inkCache[src] = null; }
       };
-      im.src = src;
+      // Its own URL, so this CORS read never shares a cache entry with the
+      // page's own (non-CORS) <img> request; Safari can fail the page image
+      // when the two share one.
+      im.src = src + (src.indexOf('?') < 0 ? '?' : '&') + 'cv-ink=1';
     }
     function subjectCentreX(img, er){
       var ink = inkCache[img.currentSrc || img.src];
@@ -1796,8 +1799,12 @@
       else off = (er.width - cw) / 2;
       return er.left + off + cw * (ink.l + ink.r) / 2;
     }
+    // Read only after the page's own image has finished loading, never
+    // before or alongside it.
     if (ON) els.forEach(function(el){
-      if (el.matches('.pdp-cmp__img-slot img')) loadInk(el.currentSrc || el.src);
+      if (!el.matches('.pdp-cmp__img-slot img')) return;
+      if (el.complete && el.naturalWidth) loadInk(el.currentSrc || el.src);
+      else el.addEventListener('load', function(){ loadInk(el.currentSrc || el.src); }, { once: true });
     });
 
     // ---- align: repair the complete tile system in one undoable action ----
