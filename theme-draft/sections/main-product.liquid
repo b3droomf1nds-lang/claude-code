@@ -595,18 +595,23 @@
       window.addEventListener('load', update);
     })();
 
-    /* Mobile, Core: the compare section's backdrop fade
-       (.pdp-cmp-wrap::before in voltical-pdp-bold.css). The page colour
+    /* Mobile, Core: the fade from the page colour into the compare
+       section's tile colour, just above that section (the product
+       section's background, see .pdp--bold.pdp--core in
+       voltical-pdp-bold.css). The page colour
        and the tile colour are only a few 8-bit levels apart, so a browser
        gradient between them is drawn as a handful of flat bands one level
        apart. This draws the same curve (smootherstep, mixed in OKLab) at
        the screen's own pixel density and dithers every pixel between the
        two nearest levels with interleaved gradient noise, so on average
        each row is exactly the right shade and there are no steps at all,
-       then hands the picture to the CSS in place of its gradient. If this
-       doesn't run, the CSS gradient shows instead. */
+       then hands the picture to the CSS and keeps it lined up so it ends
+       exactly at the compare section's top edge, even when the blocks
+       above it change height (a variant change, the Add to bag button's
+       space closing while it's pinned). */
     (function () {
-      var wrap = document.querySelector('.pdp--bold.pdp--core .pdp-cmp-wrap');
+      var section = document.querySelector('.pdp--bold.pdp--core');
+      var wrap = section && section.querySelector('.pdp-cmp-wrap');
       if (!wrap || !window.matchMedia) return;
       var mobile = window.matchMedia('(max-width: 899px)');
       var W = 64;                                   // screen pixels before the picture repeats sideways
@@ -619,7 +624,7 @@
         return p.length >= 3 && !(p.length > 3 && p[3] === 0) ? p.slice(0, 3) : null;
       }
       function pageColour() {
-        for (var el = wrap.parentElement; el; el = el.parentElement) {
+        for (var el = section.parentElement; el; el = el.parentElement) {
           var c = rgb(getComputedStyle(el).backgroundColor);
           if (c) return c;
         }
@@ -646,9 +651,18 @@
           gam(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s)];
       }
 
+      // Ends exactly at the compare section's top edge.
+      function place() {
+        if (!mobile.matches) return;
+        var h = parseFloat(getComputedStyle(section).getPropertyValue('--cmp-fade-len')) || 0;
+        var y = wrap.getBoundingClientRect().top - section.getBoundingClientRect().top - h;
+        section.style.setProperty('--cmp-fade-y', y + 'px');
+      }
+
       function build() {
         if (!mobile.matches) return;
-        var h = parseFloat(getComputedStyle(wrap, '::before').height);
+        place();
+        var h = parseFloat(getComputedStyle(section).getPropertyValue('--cmp-fade-len'));
         var top = pageColour();
         var bottom = rgb(getComputedStyle(wrap).backgroundColor);
         if (!h || !bottom) return;
@@ -687,8 +701,8 @@
             if (next.indexOf('blob:') === 0) URL.revokeObjectURL(next);
             return;
           }
-          wrap.style.setProperty('--cmp-fade-img', 'url("' + next + '")');
-          wrap.style.setProperty('--cmp-fade-size', (W / dpr) + 'px ' + h + 'px');
+          section.style.setProperty('--cmp-fade-img', 'url("' + next + '")');
+          section.style.setProperty('--cmp-fade-size', (W / dpr) + 'px ' + h + 'px');
           if (url && url.indexOf('blob:') === 0) URL.revokeObjectURL(url);
           url = next;
         };
@@ -703,6 +717,7 @@
       window.addEventListener('resize', build);
       window.addEventListener('load', build);
       if (mobile.addEventListener) mobile.addEventListener('change', build);
+      if (window.ResizeObserver) new ResizeObserver(place).observe(section);
     })();
 
     /* Add to cart sticky bar — ONE button, no clone. The real Add to cart
