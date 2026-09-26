@@ -2426,3 +2426,37 @@
     padding-bottom: 46.43px !important;
   }
 }
+
+/* Charge tile, mobile only: the "59", the battery and "minutes" share one
+   gradient, the same peach-to-lilac as the MagSafe/USB-C icons in the two
+   tiles below, running left to right across all three as one continuous
+   fade rather than restarting in each. Each piece shows its own slice of
+   that one gradient: the main-product.liquid script measures the group and
+   sets --cg-w (the whole gradient's width) and --cg-x (where this piece
+   sits inside it) in each piece's own units. The text shows it through the
+   letters; the battery shows it through its own shape (a mask of the same
+   image), with the image's own pixels moved out of view. */
+@media (max-width: 899px) {
+  .template-product .pdp-cmp__card--charge .pdp-cmp__stat,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--unit,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
+    background-image: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background-image: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background-repeat: no-repeat;
+    background-size: var(--cg-w, 100%) 100%;
+    background-position: var(--cg-x, 0px) 0;
+  }
+  .template-product .pdp-cmp__card--charge .pdp-cmp__stat,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--unit {
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+  .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
+    -webkit-mask: url("https://cdn.shopify.com/s/files/1/0968/2337/8246/files/battery-terminal-semicircle-caps.webp?v=1787084702") 0 0 / 100% 100% no-repeat;
+    mask: url("https://cdn.shopify.com/s/files/1/0968/2337/8246/files/battery-terminal-semicircle-caps.webp?v=1787084702") 0 0 / 100% 100% no-repeat;
+    object-fit: none;
+    object-position: -100000px 0;
+  }
+}

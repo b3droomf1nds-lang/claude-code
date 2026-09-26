@@ -720,6 +720,57 @@
       if (window.ResizeObserver) new ResizeObserver(place).observe(section);
     })();
 
+    /* Mobile: the charge tile's "59", battery and "minutes" show one
+       continuous gradient across all three (see the charge-tile gradient
+       rule at the end of voltical-pdp-bold.css). This measures the group
+       on screen and gives each piece the whole gradient's width and its
+       own offset inside it, in the piece's own units (the Canva layout
+       scales each one differently). Re-measured when the number changes,
+       on resize, once fonts load, and after a drag in Canva mode. */
+    (function () {
+      var card = document.querySelector('.pdp--bold .pdp-cmp__card--charge');
+      if (!card || !window.matchMedia) return;
+      var mobile = window.matchMedia('(max-width: 899px)');
+      var parts = [
+        card.querySelector('.pdp-cmp__stat'),
+        card.querySelector('.pdp-cmp__battery-icon'),
+        card.querySelector('.pdp-cmp__sub--unit')
+      ].filter(Boolean);
+      if (!parts.length) return;
+      // The letters themselves, not the (sometimes full-width) box around them.
+      function ink(el) {
+        if (el.tagName === 'IMG') return el.getBoundingClientRect();
+        var r = document.createRange();
+        r.selectNodeContents(el);
+        var b = r.getBoundingClientRect();
+        return b.width ? b : el.getBoundingClientRect();
+      }
+      var queued = false;
+      function update() {
+        queued = false;
+        if (!mobile.matches) return;
+        var L = Infinity, R = -Infinity;
+        parts.forEach(function (el) { var b = ink(el); if (b.width) { L = Math.min(L, b.left); R = Math.max(R, b.right); } });
+        if (!(R > L)) return;
+        parts.forEach(function (el) {
+          var box = el.getBoundingClientRect();
+          var s = el.offsetWidth ? box.width / el.offsetWidth : 1;   // the piece's own on-screen scale
+          if (!s) return;
+          el.style.setProperty('--cg-w', ((R - L) / s) + 'px');
+          el.style.setProperty('--cg-x', ((L - box.left) / s) + 'px');
+        });
+      }
+      function queue() { if (!queued) { queued = true; requestAnimationFrame(update); } }
+      update();
+      window.addEventListener('resize', queue);
+      window.addEventListener('load', queue);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(queue);
+      if (mobile.addEventListener) mobile.addEventListener('change', queue);
+      if (window.MutationObserver) new MutationObserver(queue).observe(parts[0], { childList: true, characterData: true, subtree: true });
+      document.addEventListener('pointerup', queue, true);
+      document.addEventListener('touchend', queue, true);
+    })();
+
     /* Add to cart sticky bar — ONE button, no clone. The real Add to cart
        button toggles between normal flow and position:fixed at the bottom of
        the screen, so it keeps all of its own add-to-cart wiring. Mobile only;
