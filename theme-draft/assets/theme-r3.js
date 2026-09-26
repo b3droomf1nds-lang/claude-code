@@ -812,13 +812,14 @@
        is sampled into plain keyframes, which every browser can hand to the
        compositor (Core Animation on iPhone), so it runs off the main
        thread. */
-    const spring = (response, damping) => {
+    const spring = (response, damping, v0) => {  // v0: starting speed, in distances per second
       const w = (2 * Math.PI) / response;
       const k = damping * w;
       const wd = w * Math.sqrt(Math.max(0, 1 - damping * damping));
+      const v = v0 || 0;
       const at = (t) => (wd
-        ? 1 - Math.exp(-k * t) * (Math.cos(wd * t) + (k / wd) * Math.sin(wd * t))
-        : 1 - Math.exp(-w * t) * (1 + w * t));
+        ? 1 - Math.exp(-k * t) * (Math.cos(wd * t) + ((k - v) / wd) * Math.sin(wd * t))
+        : 1 - Math.exp(-w * t) * (1 + (w - v) * t));
       const secs = Math.log(1000) / k;
       const pts = [];
       for (let i = 0; i < 64; i++) pts.push(at((secs * i) / 64));
@@ -867,6 +868,7 @@
       scrim.hidden = true;
       scrim.style.opacity = '';
       document.body.style.overflow = '';
+      el.style.transform = '';
       stopAnims();
     };
     const atRest = () => { if (isOpen && !closing && scroller.scrollTop <= 1) finishClose(); };
@@ -898,24 +900,92 @@
       }
       el.focus({ preventScroll: true });            // the card itself, so the X doesn't show a focus ring
     };
-    const close = () => {
+    const cardY = () => {
+      const tf = getComputedStyle(el).transform;
+      return tf && tf !== 'none' ? new DOMMatrix(tf).m42 : 0;
+    };
+    const close = (speed) => {                       // speed: px/ms the finger was moving down, after a swipe
       if (!isOpen || closing) return;
       if (!el.animate) { finishClose(); return; }
       closing = true;
-      // Leave from exactly where the card is, even mid-pop.
-      const tf = getComputedStyle(el).transform;
-      const from = tf && tf !== 'none' ? new DOMMatrix(tf).m42 : 0;
+      // Leave from exactly where the card is, even mid-pop or mid-swipe.
+      const from = cardY();
       const to = scroller.clientHeight - el.getBoundingClientRect().top + from + 48;
       const fade = scrim.animate([{ opacity: getComputedStyle(scrim).opacity }, { opacity: 0 }],
         { duration: reduceMotion.matches ? 200 : 260, easing: 'ease-out', fill: 'forwards' });
       stopAnims();
+      const v0 = typeof speed === 'number' && to > from ? Math.min(20, Math.max(0, (speed * 1000) / (to - from))) : 0;
       const away = reduceMotion.matches
         ? el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: 'forwards' })
-        : slide(AWAY, from, to, 'forwards');
+        : slide(v0 ? spring(0.36, 1, v0) : AWAY, from, to, 'forwards');
       anims = [away, fade];
       away.onfinish = () => { if (closing) finishClose(); };
     };
     space.addEventListener('click', close);          // tap outside the sheet
+
+    /* Swiping the card down on a phone is tracked here, from the first
+       touch, so that once it's past halfway it is committed to closing and
+       can't be pulled back up. (Taking over the phone's own scrolling part
+       way through a swipe makes Safari jump, so the swipe is never handed to
+       it.) Lists inside the card that scroll still scroll natively. */
+    const SNAP = spring(0.38, 0.86);                 // springs back when let go before halfway
+    let drag = null;
+    const place = (y) => {
+      el.style.transform = 'translateY(' + y.toFixed(2) + 'px)';
+      scrim.style.opacity = String(Math.min(1, Math.max(0, 1 - y / el.offsetHeight)));
+    };
+    scroller.addEventListener('touchstart', (e) => {
+      drag = null;
+      if (!isOpen || closing || e.touches.length > 1) return;
+      const t = e.touches[0];
+      const list = e.target.closest && e.target.closest('.drawer__body');
+      drag = {
+        x: t.clientX, y: t.clientY, mode: 0, base: 0, cur: 0, peak: 0, locked: false, pts: [],
+        list: list && list.scrollHeight > list.clientHeight + 1 ? list : null
+      };
+    }, { passive: true });
+    scroller.addEventListener('touchmove', (e) => {
+      if (!drag) { if (isOpen && e.cancelable) e.preventDefault(); return; }
+      if (drag.mode < 0) return;                     // scrolling the list inside the card
+      const t = e.touches[0];
+      const dy = t.clientY - drag.y;
+      if (drag.mode === 0) {
+        if (dy === 0 && t.clientX === drag.x) return;
+        if (drag.list && (drag.list.scrollTop > 0 || dy < 0)) { drag.mode = -1; return; }
+        drag.mode = 1;
+        drag.base = cardY();                         // catch it where it is, even mid-pop
+        stopAnims();
+      }
+      if (e.cancelable) e.preventDefault();
+      const h = el.offsetHeight;
+      let y = drag.base + dy;
+      if (y < 0) y = -(1 - 1 / ((-y * 0.55) / h + 1)) * h;   // rubber-band above the resting place, like iOS
+      if (drag.locked) y = Math.max(y, drag.peak);   // past halfway: it can only go further down
+      drag.peak = Math.max(drag.peak, y);
+      if (drag.peak > h / 2) drag.locked = true;
+      drag.cur = y;
+      place(y);
+      drag.pts.push({ t: e.timeStamp, y: t.clientY });
+      while (drag.pts.length > 2 && e.timeStamp - drag.pts[0].t > 100) drag.pts.shift();
+    }, { passive: false });
+    const release = () => {
+      const d = drag;
+      drag = null;
+      if (!d || d.mode !== 1 || !isOpen || closing) return;
+      const a = d.pts[0];
+      const b = d.pts[d.pts.length - 1];
+      const speed = a && b && b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;   // px/ms, down is positive
+      if (d.locked || d.cur > el.offsetHeight / 2 || (speed > 0.5 && d.cur > 0)) { close(speed); return; }
+      el.style.transform = '';
+      scrim.style.opacity = '1';
+      if (Math.abs(d.cur) < 0.5 || !el.animate) return;
+      const v0 = Math.min(20, Math.max(-20, (speed * 1000) / -d.cur));
+      anims = [slide(v0 ? spring(0.38, 0.86, v0) : SNAP, d.cur, 0),
+        scrim.animate([{ opacity: Math.min(1, Math.max(0, 1 - d.cur / el.offsetHeight)) }, { opacity: 1 }],
+          { duration: 300, easing: 'ease-out' })];
+    };
+    scroller.addEventListener('touchend', release);
+    scroller.addEventListener('touchcancel', release);
     const refresh = (openAfter) => fetchJSON('/cart.js').then((c) => { cart = c; render(); if (openAfter) open(); });
 
     $$('[data-cart-open]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); refresh(true); }));
