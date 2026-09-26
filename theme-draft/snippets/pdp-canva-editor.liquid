@@ -278,7 +278,24 @@
     ls(false, BAKED_MOBILE_LAYOUT_MIGRATION_2, '1');
   }
 
-  var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__feature-icon-wrap, .pdp-cmp__eyebrow, ' +
+  // The magnet tile copy's phone size (the 1.33x the owner had set here in
+  // Canva mode) is now fixed in the mobile CSS for every browser, so drop
+  // that one saved scale, keeping any move, so it isn't applied twice.
+  var MAGNET_COPY_SIZE_MIGRATION = 'volt-canva-magnet-copy-size-v1';
+  var MAGNET_COPY_KEY = ':nth-child(2)>:nth-child(1)>:nth-child(2)';
+  if (!window.matchMedia('(min-width:900px)').matches &&
+      ls(true, MAGNET_COPY_SIZE_MIGRATION) !== '1'){
+    var magnetCopy = layout[MAGNET_COPY_KEY];
+    if (magnetCopy && magnetCopy.s && magnetCopy.s !== 1){
+      magnetCopy.s = 1;
+      ls(false, LKEY, JSON.stringify(layout));
+      savedHistory = [];
+      rm(HKEY);
+    }
+    ls(false, MAGNET_COPY_SIZE_MIGRATION, '1');
+  }
+
+  var EDITABLE = '.pdp-cmp__card,.pdp-cmp__img-slot img, .pdp-cmp__feature-icon-wrap, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-number, .pdp-cmp__compact-partial-extra, .pdp-cmp__sub, ' +
     '.pdp-cmp__compact-video-main, .pdp-cmp__compact-video-hours, .pdp-cmp__compact-battery, ' +
     '.pdp-cmp__battery-icon, .pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__select-wrap, ' +

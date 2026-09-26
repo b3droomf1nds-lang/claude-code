@@ -2280,15 +2280,25 @@
   }
 }
 
-/* Charge card caption ("Charging time to go from 20% to 80% ..."), mobile
-   only: same size and line spacing as the magnet tile's copy directly above
-   it ("Strong magnet. 1800gs magnetic hold ..."), including the bold range
-   phrase. Last in source order so it wins the mobile cascade. */
+/* Magnet tile copy ("Strong magnet. 1800gs magnetic hold ...") and the
+   charge tile caption below it ("Charging time to go from 20% to 80% ..."),
+   mobile only: both show at the same 21.33px, the size the owner had set
+   the magnet copy to in Canva mode on their phone (16px scaled up 1.33x),
+   now fixed here for every browser (the Canva editor drops that one saved
+   scale so it isn't applied twice). The charge caption's box carries the
+   baked Canva scale of 1.10294 (CANVA-BAKED, :nth-child(2)>:nth-child(2)
+   >:nth-child(4)), so its font size is 21.33 / 1.10294 = 19.34px to land
+   on the same on-screen size. Last in source order so it wins the mobile
+   cascade. */
 @media (max-width: 899px) {
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__sub--magnet-hold,
+  .template-product .pdp-cmp__card--magnet .pdp-cmp__sub--magnet-hold * {
+    font-size: 21.33px !important;
+    line-height: 1.3 !important;
+  }
   .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range,
-  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range .pdp-cmp__charge-range-lead,
-  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range .pdp-cmp__range-bold {
-    font-size: 16px !important;
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range * {
+    font-size: 19.34px !important;
     line-height: 1.3 !important;
   }
 }
