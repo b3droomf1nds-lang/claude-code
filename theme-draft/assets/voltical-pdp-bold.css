@@ -2460,3 +2460,14 @@
     object-position: -100000px 0;
   }
 }
+
+/* Charge tile, mobile only: the "59" and "minutes" drawn at the same
+   regular weight (400) as "67 more hours" in the video tile, instead of
+   medium/semibold. */
+@media (max-width: 899px) {
+  .template-product .pdp-cmp__card--charge .pdp-cmp__stat,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__stat *,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--unit {
+    font-weight: 400 !important;
+  }
+}
