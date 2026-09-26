@@ -2389,3 +2389,26 @@
     font-weight: 600;
   }
 }
+
+/* Magnet tile photo, mobile only: the phone is 270px wide, centred on the
+   tile, with its top edge 22.3px below the last line of the copy above it,
+   matching the owner's Canva-mode placement on their phone. The copy wraps
+   to 3 lines from 384px wide, 4 lines from 325px and 5 below that, so the
+   photo sits lower on narrower screens to keep the same gap. Replaces the
+   baked Canva transform for this image (the editor drops the owner's saved
+   browser copy so it isn't applied twice). */
+@media (max-width: 899px) {
+  .template-product .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1)>:nth-child(2) {
+    transform: matrix(2.56821, 0, 0, 2.56821, 6.2078, 188.926) !important;
+  }
+}
+@media (max-width: 383.98px) {
+  .template-product .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1)>:nth-child(2) {
+    transform: matrix(2.56821, 0, 0, 2.56821, 6.2078, 206.513) !important;
+  }
+}
+@media (max-width: 324.98px) {
+  .template-product .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1)>:nth-child(2) {
+    transform: matrix(2.56821, 0, 0, 2.56821, 6.2078, 224.1) !important;
+  }
+}

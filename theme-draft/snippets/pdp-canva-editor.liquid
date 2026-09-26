@@ -295,7 +295,23 @@
     ls(false, MAGNET_COPY_SIZE_MIGRATION, '1');
   }
 
-  var EDITABLE = '.pdp-cmp__card,.pdp-cmp__img-slot img, .pdp-cmp__feature-icon-wrap, .pdp-cmp__eyebrow, ' +
+  // The magnet tile photo's phone placement (size, centring and gap under
+  // the copy) is now fixed in the mobile CSS for every browser, so drop the
+  // owner's saved browser copy of that image so it isn't applied twice.
+  var MAGNET_PHOTO_MIGRATION = 'volt-canva-magnet-photo-v1';
+  var MAGNET_PHOTO_KEY = ':nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1)>:nth-child(2)';
+  if (!window.matchMedia('(min-width:900px)').matches &&
+      ls(true, MAGNET_PHOTO_MIGRATION) !== '1'){
+    if (layout[MAGNET_PHOTO_KEY]){
+      delete layout[MAGNET_PHOTO_KEY];
+      ls(false, LKEY, JSON.stringify(layout));
+      savedHistory = [];
+      rm(HKEY);
+    }
+    ls(false, MAGNET_PHOTO_MIGRATION, '1');
+  }
+
+  var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__feature-icon-wrap, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-number, .pdp-cmp__compact-partial-extra, .pdp-cmp__sub, ' +
     '.pdp-cmp__compact-video-main, .pdp-cmp__compact-video-hours, .pdp-cmp__compact-battery, ' +
     '.pdp-cmp__battery-icon, .pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__select-wrap, ' +
