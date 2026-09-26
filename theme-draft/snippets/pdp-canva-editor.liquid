@@ -372,6 +372,21 @@
     ls(false, CHARGE_LOCK2_MIGRATION, '1');
   }
 
+  // The owner then settled on thickness 360 (baked, re-centred). Drop the
+  // saved slider value on the "59" once so the baked weight shows.
+  var CHARGE_LOCK3_MIGRATION = 'volt-canva-charge-lock-v3';
+  if (ls(true, CHARGE_LOCK3_MIGRATION) !== '1'){
+    var statEntry = layout[CHARGE_LOCK_KEYS[1]];
+    if (statEntry){
+      if (statEntry.text != null) layout[CHARGE_LOCK_KEYS[1]] = { text: statEntry.text };
+      else delete layout[CHARGE_LOCK_KEYS[1]];
+      ls(false, LKEY, JSON.stringify(layout));
+      savedHistory = [];
+      rm(HKEY);
+    }
+    ls(false, CHARGE_LOCK3_MIGRATION, '1');
+  }
+
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__feature-icon-wrap, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-number, .pdp-cmp__compact-partial-extra, .pdp-cmp__sub, ' +
     '.pdp-cmp__compact-video-main, .pdp-cmp__compact-video-hours, .pdp-cmp__compact-battery, ' +
@@ -444,8 +459,8 @@
     // with the toolbar's thickness slider. Selecting the number or its row
     // both edit the number itself. The weight is stored as "w" on the
     // number's entry and shown through the --cv-w variable that the mobile
-    // CSS reads (default 340 when nothing is saved).
-    var DEFAULT_STAT_WEIGHT = 340;
+    // CSS reads (default 360 when nothing is saved).
+    var DEFAULT_STAT_WEIGHT = 360;
     function weightTarget(el){
       if (!el || desktopMQ.matches || !el.closest('.pdp-cmp__card--charge')) return null;
       if (el.matches('.pdp-cmp__stat')) return el;
