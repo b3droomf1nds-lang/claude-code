@@ -2412,3 +2412,17 @@
     transform: matrix(2.56821, 0, 0, 2.56821, 6.2078, 224.1) !important;
   }
 }
+
+/* Charge tile ("As low as 59 minutes"), mobile only: a third of the space
+   above "As low as" is cut off the top. The letters started 81.67px below
+   the tile's top edge, so the tile is 27.22px shorter and its content sits
+   27.22px higher; the space below the copy is unchanged. The content is
+   centred in a flex column, so the padding moves 13.61px from top to
+   bottom to keep the bottom gap where it was. */
+@media (max-width: 899px) {
+  .template-product .pdp-cmp__card--charge {
+    height: 442.78px;
+    padding-top: 19.21px !important;
+    padding-bottom: 46.43px !important;
+  }
+}
