@@ -761,11 +761,36 @@
         });
       }
       function queue() { if (!queued) { queued = true; requestAnimationFrame(update); } }
+
+      /* "minutes" here is drawn at the same on-screen size as "minutes" in
+         the compact "As little as" tile, and the "59" and battery shrink by
+         the same factor (--cz; see the rule at the end of
+         voltical-pdp-bold.css). Measured as actually drawn, so any Canva
+         scale on either word is included. Not re-run after a Canva drag, so
+         it never fights a resize while editing. */
+      var unit = card.querySelector('.pdp-cmp__sub--unit');
+      var match = document.querySelector('.pdp--bold .pdp-cmp__compact-charge5-unit');
+      function drawn(el) {
+        var w = parseFloat(getComputedStyle(el).width);
+        return w ? parseFloat(getComputedStyle(el).fontSize) * el.getBoundingClientRect().width / w : 0;
+      }
+      function fit() {
+        if (!mobile.matches || !unit || !match) return;
+        var a = drawn(match), b = drawn(unit);
+        if (!a || !b) return;
+        var cz = parseFloat(getComputedStyle(card).getPropertyValue('--cz')) || 1;
+        var next = Math.round(cz * a / b * 100000) / 100000;
+        if (next > 0.2 && next < 1.5 && Math.abs(next - cz) > 0.0005) card.style.setProperty('--cz', String(next));
+      }
+      function refit() { fit(); queue(); }
+
+      fit();
       update();
-      window.addEventListener('resize', queue);
-      window.addEventListener('load', queue);
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(queue);
-      if (mobile.addEventListener) mobile.addEventListener('change', queue);
+      window.addEventListener('resize', refit);
+      window.addEventListener('load', refit);
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refit);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit);
+      if (mobile.addEventListener) mobile.addEventListener('change', refit);
       if (window.MutationObserver) new MutationObserver(queue).observe(parts[0], { childList: true, characterData: true, subtree: true });
       document.addEventListener('pointerup', queue, true);
       document.addEventListener('touchend', queue, true);
