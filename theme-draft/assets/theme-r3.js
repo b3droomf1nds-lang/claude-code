@@ -876,10 +876,10 @@
       if (!painting) { painting = true; requestAnimationFrame(paint); }
       clearTimeout(restTimer);
       restTimer = setTimeout(atRest, 120);
-      // Swiped three quarters of the way down: it's going. Take the card
-      // away from the finger (no more scrolling or snapping) and slide it
-      // off, so it can't be pulled back up.
-      if (isOpen && !closing && scroller.scrollTop < maxTop() * 0.25) {
+      // Swiped halfway down: it's going. Take the card away from the
+      // finger (no more scrolling or snapping) and slide it off, so it
+      // can't be pulled back up.
+      if (isOpen && !closing && scroller.scrollTop < maxTop() * 0.5) {
         scroller.style.scrollSnapType = 'none';
         scroller.style.overflowY = 'hidden';
         close();
