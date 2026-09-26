@@ -90,6 +90,11 @@
      that works even where a native confirm() dialog is suppressed). */
   .cv-btn.is-armed{background:#c0392b;border-color:#c0392b;}
   .cv-btn.is-armed:hover{background:#a93226;}
+  /* Thickness slider, shown only while the charge tile's number is selected. */
+  .cv-weight{display:flex;align-items:center;gap:8px;font-size:12px;white-space:nowrap;}
+  .cv-weight[hidden]{display:none;}
+  .cv-weight input{width:150px;accent-color:#0a84ff;margin:0;}
+  .cv-weight output{min-width:28px;text-align:right;font-variant-numeric:tabular-nums;opacity:.8;}
 
   .cv-hover{outline:1.5px dashed rgba(10,132,255,.55) !important;outline-offset:1px;cursor:grab;}
   /* The image wrappers are normally pointer-events:none (they're decorative,
@@ -170,6 +175,8 @@
     .cv-tb__hint{flex-basis:100%;max-width:none;text-align:center;order:9;font-size:11px;}
     .cv-btn{padding:10px 13px;font-size:13px;}
     .cv-tb.cv-tb--compact .cv-btn{padding:9px 12px;}
+    .cv-weight{flex-basis:100%;justify-content:center;font-size:13px;}
+    .cv-weight input{flex:1;max-width:260px;height:28px;}
     .cv-h{width:22px;height:22px;}
     .cv-h--tl{top:-12px;left:-12px;} .cv-h--tr{top:-12px;right:-12px;}
     .cv-h--bl{bottom:-12px;left:-12px;} .cv-h--br{bottom:-12px;right:-12px;}
@@ -410,13 +417,26 @@
 
     var editingEl = null;
 
+    // The charge tile's number (mobile) can have its stroke weight changed
+    // with the toolbar's thickness slider. Selecting the number or its row
+    // both edit the number itself. The weight is stored as "w" on the
+    // number's entry and shown through the --cv-w variable that the mobile
+    // CSS reads (default 275 when nothing is saved).
+    var DEFAULT_STAT_WEIGHT = 275;
+    function weightTarget(el){
+      if (!el || desktopMQ.matches || !el.closest('.pdp-cmp__card--charge')) return null;
+      if (el.matches('.pdp-cmp__stat')) return el;
+      if (el.matches('.pdp-cmp__stat-row')) return el.querySelector('.pdp-cmp__stat');
+      return null;
+    }
+
     function stateOf(el){
       var s = layout[el.__cvKey];
       var st = s ? {
         dx:s.dx||0, dy:s.dy||0, s:s.s||1,
-        axd:s.axd||0, ayd:s.ayd||0, axm:s.axm||0, aym:s.aym||0,
+        axd:s.axd||0, ayd:s.ayd||0, axm:s.axm||0, aym:s.aym||0, w:s.w||0,
         text:(s.text!=null ? s.text : null)
-      } : {dx:0,dy:0,s:1,axd:0,ayd:0,axm:0,aym:0,text:null};
+      } : {dx:0,dy:0,s:1,axd:0,ayd:0,axm:0,aym:0,w:0,text:null};
       // The lower "3.6 extra" caption (compact-partial-detail) must always
       // render at its authored 20px — identical to the matching compact-full
       // caption above it. Font-size is fixed in CSS, so the ONLY thing that can
@@ -604,6 +624,8 @@
       // anything already baked would silently do nothing. An inline
       // !important is the one thing that outranks an external !important.
       el.style.setProperty('transform', (el.__cvBase + ' ' + extra).trim(), 'important');
+      if (st.w) el.style.setProperty('--cv-w', String(st.w));
+      else el.style.removeProperty('--cv-w');
       if (el.__cvTextEditable){
         // Never touch innerHTML of the box currently being typed into —
         // that would reset the cursor mid-keystroke. Otherwise it should
@@ -631,7 +653,7 @@
       }
     }
     function writeState(el, st, persist){
-      var noTransform = !st.dx && !st.dy && !st.axd && !st.ayd && !st.axm && !st.aym && (!st.s || st.s === 1);
+      var noTransform = !st.dx && !st.dy && !st.axd && !st.ayd && !st.axm && !st.aym && (!st.s || st.s === 1) && !st.w;
       var noText = st.text == null || (el.__cvTextEditable && st.text === el.__cvOrigText);
       if (noTransform && noText) delete layout[el.__cvKey];
       else {
@@ -647,6 +669,7 @@
         if (st.ayd) entry.ayd = persist ? Math.round(st.ayd*100)/100 : st.ayd;
         if (st.axm) entry.axm = persist ? Math.round(st.axm*100)/100 : st.axm;
         if (st.aym) entry.aym = persist ? Math.round(st.aym*100)/100 : st.aym;
+        if (st.w) entry.w = Math.round(st.w);
         if (!noText) entry.text = st.text;
         layout[el.__cvKey] = entry;
       }
@@ -705,6 +728,7 @@
       ls(false, LKEY, JSON.stringify(layout));
       persistHistory();
       positionBox();
+      updateWeightSlider();
     }
 
     // Register every editable element: record its base transform + stable key,
@@ -1126,6 +1150,7 @@
 
     var sel = null;
     var editTextBtn = null;
+    var weightWrap = null, weightInput = null, weightOut = null;
     var touchInputSeen = false;
     function label(el){
       if (el.matches('.pdp-cmp__card')) return 'tile';
@@ -1159,6 +1184,15 @@
       if (!editTextBtn) return;
       editTextBtn.hidden = !(touchInputSeen && sel && isTextEditable(sel) && !editingEl);
     }
+    function updateWeightSlider(){
+      if (!weightWrap) return;
+      var t = weightTarget(sel);
+      weightWrap.hidden = !t || !!editingEl;
+      if (!t) return;
+      var w = stateOf(t).w || DEFAULT_STAT_WEIGHT;
+      weightInput.value = w;
+      weightOut.textContent = w;
+    }
     function select(el){
       if (sel && sel !== el && sel.style){ sel.style.touchAction = ''; sel.classList.remove('cv-touch-ready'); }
       sel = el;
@@ -1166,11 +1200,11 @@
         el.style.touchAction = touchCanMove(el) ? 'none' : 'pan-y';
         el.classList.toggle('cv-touch-ready', coarse && touchCanMove(el));
       }
-      tag.textContent = label(el); positionBox(); updateEditTextButton();
+      tag.textContent = label(el); positionBox(); updateEditTextButton(); updateWeightSlider();
     }
     function deselect(){
       if (sel && sel.style){ sel.style.touchAction = ''; sel.classList.remove('cv-touch-ready'); }
-      sel = null; positionBox(); updateEditTextButton();
+      sel = null; positionBox(); updateEditTextButton(); updateWeightSlider();
     }
 
     // ---- inline text editing ----
@@ -1721,6 +1755,9 @@
         }
         return; // every other key (letters, backspace, arrow-to-move-cursor...) behaves natively
       }
+      if (e.target.closest && e.target.closest('.cv-weight')){
+        return; // arrow keys adjust the thickness slider, not the selection's position
+      }
       if (!sel) return;
       // A selected caption is still draggable by holding the mouse on it
       // (same as any other selected element) — Enter is what switches it
@@ -1933,7 +1970,7 @@
         var mobileDx = round2(st.dx + st.axm), mobileDy = round2(st.dy + st.aym);
         var dx = desktopMQ.matches ? desktopDx : mobileDx;
         var dy = desktopMQ.matches ? desktopDy : mobileDy;
-        var hasTransform = desktopDx || desktopDy || mobileDx || mobileDy || (st.s && st.s !== 1);
+        var hasTransform = desktopDx || desktopDy || mobileDx || mobileDy || (st.s && st.s !== 1) || st.w;
         var hasText = st.text != null;
         if (!hasTransform && !hasText) return;
         var item = { sel: '.pdp-cmp>' + el.__cvKey, kind: label(el), dx: dx, dy: dy, s: st.s||1, base: el.__cvBase || 'none' };
@@ -1943,6 +1980,7 @@
             mobile:{dx:mobileDx,dy:mobileDy}
           };
         }
+        if (st.w) item.fontWeight = st.w;
         if (hasText) item.text = st.text;
         out.push(item);
       });
@@ -1961,6 +1999,7 @@
       '<button class="cv-btn" data-cv="undo" title="Undo the last move, resize, type, delete, Align, or Reset.">Undo</button>' +
       '<button class="cv-btn" data-cv="refresh" title="Reload the page, keeping all your changes and the undo history.">Refresh</button>' +
       '<button class="cv-btn" data-cv="edit-text" title="Type into the selected caption." hidden>Edit text</button>' +
+      '<label class="cv-weight" hidden>Thickness <input type="range" min="100" max="700" step="5" aria-label="Number thickness"><output></output></label>' +
       '<button class="cv-btn" data-cv="align" title="Repair tile positions and sizes, then horizontally centre every tile text group, both feature icons and the subject of each tile image.">Align all</button>' +
       '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
       '<button class="cv-btn" data-cv="reset-all">Reset all</button>' +
@@ -1973,6 +2012,30 @@
     }
     editTextBtn = tb.querySelector('[data-cv="edit-text"]');
     updateEditTextButton();
+    weightWrap = tb.querySelector('.cv-weight');
+    weightInput = weightWrap.querySelector('input');
+    weightOut = weightWrap.querySelector('output');
+    // One slide = one undo step: capture before the first move, preview
+    // while sliding, and save + commit when the finger/mouse lets go.
+    var weightBatch = null;
+    function weightFromSlider(persist){
+      var t = weightTarget(sel);
+      if (!t) return;
+      if (!weightBatch) weightBatch = captureBatch([t]);
+      var st = stateOf(t);
+      var w = parseInt(weightInput.value, 10);
+      st.w = w === DEFAULT_STAT_WEIGHT ? 0 : w;
+      weightOut.textContent = w;
+      if (persist){
+        saveState(t, st);
+        commitBatch(weightBatch);
+        weightBatch = null;
+      } else previewState(t, st);
+      positionBox();
+    }
+    weightInput.addEventListener('input', function(){ weightFromSlider(false); });
+    weightInput.addEventListener('change', function(){ weightFromSlider(true); });
+    updateWeightSlider();
 
     // ---- export panel ----
     var panel = document.createElement('div'); panel.className = 'cv-panel';
@@ -2025,6 +2088,7 @@
       else if (a === 'reset-sel' && sel){
         var resetBatch = captureBatch([sel]);
         saveState(sel, {dx:0, dy:0, s:1, text:null});
+        updateWeightSlider();
         commitBatch(resetBatch);
         positionBox();
       }
