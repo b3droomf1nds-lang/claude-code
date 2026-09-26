@@ -595,6 +595,116 @@
       window.addEventListener('load', update);
     })();
 
+    /* Mobile, Core: the compare section's backdrop fade
+       (.pdp-cmp-wrap::before in voltical-pdp-bold.css). The page colour
+       and the tile colour are only a few 8-bit levels apart, so a browser
+       gradient between them is drawn as a handful of flat bands one level
+       apart. This draws the same curve (smootherstep, mixed in OKLab) at
+       the screen's own pixel density and dithers every pixel between the
+       two nearest levels with interleaved gradient noise, so on average
+       each row is exactly the right shade and there are no steps at all,
+       then hands the picture to the CSS in place of its gradient. If this
+       doesn't run, the CSS gradient shows instead. */
+    (function () {
+      var wrap = document.querySelector('.pdp--bold.pdp--core .pdp-cmp-wrap');
+      if (!wrap || !window.matchMedia) return;
+      var mobile = window.matchMedia('(max-width: 899px)');
+      var W = 64;                                   // screen pixels before the picture repeats sideways
+      var built = '';
+      var url = '';
+
+      function rgb(c) {
+        var m = /rgba?\(([^)]+)\)/.exec(c || '');
+        var p = m ? m[1].split(/[\s,\/]+/).map(parseFloat) : [];
+        return p.length >= 3 && !(p.length > 3 && p[3] === 0) ? p.slice(0, 3) : null;
+      }
+      function pageColour() {
+        for (var el = wrap.parentElement; el; el = el.parentElement) {
+          var c = rgb(getComputedStyle(el).backgroundColor);
+          if (c) return c;
+        }
+        return [252, 253, 254];
+      }
+      function lin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+      function gam(c) { return 255 * (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055); }
+      function toLab(c) {
+        var r = lin(c[0]), g = lin(c[1]), b = lin(c[2]);
+        var l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+        var m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+        var s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+        return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+          1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+          0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
+      }
+      function fromLab(L) {
+        var l = L[0] + 0.3963377774 * L[1] + 0.2158037573 * L[2];
+        var m = L[0] - 0.1055613458 * L[1] - 0.0638541728 * L[2];
+        var s = L[0] - 0.0894841775 * L[1] - 1.2914855480 * L[2];
+        l = l * l * l; m = m * m * m; s = s * s * s;
+        return [gam(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+          gam(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+          gam(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s)];
+      }
+
+      function build() {
+        if (!mobile.matches) return;
+        var h = parseFloat(getComputedStyle(wrap, '::before').height);
+        var top = pageColour();
+        var bottom = rgb(getComputedStyle(wrap).backgroundColor);
+        if (!h || !bottom) return;
+        var dpr = window.devicePixelRatio || 1;
+        var H = Math.max(1, Math.round(h * dpr));
+        var key = [H, top, bottom].join();
+        if (key === built) return;
+        built = key;
+
+        var canvas = document.createElement('canvas');
+        canvas.width = W;
+        canvas.height = H;
+        var ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        var img = ctx.createImageData(W, H);
+        var px = img.data;
+        var a = toLab(top), b = toLab(bottom);
+        for (var y = 0; y < H; y++) {
+          var t = (y + 0.5) / H;
+          var e = t * t * t * (t * (t * 6 - 15) + 10);          // smootherstep: flat at both ends
+          var c = fromLab([a[0] + (b[0] - a[0]) * e, a[1] + (b[1] - a[1]) * e, a[2] + (b[2] - a[2]) * e]);
+          for (var k = 0; k < 3; k++) c[k] = Math.round(c[k] * 1e6) / 1e6;   // exact at the two ends
+          for (var x = 0; x < W; x++) {
+            var n = (52.9829189 * ((0.06711056 * x + 0.00583715 * y) % 1)) % 1;   // 0 to 1, evenly spread
+            var i = (y * W + x) * 4;
+            px[i] = Math.floor(c[0] + n);
+            px[i + 1] = Math.floor(c[1] + n);
+            px[i + 2] = Math.floor(c[2] + n);
+            px[i + 3] = 255;
+          }
+        }
+        ctx.putImageData(img, 0, 0);
+
+        var use = function (next) {
+          if (built !== key) {                        // a newer build has started
+            if (next.indexOf('blob:') === 0) URL.revokeObjectURL(next);
+            return;
+          }
+          wrap.style.setProperty('--cmp-fade-img', 'url("' + next + '")');
+          wrap.style.setProperty('--cmp-fade-size', (W / dpr) + 'px ' + h + 'px');
+          if (url && url.indexOf('blob:') === 0) URL.revokeObjectURL(url);
+          url = next;
+        };
+        if (canvas.toBlob && window.URL && URL.createObjectURL) {
+          canvas.toBlob(function (blob) { if (blob) use(URL.createObjectURL(blob)); }, 'image/png');
+        } else {
+          use(canvas.toDataURL('image/png'));
+        }
+      }
+
+      build();
+      window.addEventListener('resize', build);
+      window.addEventListener('load', build);
+      if (mobile.addEventListener) mobile.addEventListener('change', build);
+    })();
+
     /* Add to cart sticky bar — ONE button, no clone. The real Add to cart
        button toggles between normal flow and position:fixed at the bottom of
        the screen, so it keeps all of its own add-to-cart wiring. Mobile only;

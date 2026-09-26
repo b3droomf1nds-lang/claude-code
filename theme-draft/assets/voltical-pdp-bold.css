@@ -2309,8 +2309,61 @@
   /* Space above the heading matches Apple's compare intro: the gap from
      the "In stock" line to the heading equals the gap from Apple's image
      tile to "Worth the upgrade?" (was 70px). */
+  .pdp--bold.pdp--core .pdp-cmp-wrap {
+    --cmp-lead: 84px;
+  }
   .pdp--bold.pdp--core .pdp-cmp__select-heading {
-    margin-top: 84px;
+    margin-top: var(--cmp-lead);
+  }
+  /* The tile-colour backdrop fades in from the page colour above instead
+     of starting at a hard edge. The fade runs from the bottom of the
+     "In stock" line (--cmp-lead above the wrap, i.e. that gap) to just
+     behind the top of the first tile, 384px on a phone, so the change
+     per pixel is as small as it can be. Its curve is an S (smootherstep,
+     6t^5 - 15t^4 + 10t^3), which leaves the page colour and arrives at
+     the tile colour with no change in slope or curvature at either end,
+     so there's no line where it starts or stops. Colours are mixed in
+     OKLab so it lightens evenly to the eye with no grey or hue drift.
+     The main-product.liquid script swaps this gradient for the same
+     curve drawn at the screen's pixel density with sub-level dithering,
+     which removes the faint 8-bit steps a gradient between two colours
+     this close would otherwise show. Painted behind the section's
+     content (isolation keeps the -1 layer above the wrap's own
+     background); nothing inside the wrap is positioned against an
+     ancestor outside it, so making it relative moves nothing. */
+  .pdp--bold.pdp--core .pdp-cmp-wrap {
+    position: relative;
+    isolation: isolate;
+  }
+  .pdp--bold.pdp--core .pdp-cmp-wrap::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: 0;
+    right: 0;
+    top: calc(-1 * var(--cmp-lead));
+    height: calc(var(--cmp-lead) + 300px);
+    pointer-events: none;
+    background-image: var(--cmp-fade-img, linear-gradient(to bottom,
+      var(--base) 0%,
+      color-mix(in oklab, var(--tile) 0.22%, var(--base)) 6.25%,
+      color-mix(in oklab, var(--tile) 1.61%, var(--base)) 12.5%,
+      color-mix(in oklab, var(--tile) 4.88%, var(--base)) 18.75%,
+      color-mix(in oklab, var(--tile) 10.35%, var(--base)) 25%,
+      color-mix(in oklab, var(--tile) 18%, var(--base)) 31.25%,
+      color-mix(in oklab, var(--tile) 27.52%, var(--base)) 37.5%,
+      color-mix(in oklab, var(--tile) 38.4%, var(--base)) 43.75%,
+      color-mix(in oklab, var(--tile) 50%, var(--base)) 50%,
+      color-mix(in oklab, var(--tile) 61.6%, var(--base)) 56.25%,
+      color-mix(in oklab, var(--tile) 72.48%, var(--base)) 62.5%,
+      color-mix(in oklab, var(--tile) 82%, var(--base)) 68.75%,
+      color-mix(in oklab, var(--tile) 89.65%, var(--base)) 75%,
+      color-mix(in oklab, var(--tile) 95.12%, var(--base)) 81.25%,
+      color-mix(in oklab, var(--tile) 98.39%, var(--base)) 87.5%,
+      color-mix(in oklab, var(--tile) 99.78%, var(--base)) 93.75%,
+      var(--tile) 100%));
+    background-size: var(--cmp-fade-size, 100% 100%);
+    background-repeat: repeat-x;
   }
   .pdp--bold.pdp--core .pdp-cmp__label {
     font-size: 14px;
