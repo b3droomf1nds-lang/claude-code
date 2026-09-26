@@ -1,0 +1,1521 @@
+{%- comment -%}
+  Default variant selection. Shopify's own default (used when the URL
+  has no ?variant= param) is simply the product's first variant in
+  variant order, which for some products (e.g. Core Pro) happens to be
+  the lowest capacity. When there's a "capacity" option and the URL
+  isn't pinning a specific variant, default to the highest-capacity
+  option instead (keeping whatever the default color/other options
+  would have been).
+{%- endcomment -%}
+{%- assign capacity_idx = -1 -%}
+{%- for option in product.options_with_values -%}
+  {%- assign oname_dc = option.name | downcase -%}
+  {%- if oname_dc contains 'capacity' -%}
+    {%- assign capacity_idx = forloop.index0 -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- assign explicit_variant = product.selected_variant -%}
+{%- if explicit_variant -%}
+  {%- assign current_variant = explicit_variant -%}
+{%- elsif capacity_idx > -1 -%}
+  {%- assign base_variant = product.selected_or_first_available_variant -%}
+  {%- comment -%} Core Pro: default to the Black color option instead of
+    whatever Shopify's own first-available-variant happens to be. {%- endcomment -%}
+  {%- if product.handle == 'voltical-core-pro-5k-10k' -%}
+    {%- for v in product.variants -%}
+      {%- assign v_opts_dc = v.options | join: '|' | downcase -%}
+      {%- if v_opts_dc contains 'black' -%}
+        {%- assign base_variant = v -%}
+        {%- break -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+  {%- assign best_variant = base_variant -%}
+  {%- assign best_capacity = -1 -%}
+  {%- for v in product.variants -%}
+    {%- assign matches_other_options = true -%}
+    {%- for i in (0..2) -%}
+      {%- if i != capacity_idx -%}
+        {%- assign base_val = base_variant.options[i] -%}
+        {%- assign v_val = v.options[i] -%}
+        {%- if base_val != blank and v_val != base_val -%}
+          {%- assign matches_other_options = false -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if matches_other_options -%}
+      {%- assign cap_str = v.options[capacity_idx] | downcase | remove: ',' | remove: ' ' | remove: 'mah' -%}
+      {%- assign cap_num = cap_str | plus: 0 -%}
+      {%- if cap_num > best_capacity -%}
+        {%- assign best_capacity = cap_num -%}
+        {%- assign best_variant = v -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- assign current_variant = best_variant -%}
+{%- else -%}
+  {%- assign current_variant = product.selected_or_first_available_variant -%}
+{%- endif -%}
+
+{%- assign lt = product.title | downcase -%}
+
+{%- comment -%} Displayed title: drops the "5K & 10K" capacity suffix —
+  capacity is already chosen as a variant option right below, so the
+  product page heading and sticky bar don't need to repeat it. {%- endcomment -%}
+{%- assign display_title = product.title | replace: ' 5K & 10K', '' | replace: ' 5k & 10k', '' | strip -%}
+
+{%- comment -%} Core Pro's h1 drops the "Voltical" brand prefix too —
+  just "Core Pro" rather than "Voltical Core Pro". Only Core Pro; other
+  products keep the brand name in their heading. {%- endcomment -%}
+{%- if product.handle == 'voltical-core-pro-5k-10k' -%}
+  {%- assign display_title = display_title | replace: 'Voltical ', '' | replace: 'voltical ', '' | strip -%}
+{%- endif -%}
+
+{%- comment -%} Does this product show the capacity calculator at all? {%- endcomment -%}
+{%- assign calc_handles = 'voltical-core-5k-10k,voltical-core-pro-5k-10k,voltical-puck-5k-10k,voltical-watch-case,voltical-usb-c-charge-data-cable-new,voltical-watch-charge-cable' | split: ',' -%}
+{%- assign has_calc = false -%}
+{%- if calc_handles contains product.handle -%}
+  {%- assign has_calc = true -%}
+{%- endif -%}
+
+{%- comment -%} Eyebrow: product type, else inferred category {%- endcomment -%}
+{%- if product.type != blank -%}
+  {%- assign eyebrow = product.type -%}
+{%- elsif lt contains 'usb-c' -%}
+  {%- assign eyebrow = 'Cables' -%}
+{%- elsif lt contains 'watch charge cable' -%}
+  {%- assign eyebrow = 'Apple Watch' -%}
+{%- elsif lt contains 'watch case' -%}
+  {%- assign eyebrow = 'Apple Watch' -%}
+{%- elsif lt contains 'puck' -%}
+  {%- assign eyebrow = 'Wireless charging' -%}
+{%- else -%}
+  {%- assign eyebrow = 'Magnetic power' -%}
+{%- endif -%}
+
+{%- comment -%} Tagline: metafield override, else per-product default {%- endcomment -%}
+{%- assign tagline = product.metafields.custom.tagline.value -%}
+{%- if tagline == blank -%}
+  {%- case product.handle -%}
+    {%- when 'voltical-core-5k-10k' -%}
+      {%- assign tagline = 'The everyday magnetic battery. Snaps on, charges through the case, disappears into the bag.' -%}
+    {%- when 'voltical-core-pro-5k-10k' -%}
+      {%- assign tagline = 'The flagship. A metal shell, a live charge readout, and two-way fast charge.' -%}
+    {%- when 'voltical-puck-5k-10k' -%}
+      {%- assign tagline = 'A foldable charging stand for phone and watch. Desk by day, flat in the pocket by night.' -%}
+    {%- when 'voltical-watch-case' -%}
+      {%- assign tagline = 'A battery case for your Apple Watch. Top up anywhere — no cable, no plug.' -%}
+    {%- when 'voltical-watch-charge-cable' -%}
+      {%- assign tagline = 'The braided fast-charge cable for Apple Watch, in aluminium.' -%}
+    {%- else -%}
+      {%- if lt contains 'usb-c' -%}
+        {%- assign tagline = 'One dependable USB-C cable — charge and data, no drama.' -%}
+      {%- endif -%}
+  {%- endcase -%}
+{%- endif -%}
+
+{%- comment -%} voltical-pdp-bold.css now loads in <head> (theme.liquid)
+  so it's applied before first paint instead of after — see the
+  comment there. {%- endcomment -%}
+
+{%- comment -%} Bold buy-box data: stat tiles + benefit checks per product {%- endcomment -%}
+{%- assign stat_src = '' -%}
+{%- assign check_src = '' -%}
+{%- case product.handle -%}
+  {%- when 'voltical-core-5k-10k' -%}
+    {%- assign stat_src = '10,000 mAh|Max capacity;15 W|Magnetic charge;20 W|Wired USB-C' -%}
+    {%- assign check_src = 'Snaps on through MagSafe cases;Charges through the case;8.5 mm thin — pocket flat' -%}
+  {%- when 'voltical-core-pro-5k-10k' -%}
+    {%- assign stat_src = '10,000 mAh|Max capacity;Live %|Charge display;20 W|Two-way fast' -%}
+    {%- assign check_src = 'Live readout — never guess again;Metal shell, flagship feel;Fast in, fast out' -%}
+  {%- when 'voltical-puck-5k-10k' -%}
+    {%- assign stat_src = '15 W|Magnetic charge;2-in-1|Phone + watch;Folds|Flat for travel' -%}
+    {%- assign check_src = 'One plug charges phone + watch;Desk stand or lies flat;Folds to pocket size' -%}
+  {%- when 'voltical-watch-case' -%}
+    {%- assign stat_src = '≈1×|Full recharge;2.5 W|Watch magnetic;LED|Charge status' -%}
+    {%- assign check_src = 'Charges with no cable or plug;Magnetic ring self-aligns;10-layer safety protection' -%}
+  {%- when 'voltical-watch-charge-cable' -%}
+    {%- assign stat_src = '1.2 h|0→80% Series 8;20 W|Adapter fast charge;Alu|Braided build' -%}
+    {%- assign check_src = 'Fast charge Ultra / 9 / 8 / 7;Cool-running, battery-safe;Genuine Apple Watch only' -%}
+  {%- else -%}
+    {%- if lt contains 'usb-c' -%}
+      {%- assign stat_src = '2-in-1|Charge + data;1 / 2 m|Two lengths;USB-C|Both ends' -%}
+      {%- assign check_src = 'Fast charging + data in one;Works with Core & Core Pro;Built to be kept' -%}
+    {%- endif -%}
+{%- endcase -%}
+
+<section class="section pdp--bold{% if product.handle == 'voltical-core-5k-10k' %} pdp--core{% endif %}">
+  <div class="wrap wrap--wide">
+
+    {%- assign first_img = current_variant.featured_image | default: product.featured_image -%}
+    <div class="product__grid">
+
+      {%- comment -%} ---------- Gallery ---------- {%- endcomment -%}
+      <div class="gallery" data-gallery data-reveal>
+        {%- if product.handle == 'voltical-core-5k-10k' -%}
+          <span class="pdp-core-buy-label">buy Core</span>
+          <span class="pdp-core-buy-from">From {{ product.price_min | money }}</span>
+          {%- assign core_pro = all_products['voltical-core-pro-5k-10k'] -%}
+          {%- if core_pro and core_pro.available -%}
+            <a href="{{ core_pro.url }}" class="pdp-core-pro-upsell">Buy Core Pro</a>
+          {%- endif -%}
+        {%- endif -%}
+        <div class="gallery__main" data-gallery-main role="button" tabindex="0" aria-label="{{ 'products.view_image' | t }}">
+          {%- if first_img -%}
+            <img src="{{ first_img | image_url: width: 1600 }}"
+                 srcset="{{ first_img | image_url: width: 1200 }} 1200w, {{ first_img | image_url: width: 1600 }} 1600w, {{ first_img | image_url: width: 2200 }} 2200w, {{ first_img | image_url: width: 3000 }} 3000w"
+                 sizes="(min-width:900px) 50vw, 94vw"
+                 alt="{{ first_img.alt | default: product.title | escape }}" width="1200" height="1200">
+          {%- endif -%}
+          {%- comment -%} Desktop-only click-through arrows — hidden on
+            mobile (swipe covers that there) and hidden entirely when
+            there's nothing to click through to. {%- endcomment -%}
+          {%- assign _image_count = 0 -%}
+          {%- for media in product.media -%}{%- if media.media_type == 'image' -%}{%- assign _image_count = _image_count | plus: 1 -%}{%- endif -%}{%- endfor -%}
+          {%- if _image_count > 1 -%}
+            <button type="button" class="gallery__arrow gallery__arrow--prev" data-gallery-prev aria-label="{{ 'general.previous' | t }}"><svg width="12" height="20" viewBox="0 0 14 24" fill="none" aria-hidden="true"><path d="M11 2 3 12l8 10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button type="button" class="gallery__arrow gallery__arrow--next" data-gallery-next aria-label="{{ 'general.next' | t }}"><svg width="12" height="20" viewBox="0 0 14 24" fill="none" aria-hidden="true"><path d="M3 2l8 10-8 10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          {%- endif -%}
+        </div>
+        <div class="gallery__thumbs">
+          {%- for media in product.media -%}
+            {%- if media.media_type == 'image' -%}
+              <button type="button"
+                class="gallery__thumb{% if forloop.first %} is-active{% endif %}"
+                data-gallery-thumb
+                data-full="{{ media | image_url: width: 3200 }}"
+                aria-label="{{ 'products.view_image' | t }} {{ forloop.index }}">
+                <img src="{{ media | image_url: width: 200 }}" alt="{{ media.alt | escape }}" loading="lazy" width="100" height="100">
+              </button>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+
+        <div class="lightbox" data-lightbox hidden>
+          <button class="lightbox__btn lightbox__close" data-lb-close type="button" aria-label="{{ 'general.close' | t }}">&times;</button>
+          <button class="lightbox__btn lightbox__prev" data-lb-prev type="button" aria-label="{{ 'general.previous' | t }}"><svg width="14" height="24" viewBox="0 0 14 24" fill="none" aria-hidden="true"><path d="M11 2 3 12l8 10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <img data-lb-img src="" alt="{{ product.title | escape }}">
+          <button class="lightbox__btn lightbox__next" data-lb-next type="button" aria-label="{{ 'general.next' | t }}"><svg width="14" height="24" viewBox="0 0 14 24" fill="none" aria-hidden="true"><path d="M3 2l8 10-8 10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div class="lightbox__dots" data-lb-dots></div>
+        </div>
+      </div>
+
+      {%- comment -%} ---------- Buy column ---------- {%- endcomment -%}
+      <div class="pinfo">
+        <h1>{{ display_title }}</h1>
+        <p class="pinfo__price price-row">
+          <span class="price-row__main" data-price>{{ current_variant.price | money }}</span>
+          {%- if current_variant.compare_at_price > current_variant.price -%}
+            <s class="price-row__was">{{ current_variant.compare_at_price | money }}</s>
+            {%- assign _save = current_variant.compare_at_price | minus: current_variant.price | times: 100 | divided_by: current_variant.compare_at_price -%}
+            <span class="price-row__badge">Save {{ _save }}%</span>
+          {%- endif -%}
+        </p>
+
+        <form data-product-form id="pdp-form-{{ section.id }}" action="{{ routes.cart_add_url }}" method="post" enctype="multipart/form-data" novalidate>
+          <input type="hidden" name="id" value="{{ current_variant.id }}">
+
+          {%- if product.has_only_default_variant -%}
+            <fieldset class="opt" hidden style="display:none">
+              <div class="opt__values">
+                <input type="radio" name="opt-{{ section.id }}-default" id="opt-{{ section.id }}-default" value="Default Title" checked>
+                <label class="opt__pill" for="opt-{{ section.id }}-default">Default</label>
+              </div>
+            </fieldset>
+          {%- else -%}
+            {%- for option in product.options_with_values -%}
+              {%- comment -%} A single-value option (e.g. the Watch cable's
+                Color: White) has nothing to actually choose between — skip
+                rendering a picker for it; the one value is already what
+                current_variant uses. {%- endcomment -%}
+              {%- if option.values.size <= 1 -%}
+                {%- continue -%}
+              {%- endif -%}
+              {%- assign oname = option.name | downcase -%}
+              {%- assign is_color = false -%}
+              {%- assign is_capacity = false -%}
+              {%- if oname contains 'color' or oname contains 'colour' -%}{%- assign is_color = true -%}{%- endif -%}
+              {%- if oname contains 'capacit' or oname contains 'mah' -%}{%- assign is_capacity = true -%}{%- endif -%}
+              {%- assign is_boxed = false -%}
+              {%- if is_color or is_capacity -%}{%- assign is_boxed = true -%}{%- endif -%}
+              {%- assign current_opt_value = current_variant.options[forloop.index0] -%}
+
+              {%- comment -%} Core Pro: force swatch order to black, silver,
+                blue, purple regardless of the order set in Shopify admin;
+                force capacity order to highest mAh first (10k above 5k). {%- endcomment -%}
+              {%- assign ordered_values = option.values -%}
+              {%- if is_color and product.handle == 'voltical-core-pro-5k-10k' -%}
+                {%- assign color_priority = 'black,silver,blue,purple' | split: ',' -%}
+                {%- assign ordered_values = ''  | split: ',' -%}
+                {%- for p in color_priority -%}
+                  {%- for value in option.values -%}
+                    {%- assign vd = value | downcase -%}
+                    {%- if vd == p -%}
+                      {%- assign v_arr = value | split: '|' -%}
+                      {%- assign ordered_values = ordered_values | concat: v_arr -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+                {%- endfor -%}
+                {%- for value in option.values -%}
+                  {%- assign vd = value | downcase -%}
+                  {%- unless color_priority contains vd -%}
+                    {%- assign v_arr = value | split: '|' -%}
+                    {%- assign ordered_values = ordered_values | concat: v_arr -%}
+                  {%- endunless -%}
+                {%- endfor -%}
+              {%- elsif is_capacity -%}
+                {%- comment -%} Sort capacity options highest-mAh-first
+                  (e.g. 10k above 5k) via repeated max-extraction — Liquid
+                  has no numeric-descending sort filter. {%- endcomment -%}
+                {%- assign remaining = option.values -%}
+                {%- assign ordered_values = '' | split: ',' -%}
+                {%- for i in (1..12) -%}
+                  {%- assign remaining_size = remaining | size -%}
+                  {%- if remaining_size == 0 -%}{%- break -%}{%- endif -%}
+                  {%- assign best_val = remaining[0] -%}
+                  {%- assign best_num = best_val | downcase | remove: ',' | remove: ' ' | remove: 'mah' | plus: 0 -%}
+                  {%- for value in remaining -%}
+                    {%- assign num = value | downcase | remove: ',' | remove: ' ' | remove: 'mah' | plus: 0 -%}
+                    {%- if num > best_num -%}
+                      {%- assign best_num = num -%}
+                      {%- assign best_val = value -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+                  {%- assign v_arr = best_val | split: '|' -%}
+                  {%- assign ordered_values = ordered_values | concat: v_arr -%}
+                  {%- assign new_remaining = '' | split: ',' -%}
+                  {%- assign removed = false -%}
+                  {%- for value in remaining -%}
+                    {%- if value == best_val and removed == false -%}
+                      {%- assign removed = true -%}
+                    {%- else -%}
+                      {%- assign v_arr2 = value | split: '|' -%}
+                      {%- assign new_remaining = new_remaining | concat: v_arr2 -%}
+                    {%- endif -%}
+                  {%- endfor -%}
+                  {%- assign remaining = new_remaining -%}
+                {%- endfor -%}
+              {%- endif -%}
+
+              <fieldset class="opt{% if is_boxed %} opt--boxed{% endif %}">
+                <div class="opt__label">{{ option.name }}</div>
+                <div class="opt__values{% if is_boxed %} opt__values--boxed{% endif %}">
+                  {%- for value in ordered_values -%}
+                    {%- assign input_id = 'opt-' | append: section.id | append: '-' | append: forloop.parentloop.index | append: '-' | append: forloop.index -%}
+                    <input type="radio"
+                      name="opt-{{ section.id }}-{{ option.name | handleize }}"
+                      id="{{ input_id }}"
+                      value="{{ value | escape }}"
+                      {% if current_opt_value == value %}checked{% endif %}>
+                    <label class="opt__pill{% if is_color %} opt__pill--swatch{% endif %}{% if is_boxed %} opt__pill--box{% endif %}" for="{{ input_id }}">
+                      {%- if is_color -%}
+                        {%- assign cd = value | downcase -%}
+                        <i class="swatch" aria-hidden="true" style="background:
+                          {%- if cd contains 'black' or cd contains 'midnight' -%}#2b2b2e
+                          {%- elsif cd contains 'white' or cd contains 'starlight' -%}#efeae0
+                          {%- elsif cd contains 'grey' or cd contains 'gray' -%}#8f8f94
+                          {%- elsif cd contains 'gold' -%}#CBB88E
+                          {%- elsif cd contains 'silver' -%}#d6d6db
+                          {%- elsif cd contains 'blue' -%}#9db8d9
+                          {%- elsif cd contains 'purple' -%}#b9a8e0
+                          {%- elsif cd contains 'brown' -%}#8a6a52
+                          {%- else -%}#c9c4bb{%- endif -%}"></i>
+                      {%- endif -%}
+                      {{ value }}
+                    </label>
+                  {%- endfor -%}
+                </div>
+              </fieldset>
+            {%- endfor -%}
+          {%- endif -%}
+
+          {% render 'cross-sell', section: section, product: product %}
+
+          {%- comment -%} The Add to cart button. On mobile a script further down
+            ("Add to cart sticky bar") toggles THIS button between normal flow and
+            position:fixed at the bottom of the screen — it is the same element,
+            never a clone, so all of its own add-to-cart wiring stays intact. It
+            keeps its form="pdp-form-..." either way. {%- endcomment -%}
+          <div class="atc">
+            <button type="submit" form="pdp-form-{{ section.id }}" class="atc__btn" data-atc {% unless current_variant.available %}disabled{% endunless %}>
+              <span class="atc__fill" aria-hidden="true"></span>
+              <span class="atc__inner">
+                <span data-atc-label>{% if current_variant.available %}{{ 'products.add_to_cart' | t }}{% else %}{{ 'products.sold_out' | t }}{% endif %}</span>
+                <span class="atc__price t-mono" data-price-btn>{{ current_variant.price | money }}</span>
+              </span>
+            </button>
+          </div>
+
+          <p class="ship-note" data-ship-note {% unless current_variant.available %}hidden{% endunless %}>
+            <i class="charge-dot" aria-hidden="true"></i>{{ 'products.ship_note' | t }}
+          </p>
+        </form>
+
+        <div class="pinfo__below">
+          {% render 'pdp-compare-inline' %}
+          {% render 'pdp-canva-editor' %}
+          <div class="pdp-secondary-details" hidden>
+            {%- if stat_src != blank -%}
+              <div class="pstats">
+                {%- assign stat_items = stat_src | split: ';' -%}
+                {%- for s in stat_items -%}
+                  {%- assign parts = s | split: '|' -%}
+                  <div class="pstats__tile"><span class="t-mono">{{ parts[0] }}</span><small>{{ parts[1] }}</small></div>
+                {%- endfor -%}
+              </div>
+            {%- endif -%}
+
+            {%- if check_src != blank -%}
+              <ul class="pchecks">
+                {%- assign check_items = check_src | split: ';' -%}
+                {%- for c in check_items -%}
+                  <li>{{ c | strip }}</li>
+                {%- endfor -%}
+              </ul>
+            {%- endif -%}
+
+            {%- if has_calc -%}
+              <div class="pdp-calc-inline" id="pdp-calc">
+                {% render 'capacity-calculator', product: product %}
+              </div>
+            {%- endif -%}
+
+            {% render 'trust-badges', section: section %}
+
+            {%- if product.description != blank -%}
+              <div class="pinfo__desc" style="margin-top:32px">
+                <span class="t-eyebrow" style="display:block;margin-bottom:10px">{{ 'products.description' | t }}</span>
+                <div class="t-body">{{ product.description }}</div>
+              </div>
+            {%- endif -%}
+
+            {% render 'product-specs', product: product %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="application/json" data-product-json>{{ product | json }}</script>
+
+  <script>
+    /* Keep the price inside the add-to-cart button in sync with the
+       main price (which theme.js updates on variant change). */
+    (function () {
+      var main = document.querySelector('.pinfo__price [data-price]');
+      var btnPrice = document.querySelector('[data-price-btn]');
+      if (!main || !btnPrice) return;
+      var sync = function () { btnPrice.textContent = main.textContent; };
+      new MutationObserver(sync).observe(main, { childList: true, characterData: true, subtree: true });
+      sync();
+    })();
+
+    /* Reveal the compare / "Select your iPhone" calculator one piece at a time
+       as it scrolls into view — the heading, then the picker, then each stat
+       tile. This mirrors the site-wide [data-reveal] reveal exactly (same 12%
+       trigger point; the CSS gives it the same slide-up + fade over --dur), but
+       runs as its own observer so it can be opacity-only on desktop where the
+       tiles' layout transforms must not be touched. */
+    document.addEventListener('DOMContentLoaded', function () {
+      var cmp = document.querySelector('.pdp--bold .pdp-cmp');
+      if (!cmp) return;
+      var sel = '.pdp-cmp__select-heading, .pdp-cmp__label, .pdp-cmp__select-wrap, .pdp-cmp__grid > .pdp-cmp__card';
+      var pieces = [].slice.call(cmp.querySelectorAll(sel));
+      if (!pieces.length) return;
+      if (!('IntersectionObserver' in window)) {
+        pieces.forEach(function (el) { el.classList.add('is-shown'); });
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          e.target.classList.add('is-shown');
+          io.unobserve(e.target);
+        });
+      }, { threshold: 0.12 });
+      pieces.forEach(function (el) {
+        /* Compact tile variants that aren't rendered at this viewport
+           (display:none) can never intersect — reveal them immediately so they
+           can't get stuck invisible if the viewport later changes to show them. */
+        if (el.offsetParent === null) { el.classList.add('is-shown'); return; }
+        io.observe(el);
+      });
+    });
+
+    /* The side background fade (.pdp--bold.pdp--core in
+       voltical-pdp-bold.css) has to line up with two actual rendered
+       elements — the image bubble's right edge and the variant
+       selector's left edge — not fixed percentages of page width.
+       The bubble's own width is set in vh (viewport-height) units, so
+       how far across the page it reaches drifts with the window's
+       height-to-width ratio, not just its width. These two custom
+       properties give the CSS gradient the real measured px position
+       of each edge so the fade tracks wherever they actually land. */
+    (function () {
+      var section = document.querySelector('.pdp--bold.pdp--core');
+      var bubble = section && section.querySelector('.gallery__main');
+      var selector = section && section.querySelector('.opt__values--boxed');
+      if (!section || !bubble || !selector) return;
+
+      /* The fade's boundary runs as one continuous wavy line for the
+         section's full height (not just down the buy column) instead
+         of a dead-straight one — small ripples the whole way down,
+         with bigger swings out into the open gaps between blocks and
+         a gentler ripple right beside each block itself, and up in
+         the empty area above Color too. An uneven, hand-drawn-feeling
+         edge reads far less like a deliberate line than a perfectly
+         straight one does. Built from the actual rendered block
+         positions so it still lines up if content
+         wraps to another line or a block is missing. */
+      var optBoxes = section.querySelectorAll('.opt--boxed');
+      var addons = section.querySelectorAll('.addon');
+      var atc = section.querySelector('.atc');
+      var shipNote = section.querySelector('.ship-note');
+
+      function buildWave() {
+        if (optBoxes.length < 2 || addons.length < 1 || !atc) {
+          section.style.removeProperty('--fade-wave-svg');
+          return;
+        }
+        var sectionBox = section.getBoundingClientRect();
+        var sectionLeft = sectionBox.left, sectionTop = sectionBox.top;
+        var rel = function (r) { return { top: r.top - sectionTop, bottom: r.bottom - sectionTop }; };
+        var color = rel(optBoxes[0].getBoundingClientRect());
+        var capacity = rel(optBoxes[1].getBoundingClientRect());
+        var lastAddon = rel(addons[addons.length - 1].getBoundingClientRect());
+        var addonsBlock = { top: rel(addons[0].getBoundingClientRect()).top, bottom: lastAddon.bottom };
+        var atcBox = rel(atc.getBoundingClientRect());
+        var endBox = shipNote ? rel(shipNote.getBoundingClientRect()) : atcBox;
+
+        // Content zones recede to the baseline (plus a small ripple);
+        // the gaps between them bulge out, peak at the gap's own
+        // center, tapering to zero (matching the content zones on
+        // either side) by the gap's own edges — a bigger gap gets a
+        // bigger, wider bulge. Runs all the way past Add to cart now,
+        // not just down to the addons.
+        // gap0 is the open area above Color (down to the gallery/
+        // title/price) — much taller than the others, so it gets a
+        // proportionally bigger sweep instead of the same small cap.
+        var gap0 = { center: color.top / 2, half: color.top / 2 };
+        var gap1 = { center: (color.bottom + capacity.top) / 2, half: (capacity.top - color.bottom) / 2 };
+        var gap2 = { center: (capacity.bottom + addonsBlock.top) / 2, half: (addonsBlock.top - capacity.bottom) / 2 };
+        var gap3 = { center: (addonsBlock.bottom + atcBox.top) / 2, half: (atcBox.top - addonsBlock.bottom) / 2 };
+        var gap0Peak = Math.min(gap0.half * 0.85, 200);
+        var gap1Peak = Math.min(gap1.half * 0.55, 45);
+        var gap2Peak = Math.min(gap2.half * 0.55, 45);
+        var gap3Peak = Math.min(gap3.half * 0.55, 45);
+
+        function boost(y) {
+          var gaps = [gap0, gap1, gap2, gap3];
+          var peaks = [gap0Peak, gap1Peak, gap2Peak, gap3Peak];
+          var best = 0;
+          for (var i = 0; i < gaps.length; i++) {
+            var d = Math.abs(y - gaps[i].center);
+            if (d < gaps[i].half) {
+              var b = peaks[i] * 0.5 * (1 + Math.cos(Math.PI * d / gaps[i].half));
+              if (b > best) best = b;
+            }
+          }
+          return best;
+        }
+
+        var topY = 0, bottomY = endBox.bottom;
+        var step = 10, rippleAmp = 3, ripplePeriod = 78;
+        // Drawn in a small self-contained coordinate space (local x=0
+        // is the "receded" baseline, local y=0 is topY) rather than in
+        // real page coordinates — --fade-a is a min()/calc()
+        // expression the browser resolves at paint time, not a plain
+        // number JS can read back out, so this whole layer gets
+        // shifted into place afterwards via background-position:
+        // var(--fade-a) topYpx, with PAD absorbing the ripple's small
+        // negative dips so nothing gets clipped.
+        var PAD = 40;
+        var points = [];
+        for (var y = topY; y <= bottomY; y += step) {
+          var ripple = rippleAmp * Math.sin((2 * Math.PI * (y - topY)) / ripplePeriod);
+          var offset = ripple + boost(y);
+          if (offset < -6) offset = -6;
+          points.push([y - topY, PAD + offset]);
+        }
+
+        var svgW = PAD + 40 + Math.max(gap0Peak, gap1Peak, gap2Peak, gap3Peak, 40);
+        var svgH = bottomY - topY;
+        var d = 'M ' + points[0][1].toFixed(1) + ',' + points[0][0].toFixed(1);
+        for (var i = 1; i < points.length; i++) {
+          d += ' L ' + points[i][1].toFixed(1) + ',' + points[i][0].toFixed(1);
+        }
+        // The big single sweep above Color needs to actually read —
+        // the thin, heavily-blurred stroke used for the rest of the
+        // line all but disappears at this size. Trace that span again
+        // as its own path (bolder, less blur) so just the sweep gets
+        // more visible while the ripple further down stays as subtle
+        // as it was. Built from the plain boost curve with no ripple
+        // riding on top of it — that small high-frequency wobble is
+        // what was making a sweep this large look jittery instead of
+        // one clean curve.
+        var d0 = '';
+        var gap0PointCount = 0;
+        for (var y0 = topY; y0 <= color.top; y0 += step) gap0PointCount++;
+        if (gap0PointCount > 1) {
+          var y0first = topY;
+          d0 = 'M ' + (PAD + boost(y0first)).toFixed(1) + ',' + (y0first - topY).toFixed(1);
+          for (var y0v = topY + step; y0v <= color.top; y0v += step) {
+            d0 += ' L ' + (PAD + boost(y0v)).toFixed(1) + ',' + (y0v - topY).toFixed(1);
+          }
+        }
+        var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + svgW.toFixed(0) + '" height="' + svgH.toFixed(0) + '">' +
+          '<defs>' +
+          '<filter id="sf" x="-50%" y="-20%" width="200%" height="140%"><feGaussianBlur stdDeviation="14"/></filter>' +
+          '<filter id="sf2" x="-50%" y="-20%" width="200%" height="140%"><feGaussianBlur stdDeviation="16"/></filter>' +
+          '</defs>' +
+          '<path d="' + d + '" fill="none" stroke="rgba(240,240,243,0.4)" stroke-width="18" ' +
+          'stroke-linecap="round" stroke-linejoin="round" filter="url(#sf)"/>' +
+          (d0 ? '<path d="' + d0 + '" fill="none" stroke="rgba(240,240,243,0.5)" stroke-width="30" ' +
+          'stroke-linecap="round" stroke-linejoin="round" filter="url(#sf2)"/>' : '') +
+          '</svg>';
+        var url = 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
+        section.style.setProperty('--fade-wave-svg', url);
+        section.style.setProperty('--fade-wave-x', 'calc(var(--fade-a) - ' + PAD + 'px)');
+        section.style.setProperty('--fade-wave-y', topY.toFixed(1) + 'px');
+      }
+
+      function update() {
+        var sectionLeft = section.getBoundingClientRect().left;
+        var bubbleRight = bubble.getBoundingClientRect().right;
+        var selectorLeft = selector.getBoundingClientRect().left;
+        section.style.setProperty('--fade-bubble-right', (bubbleRight - sectionLeft) + 'px');
+        section.style.setProperty('--fade-selector-left', (selectorLeft - sectionLeft) + 'px');
+        buildWave();
+      }
+
+      update();
+      window.addEventListener('resize', update);
+      window.addEventListener('load', update);
+    })();
+
+    /* Mobile, Core: the fade from the page colour into the compare
+       section's tile colour, just above that section (the product
+       section's background, see .pdp--bold.pdp--core in
+       voltical-pdp-bold.css). The page colour
+       and the tile colour are only a few 8-bit levels apart, so a browser
+       gradient between them is drawn as a handful of flat bands one level
+       apart. This draws the same curve (smootherstep, mixed in OKLab) at
+       the screen's own pixel density and dithers every pixel between the
+       two nearest levels with interleaved gradient noise, so on average
+       each row is exactly the right shade and there are no steps at all,
+       then hands the picture to the CSS and keeps it lined up so it ends
+       exactly at the compare section's top edge, even when the blocks
+       above it change height (a variant change, the Add to bag button's
+       space closing while it's pinned). */
+    (function () {
+      var section = document.querySelector('.pdp--bold.pdp--core');
+      var wrap = section && section.querySelector('.pdp-cmp-wrap');
+      if (!wrap || !window.matchMedia) return;
+      var mobile = window.matchMedia('(max-width: 899px)');
+      var W = 64;                                   // screen pixels before the picture repeats sideways
+      var built = '';
+      var url = '';
+
+      function rgb(c) {
+        var m = /rgba?\(([^)]+)\)/.exec(c || '');
+        var p = m ? m[1].split(/[\s,\/]+/).map(parseFloat) : [];
+        return p.length >= 3 && !(p.length > 3 && p[3] === 0) ? p.slice(0, 3) : null;
+      }
+      function pageColour() {
+        for (var el = section.parentElement; el; el = el.parentElement) {
+          var c = rgb(getComputedStyle(el).backgroundColor);
+          if (c) return c;
+        }
+        return [252, 253, 254];
+      }
+      function lin(c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+      function gam(c) { return 255 * (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055); }
+      function toLab(c) {
+        var r = lin(c[0]), g = lin(c[1]), b = lin(c[2]);
+        var l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+        var m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+        var s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+        return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+          1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+          0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
+      }
+      function fromLab(L) {
+        var l = L[0] + 0.3963377774 * L[1] + 0.2158037573 * L[2];
+        var m = L[0] - 0.1055613458 * L[1] - 0.0638541728 * L[2];
+        var s = L[0] - 0.0894841775 * L[1] - 1.2914855480 * L[2];
+        l = l * l * l; m = m * m * m; s = s * s * s;
+        return [gam(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+          gam(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+          gam(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s)];
+      }
+
+      // Ends exactly at the compare section's top edge.
+      function place() {
+        if (!mobile.matches) return;
+        var h = parseFloat(getComputedStyle(section).getPropertyValue('--cmp-fade-len')) || 0;
+        var y = wrap.getBoundingClientRect().top - section.getBoundingClientRect().top - h;
+        section.style.setProperty('--cmp-fade-y', y + 'px');
+      }
+
+      function build() {
+        if (!mobile.matches) return;
+        place();
+        var h = parseFloat(getComputedStyle(section).getPropertyValue('--cmp-fade-len'));
+        var top = pageColour();
+        var bottom = rgb(getComputedStyle(wrap).backgroundColor);
+        if (!h || !bottom) return;
+        var dpr = window.devicePixelRatio || 1;
+        var H = Math.max(1, Math.round(h * dpr));
+        var key = [H, top, bottom].join();
+        if (key === built) return;
+        built = key;
+
+        var canvas = document.createElement('canvas');
+        canvas.width = W;
+        canvas.height = H;
+        var ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        var img = ctx.createImageData(W, H);
+        var px = img.data;
+        var a = toLab(top), b = toLab(bottom);
+        for (var y = 0; y < H; y++) {
+          var t = (y + 0.5) / H;
+          var e = t * t * t * (t * (t * 6 - 15) + 10);          // smootherstep: flat at both ends
+          var c = fromLab([a[0] + (b[0] - a[0]) * e, a[1] + (b[1] - a[1]) * e, a[2] + (b[2] - a[2]) * e]);
+          for (var k = 0; k < 3; k++) c[k] = Math.round(c[k] * 1e6) / 1e6;   // exact at the two ends
+          for (var x = 0; x < W; x++) {
+            var n = (52.9829189 * ((0.06711056 * x + 0.00583715 * y) % 1)) % 1;   // 0 to 1, evenly spread
+            var i = (y * W + x) * 4;
+            px[i] = Math.floor(c[0] + n);
+            px[i + 1] = Math.floor(c[1] + n);
+            px[i + 2] = Math.floor(c[2] + n);
+            px[i + 3] = 255;
+          }
+        }
+        ctx.putImageData(img, 0, 0);
+
+        var use = function (next) {
+          if (built !== key) {                        // a newer build has started
+            if (next.indexOf('blob:') === 0) URL.revokeObjectURL(next);
+            return;
+          }
+          section.style.setProperty('--cmp-fade-img', 'url("' + next + '")');
+          section.style.setProperty('--cmp-fade-size', (W / dpr) + 'px ' + h + 'px');
+          if (url && url.indexOf('blob:') === 0) URL.revokeObjectURL(url);
+          url = next;
+        };
+        if (canvas.toBlob && window.URL && URL.createObjectURL) {
+          canvas.toBlob(function (blob) { if (blob) use(URL.createObjectURL(blob)); }, 'image/png');
+        } else {
+          use(canvas.toDataURL('image/png'));
+        }
+      }
+
+      build();
+      window.addEventListener('resize', build);
+      window.addEventListener('load', build);
+      if (mobile.addEventListener) mobile.addEventListener('change', build);
+      if (window.ResizeObserver) new ResizeObserver(place).observe(section);
+    })();
+
+    /* Mobile: the charge tile's "59", battery and "minutes" show one
+       continuous gradient across all three (see the charge-tile gradient
+       rule at the end of voltical-pdp-bold.css). This measures the group
+       on screen and gives each piece the whole gradient's width and its
+       own offset inside it, in the piece's own units (the Canva layout
+       scales each one differently). Re-measured when the number changes,
+       on resize, once fonts load, and after a drag in Canva mode. */
+    (function () {
+      var card = document.querySelector('.pdp--bold .pdp-cmp__card--charge');
+      if (!card || !window.matchMedia) return;
+      var mobile = window.matchMedia('(max-width: 899px)');
+      var parts = [
+        card.querySelector('.pdp-cmp__stat'),
+        card.querySelector('.pdp-cmp__battery-icon'),
+        card.querySelector('.pdp-cmp__sub--unit')
+      ].filter(Boolean);
+      if (!parts.length) return;
+      // The letters themselves, not the (sometimes full-width) box around them.
+      function ink(el) {
+        if (el.tagName === 'IMG') return el.getBoundingClientRect();
+        var r = document.createRange();
+        r.selectNodeContents(el);
+        var b = r.getBoundingClientRect();
+        return b.width ? b : el.getBoundingClientRect();
+      }
+      var queued = false;
+      function update() {
+        queued = false;
+        if (!mobile.matches) return;
+        var L = Infinity, R = -Infinity;
+        parts.forEach(function (el) { var b = ink(el); if (b.width) { L = Math.min(L, b.left); R = Math.max(R, b.right); } });
+        if (!(R > L)) return;
+        parts.forEach(function (el) {
+          var box = el.getBoundingClientRect();
+          var s = el.offsetWidth ? box.width / el.offsetWidth : 1;   // the piece's own on-screen scale
+          if (!s) return;
+          el.style.setProperty('--cg-w', ((R - L) / s) + 'px');
+          el.style.setProperty('--cg-x', ((L - box.left) / s) + 'px');
+        });
+      }
+      function queue() { if (!queued) { queued = true; requestAnimationFrame(update); } }
+      update();
+      window.addEventListener('resize', queue);
+      window.addEventListener('load', queue);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(queue);
+      if (mobile.addEventListener) mobile.addEventListener('change', queue);
+      if (window.MutationObserver) new MutationObserver(queue).observe(parts[0], { childList: true, characterData: true, subtree: true });
+      document.addEventListener('pointerup', queue, true);
+      document.addEventListener('touchend', queue, true);
+    })();
+
+    /* Add to cart sticky bar — ONE button, no clone. The real Add to cart
+       button toggles between normal flow and position:fixed at the bottom of
+       the screen, so it keeps all of its own add-to-cart wiring. Mobile only;
+       desktop keeps the plain in-flow button.
+
+       Its space closes as soon as it pins, long before the slot scrolls back
+       into view, and nothing on screen ever moves:
+        1. Pin frame: the button goes position:fixed and an invisible spacer of
+           exactly its flow height takes its place in the same layout, so the
+           page doesn't change at all.
+        2. Following frames: the spacer is switched off (display:none). The
+           slot is above the screen, so this would pull everything you can see
+           up by the button's height — but the browser's own scroll anchoring
+           cancels that inside the engine, in the same layout, by moving the
+           scroll position with it. It is native, so it works mid-drag and
+           mid-fling. (A script scrollTo can't: on iOS it lands late during a
+           gesture and the page visibly jumps.) If a frame doesn't anchor —
+           e.g. while the compare cards are animating in — the switch is undone
+           in that same frame, unseen, and retried on the next.
+        3. Last resort, if it never got an anchored frame: close it at the next
+           moment the page is completely still, with an exact scroll correction.
+       See the anchoring notes below for what this page needs for (2).
+
+       Fusing: when the natural slot rises to the pinned bar's line at the
+       bottom of the screen the button drops back into flow right there; the
+       page grows only below that line, off-screen, and is back in its original
+       shape — so the top of the page is untouched.
+
+       Rules: never pins while scrolling down; pins only on an upward scroll
+       with the slot fully above the screen; once pinned stays pinned through
+       direction changes until it fuses; after fusing it cannot pin again until
+       a genuine downward scroll; iOS elastic overscroll is ignored (clamped
+       positions plus a few px of direction hysteresis). Add ?atcdebug=1 to the
+       URL for an on-screen state readout. */
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.matchMedia('(min-width:900px)').matches) return;
+      var atc = document.querySelector('.pdp--bold .atc');
+      if (!atc) return;
+      var realBtn = atc.querySelector('.atc__btn');
+      if (!realBtn) return;
+
+      /* Marker right where the button lives. Zero height except while it is
+         holding the fallback reservation; its top always reports where the
+         button's natural slot begins. */
+      var slot = document.createElement('div');
+      slot.setAttribute('aria-hidden', 'true');
+      slot.style.cssText = 'display:block;height:0;margin:0;padding:0;border:0;visibility:hidden;pointer-events:none;';
+      atc.parentNode.insertBefore(slot, atc);
+
+      var slotToBtn = 0;      // slot top -> button top while in flow
+      function measureSlotToBtn() {
+        slotToBtn = realBtn.getBoundingClientRect().top - slot.getBoundingClientRect().top;
+      }
+      measureSlotToBtn();
+
+      // Screen position of the first rendered thing after the button — the
+      // reference that must never move when the slot changes.
+      function afterTop() {
+        for (var el = atc; el && el !== document.body; el = el.parentElement) {
+          for (var n = el.nextElementSibling; n; n = n.nextElementSibling) {
+            var r = n.getBoundingClientRect();
+            if (r.height > 0 && getComputedStyle(n).position !== 'fixed') return r.top;
+          }
+        }
+        return document.documentElement.scrollHeight - window.scrollY;
+      }
+
+      /* state: 'flow'     – normal in-flow button
+                'reserved' – sticky, slot held open (no-anchoring fallback)
+                'pinned'   – sticky, slot closed */
+      var state = 'flow';
+      var anchorY = 0;        // direction anchor (declared here; set below)
+      var how = '';           // debug: how the last pin closed its slot
+      var events = [];        // debug: recent transitions, for the readout
+      var t0 = Date.now();
+      function note(msg) {
+        events.push(((Date.now() - t0) / 1000).toFixed(1) + 's ' + msg);
+        if (events.length > 6) events.shift();
+      }
+      var trace = /[?&]atcdebug=1/.test(window.location.search) ? (window.__atcTrace = []) : null;
+      var canAnchor = !!(window.CSS && CSS.supports && CSS.supports('overflow-anchor', 'auto'));
+      var barHidden = false;  // pinned but hidden by a downward scroll
+
+      // Instant scroll that works on every iOS version, with the theme's
+      // html{scroll-behavior:smooth} switched off for the call. Used only by
+      // the at-rest fallback, never while scrolling.
+      function jumpTo(top) {
+        var de = document.documentElement;
+        var prev = de.style.scrollBehavior;
+        de.style.scrollBehavior = 'auto';
+        try { window.scrollTo(0, top); } finally { de.style.scrollBehavior = prev; }
+      }
+
+      /* Scroll anchoring needs something on screen, below the slot, that it
+         is allowed to anchor to. On this page there usually isn't:
+         .pinfo__below (everything below the button) is overflow-anchor:none
+         in the compare section's CSS, and the compare cards that fill the
+         screen further down are overflow:hidden boxes the browser won't
+         anchor inside. So:
+         - .pinfo__below is set back to overflow-anchor:auto only while the
+           button's slot is above the screen (the only time the bar can pin),
+           and restored otherwise;
+         - an invisible 1px helper (absolutely positioned, so it takes no space
+           and moves nothing) lives inside .pinfo__below and is parked in the
+           middle of the screen while the slot is above it. It sits below the
+           slot, so when the slot closes it moves with the content you are
+           looking at, and the browser anchors to it — keeping that content
+           exactly where it was.
+         The browser picks its anchor as you scroll, so both are in place
+         before the pin, not switched on in the pin frame itself. */
+      var below = atc.closest('.pinfo') && atc.closest('.pinfo').querySelector('.pinfo__below');
+      var helper = null;
+      if (below) {
+        helper = document.createElement('div');
+        helper.setAttribute('aria-hidden', 'true');
+        helper.style.cssText = 'position:absolute;left:0;width:1px;height:1px;margin:0;padding:0;border:0;opacity:0;pointer-events:none;overflow-anchor:auto;';
+        below.insertBefore(helper, below.firstChild);   // first in page order: the browser tries candidates in order
+      }
+      var belowAnchoring = false;
+      function setBelowAnchoring(on) {
+        if (!below) return;
+        if (on) {
+          // Park the helper mid-screen, but never past the end of .pinfo__below
+          // (it must not extend the page).
+          var mt = parseFloat(helper.style.marginTop) || 0;
+          var want = mt + (window.innerHeight / 2 - helper.getBoundingClientRect().top);
+          var bb = below.getBoundingClientRect();
+          var maxDown = mt + (bb.bottom - 2 - helper.getBoundingClientRect().top);
+          var minUp = mt + (bb.top - helper.getBoundingClientRect().top);
+          want = Math.round(Math.max(minUp, Math.min(maxDown, want)));
+          if (want !== mt) helper.style.marginTop = want + 'px';
+        }
+        if (on === belowAnchoring) return;
+        below.style.overflowAnchor = on ? 'auto' : '';
+        if (!on) helper.style.marginTop = '';
+        belowAnchoring = on;
+      }
+
+      /* Spacer that stands in for the button during the pin frame. It is
+         display:none except for that one frame (and in the no-anchoring
+         fallback), and it is closed by switching display — not by changing
+         its height — because a height or position change anywhere makes the
+         browser skip anchoring for that layout. */
+      var spacer = document.createElement('div');
+      spacer.setAttribute('aria-hidden', 'true');
+      spacer.style.cssText = 'display:none;margin:0;padding:0;border:0;visibility:hidden;pointer-events:none;';
+      atc.parentNode.insertBefore(spacer, atc);
+
+      /* The exact space the button takes in the flow (its box plus however
+         its margins collapse with its neighbours), measured up front so the
+         pin frame never has an intermediate mismatch for the browser to
+         anchor. Measured synchronously (nothing paints in between) and only
+         while the button is in flow; any anchoring nudge is undone. */
+      var spacerH = 0;
+      function calibrate() {
+        if (state !== 'flow') return;
+        var y0 = window.scrollY;
+        var before = afterTop();
+        var h = atc.offsetHeight;
+        spacer.style.height = h + 'px';
+        spacer.style.display = 'block';
+        atc.style.display = 'none';
+        h += before - afterTop();
+        spacer.style.height = h + 'px';
+        atc.style.display = '';
+        spacer.style.display = 'none';
+        if (window.scrollY !== y0) jumpTo(y0);
+        spacerH = Math.max(0, h);
+      }
+      calibrate();
+      /* Later re-measures (page finished loading, iPhone toolbar resizing the
+         screen mid-scroll) wait for the page to be still: calibrating briefly
+         changes the layout, which must never happen during a scroll. */
+      var needCal = false;
+      function calibrateWhenStill() { needCal = true; scheduleRest(); }
+      window.addEventListener('load', calibrateWhenStill);
+
+      function pin() {                 // flow -> pinned (via a one-frame spacer)
+        var rect = atc.getBoundingClientRect();
+        var before = afterTop();
+        spacer.style.height = spacerH + 'px';
+        how = 'pinning';
+        // Frame 1: lift the button out and show the spacer in the same layout,
+        // pixel-corrected, so nothing moves. (This layout changes 'position',
+        // so the browser won't anchor in it — nothing needs anchoring yet.)
+        atc.style.setProperty('--atc-left', rect.left + 'px');
+        atc.style.setProperty('--atc-width', rect.width + 'px');
+        atc.classList.add('is-pinned');
+        spacer.style.display = 'block';
+        var drift = before - afterTop();
+        if (Math.abs(drift) > 0.5) {
+          spacerH = Math.max(0, spacerH + drift);
+          spacer.style.height = spacerH + 'px';
+        }
+        // From the next frame: close the space with a display switch only, so
+        // scroll anchoring keeps the content you see exactly where it is.
+        state = 'reserved';
+        note('pinned');
+        if (canAnchor) { keepAnchorFresh(); window.requestAnimationFrame(tryClose); }
+        else how = 'waiting-for-still';   // no scroll anchoring here
+      }
+      /* One attempt per frame. Anything animating layout on the page (e.g.
+         the compare cards sliding in as they reveal) also makes the browser
+         skip anchoring for that frame, so an attempt that isn't anchored is
+         undone in the same frame — before anything paints, so it is never
+         seen — and retried on the next one. Only while the space is still
+         above the screen; if it never gets a clean frame it is closed at the
+         next still moment instead (see onRest). */
+      /* WebKit only picks its scroll anchor in the browser's own rendering
+         step, and only when that step has layout to do. If the only layout is
+         the one that closes the space, it picks the anchor from the
+         already-closed page and corrects nothing. So while a close may be
+         needed, give every frame a trivial layout of the page as it is:
+         change the text of an invisible, zero-size fixed-position node
+         (affects nothing else on the page). */
+      var poke = document.createElement('div');
+      poke.setAttribute('aria-hidden', 'true');
+      poke.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none;';
+      document.body.appendChild(poke);
+      var pokeN = 0;
+      function freshAnchor() {
+        poke.textContent = String(++pokeN % 2);
+        return afterTop();
+      }
+      var pokeLoop = false;
+      function keepAnchorFresh() {
+        if (pokeLoop) return;
+        pokeLoop = true;
+        (function frame() {
+          if (state !== 'reserved') { pokeLoop = false; return; }
+          poke.textContent = String(++pokeN % 2);
+          window.requestAnimationFrame(frame);
+        })();
+      }
+      function tryClose() {
+        if (state !== 'reserved') return;
+        if (spacer.getBoundingClientRect().bottom > 0) return;
+        var before = freshAnchor();
+        var y0 = window.scrollY;
+        spacer.style.display = 'none';
+        var moved = before - afterTop();           // reading layout applies anchoring
+        if (trace) trace.push({ y: Math.round(y0), moved: Math.round(moved * 10) / 10, adj: Math.round(window.scrollY - y0), helper: Math.round(helper ? helper.getBoundingClientRect().top : -1), anims: document.getAnimations ? document.getAnimations().filter(function (a) { return a.playState === 'running'; }).length : -1 });
+        if (Math.abs(moved) <= 1.5) {
+          anchorY += window.scrollY - y0;          // engine's correction, not the user
+          state = 'pinned';
+          how = 'anchored';
+          note('closed (anchored)');
+          return;
+        }
+        spacer.style.display = 'block';
+        if (how !== 'retrying') note('anchor attempt failed, retrying');
+        // If the browser anchored only partly, undo that too (same frame).
+        var left = before - afterTop();
+        if (Math.abs(left) > 1.5) jumpTo(window.scrollY - left);
+        how = 'retrying';
+        window.requestAnimationFrame(tryClose);
+      }
+      // A retry loop stops once the space reaches the screen; if you then
+      // scroll back up so it is above the screen again, start it again.
+      var retryQueued = false;
+      function tryCloseSoon() {
+        if (retryQueued) return;
+        retryQueued = true;
+        window.requestAnimationFrame(function () { retryQueued = false; tryClose(); });
+      }
+      function dropReservation() {     // reserved -> pinned (at rest only)
+        state = 'pinned';
+        var before = afterTop();
+        var y0 = window.scrollY;
+        spacer.style.display = 'none';
+        var shift = before - afterTop();
+        anchorY += window.scrollY - y0;
+        if (Math.abs(shift) > 1.5) {
+          anchorY -= shift;
+          jumpTo(window.scrollY - shift);
+          var rest = before - afterTop();
+          if (rest) jumpTo(window.scrollY - rest);
+        }
+        how = 'reserved>closed';
+        note('closed at rest');
+      }
+      function fuse() {                // reserved/pinned -> flow
+        atc.classList.remove('is-pinned');
+        atc.style.removeProperty('--atc-left');
+        atc.style.removeProperty('--atc-width');
+        spacer.style.display = 'none';
+        atc.style.visibility = '';
+        barHidden = false;
+        state = 'flow';
+        note('fused');
+      }
+
+      function clampedY() {
+        var max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+        var y = window.scrollY;
+        return y < 0 ? 0 : (y > max ? max : y);
+      }
+
+      var THRESH = 6;         // px of consistent travel before a direction counts
+      anchorY = clampedY();
+      var dir = 0;            // 1 = down, -1 = up, 0 = undecided
+      var armed = true;       // false after fusing, until a genuine down scroll
+
+      function slotFullyAbove() {
+        if (state === 'flow') return atc.getBoundingClientRect().bottom <= 0;
+        return spacer.getBoundingClientRect().bottom <= 0 && slot.getBoundingClientRect().top <= 0;
+      }
+
+      function update() {
+        ticking = false;
+        var y = clampedY();
+        // anchorY is the furthest point reached in the current direction; the
+        // direction flips only after THRESH px of travel back from it.
+        if (dir === 1) {
+          if (y > anchorY) anchorY = y;
+          else if (anchorY - y >= THRESH) { dir = -1; anchorY = y; }
+        } else if (dir === -1) {
+          if (y < anchorY) anchorY = y;
+          else if (y - anchorY >= THRESH) { dir = 1; anchorY = y; }
+        } else if (Math.abs(y - anchorY) >= THRESH) {
+          dir = y > anchorY ? 1 : -1; anchorY = y;
+        }
+        if (dir === 1) armed = true;
+
+        // Anchoring on the content below only while the slot is above the
+        // screen (or the bar is up); the theme's own setting otherwise.
+        if (state === 'flow') {
+          var above = slotFullyAbove();
+          setBelowAnchoring(above);
+          if (above && canAnchor) poke.textContent = String(++pokeN % 2);   // anchor ready before a pin
+        }
+        else if (state === 'reserved' && how === 'retrying') tryCloseSoon();
+
+        if (state !== 'flow') {
+          /* A genuine downward scroll hides the bar; scrolling up shows it
+             again. It stays out of the flow while hidden, so its closed space
+             doesn't reopen and nothing on the page moves. */
+          if (dir === 1 && !barHidden) {
+            barHidden = true; atc.style.visibility = 'hidden'; note('hidden (scrolling down)');
+          } else if (dir === -1 && barHidden) {
+            barHidden = false; atc.style.visibility = ''; note('shown (scrolling up)');
+          }
+        }
+
+        if (state === 'flow') {
+          if (dir === -1 && armed && slotFullyAbove()) pin();
+        } else if (slot.getBoundingClientRect().top + slotToBtn >= realBtn.getBoundingClientRect().top) {
+          // Natural button has reached (or, after a fling, passed) the pinned
+          // one: fuse. The page grows only below this line, off-screen.
+          fuse();
+          armed = false;
+        }
+        scheduleRest();
+        watchStill();
+      }
+      var ticking = false;
+      window.addEventListener('scroll', function () {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(update);
+      }, { passive: true });
+
+      /* Rest detection: no scroll event for a moment, so the page isn't
+         moving — no drag in progress and no momentum. A finger resting on the
+         screen doesn't matter: catching the page with a finger stops it, and
+         while it is held still the page's position is settled, so the close
+         below is just as invisible then. (Waiting for the finger to lift
+         missed the common "flick down, catch, swipe back up" pattern.) */
+      var touching = false;
+      var restTimer = null;
+      var REST_MS = 120;
+      var restY = 0;
+      function scheduleRest(ms) {
+        clearTimeout(restTimer);
+        restY = window.scrollY;
+        restTimer = setTimeout(onRest, ms || REST_MS);
+      }
+      function onRest() {
+        // Still moving but its scroll events are lagging (busy page): wait.
+        if (window.scrollY !== restY) { scheduleRest(); return; }
+        if (state === 'flow' && needCal) { needCal = false; measureSlotToBtn(); calibrate(); }
+        if (state === 'flow') {
+          /* The page is at rest with the button above the screen (scrolled
+             down past it, or reopened / refreshed already down the page):
+             close its space now, while nothing is moving, before you ever
+             scroll back up. The button waits out of the flow, invisible, and
+             simply appears as the sticky bar when you start scrolling up —
+             no layout change at that moment. */
+          if (armed && slotFullyAbove()) {
+            barHidden = true;
+            atc.style.visibility = 'hidden';
+            pin();
+            dropReservation();
+            note('closed early (page at rest), waiting');
+          }
+          return;
+        }
+        if (state !== 'reserved') return;
+        if (slotFullyAbove()) dropReservation();
+        else note('still, but space already on screen');
+      }
+      scheduleRest();          // the page may open already scrolled past the button
+      window.addEventListener('pageshow', function () { scheduleRest(); });
+      window.addEventListener('touchstart', function () {
+        touching = true;
+        // A touch that stops momentum starts the still period. It is kept short
+        // here so the space can close in the moment between catching the page
+        // and swiping back up (the page stops within a frame or two).
+        scheduleRest(60);
+      }, { passive: true });
+      function touchEnd(e) {
+        if (e.touches && e.touches.length) return;
+        touching = false;
+        scheduleRest();
+      }
+      window.addEventListener('touchend', touchEnd, { passive: true });
+      window.addEventListener('touchcancel', touchEnd, { passive: true });
+
+      /* Frame watch. The timer above needs 60-120ms of stillness, but a quick
+         reversal (flick down, catch, swipe straight back up; or a drag that
+         turns around under the finger) is still for only a frame or two at
+         the turning point. So while a close is pending, check every frame:
+         two frames in a row with the page moving less than half a pixel count
+         as still, and the space closes right then, invisibly. */
+      var watching = false;
+      function closePending() {
+        if (state === 'flow') return armed && slotFullyAbove();
+        return state === 'reserved' && slotFullyAbove();
+      }
+      function watchStill() {
+        if (watching) return;
+        watching = true;
+        var lastY = window.scrollY, still = 0;
+        window.requestAnimationFrame(function frame() {
+          if (!closePending()) { watching = false; return; }
+          var y = window.scrollY;
+          still = Math.abs(y - lastY) < 0.5 ? still + 1 : 0;
+          lastY = y;
+          if (still >= 2) {
+            watching = false;
+            restY = y;
+            onRest();
+            return;
+          }
+          window.requestAnimationFrame(frame);
+        });
+      }
+
+      window.addEventListener('resize', function () {
+        if (state === 'flow') calibrateWhenStill();
+      });
+
+      /* Diagnostics only with ?atcdebug=1 in the URL: a small readout of the
+         sticky cart's state, recent events and any script error, for testing
+         on a phone. */
+      if (/[?&]atcdebug=1/.test(window.location.search)) {
+        var dbg = document.createElement('div');
+        dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:rgba(0,0,0,.75);color:#fff;font:11px/1.3 monospace;padding:4px 6px;pointer-events:none;white-space:pre-wrap;';
+        document.body.appendChild(dbg);
+        var lastErr = '';
+        var osv = (navigator.userAgent.match(/OS (\d+[_\d]*) like Mac/) || [])[1];
+        osv = osv ? 'iOS ' + osv.replace(/_/g, '.') : navigator.platform;
+        window.addEventListener('error', function (e) { lastErr = String(e.message || e); });
+        (function tick() {
+          dbg.textContent = 'STICKY DEBUG build 8 | state=' + state + (barHidden ? '(hidden)' : '') + ' pin=' + how +
+            ' anchoring=' + (canAnchor ? 'yes' : 'NO') + ' dir=' + dir + ' armed=' + armed +
+            ' touching=' + touching + ' y=' + Math.round(window.scrollY) +
+            ' spacer=' + spacer.style.display + ' slotTop=' + Math.round(slot.getBoundingClientRect().top) +
+            ' btnTop=' + Math.round(realBtn.getBoundingClientRect().top) + ' s2b=' + Math.round(slotToBtn) +
+            ' | ' + osv + '\n' + events.join('\n') + (lastErr ? '\nERR ' + lastErr : '');
+          window.requestAnimationFrame(tick);
+        })();
+      }
+    });
+
+    /* Scroll bar (mobile only). iPhone Safari's own scroll bar runs up behind
+       its see-through address bar, so near the top of the page it squeezes
+       into the top-right corner and disappears. A page can't move Safari's
+       bar, so it is hidden and this one drawn instead: same look, but at the
+       top of the page it starts flat right at the address bar's edge (its
+       rounded end tucked just off-screen) instead of vanishing behind it. Transform and opacity
+       only, so it never affects the page's layout or scrolling. */
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.matchMedia('(min-width:900px)').matches) return;
+      var css = document.createElement('style');
+      css.textContent =
+        'html{scrollbar-width:none}' +
+        'html::-webkit-scrollbar,body::-webkit-scrollbar{display:none;width:0;height:0}' +
+        '.v-sbar{position:fixed;top:-3px;bottom:6px;right:2px;width:3px;z-index:2147483000;pointer-events:none}' +
+        '.v-sbar i{position:absolute;left:0;top:0;width:3px;border-radius:2px;background:rgba(0,0,0,.52);' +
+          'box-shadow:0 0 0 .5px rgba(255,255,255,.35);opacity:0;transition:opacity .35s;will-change:transform,opacity}' +
+        '.v-sbar.on i{opacity:1;transition:opacity .1s}';
+      document.head.appendChild(css);
+      var track = document.createElement('div');
+      track.className = 'v-sbar';
+      track.setAttribute('aria-hidden', 'true');
+      var thumb = document.createElement('i');
+      track.appendChild(thumb);
+      document.body.appendChild(track);
+
+      var hideTimer = null, queued = false, lastLen = -1;
+      function draw() {
+        queued = false;
+        var de = document.documentElement;
+        var trackH = track.clientHeight;
+        var view = window.innerHeight, total = de.scrollHeight;
+        var range = Math.max(1, total - view);
+        var len = Math.max(30, Math.round(0.68 * trackH * view / total));
+        var y = window.scrollY;
+        // Safari-style squeeze when pulled past either end.
+        var over = y < 0 ? -y : (y > range ? y - range : 0);
+        len = Math.max(8, len - over);
+        var p = Math.min(1, Math.max(0, y / range));
+        if (len !== lastLen) { thumb.style.height = len + 'px'; lastLen = len; }
+        thumb.style.transform = 'translateY(' + Math.round(p * (trackH - len)) + 'px)';
+      }
+      window.addEventListener('scroll', function () {
+        if (!queued) { queued = true; window.requestAnimationFrame(draw); }
+        track.classList.add('on');
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(function () { track.classList.remove('on'); }, 700);
+      }, { passive: true });
+      window.addEventListener('resize', draw);
+      draw();
+    });
+
+    /* Arriving from the usage-calculator page (product cards link with
+       ?jump=calc): land straight on the calculator section instead of
+       the top of the product page, with a smooth scroll rather than an
+       instant jump. Using a query param (not a #hash) means the browser
+       never does its own instant anchor-jump first. The Add to cart
+       button stays fixed at the bottom via CSS — nothing extra needed
+       here to keep it on screen. */
+    document.addEventListener('DOMContentLoaded', function () {
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('jump') !== 'calc') return;
+      var calcEl = document.getElementById('pdp-calc');
+      if (!calcEl) return;
+      window.requestAnimationFrame(function () {
+        calcEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+
+      /* Coming in specifically from the calculator (not a normal visit
+         to the product page): put the device <select> into the same
+         "just clicked it" state a shopper gets from clicking it
+         themselves — focused, and its native options list opened where
+         the browser allows it. Only fires for the ?jump=calc path, and
+         only after the scroll above has settled. */
+      var deviceSelect = calcEl.querySelector('[data-calc-device]');
+      if (!deviceSelect) return;
+      setTimeout(function () {
+        deviceSelect.focus({ preventScroll: true });
+        if (typeof deviceSelect.showPicker === 'function') {
+          try { deviceSelect.showPicker(); } catch (err) { /* needs a user gesture in some browsers — focus still applies */ }
+        }
+      }, 500);
+    });
+
+    /* ---------- header cart icon: hidden until you scroll up ----------
+       Starts hidden on load. Scrolling down keeps it hidden; scrolling
+       up reveals it (see .cart-btn.is-hidden in voltical-pdp-bold.css
+       for the actual fade/slide). Simple direction comparison against
+       the last scroll position — no need for the pinned-ATC script's
+       bounce-detection complexity since this isn't trying to line up
+       with a specific element's position, just react to direction. */
+    document.addEventListener('DOMContentLoaded', function () {
+      var cartBtn = document.querySelector('.cart-btn');
+      if (!cartBtn) return;
+      cartBtn.classList.add('is-hidden');
+      var lastY = window.scrollY;
+      var ticking = false;
+      function update() {
+        var y = window.scrollY;
+        if (y < lastY) {
+          cartBtn.classList.remove('is-hidden');
+        } else if (y > lastY) {
+          cartBtn.classList.add('is-hidden');
+        }
+        lastY = y;
+        ticking = false;
+      }
+      window.addEventListener('scroll', function () {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(update);
+      }, { passive: true });
+    });
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": {{ product.title | json }},
+    "url": {{ request.origin | append: product.url | json }},
+    {% if product.featured_image %}"image": {{ product.featured_image | image_url: width: 1200 | prepend: 'https:' | json }},{% endif %}
+    "description": {{ product.description | strip_html | truncate: 500 | json }},
+    "brand": { "@type": "Brand", "name": "Voltical" },
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": {{ cart.currency.iso_code | json }},
+      "lowPrice": {{ product.price_min | divided_by: 100.0 | json }},
+      "highPrice": {{ product.price_max | divided_by: 100.0 | json }},
+      "availability": "{% if product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"
+    }
+  }
+  </script>
+
+  {%- comment -%} Desktop only: push the buy column (.pinfo) down until
+    the top of its first option picker (e.g. Color) lines up with the
+    top of the gallery photo bubble. Measured live via JS rather than a
+    fixed px value, since the gap depends on the Buy Core text's own
+    height above the bubble. {%- endcomment -%}
+  <script>
+  (function(){
+    function alignOptToBubble(){
+      if (!window.matchMedia('(min-width:900px)').matches) return;
+      var bubble = document.querySelector('.gallery__main');
+      var firstOpt = document.querySelector('.pinfo .opt:not([hidden])');
+      var pinfo = document.querySelector('.pinfo');
+      if (!bubble || !firstOpt || !pinfo) return;
+      pinfo.style.marginTop = '0px';
+      var delta = bubble.getBoundingClientRect().top - firstOpt.getBoundingClientRect().top;
+      if (delta > 0) pinfo.style.marginTop = delta + 'px';
+    }
+    {%- comment -%} Desktop only: Add to bag sits exactly 25px below the
+      bottom of the suggested-product cards ("You Might Also Like")
+      right above it — a plain, fixed gap, not derived from the gallery
+      bubble or trust row at all (an earlier version tied this to the
+      trust row's position, which broke once the trust row itself got
+      pushed far down the page for an unrelated reason). Moves the atc
+      wrapper via its own margin-top (can go negative to pull things
+      up), which — since it sits in normal flow — carries the ship note
+      and trust row after it along with it. {%- endcomment -%}
+    function positionAtcBelowSuggestions(){
+      if (!window.matchMedia('(min-width:900px)').matches) return;
+      var atc = document.querySelector('.pinfo .atc');
+      var addons = document.querySelectorAll('.pinfo .addon');
+      if (!atc || !addons.length) return;
+      var lastAddon = addons[addons.length - 1];
+      atc.style.marginTop = '0px';
+      var gap = atc.getBoundingClientRect().top - lastAddon.getBoundingClientRect().bottom;
+      atc.style.marginTop = (65 - gap) + 'px';
+    }
+    function alignAll(){
+      alignOptToBubble();
+      positionAtcBelowSuggestions();
+    }
+    window.addEventListener('load', alignAll);
+    window.addEventListener('resize', alignAll);
+  })();
+  </script>
+
+  {%- comment -%} Temporary drag-to-position tool for the Buy Core
+    text, only active with ?drag=1 in the URL — regular visitors never
+    see this. Gated in JS (not Liquid's request object, which doesn't
+    reliably expose the query string) by checking location.search.
+    Forces the element visible even on mobile (where it's normally
+    display:none) so it can be dragged at any width. Dragging is done
+    via a separate handle (a plain div, not the text itself) so native
+    text-selection/long-press-callout never has a chance to compete
+    with the drag — that's what broke it when the text itself was the
+    drag target. {%- endcomment -%}
+  <div id="drag-readout" style="display:none;position:fixed;bottom:16px;left:16px;z-index:9999;background:#131316;color:#fff;font:12px/1.4 monospace;padding:8px 12px;border-radius:8px;pointer-events:none;">drag the handle</div>
+  <script>
+  (function(){
+    if (!/[?&]drag=1(&|$)/.test(window.location.search)) return;
+    document.title = 'DRAG SCRIPT RUNNING';
+    var el = document.querySelector('.pdp-core-buy-label');
+    var readout = document.getElementById('drag-readout');
+    if (!el || !readout) {
+      alert('drag script ran but could not find the text element or readout box — el:' + !!el + ' readout:' + !!readout);
+      return;
+    }
+    alert('drag script found everything, handle should appear now');
+    el.style.display = 'block';
+    readout.style.display = 'block';
+
+    var handle = document.createElement('div');
+    handle.textContent = '+';
+    handle.style.cssText = 'position:fixed !important;width:44px;height:44px;border-radius:50%;background:red;color:#fff;border:3px solid #fff;box-shadow:0 0 0 2px red, 0 4px 12px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;line-height:1;cursor:grab;z-index:2147483647;touch-action:none;user-select:none;-webkit-user-select:none;';
+    document.body.appendChild(handle);
+
+    var startX, startY, curX = 0, curY = 0, dragging = false;
+    function setPos(x, y){
+      curX = x; curY = y;
+      el.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+      readout.textContent = 'translateX(' + Math.round(x) + 'px) translateY(' + Math.round(y) + 'px)';
+      positionHandle();
+    }
+    function positionHandle(){
+      var r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0){
+        handle.style.top = '80px';
+        handle.style.left = '20px';
+        return;
+      }
+      handle.style.top = (r.top - 22) + 'px';
+      handle.style.left = (r.right + 8) + 'px';
+    }
+    setPos(curX, curY);
+    // layout can settle after images load / animations finish — keep
+    // the handle glued to the text for the first couple seconds
+    var reposCount = 0;
+    var reposTimer = setInterval(function(){
+      positionHandle();
+      reposCount++;
+      if (reposCount > 40) clearInterval(reposTimer);
+    }, 50);
+
+    handle.addEventListener('pointerdown', function(e){
+      e.preventDefault();
+      dragging = true;
+      handle.style.cursor = 'grabbing';
+      startX = e.clientX - curX;
+      startY = e.clientY - curY;
+      handle.setPointerCapture(e.pointerId);
+    });
+    handle.addEventListener('pointermove', function(e){
+      if (!dragging) return;
+      setPos(e.clientX - startX, e.clientY - startY);
+    });
+    handle.addEventListener('pointerup', function(){
+      dragging = false;
+      handle.style.cursor = 'grab';
+    });
+    window.addEventListener('resize', positionHandle);
+  })();
+  </script>
+</section>
+
+{% schema %}
+{
+  "name": "Product page",
+  "settings": [
+    { "type": "header", "content": "Trust row" },
+    { "type": "text", "id": "trust_1_value", "label": "Item 1 value", "default": "12-mo" },
+    { "type": "text", "id": "trust_1_label", "label": "Item 1 label", "default": "Warranty" },
+    { "type": "text", "id": "trust_2_value", "label": "Item 2 value", "default": "30-day" },
+    { "type": "text", "id": "trust_2_label", "label": "Item 2 label", "default": "Returns" },
+    { "type": "text", "id": "trust_3_value", "label": "Item 3 value", "default": "24 h" },
+    { "type": "text", "id": "trust_3_label", "label": "Item 3 label", "default": "Dispatch" },
+    { "type": "header", "content": "Complete-the-setup add-on" },
+    { "type": "product", "id": "xsell_usbc", "label": "Add-on for power banks (USB-C cable)" },
+    { "type": "product", "id": "xsell_watch", "label": "Add-on for the Watch case (Watch cable)" }
+  ]
+}
+{% endschema %}

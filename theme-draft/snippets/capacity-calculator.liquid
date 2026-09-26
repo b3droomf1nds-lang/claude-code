@@ -1,0 +1,59 @@
+{%- comment -%}
+  Renders only for products defined in assets/voltical-data.js.
+  Logic lives in assets/voltical-calc.js (binds to data-calc-v2).
+  Modes: powerbank (Core / Core Pro), watch (Watch Case),
+  charger (Puck — iPhone + Watch 20→80% speed), cable (USB-C Cable —
+  iPhone 20→80% speed, standard vs fast-charger brick), watchcable
+  (Watch Charge Cable — Watch 0→80% speed).
+{%- endcomment -%}
+{%- assign calc_handles = 'voltical-core-5k-10k,voltical-core-pro-5k-10k,voltical-puck-5k-10k,voltical-watch-case,voltical-usb-c-charge-data-cable-new,voltical-watch-charge-cable' | split: ',' -%}
+{%- if calc_handles contains product.handle -%}
+{%- assign mode = 'powerbank' -%}
+{%- if product.handle == 'voltical-watch-case' -%}{%- assign mode = 'watch' -%}{%- endif -%}
+{%- if product.handle == 'voltical-puck-5k-10k' -%}{%- assign mode = 'charger' -%}{%- endif -%}
+{%- if product.handle == 'voltical-usb-c-charge-data-cable-new' -%}{%- assign mode = 'cable' -%}{%- endif -%}
+{%- if product.handle == 'voltical-watch-charge-cable' -%}{%- assign mode = 'watchcable' -%}{%- endif -%}
+
+<div class="calc" data-calc-v2 data-handle="{{ product.handle }}">
+  <div class="calc__head">
+    <h3>{% if mode == 'watch' %}{{ 'calculator.heading_watch' | t }}{% elsif mode == 'charger' or mode == 'cable' or mode == 'watchcable' %}{{ 'calculator.heading_charger' | t }}{% else %}{{ 'calculator.heading' | t }}{% endif %}</h3>
+    <span class="calc__badge">{{ 'calculator.badge' | t }}</span>
+  </div>
+
+  <label class="opt__label" for="calc-device-{{ product.id }}" style="display:block">
+    {% if mode == 'watch' or mode == 'watchcable' %}{{ 'calculator.select_watch' | t }}{% else %}{{ 'calculator.select_iphone' | t }}{% endif %}
+  </label>
+  <select id="calc-device-{{ product.id }}" data-calc-device>
+    <option value="" selected disabled>{{ 'calculator.placeholder' | t }}</option>
+  </select>
+
+  {%- if mode == 'charger' -%}
+  <label class="opt__label" for="calc-watch-{{ product.id }}" style="display:block;margin-top:12px">
+    {{ 'calculator.select_watch' | t }}
+  </label>
+  <select id="calc-watch-{{ product.id }}" data-calc-device-watch>
+    <option value="" selected disabled>{{ 'calculator.placeholder' | t }}</option>
+  </select>
+  {%- endif -%}
+
+  <div class="calc__out" data-calc-out>
+    <div class="calc__meter" data-calc-meter aria-hidden="true"><i></i></div>
+    <div class="calc__figures">
+      <div class="calc__fig">
+        <span class="t-mono" data-calc-charges>—</span>
+        <small>{% if mode == 'watch' %}{{ 'calculator.full_charges' | t }}{% elsif mode == 'charger' %}{{ 'calculator.phone_2080' | t }}{% elsif mode == 'cable' %}{{ 'calculator.cable_2080' | t }}{% elsif mode == 'watchcable' %}{{ 'calculator.watchcable_2080' | t }}{% else %}{{ 'calculator.wireless_charges' | t }}{% endif %}</small>
+      </div>
+      <div class="calc__fig">
+        <span class="t-mono" data-calc-speed>—</span>
+        <small>{% if mode == 'watch' %}{{ 'calculator.extra_hours' | t }}{% elsif mode == 'charger' %}{{ 'calculator.watch_2080' | t }}{% elsif mode == 'cable' %}{{ 'calculator.cable_output' | t }}{% elsif mode == 'watchcable' %}{{ 'calculator.watchcable_output' | t }}{% else %}{{ 'calculator.time_2080' | t }}{% endif %}</small>
+      </div>
+      <div class="calc__fig">
+        <span class="t-mono" data-calc-third>—</span>
+        <small>{% if mode == 'watch' or mode == 'charger' or mode == 'watchcable' %}{{ 'calculator.output' | t }}{% elsif mode == 'cable' %}{{ 'calculator.cable_fast' | t }}{% else %}{{ 'calculator.wired_charges' | t }}{% endif %}</small>
+      </div>
+    </div>
+    <p class="calc__note">{{ 'calculator.disclaimer' | t }}</p>
+  </div>
+</div>
+<script src="{{ 'voltical-calc.js' | asset_url }}" defer></script>
+{%- endif -%}

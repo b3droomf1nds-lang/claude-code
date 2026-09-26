@@ -1,0 +1,68 @@
+<section class="section section--card ritual">
+  <div class="wrap wrap--wide">
+    <div data-reveal style="margin-bottom:48px">
+      <span class="t-eyebrow">{{ section.settings.eyebrow }}</span>
+      <h2 class="t-xl">{{ section.settings.heading }}</h2>
+    </div>
+
+    <div class="ritual__grid" data-reveal>
+      {%- for block in section.blocks -%}
+        {%- if block.type == 'moment' -%}
+          <div class="ritual__cell {% if block.settings.wide %}ritual__cell--wide{% endif %}" {{ block.shopify_attributes }}>
+            {%- if block.settings.image -%}
+              <img src="{{ block.settings.image | image_url: width: 1300 }}"
+                   srcset="{{ block.settings.image | image_url: width: 900 }} 900w, {{ block.settings.image | image_url: width: 1300 }} 1300w, {{ block.settings.image | image_url: width: 1900 }} 1900w"
+                   sizes="(min-width:900px) 33vw, 50vw"
+                   alt="{{ block.settings.image.alt | default: block.settings.label | escape }}" loading="lazy">
+            {%- endif -%}
+            <span class="ritual__label">
+              <span class="ritual__time">{{ block.settings.time }}</span>
+              {{ block.settings.label }}
+            </span>
+          </div>
+        {%- else -%}
+          <div class="ritual__cell ritual__cell--text" {{ block.shopify_attributes }}>
+            <p class="t-md t-whisper" style="max-width:260px">{{ block.settings.quote }}</p>
+          </div>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "A day, charged",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "The ritual" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "It just comes along." }
+  ],
+  "blocks": [
+    {
+      "type": "moment", "name": "Moment",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Image" },
+        { "type": "text", "id": "time", "label": "Time (mono)", "default": "07:40" },
+        { "type": "text", "id": "label", "label": "Label", "default": "Snaps on with the first coffee" },
+        { "type": "checkbox", "id": "wide", "label": "Double width (desktop)", "default": false }
+      ]
+    },
+    {
+      "type": "quote", "name": "Quote cell",
+      "settings": [
+        { "type": "textarea", "id": "quote", "label": "Quote", "default": "The best charger is the one you stop noticing." }
+      ]
+    }
+  ],
+  "presets": [{
+    "name": "A day, charged",
+    "blocks": [
+      { "type": "moment", "settings": { "time": "07:40", "label": "Snaps on with the first coffee", "wide": true } },
+      { "type": "quote" },
+      { "type": "moment", "settings": { "time": "13:15", "label": "Top-up between meetings" } },
+      { "type": "moment", "settings": { "time": "18:30", "label": "Watch case in the gym bag" } },
+      { "type": "moment", "settings": { "time": "23:05", "label": "Back on the tray, charging itself", "wide": true } }
+    ]
+  }]
+}
+{% endschema %}

@@ -1,0 +1,6 @@
+<div class="page-narrow">
+  <h1 class="t-lg" style="margin-bottom:24px">{{ 'customer.addresses' | t }}</h1>
+  {% paginate customer.addresses by 10 %}
+  {% for address in customer.addresses %}<p style="padding:12px 0;border-bottom:1px solid var(--ink-12)">{{ address | format_address }}</p>{% endfor %}
+  {% endpaginate %}
+</div>

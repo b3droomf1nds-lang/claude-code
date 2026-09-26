@@ -1,0 +1,42 @@
+<section class="standard">
+  <div class="wrap">
+    <div class="standard__grid">
+      {%- for block in section.blocks -%}
+        <div class="standard__item" data-reveal style="--reveal-i: {{ forloop.index0 }};" {{ block.shopify_attributes }}>
+          <h3>{% render 'icon', icon: block.settings.icon %} {{ block.settings.heading }}</h3>
+          <p>{{ block.settings.text }}</p>
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "The Voltical standard",
+  "settings": [],
+  "blocks": [
+    {
+      "type": "item", "name": "Item",
+      "settings": [
+        { "type": "select", "id": "icon", "label": "Icon", "options": [
+          { "value": "bolt", "label": "Bolt" },
+          { "value": "shield", "label": "Shield" },
+          { "value": "magnet", "label": "Ring" }
+        ], "default": "bolt" },
+        { "type": "text", "id": "heading", "label": "Heading", "default": "Tested before it ships" },
+        { "type": "textarea", "id": "text", "label": "Text — keep every claim true to your actual policy", "default": "Every batch is sample-tested for output, alignment and heat before it's approved to sell." }
+      ]
+    }
+  ],
+  "presets": [{
+    "name": "The Voltical standard",
+    "blocks": [
+      { "type": "item", "settings": { "icon": "bolt", "heading": "Tested before it ships", "text": "Every batch is sample-tested for output, alignment and heat before it's approved to sell." } },
+      { "type": "item", "settings": { "icon": "shield", "heading": "12-month warranty", "text": "If it fails in normal use within a year, we replace it. One email, no forms." } },
+      { "type": "item", "settings": { "icon": "magnet", "heading": "30-day returns", "text": "Live with it for a month. If it isn't earning its place, send it back." } },
+      { "type": "item", "settings": { "icon": "bolt", "heading": "Human support", "text": "Questions answered by people who use the products, typically within one business day." } }
+    ]
+  }]
+}
+{% endschema %}

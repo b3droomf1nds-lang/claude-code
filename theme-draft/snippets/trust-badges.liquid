@@ -1,0 +1,7 @@
+{%- if section.settings.trust_1_value != blank -%}
+<div class="trust-row" aria-label="{{ 'products.trust_label' | t }}">
+  <div class="trust-row__item"><span class="t-mono">{{ section.settings.trust_1_value }}</span><small>{{ section.settings.trust_1_label }}</small></div>
+  <div class="trust-row__item"><span class="t-mono">{{ section.settings.trust_2_value }}</span><small>{{ section.settings.trust_2_label }}</small></div>
+  <div class="trust-row__item"><span class="t-mono">{{ section.settings.trust_3_value }}</span><small>{{ section.settings.trust_3_label }}</small></div>
+</div>
+{%- endif -%}

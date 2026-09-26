@@ -1,0 +1,96 @@
+{%- assign _flag = section.settings.flag_product -%}
+{%- if _flag.handle -%}{%- assign _flag = _flag.handle -%}{%- endif -%}
+<section data-plp>
+  <div class="wrap wrap--wide">
+    <header class="plp__head" data-reveal>
+      <span class="t-eyebrow">{{ collection.title }}</span>
+      <h1 class="t-xl plp__title">{{ section.settings.heading }}</h1>
+      {%- if collection.description != blank -%}
+        <p class="t-body-lg" style="margin-top:12px">{{ collection.description | strip_html }}</p>
+      {%- endif -%}
+      {%- assign banner = section.settings.banner | default: collection.image -%}
+      {%- if banner -%}
+        <div class="plp__banner"><img src="{{ banner | image_url: width: 2200 }}"
+             srcset="{{ banner | image_url: width: 2200 }} 2200w, {{ banner | image_url: width: 3200 }} 3200w"
+             sizes="100vw"
+             alt="{{ banner.alt | default: collection.title | escape }}"></div>
+      {%- endif -%}
+    </header>
+
+    <div class="plp__bar">
+      <div class="filters">
+        <div class="filter-group">
+          <span>{{ 'collection.capacity' | t }}</span>
+          <button class="filter-chip" data-filter-key="capacity" data-filter-value="5000">5,000 mAh</button>
+          <button class="filter-chip" data-filter-key="capacity" data-filter-value="10000">10,000 mAh</button>
+        </div>
+        <div class="filter-group">
+          <span>{{ 'collection.color' | t }}</span>
+          {%- assign seen = '' -%}
+          {%- for product in collection.products -%}
+            {%- for option in product.options_with_values -%}
+              {%- assign oname = option.name | downcase -%}
+              {%- if oname contains 'color' or oname contains 'colour' -%}
+                {%- for v in option.values -%}
+                  {%- assign key = v | downcase | append: ',' -%}
+                  {%- unless seen contains key -%}
+                    {%- assign seen = seen | append: key -%}
+                    <button class="filter-chip" data-filter-key="color" data-filter-value="{{ v | escape }}">{{ v }}</button>
+                  {%- endunless -%}
+                {%- endfor -%}
+              {%- endif -%}
+            {%- endfor -%}
+          {%- endfor -%}
+        </div>
+        <div class="filter-group">
+          <span>{{ 'collection.connector' | t }}</span>
+          <button class="filter-chip" data-filter-key="connector" data-filter-value="magnetic">{{ 'collection.magnetic' | t }}</button>
+          <button class="filter-chip" data-filter-key="connector" data-filter-value="usb-c">USB-C</button>
+          <button class="filter-chip" data-filter-key="connector" data-filter-value="watch">Apple Watch</button>
+        </div>
+      </div>
+
+      <div class="plp__sort">
+        <span class="plp__count"><output data-plp-count>{{ collection.products.size }}</output> {{ 'collection.products' | t }}</span>
+        <label for="plp-sort" class="visually-hidden">{{ 'collection.sort' | t }}</label>
+        <select id="plp-sort" data-plp-sort>
+          {%- assign current = collection.sort_by | default: collection.default_sort_by -%}
+          <option value="manual" {% if current == 'manual' %}selected{% endif %}>{{ 'collection.sort_featured' | t }}</option>
+          <option value="price-ascending" {% if current == 'price-ascending' %}selected{% endif %}>{{ 'collection.sort_price_asc' | t }}</option>
+          <option value="price-descending" {% if current == 'price-descending' %}selected{% endif %}>{{ 'collection.sort_price_desc' | t }}</option>
+          <option value="created-descending" {% if current == 'created-descending' %}selected{% endif %}>{{ 'collection.sort_new' | t }}</option>
+        </select>
+      </div>
+    </div>
+
+    {%- paginate collection.products by 24 -%}
+    <div class="plp__grid">
+      {%- for product in collection.products -%}
+        {% render 'product-card', product: product, flag_handle: _flag %}
+      {%- endfor -%}
+    </div>
+
+    <div class="plp__empty" data-plp-empty hidden>
+      <p class="t-md">{{ 'collection.empty_filters' | t }}</p>
+    </div>
+
+    {%- if paginate.pages > 1 -%}
+      <div style="text-align:center;padding-bottom:64px">
+        {%- if paginate.previous -%}<a class="btn btn--ghost" href="{{ paginate.previous.url }}">&larr;</a>{%- endif -%}
+        {%- if paginate.next -%}<a class="btn btn--ghost" href="{{ paginate.next.url }}">&rarr;</a>{%- endif -%}
+      </div>
+    {%- endif -%}
+    {%- endpaginate -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Collection page",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Everything, <em>charged.</em>" },
+    { "type": "product", "id": "flag_product", "label": "Product to flag as flagship" },
+    { "type": "image_picker", "id": "banner", "label": "Banner image (falls back to collection image)" }
+  ]
+}
+{% endschema %}

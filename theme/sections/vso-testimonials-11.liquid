@@ -1,0 +1,3634 @@
+{% comment %}
+WARNING: UNAUTHORIZED MODIFICATION PROHIBITED
+This code is proprietary property of Versio Studio. Any unauthorized tampering, 
+alteration, or distribution of this file is strictly forbidden and will be prosecuted to the maximum extent permitted by law.
+All modifications are logged.
+
+If you require assistance or have questions regarding this code, please contact support@versio.studio.
+{% endcomment %}
+
+{%- liquid
+  assign rating_block = section.blocks | where: 'type', 'header_rating' | first
+  assign title_block = section.blocks | where: 'type', 'header_title' | first
+  assign description_block = section.blocks | where: 'type', 'header_description' | first
+  assign testimonial_blocks = section.blocks | where: 'type', 'testimonial_card'
+
+  assign text_alignment = 'left'
+  assign blocks_alignment_desktop = section.settings.card_content_alignment_desktop
+  assign blocks_alignment_mobile = section.settings.card_content_alignment_mobile
+  
+  if blocks_alignment_desktop == 'left'
+    assign blocks_justify_desktop = 'flex-start'
+  elsif blocks_alignment_desktop == 'center'
+    assign blocks_justify_desktop = 'center'
+  elsif blocks_alignment_desktop == 'right'
+    assign blocks_justify_desktop = 'flex-end'
+  endif
+  
+  if blocks_alignment_mobile == 'left'
+    assign blocks_justify_mobile = 'flex-start'
+  elsif blocks_alignment_mobile == 'center'
+    assign blocks_justify_mobile = 'center'
+  elsif blocks_alignment_mobile == 'right'
+    assign blocks_justify_mobile = 'flex-end'
+  endif
+  assign desktop_blocks_gap = section.settings.desktop_blocks_gap
+  assign mobile_blocks_gap = section.settings.mobile_blocks_gap
+  assign block_padding = section.settings.block_padding
+  assign header_blocks_gap = section.settings.header_blocks_gap
+  assign stars_title_gap = section.settings.stars_title_gap
+  assign content_width = section.settings.content_width
+
+  assign rating_header_text = 'Rated <strong>4.8</strong>/5 based on 140,000+ Total Reviews'
+  assign custom_rating_header_font = false
+  assign rating_header_as = 'p'
+  assign rating_text_color = '#111111'
+  assign rating_text_size = 16
+  assign header_star_rating = 5
+  assign rating_star_color = '#FFFFFF'
+  assign rating_star_background_color = '#05B67C'
+  assign rating_star_empty_background_color = '#DFDFDF'
+  assign rating_star_size = 24
+  assign rating_badge_bg_enable = true
+  assign rating_bg_color = '#FFFFFF'
+  assign rating_padding_horizontal = 14
+  assign rating_padding_vertical = 10
+  assign rating_shadow_enable = true
+  assign rating_border_radius = 100
+  assign rating_bottom_spacing = 12
+  assign rating_margin_top_desktop = 0
+  assign rating_margin_top_mobile = 0
+  assign rating_margin_bottom_mobile = 12
+
+  if rating_block != blank
+    assign rating_header_text = rating_block.settings.rating_header | default: rating_header_text
+    assign custom_rating_header_font = rating_block.settings.custom_rating_header_font | default: false
+    assign rating_header_as = rating_block.settings.rating_header_as | default: rating_header_as
+    assign rating_text_color = rating_block.settings.rating_text_color | default: rating_text_color
+    assign rating_text_size = rating_block.settings.rating_text_size | default: rating_text_size
+    assign header_star_rating = rating_block.settings.header_star_rating | default: header_star_rating
+    assign rating_star_color = rating_block.settings.rating_star_color | default: rating_star_color
+    assign rating_star_background_color = rating_block.settings.rating_star_background_color | default: rating_star_background_color
+    assign rating_star_empty_background_color = rating_block.settings.rating_star_empty_background_color | default: rating_star_empty_background_color
+    assign rating_star_size = rating_block.settings.rating_star_size | default: rating_star_size
+    assign rating_badge_bg_enable = rating_block.settings.rating_badge_bg_enable | default: rating_badge_bg_enable
+    assign rating_bg_color = rating_block.settings.rating_bg_color | default: rating_bg_color
+    assign rating_padding_horizontal = rating_block.settings.rating_padding_horizontal | default: rating_padding_horizontal
+    assign rating_padding_vertical = rating_block.settings.rating_padding_vertical | default: rating_padding_vertical
+    assign rating_shadow_enable = rating_block.settings.rating_shadow_enable | default: rating_shadow_enable
+    assign rating_border_radius = rating_block.settings.rating_border_radius | default: rating_border_radius
+    assign rating_bottom_spacing = rating_block.settings.rating_bottom_spacing | default: rating_bottom_spacing
+    assign rating_margin_top_desktop = rating_block.settings.rating_margin_top_desktop | default: rating_margin_top_desktop
+    assign rating_margin_top_mobile = rating_block.settings.rating_margin_top_mobile | default: rating_margin_top_mobile
+    assign rating_margin_bottom_mobile = rating_block.settings.rating_margin_bottom_mobile | default: rating_margin_bottom_mobile
+  endif
+
+  assign title_text = 'Their Waists. <em>Their Words.</em>'
+  assign title_highlight_color = 'linear-gradient(135deg, #FFB4A9 0%, #FF7A6E 100%)'
+  assign title_highlight_enable_custom = false
+  assign title_highlight_font = blank
+  assign title_highlight_font_weight = 700
+  assign custom_title_font = false
+  assign title_as = 'h2'
+  assign title_size_desktop = 40
+  assign title_size_mobile = 32
+  assign title_font = blank
+  assign title_color = '#000000'
+  assign title_line_height = 130
+  assign title_font_weight = 700
+
+  if title_block != blank
+    assign title_text = title_block.settings.title | default: title_text
+    assign title_highlight_color = title_block.settings.title_highlight_color | default: title_highlight_color
+    assign title_highlight_enable_custom = title_block.settings.title_highlight_enable_custom | default: false
+    assign title_highlight_font = title_block.settings.title_highlight_font
+    assign title_highlight_font_weight = title_block.settings.title_highlight_font_weight | default: title_highlight_font_weight
+    if title_block.settings.custom_title_font
+      assign custom_title_font = true
+    endif
+    assign title_as = title_block.settings.title_as | default: title_as
+    assign title_size_desktop = title_block.settings.title_size_desktop | default: title_size_desktop
+    assign title_size_mobile = title_block.settings.title_size_mobile | default: title_size_mobile
+    assign title_font = title_block.settings.title_font
+    assign title_color = title_block.settings.title_color | default: title_color
+    assign title_line_height = title_block.settings.title_line_height | default: title_line_height
+    assign title_font_weight = title_block.settings.title_font_weight | default: title_font_weight
+  endif
+
+  assign description_text = 'See what customers are saying after their transformations.'
+  assign custom_description_font = false
+  assign description_as = 'p'
+  assign description_size_desktop = 20
+  assign description_size_mobile = 18
+  assign description_line_height = 150
+  assign description_color = '#0B0B0B'
+  assign description_top_spacing = 8
+  assign description_bottom_spacing = 0
+  assign description_margin_top_mobile = 8
+  assign description_margin_bottom_mobile = 0
+
+  if description_block != blank
+    assign description_text = description_block.settings.description | default: description_text
+    assign custom_description_font = description_block.settings.custom_description_font | default: false
+    assign description_as = description_block.settings.description_as | default: description_as
+    assign description_size_desktop = description_block.settings.description_size_desktop | default: description_size_desktop
+    assign description_size_mobile = description_block.settings.description_size_mobile | default: description_size_mobile
+    assign description_line_height = description_block.settings.description_line_height | default: description_line_height
+    assign description_color = description_block.settings.description_color | default: description_color
+    assign description_top_spacing = description_block.settings.description_top_spacing | default: description_top_spacing
+    assign description_bottom_spacing = description_block.settings.description_bottom_spacing | default: description_bottom_spacing
+    assign description_margin_top_mobile = description_block.settings.description_margin_top_mobile | default: description_margin_top_mobile
+    assign description_margin_bottom_mobile = description_block.settings.description_margin_bottom_mobile | default: description_margin_bottom_mobile
+  endif
+
+  assign title_margin_top_desktop = 0
+  assign title_margin_bottom_desktop = 0
+  assign title_margin_top_mobile = 0
+  assign title_margin_bottom_mobile = 0
+
+  if title_block != blank
+    assign title_margin_top_desktop = title_block.settings.title_margin_top_desktop | default: title_margin_top_desktop
+    assign title_margin_bottom_desktop = title_block.settings.title_margin_bottom_desktop | default: title_margin_bottom_desktop
+    assign title_margin_top_mobile = title_block.settings.title_margin_top_mobile | default: title_margin_top_mobile
+    assign title_margin_bottom_mobile = title_block.settings.title_margin_bottom_mobile | default: title_margin_bottom_mobile
+  endif
+  
+  assign image_border_radius = section.settings.block_border_radius | minus: section.settings.block_border_width
+  if image_border_radius < 0
+    assign image_border_radius = 0
+  endif
+-%}
+
+{%- style -%}
+  .vd-l { display: none !important; }
+  {% if custom_title_font and title_font != blank %}
+    {{ title_font | font_face: font_display: 'swap' }}
+  {% endif %}
+  {{ section.settings.block_title_font | font_face: font_display: 'swap' }}
+  {{ section.settings.block_description_font | font_face: font_display: 'swap' }}
+  {% if title_highlight_enable_custom and title_highlight_font != blank %}
+    {{ title_highlight_font | font_face: font_display: 'swap' }}
+  {% endif %}
+
+  {% if custom_title_font and title_font != blank %}
+    #Testimonials-Cards-{{ section.id }} .vso-testimonials-cards__title {
+      font-family: {{ title_font.family }}, {{ title_font.fallback_families }};
+      font-style: {{ title_font.style }};
+    }
+  {% endif %}
+
+  {% if section.settings.custom_block_title_font %}
+    #Testimonials-Cards-{{ section.id }} .vso-testimonials-cards__block-title {
+      font-family: {{ section.settings.block_title_font.family }}, {{ section.settings.block_title_font.fallback_families }};
+      font-style: {{ section.settings.block_title_font.style }};
+      line-height: {{ section.settings.block_title_line_height }}%;
+      font-size: {{ section.settings.block_title_size_desktop }}px;
+      color: {{ section.settings.block_title_color }};
+      font-weight: {{ section.settings.block_title_font_weight }};
+    }
+  {% endif %}
+
+  {% if section.settings.custom_block_description_font %}
+    #Testimonials-Cards-{{ section.id }} .vso-testimonials-cards__block-description {
+      font-family: {{ section.settings.block_description_font.family }}, {{ section.settings.block_description_font.fallback_families }};
+      font-style: {{ section.settings.block_description_font.style }};
+      line-height: {{ section.settings.block_description_line_height }}%;
+      font-size: {{ section.settings.block_description_size_desktop }}px;
+      color: {{ section.settings.block_description_color }};
+      font-weight: {{ section.settings.block_description_font_weight }};
+    }
+  {% endif %}
+
+  .vso-testimonials-cards {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .vso-testimonials-cards__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: {{ header_blocks_gap }}px;
+    width: 100%;
+    position: relative;
+  }
+
+  .vso-testimonials-cards__header-content {
+    max-width: 60%;
+    flex: 1;
+  }
+
+  .vso-testimonials-cards__rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    {% if rating_badge_bg_enable %}
+      background: {{ rating_bg_color }};
+    {% endif %}
+    border-radius: {{ rating_border_radius }}px;
+    {% if rating_badge_bg_enable %}
+      padding: {{ rating_padding_vertical }}px {{ rating_padding_horizontal }}px;
+      {% if rating_shadow_enable %}
+        box-shadow: rgba(0, 0, 0, 0.08) 0px 4px 12px;
+      {% endif %}
+    {% endif %}
+    margin-top: {{ rating_margin_top_mobile }}px;
+    margin-bottom: {{ rating_margin_bottom_mobile }}px;
+    white-space: nowrap;
+  }
+
+  @media screen and (min-width: 750px) {
+    .vso-testimonials-cards__rating {
+      margin-top: {{ rating_margin_top_desktop }}px;
+      margin-bottom: {{ rating_bottom_spacing }}px;
+    }
+  }
+
+  {% if custom_rating_header_font %}
+    #Testimonials-Cards-{{ section.id }} .vso-testimonials-cards__rating {
+      color: {{ rating_text_color }};
+      font-size: {{ rating_text_size }}px;
+    }
+  {% endif %}
+
+  .vso-testimonials-cards__rating-stars {
+    display: inline-flex;
+    gap: {{ section.settings.star_gap }}px;
+    font-size: {{ section.settings.star_size }}px;
+  }
+
+  .vso-testimonials-cards__rating-stars svg {
+    width: {{ rating_star_size }}px;
+    height: {{ rating_star_size }}px;
+    color: {{ rating_star_color }};
+  }
+
+  .vso-testimonials-cards__rating .star-empty svg {
+    color: {{ section.settings.star_empty_color }};
+  }
+
+  .vso-testimonials-cards__rating-text { margin: 0; line-height: 1; }
+
+  .vso-testimonials-cards__title {
+    margin: 0;
+    text-align: {{ text_alignment }};
+    margin-top: {{ title_margin_top_mobile }}px;
+    margin-bottom: {{ title_margin_bottom_mobile }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .vso-testimonials-cards__title {
+      margin-top: {{ title_margin_top_desktop }}px;
+      margin-bottom: {{ title_margin_bottom_desktop }}px;
+    }
+  }
+
+  {% if custom_title_font %}
+    #Testimonials-Cards-{{ section.id }} .vso-testimonials-cards__title {
+      line-height: {{ title_line_height }}%;
+      font-size: {{ title_size_desktop }}px;
+      color: {{ title_color }};
+      font-weight: {{ title_font_weight }};
+    }
+  {% endif %}
+  #Testimonials-Cards-{{ section.id }} .vso-testimonials-cards__title .vso-testimonials-cards__title-highlight-{{ section.id }} {
+    background: {{ title_highlight_color }} !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    color: transparent !important;
+  }
+  {% if title_highlight_enable_custom and title_highlight_font != blank %}
+    #Testimonials-Cards-{{ section.id }} .vso-testimonials-cards__title .vso-testimonials-cards__title-highlight-{{ section.id }} {
+      font-family: {{ title_highlight_font.family }}, {{ title_highlight_font.fallback_families }};
+      font-style: {{ title_highlight_font.style }};
+      font-weight: {{ title_highlight_font_weight }};
+    }
+  {% endif %}
+
+  .vso-testimonials-cards__description {
+    margin: 0;
+    text-align: {{ text_alignment }};
+    margin-top: {{ description_margin_top_mobile }}px;
+    margin-bottom: {{ description_margin_bottom_mobile }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .vso-testimonials-cards__description {
+      margin-top: {{ description_top_spacing }}px;
+      margin-bottom: {{ description_bottom_spacing }}px;
+    }
+  }
+  {% if custom_description_font %}
+    #Testimonials-Cards-{{ section.id }} .vso-testimonials-cards__description {
+      font-size: {{ description_size_desktop }}px;
+      color: {{ description_color }};
+      line-height: {{ description_line_height }}%;
+    }
+  {% endif %}
+
+  .vso-testimonials-cards__navigation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: {{ section.settings.nav_arrow_gap }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    {% if section.settings.header_alignment_desktop == 'center' %}
+      .vso-testimonials-cards__header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .vso-testimonials-cards__header-content {
+        max-width: 100%;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .vso-testimonials-cards__title,
+      .vso-testimonials-cards__description {
+        text-align: center;
+      }
+    {% endif %}
+
+    {% if section.settings.desktop_nav_position == 'bottom_center' %}
+      .vso-testimonials-cards__navigation { display: none; }
+      .vso-testimonials-cards__navigation-mobile {
+        display: flex !important;
+        width: 100%;
+        justify-content: center;
+        align-items: center;
+        margin-top: {{ section.settings.nav_arrow_top_spacing_desktop }}px !important;
+      }
+      .vso-testimonials-cards__swiper { margin-top: {{ section.settings.cards_top_spacing_desktop }}px; }
+      {% unless section.settings.show_navigation_desktop %}
+        .vso-testimonials-cards__navigation-mobile { display: none !important; }
+      {% endunless %}
+    {% else %}
+      .vso-testimonials-cards__navigation {
+        position: absolute;
+        top: 0;
+        right: 0;
+      }
+      .vso-testimonials-cards__navigation-mobile { display: none !important; }
+      {% unless section.settings.show_navigation_desktop %}
+        .vso-testimonials-cards__navigation { display: none; }
+      {% endunless %}
+    {% endif %}
+  }
+
+  @media screen and (max-width: 749px) {
+    .vso-testimonials-cards__header {
+      flex-direction: column;
+      align-items: {% if section.settings.header_alignment_mobile == 'center' %}center{% else %}flex-start{% endif %};
+      text-align: {% if section.settings.header_alignment_mobile == 'center' %}center{% else %}left{% endif %};
+    }
+    
+    .vso-testimonials-cards__header-content {
+      max-width: 100%;
+      text-align: {% if section.settings.header_alignment_mobile == 'center' %}center{% else %}left{% endif %};
+      margin-bottom: 20px;
+    }
+    
+    .vso-testimonials-cards__title {
+      text-align: {% if section.settings.header_alignment_mobile == 'center' %}center{% else %}left{% endif %};
+    }
+    
+    .vso-testimonials-cards__description {
+      text-align: {% if section.settings.header_alignment_mobile == 'center' %}center{% else %}left{% endif %};
+    }
+
+    .vso-testimonials-cards__rating {
+      white-space: normal;
+      flex-wrap: wrap;
+      justify-content: {% if section.settings.header_alignment_mobile == 'center' %}center{% else %}flex-start{% endif %};
+    }
+
+    .vso-testimonials-cards__navigation {
+      display: none;
+    }
+    
+    {% unless section.settings.show_navigation_mobile %}
+      .vso-testimonials-cards__navigation-mobile {
+        display: none;
+      }
+    {% endunless %}
+  }
+
+  .vso-testimonials-cards__swiper {
+    width: 100%;
+    padding: 5px 0px !important;
+    
+    overflow: visible;
+    position: relative;
+  }
+
+  @media screen and (min-width: 750px) {
+    .vso-testimonials-cards__swiper {
+      overflow: visible;
+    }
+  }
+
+  .vso-node { display: none; }
+  .vso-node--v2 { display: block; }
+
+  {% if section.settings.enable_equal_height %}
+    .vso-testimonials-cards__swiper {
+      height: auto;
+    }
+
+    .vso-testimonials-cards__swiper .swiper-wrapper {
+      align-items: stretch;
+      display: flex;
+    }
+
+    .vso-testimonials-cards__swiper .swiper-slide {
+      height: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .vso-testimonials-cards__block {
+      justify-content: flex-start;
+    }
+
+    .vso-testimonials-cards__author-container {
+      margin-top: auto;
+    }
+  {% endif %}
+
+  .vso-testimonials-cards__slide {
+    min-width: 0;
+    {% if section.settings.enable_equal_height %}
+      display: flex;
+      height: 100%;
+    {% endif %}
+  }
+
+  .vso-testimonials-cards__block {
+    display: flex;
+    flex-direction: column;
+    align-items: {{ blocks_alignment_desktop }};
+    padding: {{ block_padding }}px;
+    background-color: {{ section.settings.block_background_color }};
+    border-radius: {{ section.settings.block_border_radius }}px;
+    border: {{ section.settings.block_border_width }}px solid {{ section.settings.block_border_color }};
+    text-align: {{ blocks_alignment_desktop }};
+    transition: transform 0.3s ease;
+    overflow: hidden;
+    {% if section.settings.enable_equal_height %}
+      width: 100%;
+      height: 100%;
+    {% endif %}
+  }
+
+  .vso-testimonials-cards__block-image {
+    position: relative;
+    width: calc(100% + {{ block_padding | times: 2 }}px + {{ section.settings.block_border_width | times: 2 }}px);
+    margin: -{{ block_padding }}px -{{ block_padding }}px {{ section.settings.image_to_content_gap }}px -{{ block_padding }}px;
+    margin-top: -{{ block_padding | plus: section.settings.block_border_width }}px;
+    margin-left: -{{ block_padding | plus: section.settings.block_border_width }}px;
+    margin-right: -{{ block_padding | plus: section.settings.block_border_width }}px;
+    border-radius: {{ section.settings.block_border_radius }}px {{ section.settings.block_border_radius }}px 0 0;
+    overflow: hidden;
+    background-color: {{ section.settings.block_border_color }};
+    box-shadow: inset 0 0 0 1px {{ section.settings.block_border_color }};
+  }
+
+  .vso-testimonials-cards__image {
+    width: 100%;
+    height: {{ section.settings.block_image_height_mobile }}px;
+    object-fit: cover;
+    display: block;
+  }
+
+  @media screen and (min-width: 750px) {
+    .vso-testimonials-cards__image {
+      height: {{ section.settings.block_image_height_desktop }}px;
+    }
+  }
+
+  .vso-testimonials-cards__block-header-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: {{ blocks_alignment_desktop }};
+    gap: {{ stars_title_gap }}px;
+  }
+
+  .vso-testimonials-cards__stars {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: {{ section.settings.star_gap }}px;
+    font-size: {{ section.settings.star_size }}px;
+    margin: 0 0 {{ section.settings.stars_title_gap }}px 0;
+    color: {{ section.settings.star_color }};
+  }
+
+  .vso-testimonials-cards__meta-row {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+  }
+  .vso-testimonials-cards__meta-row .vso-testimonials-cards__stars { margin: 0; }
+  .vso-testimonials-cards__meta-author {
+    margin: 0;
+    background: {{ section.settings.verified_pill_bg_color }};
+    padding: 4px 10px;
+    border-radius: 999px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  {% if section.settings.custom_block_author_font %}
+    #Testimonials-Cards-{{ section.id }} .vso-testimonials-cards__meta-author {
+      font-size: {{ section.settings.block_author_size_desktop }}px;
+      color: {{ section.settings.block_author_color }};
+      font-weight: {{ section.settings.block_author_font_weight }};
+    }
+  {% endif %}
+  .vso-testimonials-cards__meta-author svg { width: {{ section.settings.verified_icon_size }}px; height: {{ section.settings.verified_icon_size }}px; }
+
+  .vso-testimonials-cards__block-title { width: 100%; margin: 0; }
+
+  .vso-testimonials-cards__block-description { width: 100%; margin: 0; margin-top: {{ section.settings.block_description_margin_top }}px; position: relative; }
+
+  .vso-testimonials-cards__product {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid {{ section.settings.product_pill_border_color }};
+    background: {{ section.settings.product_pill_bg_color }};
+    border-radius: 12px;
+    padding: 10px;
+    margin-top: 14px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .vso-testimonials-cards__product-image {
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: block;
+    background: #f2f2f2;
+  }
+
+  .vso-testimonials-cards__product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .vso-testimonials-cards__product-meta {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: {{ section.settings.product_elements_gap }}px;
+  }
+
+  .vso-testimonials-cards__product-title { margin: 0; }
+
+  .vso-testimonials-cards__product-price { display: flex; align-items: center; gap: 8px; margin: 0; }
+
+  .vso-testimonials-cards__product-compare {
+    color: {{ section.settings.product_compare_price_color }};
+    text-decoration: line-through;
+    font-weight: 600;
+  }
+
+  .vso-testimonials-cards__product-purchased { display: flex; align-items: center; gap: 6px; margin: 0; }
+
+  {% if section.settings.custom_product_title_font %}
+    #Testimonials-Cards-{{ section.id }} .vso-testimonials-cards__product-title {
+      font-family: {{ section.settings.product_title_font.family }}, {{ section.settings.product_title_font.fallback_families }};
+      font-style: {{ section.settings.product_title_font.style }};
+      line-height: {{ section.settings.product_title_line_height }}%;
+      font-size: {{ section.settings.product_title_size_desktop }}px;
+      font-weight: {{ section.settings.product_title_font_weight }};
+      color: {{ section.settings.product_title_color }};
+    }
+  {% endif %}
+
+  {% if section.settings.custom_product_price_font %}
+    #Testimonials-Cards-{{ section.id }} .vso-testimonials-cards__product-price {
+      font-family: {{ section.settings.product_price_font.family }}, {{ section.settings.product_price_font.fallback_families }};
+      font-style: {{ section.settings.product_price_font.style }};
+      line-height: {{ section.settings.product_price_line_height }}%;
+      font-size: {{ section.settings.product_price_size_desktop }}px;
+      font-weight: {{ section.settings.product_price_font_weight }};
+      color: {{ section.settings.product_price_color }};
+    }
+  {% endif %}
+
+  {% if section.settings.custom_product_subtitle_font %}
+    #Testimonials-Cards-{{ section.id }} .vso-testimonials-cards__product-purchased {
+      font-family: {{ section.settings.product_subtitle_font.family }}, {{ section.settings.product_subtitle_font.fallback_families }};
+      font-style: {{ section.settings.product_subtitle_font.style }};
+      line-height: {{ section.settings.product_subtitle_line_height }}%;
+      font-size: {{ section.settings.product_subtitle_size_desktop }}px;
+      font-weight: {{ section.settings.product_subtitle_font_weight }};
+      color: {{ section.settings.product_purchased_color }};
+    }
+  {% endif %}
+
+  @media screen and (max-width: 749px) {
+    .vso-testimonials-cards__swiper {
+      padding: 5px 0px !important;
+      overflow: visible;
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+      margin-right: calc(-50vw + 50%);
+      
+      padding-right: 20px !important;
+    }
+
+    .vso-testimonials-cards__slide {
+      width: calc(100vw - 70px);
+      min-width: calc(100vw - 70px);
+      max-width: calc(100vw - 70px);
+    }
+    
+    .section-{{ section.id }}-settings {
+      overflow: visible;
+    }
+    
+    .vso-testimonials-cards {
+      overflow: visible;
+    }
+    
+    .section-{{ section.id }} {
+      overflow: visible;
+    }
+
+    {% if custom_title_font %}
+      .vso-testimonials-cards__title {
+        font-size: {{ title_size_mobile }}px;
+      }
+    {% endif %}
+
+    {% if section.settings.custom_block_title_font %}
+      .vso-testimonials-cards__block-title { font-size: {{ section.settings.block_title_size_mobile }}px; }
+    {% endif %}
+
+    {% if section.settings.custom_block_description_font %}
+      .vso-testimonials-cards__block-description { font-size: {{ section.settings.block_description_size_mobile }}px; }
+    {% endif %}
+
+    {% if section.settings.custom_block_author_font %}
+      .vso-testimonials-cards__block-author { font-size: {{ section.settings.block_author_size_mobile }}px; }
+    {% endif %}
+
+    {% if custom_description_font %}
+      .vso-testimonials-cards__description {
+        font-size: {{ description_size_mobile }}px;
+      }
+    {% endif %}
+
+    .vso-testimonials-cards__block {
+      align-items: {{ blocks_alignment_mobile }};
+      text-align: {{ blocks_alignment_mobile }};
+    }
+
+    .vso-testimonials-cards__block-header-content {
+      align-items: {{ blocks_alignment_mobile }};
+    }
+
+    .vso-testimonials-cards__author-container {
+      justify-content: {{ blocks_justify_mobile }};
+    }
+
+    .vso-testimonials-cards__author-info {
+      {% if blocks_alignment_mobile == 'left' %}
+        flex: 1;
+      {% else %}
+        flex: 0;
+      {% endif %}
+    }
+
+    {% if section.settings.custom_product_title_font %}
+      .vso-testimonials-cards__product-title { font-size: {{ section.settings.product_title_size_mobile }}px; }
+    {% endif %}
+    {% if section.settings.custom_product_price_font %}
+      .vso-testimonials-cards__product-price { font-size: {{ section.settings.product_price_size_mobile }}px; }
+    {% endif %}
+    {% if section.settings.custom_product_subtitle_font %}
+      .vso-testimonials-cards__product-purchased { font-size: {{ section.settings.product_subtitle_size_mobile }}px; }
+    {% endif %}
+  }
+
+  .section-{{ section.id }} {
+    padding-top: {{ section.settings.padding_top_desktop }}px;
+    padding-bottom: {{ section.settings.padding_bottom_desktop }}px;
+    padding-left: 0;
+    padding-right: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  {% if section.settings.enable_advanced_settings %}
+    .section-{{ section.id }} {
+      padding-left: {{ section.settings.padding_horizontal_desktop }}px;
+      padding-right: {{ section.settings.padding_horizontal_desktop }}px;
+    }
+  {% endif %}
+
+  .section-{{ section.id }}-settings {
+    margin: 0 auto;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  @media screen and (max-width: 749px) {
+    .section-{{ section.id }} {
+      padding-top: {{ section.settings.padding_top_mobile }}px;
+      padding-bottom: {{ section.settings.padding_bottom_mobile }}px;
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+
+  {% if section.settings.enable_advanced_settings %}
+    @media screen and (max-width: 749px) {
+      .section-{{ section.id }} {
+        padding-left: {{ section.settings.padding_horizontal_mobile }}px;
+        padding-right: {{ section.settings.padding_horizontal_mobile }}px;
+      }
+    }
+  {% endif %}
+
+  .vso-testimonials-cards__nav-prev,
+  .vso-testimonials-cards__nav-next {
+    width: {{ section.settings.nav_arrow_size }}px;
+    height: {{ section.settings.nav_arrow_size }}px;
+    background-color: {{ section.settings.nav_arrow_bg_color }};
+    border: {{ section.settings.nav_arrow_border_width }}px solid {{ section.settings.nav_arrow_border_color }};
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    {% if section.settings.nav_arrow_shadow_enable %}
+      box-shadow: {{ section.settings.nav_arrow_shadow_color | color_modify: 'alpha', 0.24 }} 0px 3px 8px;
+    {% endif %}
+  }
+
+  .vso-testimonials-cards__nav-prev svg,
+  .vso-testimonials-cards__nav-next svg {
+    width: {{ section.settings.nav_arrow_size | times: 0.4 | round: 0 }}px;
+    height: {{ section.settings.nav_arrow_size | times: 0.4 | round: 0 }}px;
+    color: {{ section.settings.nav_arrow_icon_color }};
+    transition: color 0.3s ease;
+  }
+
+  .vso-testimonials-cards__nav-prev:hover,
+  .vso-testimonials-cards__nav-next:hover {
+    border-color: {{ section.settings.nav_arrow_border_color | color_darken: 10 }};
+    {% if section.settings.nav_arrow_shadow_enable %}
+      box-shadow: {{ section.settings.nav_arrow_shadow_color | color_modify: 'alpha', 0.32 }} 0px 4px 12px;
+    {% endif %}
+  }
+
+  .vso-testimonials-cards__nav-prev:hover svg,
+  .vso-testimonials-cards__nav-next:hover svg {
+    color: {{ section.settings.nav_arrow_icon_color | color_darken: 20 }};
+  }
+
+  .vso-testimonials-cards__nav-prev.swiper-button-disabled,
+  .vso-testimonials-cards__nav-next.swiper-button-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .vso-testimonials-cards__navigation-mobile {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    gap: {{ section.settings.nav_arrow_gap }}px;
+  }
+
+  @media screen and (max-width: 749px) {
+    .vso-testimonials-cards__navigation-mobile {
+      {% if section.settings.show_navigation_mobile %}
+        display: flex;
+      {% else %}
+        display: none;
+      {% endif %}
+      width: 100%;
+      justify-content: center;
+      align-items: center;
+      margin-left: 0;
+      margin-right: 0;
+      margin-top: {{ section.settings.nav_arrow_top_spacing_mobile }}px;
+    }
+  }
+
+  .vso-testimonials-cards__nav-prev-mobile,
+  .vso-testimonials-cards__nav-next-mobile {
+    width: {{ section.settings.nav_arrow_size }}px;
+    height: {{ section.settings.nav_arrow_size }}px;
+    background-color: {{ section.settings.nav_arrow_bg_color }};
+    border: {{ section.settings.nav_arrow_border_width }}px solid {{ section.settings.nav_arrow_border_color }};
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    {% if section.settings.nav_arrow_shadow_enable %}
+      box-shadow: {{ section.settings.nav_arrow_shadow_color | color_modify: 'alpha', 0.24 }} 0px 3px 8px;
+    {% endif %}
+  }
+
+  .vso-testimonials-cards__nav-prev-mobile svg,
+  .vso-testimonials-cards__nav-next-mobile svg {
+    width: {{ section.settings.nav_arrow_size | times: 0.4 | round: 0 }}px;
+    height: {{ section.settings.nav_arrow_size | times: 0.4 | round: 0 }}px;
+    color: {{ section.settings.nav_arrow_icon_color }};
+    transition: color 0.3s ease;
+  }
+
+  .vso-testimonials-cards__nav-prev-mobile:hover,
+  .vso-testimonials-cards__nav-next-mobile:hover {
+    border-color: {{ section.settings.nav_arrow_border_color | color_darken: 10 }};
+    {% if section.settings.nav_arrow_shadow_enable %}
+      box-shadow: {{ section.settings.nav_arrow_shadow_color | color_modify: 'alpha', 0.32 }} 0px 4px 12px;
+    {% endif %}
+  }
+
+  .vso-testimonials-cards__nav-prev-mobile:hover svg,
+  .vso-testimonials-cards__nav-next-mobile:hover svg {
+    color: {{ section.settings.nav_arrow_icon_color | color_darken: 20 }};
+  }
+
+  .vso-testimonials-cards__nav-prev-mobile.swiper-button-disabled,
+  .vso-testimonials-cards__nav-next-mobile.swiper-button-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+{%- endstyle -%}
+
+<style>
+#shopify-section-{{ section.id }} {
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+  margin-top: {{ section.settings.margin_top_mobile }}px;
+  margin-bottom: {{ section.settings.margin_bottom_mobile }}px;
+  padding-left: 0;
+  padding-right: 0;
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
+@media screen and (max-width: 749px) {
+  #shopify-section-{{ section.id }} {
+    overflow-x: clip;
+    overflow-y: visible;
+    {% if section.settings.section_bg_type == 'gradient' %}
+      background: {{ section.settings.section_bg_gradient }};
+    {% else %}
+      background-color: {{ section.settings.section_bg_color }};
+    {% endif %}
+  }
+}
+
+@media screen and (min-width: 750px) {
+  #shopify-section-{{ section.id }} {
+    margin-top: {{ section.settings.margin_top_desktop }}px;
+    margin-bottom: {{ section.settings.margin_bottom_desktop }}px;
+    {% if section.settings.full_width_desktop %}
+      {% if section.settings.section_bg_type == 'gradient' %}
+        background: {{ section.settings.section_bg_gradient }};
+      {% else %}
+        background-color: {{ section.settings.section_bg_color }};
+      {% endif %}
+    {% endif %}
+  }
+}
+
+#shopify-section-{{ section.id }}::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 100vw;
+  height: 100%;
+  transform: translateX(-50%);
+  background: {% if section.settings.section_bg_type == 'solid' %}{{ section.settings.section_bg_color }}{% else %}{{ section.settings.section_bg_gradient }}{% endif %};
+  z-index: -1;
+}
+
+{% unless section.settings.full_width_desktop %}
+  @media screen and (min-width: 750px) {
+    #shopify-section-{{ section.id }}::before { display: none; }
+
+    #shopify-section-{{ section.id }} .section-{{ section.id }} {
+      {% if section.settings.section_bg_type == 'gradient' %}
+        background: {{ section.settings.section_bg_gradient }};
+      {% else %}
+        background-color: {{ section.settings.section_bg_color }};
+      {% endif %}
+      border-radius: {{ section.settings.section_border_radius }}px;
+      {% if section.settings.enable_advanced_settings %}
+        padding-left: {{ section.settings.padding_horizontal_desktop }}px;
+        padding-right: {{ section.settings.padding_horizontal_desktop }}px;
+      {% else %}
+        padding-left: 40px;
+        padding-right: 40px;
+      {% endif %}
+    }
+  }
+{% endunless %}
+</style>
+
+	<style>
+	  #shopify-section-{{ section.id }} .section-{{ section.id }}-settings {
+	    max-width: var(--page-content-width, var(--page-width, 1440px));
+	    margin-left: auto;
+	    margin-right: auto;
+	    box-sizing: border-box;
+	  }
+
+	  {% if section.settings.enable_advanced_settings %}
+	    #shopify-section-{{ section.id }} .section-{{ section.id }}-settings {
+	      max-width: min({{ content_width }}rem, 100%);
+	    }
+	  {% endif %}
+	</style>
+
+{%- if request.design_mode -%}
+  <div class="vso-require-script">
+    <div class="vso-warning">
+      <div class="vso-warning__left">
+        <div class="vso-warning__badge">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+            <path d="M10 6.75a.75.75 0 0 1 .75.75v3.5a.75.75 0 1 1-1.5 0v-3.5a.75.75 0 0 1 .75-.75Z" fill="currentColor"/>
+            <path d="M11 13.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z" fill="currentColor"/>
+            <path fill-rule="evenodd" d="M10 3.5c-1.045 0-1.784.702-2.152 1.447a449.26 449.26 0 0 1-2.005 3.847l-.028.052a403.426 403.426 0 0 0-2.008 3.856c-.372.752-.478 1.75.093 2.614.57.863 1.542 1.184 2.464 1.184h7.272c.922 0 1.895-.32 2.464-1.184.57-.864.465-1.862.093-2.614-.21-.424-1.113-2.147-2.004-3.847l-.032-.061a429.497 429.497 0 0 1-2.005-3.847c-.368-.745-1.107-1.447-2.152-1.447Zm-.808 2.112c.404-.816 1.212-.816 1.616 0 .202.409 1.112 2.145 2.022 3.88a418.904 418.904 0 0 1 2.018 3.875c.404.817 0 1.633-1.212 1.633h-7.272c-1.212 0-1.617-.816-1.212-1.633.202-.408 1.113-2.147 2.023-3.883a421.932 421.932 0 0 0 2.017-3.872Z" fill="currentColor"/>
+          </svg>
+          <span>Action Required</span>
+        </div>
+        <h2 class="vso-warning__title">App Embeds Are Disabled</h2>
+        <p class="vso-warning__subtitle">Enable the Versio Sections app embed in your theme editor to use this section.</p>
+        <div class="vso-warning__steps">
+          <div class="vso-warning__step">
+            <span class="vso-warning__step-number">1</span>
+            <span>Click the <strong>App embeds</strong> icon (puzzle piece) at the top of the left sidebar</span>
+          </div>
+          <div class="vso-warning__step">
+            <span class="vso-warning__step-number">2</span>
+            <span>Toggle on <strong>Versio Sections</strong></span>
+          </div>
+          <div class="vso-warning__step">
+            <span class="vso-warning__step-number">3</span>
+            <span>Click <strong>Save</strong> in the top right</span>
+          </div>
+        </div>
+      </div>
+      <div class="vso-warning__image">
+        <img src="https://cdn.shopify.com/s/files/1/0970/2880/0861/files/1.png?v=1773296966" alt="How to enable app embeds" loading="lazy" width="640" height="880" />
+      </div>
+    </div>
+  </div>
+  <style>
+    .vso-hidden {
+      display: none !important;
+      height: 0 !important;
+      overflow: hidden !important;
+      visibility: hidden !important;
+      width: 0 !important;
+      opacity: 0 !important;
+    }
+    .vso-require-script .vso-warning {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 24px auto;
+      background: #ffffff;
+      border: 1px solid #e2e2e2;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+    .vso-warning__left {
+      flex: 1;
+      min-width: 0;
+    }
+    .vso-warning__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fef2f2;
+      color: #dc2626;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 5px 12px;
+      border-radius: 100px;
+      margin-bottom: 14px;
+      border: 1px solid #fecaca;
+    }
+    .vso-warning__badge svg {
+      flex-shrink: 0;
+    }
+    .vso-warning__title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin: 0 0 6px 0;
+      line-height: 1.3;
+    }
+    .vso-warning__subtitle {
+      font-size: 13px;
+      color: #777;
+      margin: 0 0 20px 0;
+      line-height: 1.5;
+      max-width: 340px;
+    }
+    .vso-warning__steps {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .vso-warning__step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: #444;
+      line-height: 1.4;
+    }
+    .vso-warning__step strong {
+      color: #1a1a1a;
+    }
+    .vso-warning__step-number {
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      background: #f3f3f3;
+      color: #555;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e0e0e0;
+    }
+    .vso-warning__image {
+      flex: 1;
+      min-width: 0;
+    }
+    .vso-warning__image img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+    @media screen and (max-width: 749px) {
+      .vso-require-script .vso-warning {
+        margin: 16px;
+        padding: 24px 20px;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .vso-warning__title {
+        font-size: 18px;
+      }
+      .vso-warning__subtitle {
+        max-width: none;
+      }
+      .vso-warning__image {
+        flex: none;
+        max-width: 100%;
+      }
+    }
+  </style>
+{%- endif -%}
+
+
+<div class="section-{{ section.id }} vso-node vd-l vso-hidden">
+<div class="section-{{ section.id }}-settings">
+  <div class="vso-testimonials-cards" id="Testimonials-Cards-{{ section.id }}">
+    <div class="vso-testimonials-cards__header">
+      <div class="vso-testimonials-cards__header-content">
+        {% if rating_block != blank %}
+          <div class="vso-testimonials-cards__rating" {{ rating_block.shopify_attributes }}>
+            <span class="vso-testimonials-cards__rating-stars" aria-hidden="true">
+              {%- liquid
+                assign rating = header_star_rating | default: 5
+                assign full_stars = rating | floor
+                assign half_star = rating | modulo: 1
+                assign empty_stars = 5 | minus: full_stars
+                if half_star >= 0.5
+                  assign empty_stars = empty_stars | minus: 1
+                endif
+              -%}
+
+              {% for i in (1..full_stars) %}
+                <span class="star star-filled">
+                  <svg viewBox="-2.4 -2.4 28.80 28.80" xmlns="http://www.w3.org/2000/svg" fill="none" width="1em" height="1em" style="display:block;">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0" transform="translate(1.2,1.2), scale(0.9)">
+                      <rect x="-2.4" y="-2.4" width="28.80" height="28.80" rx="0" fill="{{ rating_star_background_color }}" strokewidth="0"></rect>
+                    </g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <rect x="0" fill="none" width="24" height="24"></rect>
+                      <g>
+                        <path d="M12 2l2.582 6.953L22 9.257l-5.822 4.602L18.18 21 12 16.89 5.82 21l2.002-7.14L2 9.256l7.418-.304" fill="currentColor"></path>
+                      </g>
+                    </g>
+                  </svg>
+                </span>
+              {% endfor %}
+
+              {% if half_star >= 0.5 %}
+                <span class="star star-half">
+                  <svg viewBox="-2.4 -2.4 28.80 28.80" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em">
+                    <defs>
+                      <linearGradient id="half-rating-{{ section.id }}" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="50%" style="stop-color:{{ rating_star_background_color }};stop-opacity:1" />
+                        <stop offset="50%" style="stop-color:{{ rating_star_empty_background_color }};stop-opacity:1" />
+                      </linearGradient>
+                    </defs>
+                    <g id="SVGRepo_bgCarrier" stroke-width="0" transform="translate(1.2,1.2), scale(0.9)">
+                      <rect x="-2.4" y="-2.4" width="28.80" height="28.80" rx="0" fill="url(#half-rating-{{ section.id }})" strokewidth="0"></rect>
+                    </g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <rect x="0" fill="none" width="24" height="24"></rect>
+                      <g>
+                        <path d="M12 2l2.582 6.953L22 9.257l-5.822 4.602L18.18 21 12 16.89 5.82 21l2.002-7.14L2 9.256l7.418-.304" fill="currentColor"></path>
+                      </g>
+                    </g>
+                  </svg>
+                </span>
+              {% endif %}
+
+              {% for i in (1..empty_stars) %}
+                <span class="star star-empty">
+                  <svg viewBox="-2.4 -2.4 28.80 28.80" xmlns="http://www.w3.org/2000/svg" fill="none" width="1em" height="1em" style="display:block;">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0" transform="translate(1.2,1.2), scale(0.9)">
+                      <rect x="-2.4" y="-2.4" width="28.80" height="28.80" rx="0" fill="{{ rating_star_empty_background_color }}" strokewidth="0"></rect>
+                    </g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <rect x="0" fill="none" width="24" height="24"></rect>
+                      <g>
+                        <path d="M12 2l2.582 6.953L22 9.257l-5.822 4.602L18.18 21 12 16.89 5.82 21l2.002-7.14L2 9.256l7.418-.304" fill="currentColor"></path>
+                      </g>
+                    </g>
+                  </svg>
+                </span>
+              {% endfor %}
+            </span>
+            {% if custom_rating_header_font %}
+              <p class="vso-testimonials-cards__rating-text">{{ rating_header_text }}</p>
+            {% else %}
+              <{{ rating_header_as }} class="vso-testimonials-cards__rating-text">{{ rating_header_text }}</{{ rating_header_as }}>
+            {% endif %}
+          </div>
+        {% endif %}
+        {% if title_text != blank and title_block != blank %}
+          {%- liquid
+            assign title_parts = title_text | split: '_'
+            assign processed_title = ''
+            assign is_highlighted = false
+            for part in title_parts
+              if is_highlighted
+                capture highlighted_part
+                  echo '<span class="vso-testimonials-cards__title-highlight-' | append: section.id | append: '">' | append: part | append: '</span>'
+                endcapture
+                assign processed_title = processed_title | append: highlighted_part
+                assign is_highlighted = false
+              else
+                assign processed_title = processed_title | append: part
+                assign is_highlighted = true
+              endif
+            endfor
+          -%}
+          {% if custom_title_font %}
+            <h2 class="vso-testimonials-cards__title" {{ title_block.shopify_attributes }}>
+              {{ processed_title }}
+            </h2>
+          {% else %}
+            <{{ title_as }} class="vso-testimonials-cards__title" {{ title_block.shopify_attributes }}>
+              {{ processed_title }}
+            </{{ title_as }}>
+          {% endif %}
+        {% endif %}
+        
+        {% if description_text != blank and description_block != blank %}
+          {% if custom_description_font %}
+            <p class="vso-testimonials-cards__description" {{ description_block.shopify_attributes }}>
+              {{ description_text }}
+            </p>
+          {% else %}
+            <{{ description_as }} class="vso-testimonials-cards__description" {{ description_block.shopify_attributes }}>
+              {{ description_text }}
+            </{{ description_as }}>
+          {% endif %}
+        {% endif %}
+      </div>
+      
+      <div class="vso-testimonials-cards__navigation">
+        <div class="vso-testimonials-cards__nav-prev">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform: scaleX(-1);">
+            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+            <g id="SVGRepo_iconCarrier">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"></path>
+            </g>
+          </svg>
+        </div>
+        <div class="vso-testimonials-cards__nav-next">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+            <g id="SVGRepo_iconCarrier">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"></path>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    {% if testimonial_blocks.size > 0 %}
+      <div class="swiper vso-testimonials-cards__swiper">
+        <div class="swiper-wrapper">
+          {% for block in testimonial_blocks %}
+            <div class="swiper-slide vso-testimonials-cards__slide">
+              <div class="vso-testimonials-cards__block" {{ block.shopify_attributes }}>
+                {% if block.settings.card_image != blank %}
+                  <div class="vso-testimonials-cards__block-image">
+                    {{ block.settings.card_image | image_url: width: 600 | image_tag: loading: 'lazy', class: 'vso-testimonials-cards__image' }}
+                  </div>
+                {% endif %}
+                <div class="vso-testimonials-cards__block-header-content">
+                  <div class="vso-testimonials-cards__meta-row">
+                    <div class="vso-testimonials-cards__stars">
+                    {%- liquid
+                      assign rating = block.settings.star_rating
+                      assign full_stars = rating | floor
+                      assign half_star = rating | modulo: 1
+                      assign empty_stars = 5 | minus: full_stars
+                      if half_star >= 0.5
+                        assign empty_stars = empty_stars | minus: 1
+                      endif
+                    -%}
+
+                    {% for i in (1..full_stars) %}
+                      <span class="star star-filled">
+                        <svg viewBox="-2.4 -2.4 28.80 28.80" xmlns="http://www.w3.org/2000/svg" fill="{{ section.settings.star_color }}" width="1em" height="1em" style="display:block;">
+                          <g id="SVGRepo_bgCarrier" stroke-width="0" transform="translate(1.2,1.2), scale(0.9)">
+                            <rect x="-2.4" y="-2.4" width="28.80" height="28.80" rx="0" fill="{{ section.settings.star_background_color }}" strokewidth="0"></rect>
+                          </g>
+                          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                          <g id="SVGRepo_iconCarrier">
+                            <rect x="0" fill="none" width="24" height="24"></rect>
+                            <g>
+                              <path d="M12 2l2.582 6.953L22 9.257l-5.822 4.602L18.18 21 12 16.89 5.82 21l2.002-7.14L2 9.256l7.418-.304"></path>
+                            </g>
+                          </g>
+                        </svg>
+                      </span>
+                    {% endfor %}
+
+                    {% if half_star >= 0.5 %}
+                      <span class="star star-half">
+                        <svg viewBox="-2.4 -2.4 28.80 28.80" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em">
+                          <defs>
+                            <linearGradient id="half-testimonial-{{ block.id }}" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="50%" style="stop-color:{{ section.settings.star_background_color }};stop-opacity:1" />
+                              <stop offset="50%" style="stop-color:{{ section.settings.star_empty_color }};stop-opacity:1" />
+                            </linearGradient>
+                          </defs>
+                          <g id="SVGRepo_bgCarrier" stroke-width="0" transform="translate(1.2,1.2), scale(0.9)">
+                            <rect x="-2.4" y="-2.4" width="28.80" height="28.80" rx="0" fill="url(#half-testimonial-{{ block.id }})" strokewidth="0"></rect>
+                          </g>
+                          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                          <g id="SVGRepo_iconCarrier">
+                            <rect x="0" fill="none" width="24" height="24"></rect>
+                            <g>
+                              <path d="M12 2l2.582 6.953L22 9.257l-5.822 4.602L18.18 21 12 16.89 5.82 21l2.002-7.14L2 9.256l7.418-.304" fill="{{ section.settings.star_color }}"></path>
+                            </g>
+                          </g>
+                        </svg>
+                      </span>
+                    {% endif %}
+
+                    {% for i in (1..empty_stars) %}
+                      <span class="star star-empty">
+                        <svg viewBox="-2.4 -2.4 28.80 28.80" xmlns="http://www.w3.org/2000/svg" fill="{{ section.settings.star_color }}" width="1em" height="1em" style="display:block;">
+                          <g id="SVGRepo_bgCarrier" stroke-width="0" transform="translate(1.2,1.2), scale(0.9)">
+                            <rect x="-2.4" y="-2.4" width="28.80" height="28.80" rx="0" fill="{{ section.settings.star_empty_color }}" strokewidth="0"></rect>
+                          </g>
+                          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                          <g id="SVGRepo_iconCarrier">
+                            <rect x="0" fill="none" width="24" height="24"></rect>
+                            <g>
+                              <path d="M12 2l2.582 6.953L22 9.257l-5.822 4.602L18.18 21 12 16.89 5.82 21l2.002-7.14L2 9.256l7.418-.304"></path>
+                            </g>
+                          </g>
+                        </svg>
+                      </span>
+                    {% endfor %}
+                    </div>
+
+                    {% if block.settings.author != blank %}
+                      {%- assign block_author_tag = section.settings.block_author_as | default: 'p' -%}
+                      <{{ block_author_tag }} class="vso-testimonials-cards__meta-author">
+                        {{ block.settings.author }}
+                        {% if block.settings.show_verified and block.settings.verified_text != blank %}
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="{{ block.settings.verified_text | strip_html | escape }}">
+                            <g id="SVGRepo_iconCarrier">
+                              <path fill-rule="evenodd" clip-rule="evenodd" d="M21.007 8.27C22.194 9.125 23 10.45 23 12c0 1.55-.806 2.876-1.993 3.73.24 1.442-.134 2.958-1.227 4.05-1.095 1.095-2.61 1.459-4.046 1.225C14.883 22.196 13.546 23 12 23c-1.55 0-2.878-.807-3.731-1.996-1.438.235-2.954-.128-4.05-1.224-1.095-1.095-1.459-2.611-1.217-4.05C1.816 14.877 1 13.551 1 12s.816-2.878 2.002-3.73c-.242-1.439.122-2.955 1.218-4.05 1.093-1.094 2.61-1.467 4.057-1.227C9.125 1.804 10.453 1 12 1c1.545 0 2.88.803 3.732 1.993 1.442-.24 2.956.135 4.048 1.227 1.093 1.092 1.468 2.608 1.227 4.05Z" fill="{{ section.settings.verified_icon_color }}"></path>
+                              <path fill-rule="evenodd" clip-rule="evenodd" d="M16.581 8.186a1 1 0 0 1 .233 1.395l-5 7a1 1 0 0 1-1.521.126l-3-3a1 1 0 0 1 1.414-1.414l2.165 2.165 4.314-6.04a1 1 0 0 1 1.395-.232Z" fill="{{ section.settings.verified_check_color }}"></path>
+                            </g>
+                          </svg>
+                        {% endif %}
+                      </{{ block_author_tag }}>
+                    {% endif %}
+                  </div>
+
+                  {% if block.settings.title != blank %}
+                    {%- assign block_title_tag = section.settings.block_title_as | default: 'h3' -%}
+                    <{{ block_title_tag }} class="vso-testimonials-cards__block-title">
+                      {{ block.settings.title }}
+                    </{{ block_title_tag }}>
+                  {% endif %}
+                </div>
+
+                {% if block.settings.description != blank %}
+                  {%- assign block_desc_tag = section.settings.block_description_as | default: 'p' -%}
+                  <{{ block_desc_tag }} class="vso-testimonials-cards__block-description">
+                    {{ block.settings.description }}
+                  </{{ block_desc_tag }}>
+                {% endif %}
+
+                
+
+                {% if block.settings.product != blank %}
+                  {%- assign prod = block.settings.product -%}
+                  {%- assign product_title = block.settings.product_title_override | default: prod.title -%}
+                  {%- assign price = prod.price -%}
+                  {%- assign compare_at = prod.compare_at_price_max | default: prod.compare_at_price -%}
+                  <a class="vso-testimonials-cards__product" href="{{ prod.url }}">
+                    <span class="vso-testimonials-cards__product-image">
+                      {% if block.settings.product_image_override != blank %}
+                        {{ block.settings.product_image_override | image_url: width: 120 | image_tag: loading: 'lazy' }}
+                      {% elsif prod.featured_image %}
+                        {{ prod.featured_image | image_url: width: 120 | image_tag: loading: 'lazy' }}
+                      {% endif %}
+                    </span>
+                    <span class="vso-testimonials-cards__product-meta">
+                      {%- assign product_title_tag = section.settings.product_title_as | default: 'p' -%}
+                      <{{ product_title_tag }} class="vso-testimonials-cards__product-title">{{ product_title }}</{{ product_title_tag }}>
+                      {% if section.settings.show_product_price %}
+                        {%- assign product_price_tag = section.settings.product_price_as | default: 'p' -%}
+                        <{{ product_price_tag }} class="vso-testimonials-cards__product-price">
+                          <span>{{ price | money }}</span>
+                          {% if compare_at and compare_at > price %}
+                            <s class="vso-testimonials-cards__product-compare">{{ compare_at | money }}</s>
+                          {% endif %}
+                        </{{ product_price_tag }}>
+                      {% endif %}
+                      {% if block.settings.show_subtitle and block.settings.subtitle_text != blank %}
+                        {%- assign product_subtitle_tag = section.settings.product_subtitle_as | default: 'p' -%}
+                        <{{ product_subtitle_tag }} class="vso-testimonials-cards__product-purchased">
+                          {{ block.settings.subtitle_text }}
+                        </{{ product_subtitle_tag }}>
+                      {% endif %}
+                    </span>
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+
+          {% for block in testimonial_blocks %}
+            <div class="swiper-slide vso-testimonials-cards__slide">
+              <div class="vso-testimonials-cards__block">
+                {% if block.settings.card_image != blank %}
+                  <div class="vso-testimonials-cards__block-image">
+                    {{ block.settings.card_image | image_url: width: 600 | image_tag: loading: 'lazy', class: 'vso-testimonials-cards__image' }}
+                  </div>
+                {% endif %}
+                <div class="vso-testimonials-cards__block-header-content">
+                  <div class="vso-testimonials-cards__meta-row">
+                    <div class="vso-testimonials-cards__stars">
+                    {%- liquid
+                      assign rating = block.settings.star_rating
+                      assign full_stars = rating | floor
+                      assign half_star = rating | modulo: 1
+                      assign empty_stars = 5 | minus: full_stars
+                      if half_star >= 0.5
+                        assign empty_stars = empty_stars | minus: 1
+                      endif
+                    -%}
+
+                    {% for i in (1..full_stars) %}
+                      <span class="star star-filled">
+                        <svg viewBox="-2.4 -2.4 28.80 28.80" xmlns="http://www.w3.org/2000/svg" fill="{{ section.settings.star_color }}" width="1em" height="1em">
+                          <g id="SVGRepo_bgCarrier" stroke-width="0" transform="translate(1.2,1.2), scale(0.9)">
+                            <rect x="-2.4" y="-2.4" width="28.80" height="28.80" rx="0" fill="{{ section.settings.star_background_color }}" strokewidth="0"></rect>
+                          </g>
+                          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                          <g id="SVGRepo_iconCarrier">
+                            <rect x="0" fill="none" width="24" height="24"></rect>
+                            <g>
+                              <path d="M12 2l2.582 6.953L22 9.257l-5.822 4.602L18.18 21 12 16.89 5.82 21l2.002-7.14L2 9.256l7.418-.304"></path>
+                            </g>
+                          </g>
+                        </svg>
+                      </span>
+                    {% endfor %}
+
+                    {% if half_star >= 0.5 %}
+                      <span class="star star-half">
+                        <svg viewBox="-2.4 -2.4 28.80 28.80" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em">
+                          <defs>
+                            <linearGradient id="half-testimonial-{{ block.id }}-dup" x1="0%" y1="0%" x2="100%" y2="0%">
+                              <stop offset="50%" style="stop-color:{{ section.settings.star_background_color }};stop-opacity:1" />
+                              <stop offset="50%" style="stop-color:{{ section.settings.star_empty_color }};stop-opacity:1" />
+                            </linearGradient>
+                          </defs>
+                          <g id="SVGRepo_bgCarrier" stroke-width="0" transform="translate(1.2,1.2), scale(0.9)">
+                            <rect x="-2.4" y="-2.4" width="28.80" height="28.80" rx="0" fill="url(#half-testimonial-{{ block.id }}-dup)" strokewidth="0"></rect>
+                          </g>
+                          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                          <g id="SVGRepo_iconCarrier">
+                            <rect x="0" fill="none" width="24" height="24"></rect>
+                            <g>
+                              <path d="M12 2l2.582 6.953L22 9.257l-5.822 4.602L18.18 21 12 16.89 5.82 21l2.002-7.14L2 9.256l7.418-.304" fill="{{ section.settings.star_color }}"></path>
+                            </g>
+                          </g>
+                        </svg>
+                      </span>
+                    {% endif %}
+
+                    {% for i in (1..empty_stars) %}
+                      <span class="star star-empty">
+                        <svg viewBox="-2.4 -2.4 28.80 28.80" xmlns="http://www.w3.org/2000/svg" fill="{{ section.settings.star_color }}" width="1em" height="1em">
+                          <g id="SVGRepo_bgCarrier" stroke-width="0" transform="translate(1.2,1.2), scale(0.9)">
+                            <rect x="-2.4" y="-2.4" width="28.80" height="28.80" rx="0" fill="{{ section.settings.star_empty_color }}" strokewidth="0"></rect>
+                          </g>
+                          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                          <g id="SVGRepo_iconCarrier">
+                            <rect x="0" fill="none" width="24" height="24"></rect>
+                            <g>
+                              <path d="M12 2l2.582 6.953L22 9.257l-5.822 4.602L18.18 21 12 16.89 5.82 21l2.002-7.14L2 9.256l7.418-.304"></path>
+                            </g>
+                          </g>
+                        </svg>
+                      </span>
+                    {% endfor %}
+                    </div>
+
+                    {% if block.settings.author != blank %}
+                      {%- assign block_author_tag = section.settings.block_author_as | default: 'p' -%}
+                      <{{ block_author_tag }} class="vso-testimonials-cards__meta-author">
+                        {{ block.settings.author }}
+                        {% if block.settings.show_verified and block.settings.verified_text != blank %}
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="{{ block.settings.verified_text | strip_html | escape }}">
+                            <g id="SVGRepo_iconCarrier">
+                              <path fill-rule="evenodd" clip-rule="evenodd" d="M21.007 8.27C22.194 9.125 23 10.45 23 12c0 1.55-.806 2.876-1.993 3.73.24 1.442-.134 2.958-1.227 4.05-1.095 1.095-2.61 1.459-4.046 1.225C14.883 22.196 13.546 23 12 23c-1.55 0-2.878-.807-3.731-1.996-1.438.235-2.954-.128-4.05-1.224-1.095-1.095-1.459-2.611-1.217-4.05C1.816 14.877 1 13.551 1 12s.816-2.878 2.002-3.73c-.242-1.439.122-2.955 1.218-4.05 1.093-1.094 2.61-1.467 4.057-1.227C9.125 1.804 10.453 1 12 1c1.545 0 2.88.803 3.732 1.993 1.442-.24 2.956.135 4.048 1.227 1.093 1.092 1.468 2.608 1.227 4.05Z" fill="{{ section.settings.verified_icon_color }}"></path>
+                              <path fill-rule="evenodd" clip-rule="evenodd" d="M16.581 8.186a1 1 0 0 1 .233 1.395l-5 7a1 1 0 0 1-1.521.126l-3-3a1 1 0 0 1 1.414-1.414l2.165 2.165 4.314-6.04a1 1 0 0 1 1.395-.232Z" fill="{{ section.settings.verified_check_color }}"></path>
+                            </g>
+                          </svg>
+                        {% endif %}
+                      </{{ block_author_tag }}>
+                    {% endif %}
+                  </div>
+
+                  {% if block.settings.title != blank %}
+                    {%- assign block_title_tag = section.settings.block_title_as | default: 'h3' -%}
+                    <{{ block_title_tag }} class="vso-testimonials-cards__block-title">
+                      {{ block.settings.title }}
+                    </{{ block_title_tag }}>
+                  {% endif %}
+                </div>
+
+                {% if block.settings.description != blank %}
+                  {%- assign block_desc_tag = section.settings.block_description_as | default: 'p' -%}
+                  <{{ block_desc_tag }} class="vso-testimonials-cards__block-description">
+                    {{ block.settings.description }}
+                  </{{ block_desc_tag }}>
+                {% endif %}
+
+                
+
+                {% if block.settings.product != blank %}
+                  {%- assign prod = block.settings.product -%}
+                  {%- assign product_title = block.settings.product_title_override | default: prod.title -%}
+                  {%- assign price = prod.price -%}
+                  {%- assign compare_at = prod.compare_at_price_max | default: prod.compare_at_price -%}
+                  <a class="vso-testimonials-cards__product" href="{{ prod.url }}">
+                    <span class="vso-testimonials-cards__product-image">
+                      {% if block.settings.product_image_override != blank %}
+                        {{ block.settings.product_image_override | image_url: width: 120 | image_tag: loading: 'lazy' }}
+                      {% elsif prod.featured_image %}
+                        {{ prod.featured_image | image_url: width: 120 | image_tag: loading: 'lazy' }}
+                      {% endif %}
+                    </span>
+                    <span class="vso-testimonials-cards__product-meta">
+                      {%- assign product_title_tag = section.settings.product_title_as | default: 'p' -%}
+                      <{{ product_title_tag }} class="vso-testimonials-cards__product-title">{{ product_title }}</{{ product_title_tag }}>
+                      {% if section.settings.show_product_price %}
+                        {%- assign product_price_tag = section.settings.product_price_as | default: 'p' -%}
+                        <{{ product_price_tag }} class="vso-testimonials-cards__product-price">
+                          <span>{{ price | money }}</span>
+                          {% if compare_at and compare_at > price %}
+                            <s class="vso-testimonials-cards__product-compare">{{ compare_at | money }}</s>
+                          {% endif %}
+                        </{{ product_price_tag }}>
+                      {% endif %}
+                      {% if block.settings.show_subtitle and block.settings.subtitle_text != blank %}
+                        {%- assign product_subtitle_tag = section.settings.product_subtitle_as | default: 'p' -%}
+                        <{{ product_subtitle_tag }} class="vso-testimonials-cards__product-purchased">
+                          {{ block.settings.subtitle_text }}
+                        </{{ product_subtitle_tag }}>
+                      {% endif %}
+                    </span>
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="vso-testimonials-cards__navigation-mobile">
+        <div class="vso-testimonials-cards__nav-prev-mobile">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform: scaleX(-1);">
+            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+            <g id="SVGRepo_iconCarrier">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"></path>
+            </g>
+          </svg>
+        </div>
+        <div class="vso-testimonials-cards__nav-next-mobile">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+            <g id="SVGRepo_iconCarrier">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M8.29289 4.29289C8.68342 3.90237 9.31658 3.90237 9.70711 4.29289L16.7071 11.2929C17.0976 11.6834 17.0976 12.3166 16.7071 12.7071L9.70711 19.7071C9.31658 20.0976 8.68342 20.0976 8.29289 19.7071C7.90237 19.3166 7.90237 18.6834 8.29289 18.2929L14.5858 12L8.29289 5.70711C7.90237 5.31658 7.90237 4.68342 8.29289 4.29289Z" fill="currentColor"></path>
+            </g>
+          </svg>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
+
+<script defer>
+document.addEventListener('DOMContentLoaded', function() {
+const sectionEl = document.getElementById('shopify-section-{{ section.id }}');
+if (!sectionEl) return;
+
+const swiperEl = sectionEl.querySelector('.vso-testimonials-cards__swiper');
+if (!swiperEl) return;
+
+const testimonialsSwiper = new Swiper(swiperEl, {
+  loop: true,
+  slidesPerView: {{ section.settings.desktop_cards_per_view }},
+  spaceBetween: {{ desktop_blocks_gap }},
+  grabCursor: true,
+  speed: 600,
+  
+  {% if section.settings.enable_equal_height %}
+  watchSlidesProgress: true,
+  {% endif %}
+  
+  navigation: {
+    nextEl: sectionEl.querySelector('.vso-testimonials-cards__nav-next'),
+    prevEl: sectionEl.querySelector('.vso-testimonials-cards__nav-prev'),
+  },
+  
+  breakpoints: {
+    0: {
+      spaceBetween: {{ mobile_blocks_gap }},
+      centeredSlides: false,
+      slidesPerView: 'auto',
+      slidesOffsetBefore: 0,
+      slidesOffsetAfter: 60,
+    },
+    750: {
+      spaceBetween: {{ desktop_blocks_gap }},
+      centeredSlides: false,
+      slidesPerView: {{ section.settings.desktop_cards_per_view }},
+    }
+  }{% if section.settings.enable_equal_height %},
+  
+  on: {
+    init: function() {
+      setTimeout(() => {
+        this.updateSlidesClasses();
+        equalizeSlideHeights();
+      }, 100);
+    },
+    slideChangeTransitionEnd: function() {
+      equalizeSlideHeights();
+    }
+  }{% endif %}
+});
+
+{% if section.settings.enable_equal_height %}
+function equalizeSlideHeights() {
+  const slides = document.querySelectorAll('.vso-testimonials-cards__swiper .swiper-slide');
+  const blocks = document.querySelectorAll('.vso-testimonials-cards__swiper .vso-testimonials-cards__block');
+  
+  if (slides.length === 0 || blocks.length === 0) return;
+  
+  blocks.forEach(block => {
+    block.style.height = 'auto';
+  });
+  
+  let maxHeight = 0;
+  blocks.forEach(block => {
+    const height = block.offsetHeight;
+    if (height > maxHeight) {
+      maxHeight = height;
+    }
+  });
+  
+  blocks.forEach(block => {
+    block.style.height = maxHeight + 'px';
+  });
+}
+
+window.addEventListener('resize', function() {
+  setTimeout(equalizeSlideHeights, 100);
+});
+{% endif %}
+
+const mobileNavPrev = sectionEl.querySelector('.vso-testimonials-cards__nav-prev-mobile');
+const mobileNavNext = sectionEl.querySelector('.vso-testimonials-cards__nav-next-mobile');
+
+if (mobileNavPrev) {
+  mobileNavPrev.addEventListener('click', function() {
+    testimonialsSwiper.slidePrev();
+  });
+}
+
+if (mobileNavNext) {
+  mobileNavNext.addEventListener('click', function() {
+    testimonialsSwiper.slideNext();
+  });
+}
+});
+</script>
+
+{% schema %}
+{
+  "name": "VSO - Testimonials 11",
+  "tag": "section",
+  "class": "section",
+  "max_blocks": 13,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Section Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_advanced_settings",
+      "label": "Enable advanced settings",
+      "default": false,
+      "info": "Shows additional settings for spacing, layout, and typography."
+    },
+    {
+      "type": "range",
+      "id": "desktop_cards_per_view",
+      "min": 3,
+      "max": 6,
+      "step": 1,
+      "label": "Desktop cards per view",
+      "default": 4,
+      "info": "Number of testimonial cards visible at once on desktop"
+    },
+    {
+      "type": "header",
+      "content": "Layout Settings",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "range",
+      "id": "content_width",
+      "min": 30,
+      "max": 200,
+      "step": 2,
+      "unit": "rem",
+      "label": "Content max width",
+      "default": 120,
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_horizontal_desktop",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "label": "Desktop side spacing",
+      "default": 0,
+      "info": "Adds spacing on the left and right sides of this section on desktop.",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_horizontal_mobile",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "label": "Mobile side spacing",
+      "default": 0,
+      "info": "Adds spacing on the left and right sides of this section on mobile.",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "header",
+      "content": "Section Background"
+    },
+    {
+      "type": "select",
+      "id": "section_bg_type",
+      "label": "Background type",
+      "options": [
+        {
+          "value": "solid",
+          "label": "Solid color"
+        },
+        {
+          "value": "gradient",
+          "label": "Gradient"
+        }
+      ],
+      "default": "gradient"
+    },
+    {
+      "type": "color",
+      "id": "section_bg_color",
+      "label": "Background color",
+      "default": "#FFFFFF",
+      "visible_if": "{{ section.settings.section_bg_type == 'solid' }}"
+    },
+    {
+      "type": "color_background",
+      "id": "section_bg_gradient",
+      "label": "Background gradient",
+      "default": "linear-gradient(180deg, #F7F5FF 0%, #FFFFFF 100%)",
+      "visible_if": "{{ section.settings.section_bg_type == 'gradient' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width_desktop",
+      "label": "Full width on desktop",
+      "default": true,
+      "info": "Make section background full width on desktop"
+    },
+    {
+      "type": "range",
+      "id": "section_border_radius",
+      "label": "Desktop border radius",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "default": 12,
+      "visible_if": "{{ section.settings.full_width_desktop == false }}"
+    },
+    {
+      "type": "header",
+      "content": "Section Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_desktop",
+      "min": 0,
+      "max": 180,
+      "step": 4,
+      "unit": "px",
+      "label": "Desktop padding top",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_desktop",
+      "min": 0,
+      "max": 180,
+      "step": 4,
+      "unit": "px",
+      "label": "Desktop padding bottom",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Mobile padding top",
+      "default": 32
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Mobile padding bottom",
+      "default": 32
+    },
+    {
+      "type": "header",
+      "content": "Section Margin"
+    },
+    {
+      "type": "range",
+      "id": "margin_top_desktop",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Desktop margin top",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom_desktop",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Desktop margin bottom",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_top_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Mobile margin top",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Mobile margin bottom",
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "Header Alignment",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "select",
+      "id": "header_alignment_desktop",
+      "label": "Desktop header alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        }
+      ],
+      "default": "center",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "select",
+      "id": "header_alignment_mobile",
+      "label": "Mobile header alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        }
+      ],
+      "default": "center",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "header",
+      "content": "Card styling"
+    },
+    {
+      "type": "select",
+      "id": "card_content_alignment_desktop",
+      "label": "Desktop card content alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "left",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "select",
+      "id": "card_content_alignment_mobile",
+      "label": "Mobile card content alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "left",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "color",
+      "id": "block_background_color",
+      "label": "Card background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "block_padding",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "label": "Block padding",
+      "default": 16,
+      "info": "Inner spacing of each block",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "range",
+      "id": "block_border_radius",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "label": "Block border radius",
+      "default": 8,
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "range",
+      "id": "block_border_width",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "unit": "px",
+      "label": "Block border width",
+      "default": 1,
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "color",
+      "id": "block_border_color",
+      "label": "Block border color",
+      "default": "#e0e0e0",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_equal_height",
+      "label": "Enable equal height cards",
+      "default": false,
+      "info": "Makes all cards the same height regardless of content length"
+    },
+    {
+      "type": "header",
+      "content": "Card image"
+    },
+    {
+      "type": "range",
+      "id": "block_image_height_desktop",
+      "min": 100,
+      "max": 400,
+      "step": 10,
+      "unit": "px",
+      "label": "Desktop card image height",
+      "default": 200
+    },
+    {
+      "type": "range",
+      "id": "block_image_height_mobile",
+      "min": 80,
+      "max": 300,
+      "step": 10,
+      "unit": "px",
+      "label": "Mobile card image height",
+      "default": 150
+    },
+    {
+      "type": "range",
+      "id": "image_to_content_gap",
+      "min": 0,
+      "max": 32,
+      "step": 1,
+      "unit": "px",
+      "label": "Gap between image and content",
+      "default": 14,
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "header",
+      "content": "Verified badge"
+    },
+    {
+      "type": "color",
+      "id": "verified_pill_bg_color",
+      "label": "Verified pill background",
+      "default": "#F3F4F6"
+    },
+    {
+      "type": "color",
+      "id": "verified_icon_color",
+      "label": "Verified badge color",
+      "default": "#13BFFF"
+    },
+    {
+      "type": "color",
+      "id": "verified_check_color",
+      "label": "Verified check color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "range",
+      "id": "verified_icon_size",
+      "min": 12,
+      "max": 32,
+      "step": 1,
+      "unit": "px",
+      "label": "Verified icon size",
+      "default": 16
+    },
+    {
+      "type": "header",
+      "content": "Card Star Rating"
+    },
+    {
+      "type": "range",
+      "id": "star_size",
+      "min": 16,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "label": "Star size",
+      "default": 24
+    },
+    {
+      "type": "color",
+      "id": "star_color",
+      "label": "Star color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "star_background_color",
+      "label": "Star background color",
+      "default": "#05B67C"
+    },
+    {
+      "type": "color",
+      "id": "star_empty_color",
+      "label": "Star empty color",
+      "default": "#DFDFDF"
+    },
+    {
+      "type": "range",
+      "id": "stars_title_gap",
+      "min": 0,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Gap between stars and title",
+      "default": 8,
+      "info": "Controls the gap between the star rating and card title",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "header",
+      "content": "Card Title Typography"
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_block_title_font",
+      "label": "Enable custom font settings",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "block_title_as",
+      "label": "Render as",
+      "options": [
+        {
+          "value": "h2",
+          "label": "H2"
+        },
+        {
+          "value": "h3",
+          "label": "H3"
+        },
+        {
+          "value": "h4",
+          "label": "H4"
+        },
+        {
+          "value": "h5",
+          "label": "H5"
+        },
+        {
+          "value": "p",
+          "label": "Paragraph (p)"
+        }
+      ],
+      "default": "h3",
+      "visible_if": "{{ section.settings.custom_block_title_font == false }}"
+    },
+    {
+      "type": "font_picker",
+      "id": "block_title_font",
+      "label": "Font family",
+      "default": "helvetica_n4",
+      "visible_if": "{{ section.settings.custom_block_title_font }}"
+    },
+    {
+      "type": "range",
+      "id": "block_title_size_desktop",
+      "min": 14,
+      "max": 36,
+      "step": 1,
+      "unit": "px",
+      "label": "Desktop card title size",
+      "default": 20,
+      "visible_if": "{{ section.settings.custom_block_title_font }}"
+    },
+    {
+      "type": "range",
+      "id": "block_title_size_mobile",
+      "min": 12,
+      "max": 28,
+      "step": 1,
+      "unit": "px",
+      "label": "Mobile card title size",
+      "default": 18,
+      "visible_if": "{{ section.settings.custom_block_title_font }}"
+    },
+    {
+      "type": "range",
+      "id": "block_title_line_height",
+      "min": 50,
+      "max": 200,
+      "step": 10,
+      "unit": "%",
+      "label": "Line height",
+      "default": 120,
+      "visible_if": "{{ section.settings.custom_block_title_font }}"
+    },
+    {
+      "type": "range",
+      "id": "block_title_font_weight",
+      "min": 100,
+      "max": 900,
+      "step": 100,
+      "label": "Font weight",
+      "default": 600,
+      "visible_if": "{{ section.settings.custom_block_title_font and section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "color",
+      "id": "block_title_color",
+      "label": "Color",
+      "default": "#000000",
+      "visible_if": "{{ section.settings.custom_block_title_font }}"
+    },
+    {
+      "type": "header",
+      "content": "Card Description Typography"
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_block_description_font",
+      "label": "Enable custom font settings",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "block_description_as",
+      "label": "Render as",
+      "options": [
+        {
+          "value": "h2",
+          "label": "H2"
+        },
+        {
+          "value": "h3",
+          "label": "H3"
+        },
+        {
+          "value": "h4",
+          "label": "H4"
+        },
+        {
+          "value": "h5",
+          "label": "H5"
+        },
+        {
+          "value": "p",
+          "label": "Paragraph (p)"
+        }
+      ],
+      "default": "p",
+      "visible_if": "{{ section.settings.custom_block_description_font == false }}"
+    },
+    {
+      "type": "font_picker",
+      "id": "block_description_font",
+      "label": "Font family",
+      "default": "helvetica_n4",
+      "visible_if": "{{ section.settings.custom_block_description_font }}"
+    },
+    {
+      "type": "range",
+      "id": "block_description_size_desktop",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Desktop card description size",
+      "default": 16,
+      "visible_if": "{{ section.settings.custom_block_description_font }}"
+    },
+    {
+      "type": "range",
+      "id": "block_description_size_mobile",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Mobile card description size",
+      "default": 14,
+      "visible_if": "{{ section.settings.custom_block_description_font }}"
+    },
+    {
+      "type": "range",
+      "id": "block_description_line_height",
+      "min": 50,
+      "max": 200,
+      "step": 10,
+      "unit": "%",
+      "label": "Line height",
+      "default": 150,
+      "visible_if": "{{ section.settings.custom_block_description_font }}"
+    },
+    {
+      "type": "range",
+      "id": "block_description_font_weight",
+      "min": 100,
+      "max": 900,
+      "step": 100,
+      "label": "Font weight",
+      "default": 400,
+      "visible_if": "{{ section.settings.custom_block_description_font and section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "color",
+      "id": "block_description_color",
+      "label": "Color",
+      "default": "#232323",
+      "visible_if": "{{ section.settings.custom_block_description_font }}"
+    },
+    {
+      "type": "range",
+      "id": "block_description_margin_top",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "label": "Card description margin top",
+      "default": 8,
+      "info": "Space above the card description"
+    },
+    {
+      "type": "header",
+      "content": "Author Typography"
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_block_author_font",
+      "label": "Enable custom font settings",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "block_author_as",
+      "label": "Render as",
+      "options": [
+        {
+          "value": "h2",
+          "label": "H2"
+        },
+        {
+          "value": "h3",
+          "label": "H3"
+        },
+        {
+          "value": "h4",
+          "label": "H4"
+        },
+        {
+          "value": "h5",
+          "label": "H5"
+        },
+        {
+          "value": "p",
+          "label": "Paragraph (p)"
+        }
+      ],
+      "default": "p",
+      "visible_if": "{{ section.settings.custom_block_author_font == false }}"
+    },
+    {
+      "type": "range",
+      "id": "block_author_size_desktop",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Desktop author text size",
+      "default": 14,
+      "visible_if": "{{ section.settings.custom_block_author_font }}"
+    },
+    {
+      "type": "range",
+      "id": "block_author_size_mobile",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Mobile author text size",
+      "default": 13,
+      "visible_if": "{{ section.settings.custom_block_author_font }}"
+    },
+    {
+      "type": "range",
+      "id": "block_author_line_height",
+      "min": 50,
+      "max": 200,
+      "step": 10,
+      "unit": "%",
+      "label": "Line height",
+      "default": 140,
+      "visible_if": "{{ section.settings.custom_block_author_font }}"
+    },
+    {
+      "type": "range",
+      "id": "block_author_font_weight",
+      "min": 100,
+      "max": 900,
+      "step": 100,
+      "label": "Font weight",
+      "default": 600,
+      "visible_if": "{{ section.settings.custom_block_author_font and section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "color",
+      "id": "block_author_color",
+      "label": "Color",
+      "default": "#333333",
+      "visible_if": "{{ section.settings.custom_block_author_font }}"
+    },
+    {
+      "type": "header",
+      "content": "Product Typography"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_product_price",
+      "label": "Show product price",
+      "default": true,
+      "info": "Toggle to show the product price inside each card when a product is attached."
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_product_title_font",
+      "label": "Enable product title custom font",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "product_title_as",
+      "label": "Product title render as",
+      "options": [
+        {
+          "value": "h2",
+          "label": "H2"
+        },
+        {
+          "value": "h3",
+          "label": "H3"
+        },
+        {
+          "value": "h4",
+          "label": "H4"
+        },
+        {
+          "value": "h5",
+          "label": "H5"
+        },
+        {
+          "value": "p",
+          "label": "Paragraph (p)"
+        }
+      ],
+      "default": "h5",
+      "visible_if": "{{ section.settings.custom_product_title_font == false }}"
+    },
+    {
+      "type": "font_picker",
+      "id": "product_title_font",
+      "label": "Product title font",
+      "default": "helvetica_n4",
+      "visible_if": "{{ section.settings.custom_product_title_font }}"
+    },
+    {
+      "type": "range",
+      "id": "product_title_size_desktop",
+      "min": 10,
+      "max": 28,
+      "step": 1,
+      "unit": "px",
+      "label": "Desktop product title size",
+      "default": 14,
+      "visible_if": "{{ section.settings.custom_product_title_font }}"
+    },
+    {
+      "type": "range",
+      "id": "product_title_size_mobile",
+      "min": 10,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Mobile product title size",
+      "default": 14,
+      "visible_if": "{{ section.settings.custom_product_title_font }}"
+    },
+    {
+      "type": "range",
+      "id": "product_title_line_height",
+      "min": 50,
+      "max": 200,
+      "step": 10,
+      "unit": "%",
+      "label": "Product title line height",
+      "default": 130,
+      "visible_if": "{{ section.settings.custom_product_title_font }}"
+    },
+    {
+      "type": "range",
+      "id": "product_title_font_weight",
+      "min": 100,
+      "max": 900,
+      "step": 100,
+      "label": "Product title font weight",
+      "default": 700,
+      "visible_if": "{{ section.settings.custom_product_title_font and section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "color",
+      "id": "product_title_color",
+      "label": "Product title color",
+      "default": "#111111",
+      "visible_if": "{{ section.settings.custom_product_title_font }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_product_price_font",
+      "label": "Enable product price custom font",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "product_price_as",
+      "label": "Product price render as",
+      "options": [
+        {
+          "value": "h2",
+          "label": "H2"
+        },
+        {
+          "value": "h3",
+          "label": "H3"
+        },
+        {
+          "value": "h4",
+          "label": "H4"
+        },
+        {
+          "value": "h5",
+          "label": "H5"
+        },
+        {
+          "value": "p",
+          "label": "Paragraph (p)"
+        }
+      ],
+      "default": "h5",
+      "visible_if": "{{ section.settings.custom_product_price_font == false }}"
+    },
+    {
+      "type": "font_picker",
+      "id": "product_price_font",
+      "label": "Product price font",
+      "default": "helvetica_n4",
+      "visible_if": "{{ section.settings.custom_product_price_font }}"
+    },
+    {
+      "type": "range",
+      "id": "product_price_size_desktop",
+      "min": 10,
+      "max": 28,
+      "step": 1,
+      "unit": "px",
+      "label": "Desktop product price size",
+      "default": 14,
+      "visible_if": "{{ section.settings.custom_product_price_font }}"
+    },
+    {
+      "type": "range",
+      "id": "product_price_size_mobile",
+      "min": 10,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Mobile product price size",
+      "default": 14,
+      "visible_if": "{{ section.settings.custom_product_price_font }}"
+    },
+    {
+      "type": "range",
+      "id": "product_price_line_height",
+      "min": 50,
+      "max": 200,
+      "step": 10,
+      "unit": "%",
+      "label": "Product price line height",
+      "default": 130,
+      "visible_if": "{{ section.settings.custom_product_price_font }}"
+    },
+    {
+      "type": "range",
+      "id": "product_price_font_weight",
+      "min": 100,
+      "max": 900,
+      "step": 100,
+      "label": "Product price font weight",
+      "default": 700,
+      "visible_if": "{{ section.settings.custom_product_price_font and section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "color",
+      "id": "product_price_color",
+      "label": "Price color",
+      "default": "#111111",
+      "visible_if": "{{ section.settings.custom_product_price_font }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_product_subtitle_font",
+      "label": "Enable product subtitle custom font",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "product_subtitle_as",
+      "label": "Product subtitle render as",
+      "options": [
+        {
+          "value": "h2",
+          "label": "H2"
+        },
+        {
+          "value": "h3",
+          "label": "H3"
+        },
+        {
+          "value": "h4",
+          "label": "H4"
+        },
+        {
+          "value": "h5",
+          "label": "H5"
+        },
+        {
+          "value": "p",
+          "label": "Paragraph (p)"
+        }
+      ],
+      "default": "h5",
+      "visible_if": "{{ section.settings.custom_product_subtitle_font == false }}"
+    },
+    {
+      "type": "font_picker",
+      "id": "product_subtitle_font",
+      "label": "Product subtitle font",
+      "default": "helvetica_n4",
+      "visible_if": "{{ section.settings.custom_product_subtitle_font }}"
+    },
+    {
+      "type": "range",
+      "id": "product_subtitle_size_desktop",
+      "min": 10,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Desktop product subtitle size",
+      "default": 12,
+      "visible_if": "{{ section.settings.custom_product_subtitle_font }}"
+    },
+    {
+      "type": "range",
+      "id": "product_subtitle_size_mobile",
+      "min": 10,
+      "max": 22,
+      "step": 1,
+      "unit": "px",
+      "label": "Mobile product subtitle size",
+      "default": 12,
+      "visible_if": "{{ section.settings.custom_product_subtitle_font }}"
+    },
+    {
+      "type": "range",
+      "id": "product_subtitle_line_height",
+      "min": 50,
+      "max": 200,
+      "step": 10,
+      "unit": "%",
+      "label": "Product subtitle line height",
+      "default": 130,
+      "visible_if": "{{ section.settings.custom_product_subtitle_font }}"
+    },
+    {
+      "type": "range",
+      "id": "product_subtitle_font_weight",
+      "min": 100,
+      "max": 900,
+      "step": 100,
+      "label": "Product subtitle font weight",
+      "default": 400,
+      "visible_if": "{{ section.settings.custom_product_subtitle_font and section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "color",
+      "id": "product_purchased_color",
+      "label": "Purchased text color",
+      "default": "#6B7280",
+      "visible_if": "{{ section.settings.custom_product_subtitle_font }}"
+    },
+    {
+      "type": "header",
+      "content": "Product Container Spacing",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "range",
+      "id": "product_elements_gap",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Space between product elements",
+      "default": 4,
+      "info": "Controls spacing between product title, price, and subtitle",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "header",
+      "content": "Product Container Colors"
+    },
+    {
+      "type": "color",
+      "id": "product_pill_bg_color",
+      "label": "Product container background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "product_pill_border_color",
+      "label": "Product container border",
+      "default": "#e5e7eb"
+    },
+    {
+      "type": "color",
+      "id": "product_compare_price_color",
+      "label": "Compare-at color",
+      "default": "#9CA3AF"
+    },
+    {
+      "type": "header",
+      "content": "Carousel Settings",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "range",
+      "id": "header_blocks_gap",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "label": "Space between title and blocks",
+      "default": 0,
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "range",
+      "id": "desktop_blocks_gap",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "label": "Desktop gap between cards",
+      "default": 16,
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "range",
+      "id": "mobile_blocks_gap",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "label": "Mobile gap between cards",
+      "default": 16,
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "header",
+      "content": "Carousel Navigation",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_navigation_desktop",
+      "label": "Show desktop navigation arrows",
+      "default": true,
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_navigation_mobile",
+      "label": "Show mobile navigation arrows",
+      "default": true,
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "select",
+      "id": "desktop_nav_position",
+      "label": "Desktop navigation position",
+      "options": [
+        {
+          "value": "top_right",
+          "label": "Top right"
+        },
+        {
+          "value": "bottom_center",
+          "label": "Bottom center"
+        }
+      ],
+      "default": "bottom_center",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "range",
+      "id": "nav_arrow_top_spacing_desktop",
+      "min": 0,
+      "max": 120,
+      "step": 2,
+      "unit": "px",
+      "label": "Desktop arrow top spacing",
+      "default": 24,
+      "visible_if": "{{ section.settings.desktop_nav_position == 'bottom_center' and section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "range",
+      "id": "nav_arrow_top_spacing_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 1,
+      "unit": "px",
+      "label": "Mobile arrow top spacing",
+      "default": 20,
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "header",
+      "content": "Arrow Styling"
+    },
+    {
+      "type": "range",
+      "id": "nav_arrow_size",
+      "min": 40,
+      "max": 80,
+      "step": 5,
+      "unit": "px",
+      "label": "Arrow size",
+      "default": 50,
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "range",
+      "id": "nav_arrow_gap",
+      "min": 10,
+      "max": 50,
+      "step": 5,
+      "unit": "px",
+      "label": "Gap between arrows",
+      "default": 20,
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "color",
+      "id": "nav_arrow_bg_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "nav_arrow_icon_color",
+      "label": "Icon color",
+      "default": "#6b7280"
+    },
+    {
+      "type": "range",
+      "id": "nav_arrow_border_width",
+      "min": 0,
+      "max": 5,
+      "step": 1,
+      "unit": "px",
+      "label": "Border width",
+      "default": 0,
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "color",
+      "id": "nav_arrow_border_color",
+      "label": "Border color",
+      "default": "#e5e7eb",
+      "visible_if": "{{ section.settings.enable_advanced_settings == true }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "nav_arrow_shadow_enable",
+      "label": "Enable shadow",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "nav_arrow_shadow_color",
+      "label": "Shadow color",
+      "default": "#000000"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "header_rating",
+      "name": "Header Rating",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "header",
+          "content": "Header Rating"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "rating_header",
+          "label": "Rating header",
+          "default": "Rated <strong>4.8</strong>/5 based on 140,000+ Total Reviews"
+        },
+        {
+          "type": "checkbox",
+          "id": "custom_rating_header_font",
+          "label": "Enable rating header custom font",
+          "default": false
+        },
+        {
+          "type": "select",
+          "id": "rating_header_as",
+          "label": "Rating header render as",
+          "options": [
+            {
+              "value": "h2",
+              "label": "H2"
+            },
+            {
+              "value": "h3",
+              "label": "H3"
+            },
+            {
+              "value": "h4",
+              "label": "H4"
+            },
+            {
+              "value": "h5",
+              "label": "H5"
+            },
+            {
+              "value": "p",
+              "label": "Paragraph (p)"
+            }
+          ],
+          "default": "p",
+          "visible_if": "{{ block.settings.custom_rating_header_font == false }}"
+        },
+        {
+          "type": "color",
+          "id": "rating_text_color",
+          "label": "Rating text color",
+          "default": "#111111",
+          "visible_if": "{{ block.settings.custom_rating_header_font }}"
+        },
+        {
+          "type": "range",
+          "id": "rating_text_size",
+          "min": 10,
+          "max": 40,
+          "step": 1,
+          "unit": "px",
+          "label": "Rating text size",
+          "default": 16,
+          "visible_if": "{{ block.settings.custom_rating_header_font }}"
+        },
+        {
+          "type": "range",
+          "id": "header_star_rating",
+          "label": "Header star rating",
+          "min": 0,
+          "max": 5,
+          "step": 0.5,
+          "default": 5
+        },
+        {
+          "type": "color",
+          "id": "rating_star_color",
+          "label": "Rating star color",
+          "default": "#FFFFFF"
+        },
+        {
+          "type": "color",
+          "id": "rating_star_background_color",
+          "label": "Star background color",
+          "default": "#05B67C"
+        },
+        {
+          "type": "color",
+          "id": "rating_star_empty_background_color",
+          "label": "Star empty background color",
+          "default": "#DFDFDF"
+        },
+        {
+          "type": "range",
+          "id": "rating_star_size",
+          "min": 10,
+          "max": 40,
+          "step": 1,
+          "unit": "px",
+          "label": "Rating star size",
+          "default": 24
+        },
+        {
+          "type": "checkbox",
+          "id": "rating_badge_bg_enable",
+          "label": "Enable rating badge background",
+          "default": true
+        },
+        {
+          "type": "color",
+          "id": "rating_bg_color",
+          "label": "Rating badge background",
+          "default": "#FFFFFF",
+          "visible_if": "{{ block.settings.rating_badge_bg_enable }}"
+        },
+        {
+          "type": "range",
+          "id": "rating_padding_horizontal",
+          "min": 0,
+          "max": 32,
+          "step": 1,
+          "unit": "px",
+          "label": "Horizontal badge padding",
+          "default": 14,
+          "visible_if": "{{ block.settings.rating_badge_bg_enable and section.settings.enable_advanced_settings == true }}"
+        },
+        {
+          "type": "range",
+          "id": "rating_padding_vertical",
+          "min": 0,
+          "max": 20,
+          "step": 1,
+          "unit": "px",
+          "label": "Vertical badge padding",
+          "default": 10,
+          "visible_if": "{{ block.settings.rating_badge_bg_enable and section.settings.enable_advanced_settings == true }}"
+        },
+        {
+          "type": "checkbox",
+          "id": "rating_shadow_enable",
+          "label": "Enable rating badge shadow",
+          "default": true,
+          "visible_if": "{{ block.settings.rating_badge_bg_enable }}"
+        },
+        {
+          "type": "range",
+          "id": "rating_border_radius",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "unit": "px",
+          "label": "Border radius",
+          "default": 100
+        },
+        {
+          "type": "header",
+          "content": "Spacing"
+        },
+        {
+          "type": "range",
+          "id": "rating_margin_top_desktop",
+          "min": 0,
+          "max": 60,
+          "step": 1,
+          "unit": "px",
+          "label": "Desktop margin top",
+          "default": 0
+        },
+        {
+          "type": "range",
+          "id": "rating_bottom_spacing",
+          "min": 0,
+          "max": 40,
+          "step": 1,
+          "unit": "px",
+          "label": "Desktop margin bottom",
+          "default": 12
+        },
+        {
+          "type": "range",
+          "id": "rating_margin_top_mobile",
+          "min": 0,
+          "max": 60,
+          "step": 1,
+          "unit": "px",
+          "label": "Mobile margin top",
+          "default": 0
+        },
+        {
+          "type": "range",
+          "id": "rating_margin_bottom_mobile",
+          "min": 0,
+          "max": 60,
+          "step": 1,
+          "unit": "px",
+          "label": "Mobile margin bottom",
+          "default": 12
+        }
+      ]
+    },
+    {
+      "type": "header_title",
+      "name": "Title",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "header",
+          "content": "Title"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "title",
+          "label": "Title text",
+          "default": "Their Waists. <em>Their Words.</em>",
+          "info": "Use _underscores_ to highlight text"
+        },
+        {
+          "type": "color_background",
+          "id": "title_highlight_color",
+          "label": "Title highlight color",
+          "default": "linear-gradient(135deg, #FFB4A9 0%, #FF7A6E 100%)"
+        },
+        {
+          "type": "checkbox",
+          "id": "title_highlight_enable_custom",
+          "label": "Enable highlight custom font",
+          "default": false
+        },
+        {
+          "type": "font_picker",
+          "id": "title_highlight_font",
+          "label": "Highlight font",
+          "default": "helvetica_n4",
+          "visible_if": "{{ block.settings.title_highlight_enable_custom }}"
+        },
+        {
+          "type": "range",
+          "id": "title_highlight_font_weight",
+          "min": 100,
+          "max": 900,
+          "step": 100,
+          "label": "Highlight font weight",
+          "default": 700,
+          "visible_if": "{{ block.settings.title_highlight_enable_custom and section.settings.enable_advanced_settings == true }}"
+        },
+        {
+          "type": "checkbox",
+          "id": "custom_title_font",
+          "label": "Enable custom title font",
+          "default": false
+        },
+        {
+          "type": "select",
+          "id": "title_as",
+          "label": "Title render as",
+          "options": [
+            {
+              "value": "h1",
+              "label": "H1"
+            },
+            {
+              "value": "h2",
+              "label": "H2"
+            },
+            {
+              "value": "h3",
+              "label": "H3"
+            },
+            {
+              "value": "h4",
+              "label": "H4"
+            },
+            {
+              "value": "h5",
+              "label": "H5"
+            },
+            {
+              "value": "p",
+              "label": "Paragraph (p)"
+            }
+          ],
+          "default": "h2",
+          "visible_if": "{{ block.settings.custom_title_font == false }}"
+        },
+        {
+          "type": "range",
+          "id": "title_size_desktop",
+          "min": 20,
+          "max": 80,
+          "step": 2,
+          "unit": "px",
+          "label": "Desktop title size",
+          "default": 40,
+          "visible_if": "{{ block.settings.custom_title_font }}"
+        },
+        {
+          "type": "range",
+          "id": "title_size_mobile",
+          "min": 16,
+          "max": 60,
+          "step": 2,
+          "unit": "px",
+          "label": "Mobile title size",
+          "default": 32,
+          "visible_if": "{{ block.settings.custom_title_font }}"
+        },
+        {
+          "type": "font_picker",
+          "id": "title_font",
+          "label": "Title font",
+          "default": "helvetica_n4",
+          "visible_if": "{{ block.settings.custom_title_font }}"
+        },
+        {
+          "type": "color",
+          "id": "title_color",
+          "label": "Title color",
+          "default": "#000000",
+          "visible_if": "{{ block.settings.custom_title_font }}"
+        },
+        {
+          "type": "range",
+          "id": "title_line_height",
+          "min": 50,
+          "max": 200,
+          "step": 10,
+          "unit": "%",
+          "label": "Title line height",
+          "default": 130,
+          "visible_if": "{{ block.settings.custom_title_font }}"
+        },
+        {
+          "type": "range",
+          "id": "title_font_weight",
+          "min": 100,
+          "max": 900,
+          "step": 100,
+          "label": "Title font weight",
+          "default": 700,
+          "visible_if": "{{ block.settings.custom_title_font and section.settings.enable_advanced_settings == true }}"
+        },
+        {
+          "type": "header",
+          "content": "Spacing"
+        },
+        {
+          "type": "range",
+          "id": "title_margin_top_desktop",
+          "min": 0,
+          "max": 80,
+          "step": 1,
+          "unit": "px",
+          "label": "Desktop margin top",
+          "default": 0
+        },
+        {
+          "type": "range",
+          "id": "title_margin_bottom_desktop",
+          "min": 0,
+          "max": 80,
+          "step": 1,
+          "unit": "px",
+          "label": "Desktop margin bottom",
+          "default": 0
+        },
+        {
+          "type": "range",
+          "id": "title_margin_top_mobile",
+          "min": 0,
+          "max": 80,
+          "step": 1,
+          "unit": "px",
+          "label": "Mobile margin top",
+          "default": 0
+        },
+        {
+          "type": "range",
+          "id": "title_margin_bottom_mobile",
+          "min": 0,
+          "max": 80,
+          "step": 1,
+          "unit": "px",
+          "label": "Mobile margin bottom",
+          "default": 0
+        }
+      ]
+    },
+    {
+      "type": "header_description",
+      "name": "Description",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "header",
+          "content": "Description"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "description",
+          "label": "Description text",
+          "default": "See what customers are saying after their transformations."
+        },
+        {
+          "type": "checkbox",
+          "id": "custom_description_font",
+          "label": "Enable custom description font",
+          "default": false
+        },
+        {
+          "type": "select",
+          "id": "description_as",
+          "label": "Description render as",
+          "options": [
+            {
+              "value": "h2",
+              "label": "H2"
+            },
+            {
+              "value": "h3",
+              "label": "H3"
+            },
+            {
+              "value": "h4",
+              "label": "H4"
+            },
+            {
+              "value": "h5",
+              "label": "H5"
+            },
+            {
+              "value": "p",
+              "label": "Paragraph (p)"
+            }
+          ],
+          "default": "p",
+          "visible_if": "{{ block.settings.custom_description_font == false }}"
+        },
+        {
+          "type": "range",
+          "id": "description_size_desktop",
+          "min": 14,
+          "max": 38,
+          "step": 1,
+          "unit": "px",
+          "label": "Desktop description size",
+          "default": 20,
+          "visible_if": "{{ block.settings.custom_description_font }}"
+        },
+        {
+          "type": "range",
+          "id": "description_size_mobile",
+          "min": 12,
+          "max": 34,
+          "step": 1,
+          "unit": "px",
+          "label": "Mobile description size",
+          "default": 18,
+          "visible_if": "{{ block.settings.custom_description_font }}"
+        },
+        {
+          "type": "range",
+          "id": "description_line_height",
+          "min": 120,
+          "max": 200,
+          "step": 10,
+          "unit": "%",
+          "label": "Description line height",
+          "default": 150,
+          "visible_if": "{{ block.settings.custom_description_font }}"
+        },
+        {
+          "type": "color",
+          "id": "description_color",
+          "label": "Description color",
+          "default": "#0B0B0B",
+          "visible_if": "{{ block.settings.custom_description_font }}"
+        },
+        {
+          "type": "header",
+          "content": "Spacing"
+        },
+        {
+          "type": "range",
+          "id": "description_top_spacing",
+          "min": 0,
+          "max": 60,
+          "step": 1,
+          "unit": "px",
+          "label": "Desktop margin top",
+          "default": 8
+        },
+        {
+          "type": "range",
+          "id": "description_bottom_spacing",
+          "min": 0,
+          "max": 80,
+          "step": 4,
+          "unit": "px",
+          "label": "Desktop margin bottom",
+          "default": 0
+        },
+        {
+          "type": "range",
+          "id": "description_margin_top_mobile",
+          "min": 0,
+          "max": 60,
+          "step": 1,
+          "unit": "px",
+          "label": "Mobile margin top",
+          "default": 8
+        },
+        {
+          "type": "range",
+          "id": "description_margin_bottom_mobile",
+          "min": 0,
+          "max": 60,
+          "step": 1,
+          "unit": "px",
+          "label": "Mobile margin bottom",
+          "default": 0
+        }
+      ]
+    },
+    {
+      "type": "testimonial_card",
+      "name": "Testimonial Card",
+      "limit": 10,
+      "settings": [
+        {
+          "type": "header",
+          "content": "Card Content"
+        },
+        {
+          "type": "image_picker",
+          "id": "card_image",
+          "label": "Card image",
+          "info": "Optional image to display at the top of the card"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "title",
+          "label": "Title",
+          "default": "Amazing Transformation"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "description",
+          "label": "Description",
+          "default": "<em>This product changed everything for me. Confidence through the roof!</em>"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "author",
+          "label": "Author",
+          "default": "Stephanie, 35"
+        },
+        {
+          "type": "header",
+          "content": "Star Rating"
+        },
+        {
+          "type": "range",
+          "id": "star_rating",
+          "label": "Star rating",
+          "min": 0,
+          "max": 5,
+          "step": 0.5,
+          "default": 5
+        },
+        {
+          "type": "inline_richtext",
+          "id": "verified_text",
+          "label": "Verified text",
+          "default": "Verified purchase"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_verified",
+          "label": "Show verified badge",
+          "default": true
+        },
+        {
+          "type": "header",
+          "content": "Attach Product (optional)"
+        },
+        {
+          "type": "paragraph",
+          "content": "Note: You can disable showing the product price in the main section settings under ‘Show product price’."
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Product"
+        },
+        {
+          "type": "image_picker",
+          "id": "product_image_override",
+          "label": "Product image override"
+        },
+        {
+          "type": "inline_richtext",
+          "id": "product_title_override",
+          "label": "Product title override"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_subtitle",
+          "label": "Show subtitle",
+          "default": true
+        },
+        {
+          "type": "inline_richtext",
+          "id": "subtitle_text",
+          "label": "Subtitle text",
+          "default": "Purchased on 25 August 2025",
+          "visible_if": "{{ block.settings.show_subtitle }}"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "VSO - Testimonials 11",
+      "settings": {
+        "section_bg_gradient": "linear-gradient(180deg, #E3F2FD 0%, #FFFFFF 100%)",
+        "star_background_color": "#42A5F5"
+      },
+      "blocks": [
+        {
+          "type": "header_rating"
+        },
+        {
+          "type": "header_title"
+        },
+        {
+          "type": "header_description"
+        },
+        {
+          "type": "testimonial_card",
+          "settings": {
+            "title": "Best Sleep Ever",
+            "description": "This weighted blanket has completely transformed my sleep quality. I fall asleep faster and wake up feeling refreshed.",
+            "author": "Sarah M, 32",
+            "verified_text": "Verified Purchase"
+          }
+        },
+        {
+          "type": "testimonial_card",
+          "settings": {
+            "title": "Anxiety Relief",
+            "description": "The gentle pressure helps calm my anxiety at night. It's like a warm hug that lasts all night long.",
+            "author": "Michael R, 28",
+            "verified_text": "Verified Purchase"
+          }
+        },
+        {
+          "type": "testimonial_card",
+          "settings": {
+            "title": "Game Changer",
+            "description": "I was skeptical at first, but after one week I can't imagine sleeping without it. Worth every penny!",
+            "author": "Jessica T, 41",
+            "verified_text": "Verified Purchase"
+          }
+        },
+        {
+          "type": "testimonial_card",
+          "settings": {
+            "title": "Perfect Weight",
+            "description": "Not too heavy, not too light. The weight distribution is perfect and the quality is outstanding.",
+            "author": "David L, 35",
+            "verified_text": "Verified Purchase"
+          }
+        }
+      ]
+    }
+  ]
+}
+
+
+
+
+
+{% endschema %}
