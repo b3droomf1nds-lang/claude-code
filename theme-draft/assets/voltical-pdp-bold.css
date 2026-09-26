@@ -2301,6 +2301,12 @@
     font-size: 19.34px !important;
     line-height: 1.3 !important;
   }
+  /* The charge tile's "As low as" shows at the same 21.33px as the caption
+     under it. Its box carries a baked Canva scale of 1.0909, so
+     21.33 / 1.0909 = 19.55px. */
+  .template-product .pdp-cmp__card--charge > .pdp-cmp__eyebrow {
+    font-size: 19.55px !important;
+  }
 }
 
 /* Keep the mobile comparison introduction centered and compact above the
