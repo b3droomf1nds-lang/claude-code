@@ -194,6 +194,9 @@
   color: transparent;
   text-shadow: 0 0 0 var(--ink, #131316);
 }
+.pdp-cmp__intro {
+  display: none;
+}
 .pdp-cmp__grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2290,12 +2293,52 @@
   }
 }
 
-/* Compare heading, mobile only: "See how Core / upgrades your experience?"
-   on exactly two lines. The second line is the longer one, so the size
-   follows the screen width (never larger than the original 29.6px) to keep
-   it on one line down to 320px-wide phones. */
+/* Keep the mobile comparison introduction centered and compact above the
+   existing card grid; no card geometry or desktop composition changes. */
 @media (max-width: 899px) {
+  .pdp--bold.pdp--core .pdp-cmp__select-group {
+    text-align: center;
+  }
   .pdp--bold .pdp-cmp__select-heading {
     font-size: min(29.6px, 7vw);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
+  }
+  .pdp--bold.pdp--core .pdp-cmp__label {
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 400;
+    margin-bottom: 16px;
+  }
+  .pdp--bold.pdp--core .pdp-cmp__select-wrap {
+    margin-bottom: 0;
+    padding-bottom: 24px;
+  }
+  .pdp--bold.pdp--core .pdp-cmp__select {
+    display: block;
+    width: 190px;
+    height: 36px;
+    margin-inline: auto;
+    padding: 6px 34px 6px 22px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .pdp--bold.pdp--core .pdp-cmp__select-wrap::after {
+    top: 18px;
+    right: calc(50% - 79px);
+  }
+  .pdp--bold.pdp--core .pdp-cmp__intro {
+    display: block;
+    margin: 32px 0 0;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+    color: var(--ink-60, rgba(19,19,22,.58));
+  }
+  .pdp--bold.pdp--core .pdp-cmp__intro strong {
+    color: var(--ink, #131316);
+    font-weight: 600;
   }
 }
