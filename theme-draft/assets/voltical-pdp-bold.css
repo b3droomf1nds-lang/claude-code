@@ -1348,18 +1348,18 @@
   .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(2) { transform: translate(0px, -1.32px) scale(1.2012) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1) { transform: matrix(3.3, 0, 0, 3.3, 0, 0) translate(0.24px, 6.81px) scale(0.4776) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1)>:nth-child(2) { transform: matrix(3.3, 0, 0, 3.3, 0, 0) translate(0px, 17.79px) scale(0.8645) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: translate(0px, -15.69px) scale(1.0909) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: matrix(1, 0, 0, 1, 8.3, 0) translate(-8.84px, -4.08px) scale(1.2155) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2) { transform: matrix(2.412706, 0, 0, 2.412706, -1.529728, -1.345712) translate(1.61px, -0.22px) scale(0.7683) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(3) { transform: translate(0px, 1.27px) scale(0.9825) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(4) { transform: matrix(0.9817, 0, 0, 0.9817, 0, -6.79) translate(0px, 11.62px) scale(1.1235) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: matrix(1.0909, 0, 0, 1.0909, 0, -15.69) translate(-2.77121px, -9.8972px) scale(1.1658) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: matrix(1.2155, 0, 0, 1.2155, -0.54, -4.08) translate(-35.9268px, 18.3428px) scale(3.2522) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2) { transform: matrix(1.85368, 0, 0, 1.85368, 2.35473, -1.87651) translate(21.3779px, 10.8209px) scale(4.2928) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(3) { transform: matrix(0.9825, 0, 0, 0.9825, 0, 1.27) translate(3.06813px, 39.3579px) scale(0.8174) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(4) { transform: matrix(1.10294, 0, 0, 1.10294, 0, 4.61735) translate(6.10327px, 37.4774px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(1) { transform: translate(0px, 61.05px) scale(0.7457) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(2) { transform: translate(0px, 54.3px) scale(0.6874) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(3) { transform: translate(0px, 52.75px) scale(0.4752) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(4)>:nth-child(1) { transform: translate(8.03px, 10.28px) scale(0.9329) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(1) { transform: translate(0px, -3.36px) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(2) { transform: translate(0px, -4.49px) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(3)>:nth-child(1) { transform: matrix(4.703656, 0, 0, 4.703656, 3.144997, 158.592534) translate(0px, -0.44px) scale(0.4497) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(2) { transform: translate(0px, -4.35477px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(4)>:nth-child(3)>:nth-child(1) { transform: matrix(2.11523, 0, 0, 2.11523, 3.145, 156.523) translate(-1.45159px, 3.03514px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(1) { transform: translate(0px, 6.12px) scale(0.9124) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(2) { transform: translate(0px, 13.28px) scale(1.1915) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(5)>:nth-child(3)>:nth-child(1) { transform: translate(-1.74px, 2.07px) scale(0.8301) !important; }
@@ -2472,22 +2472,19 @@
   }
 }
 
-/* Charge tile, mobile only, sized against the compact "As little as 31
-   minutes" tile:
-   --cz: "minutes" is drawn at the same on-screen size as that tile's
-     "minutes" (default 0.62199: 44px against 72px x the 0.9825 Canva scale).
-   --cn: the "59", the battery and the gap between them, with the "59"'s
-     digits drawn 20% taller than that tile's "31" (default 0.44244).
-   The main-product.liquid script re-measures both as actually drawn on the
-   device (Canva scales and fonts included) and sets the exact factors.
+/* Charge tile, mobile only. Two size factors, locked in from the owner's
+   Canva layout (the baked transforms above scale these pieces further):
+   --cz: "minutes" (with the baked 0.9825 x 0.8174 scale it is drawn at 44px,
+     the same size as "minutes" in the compact "As little as 31" tile).
+   --cn: the "59", the battery and the gap between them.
    "As low as" stays where it was and the gaps to it and to the caption stay
    the same: the tile loses exactly the height the group gives up. The
    (1 - factor) terms are that height and small spacing corrections, per
    unit of shrink. */
 @media (max-width: 899px) {
   .template-product .pdp-cmp__card--charge {
-    --cz: 0.62199;
-    --cn: 0.44244;
+    --cz: 0.76094;
+    --cn: 0.209;
     height: calc(442.78px - (1 - var(--cn)) * 94.95px - (1 - var(--cz)) * 71.29px);
   }
   .template-product .pdp-cmp__card--charge .pdp-cmp__stat {
@@ -2506,5 +2503,25 @@
   }
   .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
     margin-top: calc(8px + (1 - var(--cz)) * 6.88px);
+  }
+}
+
+/* Charge tile, mobile only: the "59" in Inter's 200 weight, so its strokes
+   are drawn as thick as the 400-weight "minutes" in the same tile (the "59"
+   is drawn almost twice as large). Loaded under its own family name so no
+   other light-weight Inter on the site changes. */
+@font-face {
+  font-family: 'Voltical Stat';
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuDyfAZ9hiJ-Ck-8.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@media (max-width: 899px) {
+  .template-product .pdp-cmp__card--charge .pdp-cmp__stat,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__stat * {
+    font-family: 'Voltical Stat', var(--sans), sans-serif;
+    font-weight: 200 !important;
   }
 }

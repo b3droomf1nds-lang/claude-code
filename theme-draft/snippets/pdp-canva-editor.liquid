@@ -311,6 +311,37 @@
     ls(false, MAGNET_PHOTO_MIGRATION, '1');
   }
 
+  // The owner's mobile layout for the charge tile (and the video tile's
+  // caption and photo) is baked into the CSS (CANVA-BAKED), so drop the saved
+  // browser copy of those moves once so they aren't applied twice. Edited
+  // wording, if any, is kept.
+  var CHARGE_LOCK_MIGRATION = 'volt-canva-charge-lock-v1';
+  var CHARGE_LOCK_KEYS = [
+    ':nth-child(2)>:nth-child(2)>:nth-child(1)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(3)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(4)',
+    ':nth-child(2)>:nth-child(4)>:nth-child(2)',
+    ':nth-child(2)>:nth-child(4)>:nth-child(3)>:nth-child(1)'
+  ];
+  if (ls(true, CHARGE_LOCK_MIGRATION) !== '1'){
+    var chargeLockChanged = false;
+    CHARGE_LOCK_KEYS.forEach(function(k){
+      var e = layout[k];
+      if (!e) return;
+      if (e.text != null) layout[k] = { text: e.text };
+      else delete layout[k];
+      chargeLockChanged = true;
+    });
+    if (chargeLockChanged){
+      ls(false, LKEY, JSON.stringify(layout));
+      savedHistory = [];
+      rm(HKEY);
+    }
+    ls(false, CHARGE_LOCK_MIGRATION, '1');
+  }
+
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__feature-icon-wrap, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-number, .pdp-cmp__compact-partial-extra, .pdp-cmp__sub, ' +
     '.pdp-cmp__compact-video-main, .pdp-cmp__compact-video-hours, .pdp-cmp__compact-battery, ' +
