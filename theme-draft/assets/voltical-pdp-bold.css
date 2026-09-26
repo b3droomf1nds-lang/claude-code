@@ -2472,30 +2472,33 @@
   }
 }
 
-/* Charge tile, mobile only: "minutes" drawn at the same on-screen size as
-   "minutes" in the compact "As little as 31 minutes" tile, and the "59",
-   the battery and the spacing between the three shrunk by the same factor
-   as one group. --cz is that factor. It defaults to 0.62199 (44px against
-   72px x the 0.9825 Canva scale); the main-product.liquid script re-measures
-   both words as actually drawn on the device (Canva scales included) and
-   sets the exact factor. "As low as" stays where it was and the gaps to it
-   and to the caption stay the same: the tile loses exactly the height the
-   group gives up, so the space above and below is unchanged. The (1 - --cz)
-   terms are that height and small spacing corrections, per unit of shrink. */
+/* Charge tile, mobile only, sized against the compact "As little as 31
+   minutes" tile:
+   --cz: "minutes" is drawn at the same on-screen size as that tile's
+     "minutes" (default 0.62199: 44px against 72px x the 0.9825 Canva scale).
+   --cn: the "59", the battery and the gap between them, with the "59"'s
+     digits drawn 20% taller than that tile's "31" (default 0.44244).
+   The main-product.liquid script re-measures both as actually drawn on the
+   device (Canva scales and fonts included) and sets the exact factors.
+   "As low as" stays where it was and the gaps to it and to the caption stay
+   the same: the tile loses exactly the height the group gives up. The
+   (1 - factor) terms are that height and small spacing corrections, per
+   unit of shrink. */
 @media (max-width: 899px) {
   .template-product .pdp-cmp__card--charge {
     --cz: 0.62199;
-    height: calc(442.78px - (1 - var(--cz)) * 164.45px);
+    --cn: 0.44244;
+    height: calc(442.78px - (1 - var(--cn)) * 94.95px - (1 - var(--cz)) * 71.29px);
   }
   .template-product .pdp-cmp__card--charge .pdp-cmp__stat {
-    font-size: calc(98.45px * var(--cz)) !important;
+    font-size: calc(98.45px * var(--cn)) !important;
   }
   .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
-    width: calc(101.73px * var(--cz)) !important;
+    width: calc(101.73px * var(--cn)) !important;
   }
   .template-product .pdp-cmp__card--charge .pdp-cmp__stat-row {
-    gap: calc(19.69px * var(--cz));
-    margin-top: calc((1 - var(--cz)) * 5.29px);
+    gap: calc(19.69px * var(--cn));
+    margin-top: calc((1 - var(--cn)) * 3.5px);
   }
   .template-product .pdp-cmp__card--charge .pdp-cmp__sub--unit {
     font-size: calc(72px * var(--cz)) !important;

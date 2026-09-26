@@ -774,13 +774,32 @@
         var w = parseFloat(getComputedStyle(el).width);
         return w ? parseFloat(getComputedStyle(el).fontSize) * el.getBoundingClientRect().width / w : 0;
       }
+      /* The "59" (with its battery, --cn) is drawn with digits 20% taller
+         than the "31" in that same compact tile. The two use different
+         fonts, so this compares the drawn height of the digits themselves. */
+      var stat = card.querySelector('.pdp-cmp__stat');
+      var small = document.querySelector('.pdp--bold .pdp-cmp__card--compact-charge5 [data-calc-charge5]');
+      var pen = document.createElement('canvas').getContext('2d');
+      function digits(el) {
+        var cs = getComputedStyle(el);
+        pen.font = cs.fontStyle + ' ' + cs.fontWeight + ' 100px ' + cs.fontFamily;
+        return drawn(el) * pen.measureText('0123456789').actualBoundingBoxAscent / 100;
+      }
+      function setFactor(name, now, next) {
+        next = Math.round(next * 100000) / 100000;
+        if (next > 0.2 && next < 1.5 && Math.abs(next - now) > 0.0005) card.style.setProperty(name, String(next));
+      }
       function fit() {
-        if (!mobile.matches || !unit || !match) return;
-        var a = drawn(match), b = drawn(unit);
-        if (!a || !b) return;
-        var cz = parseFloat(getComputedStyle(card).getPropertyValue('--cz')) || 1;
-        var next = Math.round(cz * a / b * 100000) / 100000;
-        if (next > 0.2 && next < 1.5 && Math.abs(next - cz) > 0.0005) card.style.setProperty('--cz', String(next));
+        if (!mobile.matches) return;
+        var cs = getComputedStyle(card);
+        if (unit && match) {
+          var a = drawn(match), b = drawn(unit);
+          if (a && b) setFactor('--cz', parseFloat(cs.getPropertyValue('--cz')) || 1, (parseFloat(cs.getPropertyValue('--cz')) || 1) * a / b);
+        }
+        if (stat && small && pen) {
+          var c = digits(small), d = digits(stat);
+          if (c && d) setFactor('--cn', parseFloat(cs.getPropertyValue('--cn')) || 1, (parseFloat(cs.getPropertyValue('--cn')) || 1) * 1.2 * c / d);
+        }
       }
       function refit() { fit(); queue(); }
 
