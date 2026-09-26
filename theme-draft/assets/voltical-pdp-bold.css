@@ -2306,6 +2306,12 @@
     letter-spacing: -0.02em;
     margin-bottom: 32px;
   }
+  /* Space above the heading matches Apple's compare intro: the gap from
+     the "In stock" line to the heading equals the gap from Apple's image
+     tile to "Worth the upgrade?" (was 70px). */
+  .pdp--bold.pdp--core .pdp-cmp__select-heading {
+    margin-top: 84px;
+  }
   .pdp--bold.pdp--core .pdp-cmp__label {
     font-size: 14px;
     line-height: 18px;
