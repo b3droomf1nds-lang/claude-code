@@ -1109,7 +1109,7 @@
       });
       if (sel && sel.style){
         sel.style.touchAction = touchCanMove(sel) ? 'none' : 'pan-y';
-        sel.classList.toggle('cv-touch-ready', coarse && touchCanMove(sel));
+        sel.classList.toggle('cv-touch-ready', prewarm(sel));
       }
       if (ON) positionBox();
     }
@@ -1180,6 +1180,12 @@
     // scrolls instead of silently saving an invisible desktop offset.
     // Inline touch-action is inert for mouse, so this does not alter desktop.
     function touchCanMove(el){ return !!el && translateFactor(el) !== 0; }
+    // Pre-warming (will-change:transform) makes iOS draw the element once at
+    // its unscaled size and then stretch that bitmap, so the heavily scaled
+    // charge-tile number (and the battery beside it) turn blurry for as long
+    // as it's selected — e.g. while using the thickness slider. Leave that
+    // one unpromoted so it stays sharp; dragging it still works normally.
+    function prewarm(el){ return coarse && touchCanMove(el) && !weightTarget(el); }
     function updateEditTextButton(){
       if (!editTextBtn) return;
       editTextBtn.hidden = !(touchInputSeen && sel && isTextEditable(sel) && !editingEl);
@@ -1198,7 +1204,7 @@
       sel = el;
       if (el && el.style){
         el.style.touchAction = touchCanMove(el) ? 'none' : 'pan-y';
-        el.classList.toggle('cv-touch-ready', coarse && touchCanMove(el));
+        el.classList.toggle('cv-touch-ready', prewarm(el));
       }
       tag.textContent = label(el); positionBox(); updateEditTextButton(); updateWeightSlider();
     }
