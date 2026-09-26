@@ -349,6 +349,29 @@
     ls(false, CHARGE_LOCK_MIGRATION, '1');
   }
 
+  // Second lock-in of the charge tile (mobile): the owner's 340 thickness
+  // for the "59", its small nudges, the "59" + battery centred as one unit,
+  // and the Align corrections on the eyebrow, "minutes" and caption are now
+  // in CANVA-BAKED. Drop the saved copy once so nothing is applied twice.
+  var CHARGE_LOCK2_MIGRATION = 'volt-canva-charge-lock-v2';
+  var CHARGE_LOCK2_KEYS = CHARGE_LOCK_KEYS.slice(0, 5);
+  if (ls(true, CHARGE_LOCK2_MIGRATION) !== '1'){
+    var chargeLock2Changed = false;
+    CHARGE_LOCK2_KEYS.forEach(function(k){
+      var e = layout[k];
+      if (!e) return;
+      if (e.text != null) layout[k] = { text: e.text };
+      else delete layout[k];
+      chargeLock2Changed = true;
+    });
+    if (chargeLock2Changed){
+      ls(false, LKEY, JSON.stringify(layout));
+      savedHistory = [];
+      rm(HKEY);
+    }
+    ls(false, CHARGE_LOCK2_MIGRATION, '1');
+  }
+
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__feature-icon-wrap, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-number, .pdp-cmp__compact-partial-extra, .pdp-cmp__sub, ' +
     '.pdp-cmp__compact-video-main, .pdp-cmp__compact-video-hours, .pdp-cmp__compact-battery, ' +
@@ -421,8 +444,8 @@
     // with the toolbar's thickness slider. Selecting the number or its row
     // both edit the number itself. The weight is stored as "w" on the
     // number's entry and shown through the --cv-w variable that the mobile
-    // CSS reads (default 275 when nothing is saved).
-    var DEFAULT_STAT_WEIGHT = 275;
+    // CSS reads (default 340 when nothing is saved).
+    var DEFAULT_STAT_WEIGHT = 340;
     function weightTarget(el){
       if (!el || desktopMQ.matches || !el.closest('.pdp-cmp__card--charge')) return null;
       if (el.matches('.pdp-cmp__stat')) return el;
