@@ -1720,6 +1720,70 @@
       if (editingEl && e.target === editingEl) saveText(editingEl);
     });
 
+    // ---- align: centre an image on its subject, not on its box ----
+    // A picture's subject is rarely centred in its own canvas (the magnet
+    // tile's phone sits at 48.3% across a white 2048px canvas), and
+    // object-fit adds empty bands on top, so centring the <img> box leaves
+    // the subject visibly off to one side once the image is zoomed in.
+    // In edit mode each tile image is read once (Shopify's CDN allows it)
+    // and the left/right edges of everything that isn't the plain
+    // background are stored as fractions of its width; Align all then
+    // centres that span on the card. Falls back to the box if it can't be
+    // read.
+    var inkCache = {};
+    function loadInk(src){
+      if (!src || inkCache[src] !== undefined) return;
+      inkCache[src] = null;
+      var im = new Image();
+      im.crossOrigin = 'anonymous';
+      im.onload = function(){
+        try {
+          var W = Math.min(1024, im.naturalWidth), H = Math.max(1, Math.round(W * im.naturalHeight / im.naturalWidth));
+          var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+          var cx = cv.getContext('2d'); cx.drawImage(im, 0, 0, W, H);
+          var d = cx.getImageData(0, 0, W, H).data;
+          // Background: the four corners' colour, or transparency.
+          var corners = [0, (W - 1) * 4, (H - 1) * W * 4, ((H - 1) * W + W - 1) * 4];
+          var bg = [0, 0, 0, 0];
+          corners.forEach(function(i){ for (var k = 0; k < 4; k++) bg[k] += d[i + k] / 4; });
+          var clearBg = bg[3] < 20;
+          var minRun = Math.max(2, Math.round(H * 0.01)), l = -1, r = -1;
+          for (var x = 0; x < W; x++){
+            var n = 0;
+            for (var y = 0; y < H; y++){
+              var i = (y * W + x) * 4;
+              if (d[i + 3] < 20) continue;
+              if (clearBg || Math.abs(d[i] - bg[0]) + Math.abs(d[i + 1] - bg[1]) + Math.abs(d[i + 2] - bg[2]) > 24) n++;
+            }
+            if (n >= minRun){ if (l < 0) l = x; r = x + 1; }
+          }
+          inkCache[src] = l < 0 ? null : { l: l / W, r: r / W };
+        } catch(e){ inkCache[src] = null; }
+      };
+      im.src = src;
+    }
+    function subjectCentreX(img, er){
+      var ink = inkCache[img.currentSrc || img.src];
+      if (!ink || !img.naturalWidth || !img.offsetWidth) return null;
+      var cs = getComputedStyle(img);
+      var px = er.width / img.offsetWidth;                // screen px per CSS px (the element's own scale)
+      var sx = er.width / img.naturalWidth, sy = er.height / img.naturalHeight;
+      var fit = cs.objectFit;
+      if (fit === 'contain') sx = Math.min(sx, sy);
+      else if (fit === 'cover') sx = Math.max(sx, sy);
+      else if (fit === 'none') sx = px;
+      else if (fit === 'scale-down') sx = Math.min(sx, sy, px);
+      var cw = img.naturalWidth * sx;
+      var pos = (cs.objectPosition || '50%').split(' ')[0], off;
+      if (/%$/.test(pos)) off = (er.width - cw) * parseFloat(pos) / 100;
+      else if (/px$/.test(pos)) off = parseFloat(pos) * px;
+      else off = (er.width - cw) / 2;
+      return er.left + off + cw * (ink.l + ink.r) / 2;
+    }
+    if (ON) els.forEach(function(el){
+      if (el.matches('.pdp-cmp__img-slot img')) loadInk(el.currentSrc || el.src);
+    });
+
     // ---- align: repair the complete tile system in one undoable action ----
     // A tile's existing CSS/CANVA-BAKED transform lives in __cvBase. Clearing
     // only the editor-authored delta therefore returns every card to exactly
@@ -1734,7 +1798,11 @@
       var alignYKey = desktopMQ.matches ? 'ayd' : 'aym';
       var otherAlignXKey = desktopMQ.matches ? 'axm' : 'axd';
       var directAlignTargets = alignTargets.filter(function(el){
-        return el.parentElement && (el.parentElement.matches('.pdp-cmp__card') || el.parentElement.matches('.pdp-cmp__img-slot')) &&
+        // An image may sit in a <picture> inside its slot (the magnet tile's
+        // does); it's still that slot's one image.
+        var parent = el.parentElement;
+        if (parent && parent.tagName === 'PICTURE') parent = parent.parentElement;
+        return parent && (parent.matches('.pdp-cmp__card') || parent.matches('.pdp-cmp__img-slot')) &&
           el.matches('.pdp-cmp__eyebrow, .pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__sub, .pdp-cmp__feature-icon-wrap, .pdp-cmp__img-slot img');
       });
       var batch = captureBatch(tiles.concat(alignTargets));
@@ -1770,11 +1838,17 @@
       // its visual centre onto the card centre through the exact transform
       // inverse. Nested stat parts stay together as one group.
       directAlignTargets.forEach(function(el){
-        if (!el.matches('.pdp-cmp__feature-icon-wrap') && !(el.textContent || '').trim()) return;
+        if (!el.matches('.pdp-cmp__feature-icon-wrap') && el.tagName !== 'IMG' && !(el.textContent || '').trim()) return;
         var card = el.closest('.pdp-cmp__card');
         var er = el.getBoundingClientRect(), cr = card.getBoundingClientRect();
         if (!er.width || !er.height || !cr.width) return;
-        var screenDx = (cr.left + cr.width/2) - (er.left + er.width/2);
+        var centreX = er.left + er.width/2;
+        if (el.tagName === 'IMG'){
+          loadInk(el.currentSrc || el.src);                  // in case the <picture> swapped source
+          var subject = subjectCentreX(el, er);
+          if (subject != null) centreX = subject;
+        }
+        var screenDx = (cr.left + cr.width/2) - centreX;
         if (Math.abs(screenDx) < 0.25) return;
         var inv = screenDeltaInverse(el);
         if (!inv) return;
@@ -1833,7 +1907,7 @@
       '<button class="cv-btn" data-cv="undo" title="Undo the last move, resize, type, delete, Align, or Reset.">Undo</button>' +
       '<button class="cv-btn" data-cv="refresh" title="Reload the page, keeping all your changes and the undo history.">Refresh</button>' +
       '<button class="cv-btn" data-cv="edit-text" title="Type into the selected caption." hidden>Edit text</button>' +
-      '<button class="cv-btn" data-cv="align" title="Repair tile positions and sizes, then horizontally centre every tile text group and both feature icons.">Align all</button>' +
+      '<button class="cv-btn" data-cv="align" title="Repair tile positions and sizes, then horizontally centre every tile text group, both feature icons and the subject of each tile image.">Align all</button>' +
       '<button class="cv-btn" data-cv="reset-sel">Reset one</button>' +
       '<button class="cv-btn" data-cv="reset-all">Reset all</button>' +
       '<button class="cv-btn cv-btn--go" data-cv="copy" title="Copy your finished layout so it can be baked permanently into the theme — then it shows the same on every browser (including iPhone Safari).">Lock it in</button>' +
