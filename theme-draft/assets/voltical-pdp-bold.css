@@ -1688,9 +1688,9 @@
     background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
     background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
     /* These glyphs are narrow (24px / 50px), so the full peach-to-violet
-       run looked harsh. Show only the middle third of the fade: the
-       gradient is drawn 3x the icon's width and centred on it. */
-    background-size: 300% 100%;
+       run looked harsh. Show only the middle two-thirds of the fade: the
+       gradient is drawn 1.5x the icon's width and centred on it. */
+    background-size: 150% 100%;
     background-position: 50% 0;
     background-repeat: no-repeat;
     -webkit-mask-position: center;
