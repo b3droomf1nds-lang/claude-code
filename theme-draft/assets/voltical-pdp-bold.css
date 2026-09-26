@@ -2471,3 +2471,32 @@
     font-weight: 400 !important;
   }
 }
+
+/* Charge tile, mobile only: "minutes" shrunk to the same on-screen size as
+   "minutes" in the compact "As little as 31 minutes" tile (44px after the
+   0.9825 Canva scale), a 37.8% cut (x0.62199). The "59", the battery and
+   the spacing between those three shrink by the same 37.8%, as one group.
+   "As low as" stays where it was, the gaps to it and to the caption stay
+   the same, and the tile gets shorter so the space below is unchanged. */
+@media (max-width: 899px) {
+  .template-product .pdp-cmp__card--charge {
+    height: 381.68px;
+  }
+  .template-product .pdp-cmp__card--charge .pdp-cmp__stat {
+    font-size: 61.235px !important;
+  }
+  .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
+    width: 63.274px !important;
+  }
+  .template-product .pdp-cmp__card--charge .pdp-cmp__stat-row {
+    gap: 11.49px;
+    margin-top: 2px;
+  }
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--unit {
+    font-size: 44.784px !important;
+    margin-top: -3.4px;
+  }
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
+    margin-top: 10.6px;
+  }
+}
