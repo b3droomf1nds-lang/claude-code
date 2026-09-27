@@ -2334,6 +2334,20 @@
   .pdp--bold.pdp--core .pdp-cmp-wrap {
     --cmp-lead: 84px;
   }
+  /* The tile-colour strip under the last tile is half as tall as the
+     full compact-tile height it used to be, and its lower half fades
+     back into the page colour (the reverse of the fade above the
+     section, drawn by the same main-product.liquid script). The last
+     tile paints 36px below the grid box, so the strip is
+     (padding - 36px): halving it gives padding / 2 + 18px. Without the
+     script the strip just stays solid tile colour. */
+  .pdp--bold.pdp--core .pdp-cmp-wrap {
+    padding-bottom: calc(var(--compact-full-card-height) / 2 + 18px);
+    background-image: var(--cmp-tail-img, none);
+    background-position: 0 100%;
+    background-size: var(--cmp-tail-size, auto);
+    background-repeat: repeat-x;
+  }
   .pdp--bold.pdp--core .pdp-cmp__select-heading {
     margin-top: var(--cmp-lead);
   }

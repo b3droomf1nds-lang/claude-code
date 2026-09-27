@@ -659,19 +659,11 @@
         section.style.setProperty('--cmp-fade-y', y + 'px');
       }
 
-      function build() {
-        if (!mobile.matches) return;
-        place();
-        var h = parseFloat(getComputedStyle(section).getPropertyValue('--cmp-fade-len'));
-        var top = pageColour();
-        var bottom = rgb(getComputedStyle(wrap).backgroundColor);
-        if (!h || !bottom) return;
+      // Draws the curve from colour `from` to colour `to` over `h` CSS px
+      // and hands back (url, background-size) once the picture is ready.
+      function paint(h, from, to, done) {
         var dpr = window.devicePixelRatio || 1;
         var H = Math.max(1, Math.round(h * dpr));
-        var key = [H, top, bottom].join();
-        if (key === built) return;
-        built = key;
-
         var canvas = document.createElement('canvas');
         canvas.width = W;
         canvas.height = H;
@@ -679,7 +671,7 @@
         if (!ctx) return;
         var img = ctx.createImageData(W, H);
         var px = img.data;
-        var a = toLab(top), b = toLab(bottom);
+        var a = toLab(from), b = toLab(to);
         for (var y = 0; y < H; y++) {
           var t = (y + 0.5) / H;
           var e = t * t * t * (t * (t * 6 - 15) + 10);          // smootherstep: flat at both ends
@@ -695,29 +687,78 @@
           }
         }
         ctx.putImageData(img, 0, 0);
+        var size = (W / dpr) + 'px ' + h + 'px';
+        if (canvas.toBlob && window.URL && URL.createObjectURL) {
+          canvas.toBlob(function (blob) { if (blob) done(URL.createObjectURL(blob), size); }, 'image/png');
+        } else {
+          done(canvas.toDataURL('image/png'), size);
+        }
+      }
 
-        var use = function (next) {
+      function build() {
+        if (!mobile.matches) return;
+        place();
+        var h = parseFloat(getComputedStyle(section).getPropertyValue('--cmp-fade-len'));
+        var top = pageColour();
+        var bottom = rgb(getComputedStyle(wrap).backgroundColor);
+        if (!h || !bottom) return;
+        var key = [Math.round(h * (window.devicePixelRatio || 1)), top, bottom].join();
+        if (key === built) return;
+        built = key;
+        paint(h, top, bottom, function (next, size) {
           if (built !== key) {                        // a newer build has started
             if (next.indexOf('blob:') === 0) URL.revokeObjectURL(next);
             return;
           }
           section.style.setProperty('--cmp-fade-img', 'url("' + next + '")');
-          section.style.setProperty('--cmp-fade-size', (W / dpr) + 'px ' + h + 'px');
+          section.style.setProperty('--cmp-fade-size', size);
           if (url && url.indexOf('blob:') === 0) URL.revokeObjectURL(url);
           url = next;
-        };
-        if (canvas.toBlob && window.URL && URL.createObjectURL) {
-          canvas.toBlob(function (blob) { if (blob) use(URL.createObjectURL(blob)); }, 'image/png');
-        } else {
-          use(canvas.toDataURL('image/png'));
+        });
+      }
+
+      /* The same fade in reverse at the bottom of the compare section:
+         the lower half of the tile-colour strip under the last tile goes
+         from the tile colour back to the page colour, so the section ends
+         in the page colour with no edge (see --cmp-tail-img in
+         voltical-pdp-bold.css). Measured from the lowest visible tile,
+         not the grid box, which the last tile paints past. */
+      var tailBuilt = '';
+      var tailUrl = '';
+      function buildTail() {
+        if (!mobile.matches) return;
+        var grid = wrap.querySelector('.pdp-cmp__grid');
+        var tile = rgb(getComputedStyle(wrap).backgroundColor);
+        if (!grid || !tile) return;
+        var low = -Infinity;
+        for (var i = 0; i < grid.children.length; i++) {
+          var r = grid.children[i].getBoundingClientRect();
+          if (r.height > 0 && r.bottom > low) low = r.bottom;
         }
+        var h = (wrap.getBoundingClientRect().bottom - low) / 2;
+        if (!(h > 0)) return;
+        var page = pageColour();
+        var key = [Math.round(h * (window.devicePixelRatio || 1)), tile, page].join();
+        if (key === tailBuilt) return;
+        tailBuilt = key;
+        paint(h, tile, page, function (next, size) {
+          if (tailBuilt !== key) {
+            if (next.indexOf('blob:') === 0) URL.revokeObjectURL(next);
+            return;
+          }
+          wrap.style.setProperty('--cmp-tail-img', 'url("' + next + '")');
+          wrap.style.setProperty('--cmp-tail-size', size);
+          if (tailUrl && tailUrl.indexOf('blob:') === 0) URL.revokeObjectURL(tailUrl);
+          tailUrl = next;
+        });
       }
 
       build();
-      window.addEventListener('resize', build);
-      window.addEventListener('load', build);
-      if (mobile.addEventListener) mobile.addEventListener('change', build);
-      if (window.ResizeObserver) new ResizeObserver(place).observe(section);
+      buildTail();
+      window.addEventListener('resize', function () { build(); buildTail(); });
+      window.addEventListener('load', function () { build(); buildTail(); });
+      if (mobile.addEventListener) mobile.addEventListener('change', function () { build(); buildTail(); });
+      if (window.ResizeObserver) new ResizeObserver(function () { place(); buildTail(); }).observe(section);
     })();
 
     /* Mobile: the charge tile's "59", battery and "minutes" show one
