@@ -387,6 +387,49 @@
     ls(false, CHARGE_LOCK3_MIGRATION, '1');
   }
 
+  // Third mobile lock-in of the charge tile (photo nudge, "minutes" and the
+  // caption moved down) plus the magnet caption's new line breaks are now in
+  // CANVA-BAKED and the markup. Zero the saved mobile offsets for those
+  // elements so they aren't applied twice, but fold the combined offsets into
+  // the desktop-only fields so the owner's unbaked desktop placement stays
+  // exactly where it was. The magnet caption's saved wording is dropped
+  // because the markup now carries it.
+  var CHARGE_LOCK4_MIGRATION = 'volt-canva-charge-lock-v4';
+  var CHARGE_LOCK4_KEYS = [
+    ':nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(3)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(4)'
+  ];
+  if (ls(true, CHARGE_LOCK4_MIGRATION) !== '1'){
+    var chargeLock4Changed = false;
+    CHARGE_LOCK4_KEYS.forEach(function(k){
+      var e = layout[k];
+      if (!e) return;
+      e.axd = Math.round(((e.dx || 0) + (e.axd || 0)) * 100) / 100;
+      e.ayd = Math.round(((e.dy || 0) + (e.ayd || 0)) * 100) / 100;
+      e.dx = 0; e.dy = 0;
+      delete e.axm; delete e.aym;
+      if (!e.axd) delete e.axd;
+      if (!e.ayd) delete e.ayd;
+      chargeLock4Changed = true;
+    });
+    var magnetCaption = layout[MAGNET_COPY_KEY];
+    if (magnetCaption && magnetCaption.text != null){
+      delete magnetCaption.text;
+      if (!magnetCaption.dx && !magnetCaption.dy && (!magnetCaption.s || magnetCaption.s === 1) &&
+          !magnetCaption.axd && !magnetCaption.ayd && !magnetCaption.axm && !magnetCaption.aym && !magnetCaption.w){
+        delete layout[MAGNET_COPY_KEY];
+      }
+      chargeLock4Changed = true;
+    }
+    if (chargeLock4Changed){
+      ls(false, LKEY, JSON.stringify(layout));
+      savedHistory = [];
+      rm(HKEY);
+    }
+    ls(false, CHARGE_LOCK4_MIGRATION, '1');
+  }
+
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__feature-icon-wrap, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-number, .pdp-cmp__compact-partial-extra, .pdp-cmp__sub, ' +
     '.pdp-cmp__compact-video-main, .pdp-cmp__compact-video-hours, .pdp-cmp__compact-battery, ' +
