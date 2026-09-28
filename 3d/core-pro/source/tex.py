@@ -27,29 +27,30 @@ m=Image.new('L',(W,H),0); ImageDraw.Draw(m).ellipse([cx-9.3*PX,cy-9.3*PX,cx+9.3*
 m.filter(ImageFilter.GaussianBlur(2)).resize((W//2,H//2),Image.LANCZOS).save('back_disc.png')
 
 # ---- display: 14.8 x 9.0 mm, emission RGB
+# Dot positions measured off the listing's "Digital display" close-up
+# (display box 178.5 x 109 px there = 14.8 x 9.0 mm here).
 DW,DH=int(14.8*PX),int(9.0*PX)
 dsp=Image.new('RGB',(DW,DH),(0,0,0)); d=ImageDraw.Draw(dsp)
-SEG={'1':'bc','0':'abcdef'}
-def dig(x0,y0,ch,w=2.2*PX,h=4.6*PX,dot=0.14*PX):
-    P={'a':((0,0),(1,0)),'b':((1,0),(1,.5)),'c':((1,.5),(1,1)),'d':((0,1),(1,1)),'e':((0,.5),(0,1)),'f':((0,0),(0,.5)),'g':((0,.5),(1,.5))}
-    pts=set()
-    for s_ in SEG[ch]:
-        (u0,v0),(u1,v1)=P[s_]; n=4 if v0==v1 else 5
-        for i in range(n+1):
-            t=i/n; pts.add((round(u0+(u1-u0)*t,3),round(v0+(v1-v0)*t,3)))
-    for u,v in pts:
-        x=x0+u*w; y=y0+v*h; d.ellipse([x-dot,y-dot,x+dot,y+dot],fill=(245,245,245))
-y0=2.2*PX
-dig(-0.9*PX,y0,'1'); dig(2.6*PX,y0,'0'); dig(6.0*PX,y0,'0')
-# percent sign
-x0,y0p=10.2*PX,4.9*PX
-d.ellipse([x0,y0p,x0+0.8*PX,y0p+0.8*PX],outline=(245,245,245),width=int(.22*PX))
-d.ellipse([x0+1.3*PX,y0p+1.2*PX,x0+2.1*PX,y0p+2.0*PX],outline=(245,245,245),width=int(.22*PX))
-d.line([x0+2.0*PX,y0p,x0+0.1*PX,y0p+2.0*PX],fill=(245,245,245),width=int(.22*PX))
-# green charging icon
-gx,gy,gr=12.0*PX,2.2*PX,0.75*PX
-d.ellipse([gx-gr,gy-gr,gx+gr,gy+gr],outline=(40,220,90),width=int(.16*PX))
-d.polygon([(gx+x*.28*PX,gy+y*.28*PX) for x,y in bolt],fill=(40,220,90))
+WH=(245,245,245); GR=(40,220,90)
+def dot(x,y,r=0.165,c=WH):
+    d.ellipse([(x-r)*PX,(y-r)*PX,(x+r)*PX,(y+r)*PX],fill=c)
+COL=[2.81,3.35,3.84,5.04,5.54,6.07]                   # side-column dot rows (gap at the middle)
+TOP,BOT=2.31,6.61                                     # the 0s' top and bottom rows
+for y in COL: dot(2.07,y)                             # "1"
+for xl,xr,xs in [(3.81,6.05,(4.39,4.93,5.47)),(7.79,9.99,(8.37,8.87,9.41))]:
+    for y in COL: dot(xl,y); dot(xr,y)                # the two 0s
+    for x in xs: dot(x,TOP); dot(x,BOT)
+# green charging icon: circular arrow, bolt inside, >> chevron in the gap on the left
+gx,gy,gr=11.77,3.06,0.95; w=int(.17*PX)
+d.arc([(gx-gr)*PX,(gy-gr)*PX,(gx+gr)*PX,(gy+gr)*PX],start=192,end=138+360,fill=GR,width=w)
+for cx_ in (gx-0.72,gx-0.50):                         # ">>" dots running into the gap
+    dot(cx_,gy+0.30,0.055,GR); dot(cx_+0.08,gy+0.38,0.055,GR); dot(cx_,gy+0.46,0.055,GR)
+d.polygon([((gx+x*.30)*PX,(gy+y*.30)*PX) for x,y in bolt],fill=GR)
+# percent sign under the icon
+px0,py0,s=11.69,5.91,0.70; lw=int(.13*PX); rr=.28
+d.ellipse([(px0-s+.02)*PX,(py0-s+.02)*PX,(px0-s+.02+2*rr)*PX,(py0-s+.02+2*rr)*PX],outline=WH,width=lw)
+d.ellipse([(px0+s-.02-2*rr)*PX,(py0+s-.02-2*rr)*PX,(px0+s-.02)*PX,(py0+s-.02)*PX],outline=WH,width=lw)
+d.line([(px0+s-.05)*PX,(py0-s+.05)*PX,(px0-s+.05)*PX,(py0+s-.05)*PX],fill=WH,width=lw)
 dsp.filter(ImageFilter.GaussianBlur(0.8)).save('display.png')
 print('ok')
 # ---- baked back colour for glTF (exporters can't read the mix node)

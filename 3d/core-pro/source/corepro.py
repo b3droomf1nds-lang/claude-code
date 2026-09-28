@@ -92,25 +92,54 @@ t_disp = img_node(m_disp, os.path.join(HERE, 'display.png'))
 m_disp.node_tree.links.new(t_disp.outputs['Color'], b_disp.inputs['Emission Color'])
 
 # ------------------------------------------------------------------ body
-body = slab('CorePro', W, L, R_CORNER, -T/2, T/2)
-bv = body.modifiers.new('rim', 'BEVEL'); bv.limit_method = 'ANGLE'; bv.angle_limit = math.radians(40)
-bv.width = R_EDGE; bv.segments = 10; bv.profile = 0.5; bv.harden_normals = True
-bake(body)
+# Three layers, measured off the listing's side-profile drawing (26 px = 7.8 mm
+# there): a rounded aluminium front plate, the satin side frame, and a thin
+# glass back plate. The frame is the full 104 x 66 footprint; both plates sit
+# INSET in from it all round, so from the side the frame's ends stand proud of
+# the plates and the plates' rounded edges stand proud of the frame's faces.
+T_FRONT, T_FRAME, T_BACK = 2.70*MM, 3.45*MM, 1.65*MM      # 34.6% / 44.2% / 21.2% of 7.8 mm
+INSET = 0.55*MM
+R_FRONT, R_BACK = 1.40*MM, 1.00*MM                        # outer edge rounding of each plate
+R_SEAM = 0.15*MM                                          # small break where a plate meets the frame
+Z_BACK = -T/2
+Z_FRAME0 = Z_BACK + T_BACK
+Z_FRAME1 = Z_FRAME0 + T_FRAME
+Z_FRAME = (Z_FRAME0 + Z_FRAME1) / 2                       # ports and button are centred on the frame
+
+def ring_edges(bm, z):
+    return [e for e in bm.edges if all(abs(v.co.z - z) < 1e-7 for v in e.verts)]
+
+def plate(name, z0, z1, r_out, outer_top):
+    ob = slab(name, W - 2*INSET, L - 2*INSET, R_CORNER - INSET, z0, z1, 48)
+    bm = bmesh.new(); bm.from_mesh(ob.data)
+    zo, zi = (z1, z0) if outer_top else (z0, z1)
+    bmesh.ops.bevel(bm, geom=ring_edges(bm, zo), offset=r_out, segments=12, profile=0.5, affect='EDGES')
+    bmesh.ops.bevel(bm, geom=ring_edges(bm, zi), offset=R_SEAM, segments=3, profile=0.5, affect='EDGES')
+    bm.to_mesh(ob.data); bm.free()
+    return ob
+
+front = plate('FrontPlate', Z_FRAME1, T/2, R_FRONT, True)
+back = plate('BackPlate', Z_BACK, Z_FRAME0, R_BACK, False)
+frame = slab('Frame', W, L, R_CORNER, Z_FRAME0, Z_FRAME1, 48)
+bv = frame.modifiers.new('rim', 'BEVEL'); bv.limit_method = 'ANGLE'; bv.angle_limit = math.radians(40)
+bv.width = 0.22*MM; bv.segments = 4; bv.profile = 0.5; bv.harden_normals = True
+bake(frame)
 
 # USB-C port on the long edge (x = -W/2), near the bottom end
 PORT_Y = -L/2 + 18*MM
-cut = slab('portcut', 3.25*MM, 8.95*MM, 1.6*MM, 0, 1, 16)
+PORT_H = 3.05*MM
+cut = slab('portcut', PORT_H, 8.95*MM, 1.5*MM, 0, 1, 16)
 cut.data.transform(Matrix.Translation((0, 0, -0.5)))
 cut.data.transform(Matrix.Scale(8*MM, 4, (0, 0, 1)))
-cut.rotation_euler = (0, math.radians(90), 0); cut.location = (-W/2, PORT_Y, 0)
-bo = body.modifiers.new('port', 'BOOLEAN'); bo.object = cut; bo.operation = 'DIFFERENCE'; bo.solver = 'EXACT'
-bake(body); bpy.data.objects.remove(cut)
+cut.rotation_euler = (0, math.radians(90), 0); cut.location = (-W/2, PORT_Y, Z_FRAME)
+bo = frame.modifiers.new('port', 'BOOLEAN'); bo.object = cut; bo.operation = 'DIFFERENCE'; bo.solver = 'EXACT'
+bake(frame); bpy.data.objects.remove(cut)
 tongue = slab('tongue', 0.7*MM, 6.6*MM, 0.3*MM, 0, 5*MM, 6)
 for v in tongue.data.vertices:
     x, y, z = v.co
     v.co = (z, y, x)   # swap x/z: thickness along z, depth along +x
 for p in tongue.data.polygons: p.flip()
-tongue.location = (-W/2 + 1.0*MM, PORT_Y, 0)
+tongue.location = (-W/2 + 1.0*MM, PORT_Y, Z_FRAME)
 tongue.data.materials.append(m_port)
 
 # side button (pill), further up the same edge
@@ -120,38 +149,49 @@ me = btn.data
 for v in me.vertices:
     x, y, z = v.co
     v.co = (-z, y, x)
-btn.location = (-W/2 + 0.12*MM, BTN_Y, 0)
+btn.location = (-W/2 + 0.12*MM, BTN_Y, Z_FRAME)
 b2 = btn.modifiers.new('b', 'BEVEL'); b2.width = 0.18*MM; b2.segments = 4; b2.limit_method = 'ANGLE'
 bake(btn); smooth(btn); btn.data.materials.append(m_chamf)
 
-# material split by face normal
-body.data.materials.append(m_face)    # 0 front (+z)
-body.data.materials.append(m_back)    # 1 back (-z)
-body.data.materials.append(m_chamf)   # 2 polished chamfers
-body.data.materials.append(m_side)    # 3 satin side band
-body.data.materials.append(m_port)    # 4 port cavity
-for p in body.data.polygons:
+m_glass_edge, _ = mat('GlassEdge', **{'Base Color': (0.01, 0.01, 0.011, 1), 'Roughness': 0.05,
+                                     'Coat Weight': 1.0, 'Coat Roughness': 0.02})
+
+# front plate: bead-blasted face, polished rounded edge
+front.data.materials.append(m_face); front.data.materials.append(m_chamf)
+for p in front.data.polygons:
+    p.material_index = 0 if p.normal.z > 0.9995 else 1
+    p.use_smooth = p.material_index == 1
+
+# frame: satin band, polished breaks, port cavity
+frame.data.materials.append(m_side); frame.data.materials.append(m_chamf); frame.data.materials.append(m_port)
+for p in frame.data.polygons:
     nz = p.normal.z; c = p.center
-    if c.x < -W/2 + 0.6*MM and abs(c.y - PORT_Y) < 4.6*MM and abs(c.z) < 1.7*MM and abs(p.normal.x) < 0.99:
-        p.material_index = 4
-    elif nz > 0.9995: p.material_index = 0
-    elif nz < -0.9995: p.material_index = 1
-    elif abs(nz) < 0.25: p.material_index = 3
-    else: p.material_index = 2
-    p.use_smooth = abs(nz) < 0.9995
+    if c.x < -W/2 + 0.6*MM and abs(c.y - PORT_Y) < 4.6*MM and abs(c.z - Z_FRAME) < 1.6*MM and abs(p.normal.x) < 0.99:
+        p.material_index = 2
+    elif abs(nz) < 0.25: p.material_index = 0
+    else: p.material_index = 1
+    # straight runs stay flat: the port boolean leaves long thin triangles there,
+    # and smoothing across them bends the reflection
+    p.use_smooth = abs(nz) < 0.9995 and abs(p.normal.x) < 0.9995 and abs(p.normal.y) < 0.9995
+
+# back plate: printed glass face, glossy black glass edge
+back.data.materials.append(m_back); back.data.materials.append(m_glass_edge)
+for p in back.data.polygons:
+    p.material_index = 0 if p.normal.z < -0.9995 else 1
+    p.use_smooth = p.material_index == 1
 
 # UVs for the back print (planar, 0..1 over the footprint; image is drawn back-view)
-uv = body.data.uv_layers.new(name='UV')
-for p in body.data.polygons:
+uv = back.data.uv_layers.new(name='UV')
+for p in back.data.polygons:
     for li in p.loop_indices:
-        v = body.data.vertices[body.data.loops[li].vertex_index].co
+        v = back.data.vertices[back.data.loops[li].vertex_index].co
         # back is seen from -z: mirror x so the print reads correctly
         uv.data[li].uv = (0.5 - v.x / W, 0.5 + v.y / L)
 
 # display window on the front, lower right
 DX = W/2 - 10.5*MM - 7.4*MM
 DY = -L/2 + 10.9*MM + 4.5*MM
-disp = slab('display', 14.8*MM, 9.0*MM, 1.4*MM, T/2 - 0.01*MM, T/2 + 0.06*MM, 12)
+disp = slab('display', 14.8*MM, 9.0*MM, 1.0*MM, T/2 - 0.01*MM, T/2 + 0.06*MM, 12)
 disp.location = (DX, DY, 0)
 disp.data.materials.append(m_disp)
 uvd = disp.data.uv_layers.new(name='UV')
@@ -162,7 +202,7 @@ for p in disp.data.polygons:
 
 # parent everything to one empty so shots can pose the product
 rig = bpy.data.objects.new('CoreProRig', None); sc.collection.objects.link(rig)
-for o in (body, tongue, btn, disp): o.parent = rig
+for o in (front, frame, back, tongue, btn, disp): o.parent = rig
 
 # ------------------------------------------------------------------ studio
 world = bpy.data.worlds.new('W'); sc.world = world; world.use_nodes = True
@@ -216,6 +256,11 @@ elif shot == 'flat':
     rig.rotation_euler = (math.radians(180), 0, math.radians(-100)); rig.location = (0, 0, T/2)
     look((0.10, -0.42, 0.26), (0, 0, 0)); cam_d.lens = 100
     sc.render.resolution_x = res; sc.render.resolution_y = int(res * 0.75)
+elif shot == 'side':
+    # straight-on view of the long edge opposite the port, front plate on the left like the listing drawing
+    rig.rotation_euler = (math.radians(90), 0, 0); rig.location = (0, 0, L/2)
+    look((0.62, 0, L/2), (0, 0, L/2)); cam_d.type = 'ORTHO'; cam_d.ortho_scale = 0.115
+    sc.render.resolution_x = res; sc.render.resolution_y = res
 elif shot == 'edge':
     rig.rotation_euler = (math.radians(90), 0, math.radians(-90)); rig.location = (0, 0, L/2)
     look((-0.10, -0.03, 0.035), (-W/2, 0, 0.035)); cam_d.lens = 100
