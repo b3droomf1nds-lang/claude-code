@@ -2348,6 +2348,13 @@
     background-size: var(--cmp-tail-size, auto);
     background-repeat: repeat-x;
   }
+  /* The compare section is the last thing in this product section on
+     mobile, so drop the section's own bottom padding (.section's 80px)
+     and let the next section ("Everything you need to stay charged.")
+     start straight after the fade. */
+  .pdp--bold.pdp--core {
+    padding-bottom: 0;
+  }
   .pdp--bold.pdp--core .pdp-cmp__select-heading {
     margin-top: var(--cmp-lead);
   }
