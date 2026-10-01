@@ -2486,6 +2486,17 @@
     object-fit: none;
     object-position: -100000px 0;
   }
+  /* Outline only: the mask is battery-outline.webp, the same image with
+     the charge bar inside removed (only the outline and the terminal nub
+     kept), so the icon shows as an empty battery. A cut-out shape on the
+     original can't do this cleanly: the bar's rounded corners nest into
+     the outline's rounded inner corners, so any rectangle that removes the
+     bar also nicks the outline. The <img> itself (and desktop) still uses
+     the original file. */
+  .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
+    -webkit-mask: url("battery-outline.webp") 0 0 / 100% 100% no-repeat;
+    mask: url("battery-outline.webp") 0 0 / 100% 100% no-repeat;
+  }
 }
 
 /* Charge tile, mobile only: the "59" and "minutes" drawn at the same
