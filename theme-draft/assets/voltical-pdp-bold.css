@@ -2486,18 +2486,16 @@
     object-fit: none;
     object-position: -100000px 0;
   }
-  /* Empty double outline: the mask is battery-outline-double.webp, the
-     same image with the charge bar inside removed (only the outline and the
-     terminal nub kept) plus a second, concentric outline inside it: one
-     line-width in from the outer outline and one line-width thick, so the
-     gap and both lines are all the same width. A cut-out shape on the
-     original can't remove the bar cleanly: the bar's rounded corners nest
-     into the outline's rounded inner corners, so any rectangle that removes
-     it also nicks the outline. The <img> itself (and desktop) still uses
+  /* Outline only: the mask is battery-outline.webp, the same image with
+     the charge bar inside removed (only the outline and the terminal nub
+     kept), so the icon shows as an empty battery. A cut-out shape on the
+     original can't do this cleanly: the bar's rounded corners nest into
+     the outline's rounded inner corners, so any rectangle that removes the
+     bar also nicks the outline. The <img> itself (and desktop) still uses
      the original file. */
   .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
-    -webkit-mask: url("battery-outline-double.webp") 0 0 / 100% 100% no-repeat;
-    mask: url("battery-outline-double.webp") 0 0 / 100% 100% no-repeat;
+    -webkit-mask: url("battery-outline.webp") 0 0 / 100% 100% no-repeat;
+    mask: url("battery-outline.webp") 0 0 / 100% 100% no-repeat;
   }
 }
 
