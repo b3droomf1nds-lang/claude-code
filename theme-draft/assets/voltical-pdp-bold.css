@@ -2486,16 +2486,18 @@
     object-fit: none;
     object-position: -100000px 0;
   }
-  /* Outline only: the mask is battery-outline.webp, the same image with
-     the charge bar inside removed (only the outline and the terminal nub
-     kept), so the icon shows as an empty battery. A cut-out shape on the
-     original can't do this cleanly: the bar's rounded corners nest into
-     the outline's rounded inner corners, so any rectangle that removes the
-     bar also nicks the outline. The <img> itself (and desktop) still uses
+  /* Empty double outline: the mask is battery-outline-double.webp, the
+     same image with the charge bar inside removed (only the outline and the
+     terminal nub kept) plus a second, concentric outline inside it: one
+     line-width in from the outer outline and one line-width thick, so the
+     gap and both lines are all the same width. A cut-out shape on the
+     original can't remove the bar cleanly: the bar's rounded corners nest
+     into the outline's rounded inner corners, so any rectangle that removes
+     it also nicks the outline. The <img> itself (and desktop) still uses
      the original file. */
   .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
-    -webkit-mask: url("battery-outline.webp") 0 0 / 100% 100% no-repeat;
-    mask: url("battery-outline.webp") 0 0 / 100% 100% no-repeat;
+    -webkit-mask: url("battery-outline-double.webp") 0 0 / 100% 100% no-repeat;
+    mask: url("battery-outline-double.webp") 0 0 / 100% 100% no-repeat;
   }
 }
 
@@ -2544,11 +2546,13 @@
   }
 }
 
-/* Charge tile, mobile only: the "59" in Inter at weight 360, the light
-   stroke the owner chose with Canva mode's thickness slider. Loaded under its own family name so no
-   other light-weight Inter on the site changes. The file is Inter's variable
-   font, so any weight 100-900 renders exactly; Canva mode's thickness slider
-   sets --cv-w to preview other weights. */
+/* Charge tile, mobile only: the "59" and "minutes" in Inter at the weight
+   whose stems are as thick as the battery's outline (4.75px at 390px wide):
+   260 for the big "59", 495 for the smaller "minutes" (the same thickness
+   needs more weight at a smaller size). Loaded under its own family name so
+   no other light-weight Inter on the site changes. The file is Inter's
+   variable font, so any weight 100-900 renders exactly; Canva mode's
+   thickness slider sets --cv-w to preview other weights for the "59". */
 @font-face {
   font-family: 'Voltical Stat';
   font-style: normal;
@@ -2561,6 +2565,10 @@
   .template-product .pdp-cmp__card--charge .pdp-cmp__stat,
   .template-product .pdp-cmp__card--charge .pdp-cmp__stat * {
     font-family: 'Voltical Stat', var(--sans), sans-serif;
-    font-weight: var(--cv-w, 360) !important;
+    font-weight: var(--cv-w, 260) !important;
+  }
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--unit {
+    font-family: 'Voltical Stat', var(--sans), sans-serif;
+    font-weight: 495 !important;
   }
 }

@@ -387,6 +387,20 @@
     ls(false, CHARGE_LOCK3_MIGRATION, '1');
   }
 
+  // The "59" then went to thickness 260 to match the battery outline's line
+  // (CSS default). Drop any saved slider value on it once so 260 shows.
+  var CHARGE_WEIGHT260_MIGRATION = 'volt-canva-charge-weight-260';
+  if (ls(true, CHARGE_WEIGHT260_MIGRATION) !== '1'){
+    var statEntry260 = layout[CHARGE_LOCK_KEYS[1]];
+    if (statEntry260 && statEntry260.w){
+      delete statEntry260.w;
+      ls(false, LKEY, JSON.stringify(layout));
+      savedHistory = [];
+      rm(HKEY);
+    }
+    ls(false, CHARGE_WEIGHT260_MIGRATION, '1');
+  }
+
   // Third mobile lock-in of the charge tile (photo nudge, "minutes" and the
   // caption moved down) plus the magnet caption's new line breaks are now in
   // CANVA-BAKED and the markup. Zero the saved mobile offsets for those
@@ -502,8 +516,8 @@
     // with the toolbar's thickness slider. Selecting the number or its row
     // both edit the number itself. The weight is stored as "w" on the
     // number's entry and shown through the --cv-w variable that the mobile
-    // CSS reads (default 360 when nothing is saved).
-    var DEFAULT_STAT_WEIGHT = 360;
+    // CSS reads (default 260 when nothing is saved).
+    var DEFAULT_STAT_WEIGHT = 260;
     function weightTarget(el){
       if (!el || desktopMQ.matches || !el.closest('.pdp-cmp__card--charge')) return null;
       if (el.matches('.pdp-cmp__stat')) return el;
