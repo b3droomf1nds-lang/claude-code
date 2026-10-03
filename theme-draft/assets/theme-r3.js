@@ -825,7 +825,7 @@
       const key = line.dataset.lineKey;
       const item = cart.items.find((i) => i.key === key);
       if (!item) return;
-      if (e.target.closest('[data-qty-edit]') && !qm) { tick(); openQtyMenu(item, line); }
+      if (e.target.closest('[data-qty-edit]') && !qm && !busy) { tick(); openQtyMenu(item, line); }
     });
 
     /* Quantity menu, copied from the iPhone's stepped slider pop-up in the
@@ -1041,6 +1041,7 @@
     };
 
     const qmFinish = () => {
+      const { key, commitQty } = qm;
       const line = qmLine(qm.key);
       if (line) line.classList.remove('is-qty-open');
       qtyOpenKey = null;
@@ -1048,17 +1049,13 @@
       qmEl.root.hidden = true;
       qmEl.root.classList.remove('is-settled');
       el.focus({ preventScroll: true });             // back to the bag card, as when it opened
+      if (commitQty != null) applyQty(key, commitQty);
     };
     const qmLoop = (now) => {
       qmFrame = 0;
       if (!qm) return;
       const dt = Math.min(1 / 30, Math.max(0, (now - qmLast) / 1000));
       qmLast = now;
-      if (qm.closing) {                              // land on the pencil where it is now
-        const pen = qmLine(qm.key);
-        const b = pen && $('.cart-line__pencil', pen).getBoundingClientRect();
-        if (b && b.width) qm.from = { x: b.left + b.width / 2, y: b.top + b.height / 2 };
-      }
       let moving = qm.p.step(dt);
       moving = qm.k.step(dt) || moving;
       moving = qm.s.step(dt) || moving;
@@ -1081,16 +1078,20 @@
       stopTicks();
       qm.closing = true;
       qm.drag = null;
+      qm.hapT = null;
       const v = qmStop(qm.k.to);
-      if (v !== qm.start) applyQty(qm.key, v);
+      qm.commitQty = v !== qm.start ? v : null;
+      const line = qmLine(qm.key);
+      const pen = line && $('.cart-line__pencil', line).getBoundingClientRect();
+      if (pen && pen.width) qm.from = { x: pen.left + pen.width / 2, y: pen.top + pen.height / 2 };
       qmEl.root.classList.remove('is-settled');
       qm.s.aim(1, 0.2, 1);
       if (qmReduce.matches) qm.p.set(0);
-      else qm.p.aim(0, 0.3, 1, -4);
+      else qm.p.aim(0, 0.2, 1, -8 * Math.max(0, qm.p.x));
       qmRun();
     };
     const openQtyMenu = (item, line) => {
-      if (qm) return;
+      if (qm || busy) return;
       const pen = $('.cart-line__pencil', line).getBoundingClientRect();
       const card = el.getBoundingClientRect();
       const vw = document.documentElement.clientWidth;

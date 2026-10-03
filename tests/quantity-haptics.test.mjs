@@ -32,16 +32,20 @@ class Element {
   querySelectorAll(name) {
     return name.includes('frost') ? [new Element(), new Element(), new Element()] : [new Element(), new Element()];
   }
-  getBoundingClientRect() { return { left: 0, top: 200, width: 390, height: 20 }; }
+  getBoundingClientRect() {
+    this.measurements = (this.measurements || 0) + 1;
+    return { left: 0, top: 200, width: 390, height: 20 };
+  }
   setPointerCapture() {}
   contains(node) { return node === this; }
   focus() {}
 }
 
-function harness({ native = false, quantity = 1 } = {}) {
+function harness({ native = false, quantity = 1, reduced = false } = {}) {
   let now = 0;
   let nextTimer = 0;
   const timers = new Map();
+  const frames = new Map();
   const pulses = [];
   const changes = [];
   const previews = [];
@@ -61,18 +65,22 @@ function harness({ native = false, quantity = 1 } = {}) {
       },
       addEventListener() {}
     },
-    window: { innerHeight: 844, matchMedia: () => ({ matches: false }), VolticalStrings: { remove: 'Remove' } },
+    window: { innerHeight: 844, matchMedia: () => ({ matches: reduced }), VolticalStrings: { remove: 'Remove' } },
     performance: { now: () => now },
     setTimeout: (callback, delay) => { timers.set(++nextTimer, { callback, at: now + delay }); return nextTimer; },
     clearTimeout: (id) => timers.delete(id),
-    requestAnimationFrame: () => 1,
+    requestAnimationFrame: (callback) => { frames.set(++nextTimer, callback); return nextTimer; },
     $: (name, root) => root.querySelector(name),
     $$: (name, root) => root.querySelectorAll(name),
     el: new Element(), linesEl: { children: [line] },
     cart: { items: [item], items_subtotal_price: quantity * 100, total_price: quantity * 100, item_count: quantity },
     money: String, isProtection: () => false,
     paintTotals: (cart) => previews.push(cart.item_count),
-    mutate: (change) => { changes.push(change); return Promise.resolve(); },
+    mutate: (change) => {
+      assert.equal(context.api.qmEl.root.hidden, true, 'cart refresh must not interrupt the close');
+      changes.push(change);
+      return Promise.resolve();
+    },
     syncProtectionTier() {}, render() {}, busy: false, qtyOpenKey: null
   };
   vm.createContext(context);
@@ -97,7 +105,17 @@ function harness({ native = false, quantity = 1 } = {}) {
     }
     now = end;
   };
-  return { api, state, x, pointer, touch, advance, pulses, changes, previews };
+  const frame = (amount = 1000 / 60) => {
+    advance(amount);
+    const callbacks = [...frames.values()];
+    frames.clear();
+    callbacks.forEach((callback) => callback(now));
+  };
+  const settle = () => {
+    for (let i = 0; frames.size && i < 180; i++) frame();
+    assert.equal(frames.size, 0, 'animation must finish');
+  };
+  return { api, state, x, pointer, touch, advance, frame, settle, frames, context, line, pulses, changes, previews };
 }
 
 test('one fast input crossing four notches delivers four distinct pulses', () => {
@@ -148,6 +166,8 @@ test('close cancels queued pulses and saves only the final quantity', () => {
   h.pointer('pointerdown', 1);
   h.pointer('pointermove', 5);
   h.api.closeQtyMenu();
+  assert.equal(h.changes.length, 0);
+  h.settle();
   h.advance(200);
   assert.equal(h.pulses.length, 1);
   assert.deepEqual(JSON.parse(JSON.stringify(h.changes)), [{ id: 'test-line', quantity: 5 }]);
@@ -200,5 +220,74 @@ test('keyboard selection and Remove retain the existing quantity behavior', () =
   assert.equal(h.state().shown, 0);
   assert.equal(h.api.qmEl.pill.attrs['aria-valuetext'], 'Remove');
   h.api.qmEl.pill.emit('keydown', { key: 'Enter' });
+  h.settle();
   assert.deepEqual(JSON.parse(JSON.stringify(h.changes)), [{ id: 'test-line', quantity: 0 }]);
+});
+
+test('close returns monotonically to the pencil within 250ms without measuring every frame', () => {
+  const h = harness();
+  h.settle();
+  const pencil = h.line.querySelector('.cart-line__pencil');
+  const before = pencil.measurements;
+  h.api.closeQtyMenu();
+  assert.equal(pencil.measurements, before + 1);
+  let previous = h.state().p.x;
+  let count = 0;
+  while (h.state() && count < 30) {
+    h.frame();
+    count++;
+    if (h.state()) {
+      assert.ok(h.state().p.x <= previous);
+      assert.ok(h.state().p.x >= 0);
+      previous = h.state().p.x;
+    }
+  }
+  assert.equal(h.state(), null);
+  assert.ok(count * 1000 / 60 <= 250, `close took ${count} frames`);
+  assert.equal(pencil.measurements, before + 1);
+  assert.equal(h.changes.length, 0, 'unchanged quantity must not be saved');
+});
+
+test('changed quantity saves exactly once after closing, even if close is requested twice', () => {
+  const h = harness();
+  h.settle();
+  h.pointer('pointerdown', 1);
+  h.pointer('pointerup', 5);
+  h.settle();
+  h.api.closeQtyMenu();
+  h.api.closeQtyMenu();
+  h.frame();
+  assert.ok(h.state().closing);
+  assert.equal(h.changes.length, 0);
+  h.settle();
+  assert.deepEqual(JSON.parse(JSON.stringify(h.changes)), [{ id: 'test-line', quantity: 5 }]);
+});
+
+test('closing midway through opening does not overshoot or leave the menu visible', () => {
+  const h = harness();
+  h.frame();
+  assert.ok(h.state().p.x > 0 && h.state().p.x < 1);
+  h.api.closeQtyMenu();
+  h.settle();
+  assert.equal(h.api.qmEl.root.hidden, true);
+  assert.equal(h.state(), null);
+});
+
+test('reduced motion closes on the next frame and saves the selected quantity', () => {
+  const h = harness({ reduced: true });
+  h.pointer('pointerdown', 1);
+  h.pointer('pointerup', 3);
+  h.api.closeQtyMenu();
+  h.frame();
+  assert.equal(h.state(), null);
+  assert.deepEqual(JSON.parse(JSON.stringify(h.changes)), [{ id: 'test-line', quantity: 3 }]);
+});
+
+test('the selector cannot reopen with a stale quantity during a cart save', () => {
+  const h = harness();
+  h.api.closeQtyMenu();
+  h.settle();
+  h.context.busy = true;
+  h.api.openQtyMenu({ key: 'test-line', quantity: 1 }, h.line);
+  assert.equal(h.state(), null);
 });
