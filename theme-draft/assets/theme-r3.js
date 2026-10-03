@@ -940,6 +940,100 @@
     let qmLast = 0;
     const clamp01 = (x) => Math.max(0, Math.min(1, x));
     const qmStop = (x) => Math.max(0, Math.min(qm.n - 1, Math.round(x)));
+    const qmReleaseTest = (() => {
+      const theme = window.Shopify && window.Shopify.theme;
+      if (!theme || String(theme.id) !== '193289027910' || theme.role !== 'unpublished' ||
+          new URLSearchParams(window.location.search).get('qty_haptics') !== 'release-test') return null;
+      const S = window.VolticalStrings.hapticTest;
+      const panel = document.createElement('div');
+      panel.className = 'qty-menu__release-test';
+      panel.style.cssText = 'position:absolute;z-index:2;top:calc(env(safe-area-inset-top,0px) + 20px);left:20px;right:20px;padding:14px;border-radius:16px;background:#fff;color:#111;box-shadow:0 4px 24px #0002;font:13px/1.4 system-ui';
+      panel.innerHTML = '<b></b><p style="margin:6px 0 10px"></p><select style="max-width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111"><option value="click"></option><option value="label"></option></select> <button type="button" style="margin-top:6px;padding:8px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111"></button>';
+      $('b', panel).textContent = S.title;
+      $('p', panel).textContent = S.instructions;
+      const mode = $('select', panel);
+      mode.setAttribute('aria-label', S.route);
+      $('option[value="click"]', mode).textContent = S.direct;
+      $('option[value="label"]', mode).textContent = S.label;
+      mode.value = 'click';
+      const probe = $('button', panel);
+      probe.textContent = S.probe;
+      const label = document.createElement('label');
+      qmEl.hap.id = 'qty-menu-release-test-switch';
+      label.htmlFor = qmEl.hap.id;
+      label.hidden = true;
+      qmEl.root.appendChild(label);
+      qmEl.root.appendChild(panel);
+      qmEl.root.dataset.hapticTest = 'release-test';
+      qmEl.root.dataset.hapticRoute = mode.value;
+      qmEl.root.dataset.hapticAttempts = '0';
+      const jobs = new Set();
+      const attempts = [];
+      let following = null;
+      let lastStop = 0;
+      let nextAt = 0;
+      const stop = () => {
+        jobs.forEach(clearTimeout);
+        jobs.clear();
+        following = null;
+        nextAt = 0;
+      };
+      const attempt = (session, phase, from, to) => {
+        if (qm !== session || !qm || qm.closing || qm.drag || qm.hapT || document.hidden) return;
+        const record = { route: mode.value, phase, at: performance.now(), from, to };
+        attempts.push(record);
+        if (attempts.length > 40) attempts.shift();
+        qmEl.root.dataset.hapticAttempts = String(Number(qmEl.root.dataset.hapticAttempts) + 1);
+        qmEl.root.dataset.hapticLastAttempt = JSON.stringify(record);
+        qmEl.root.dataset.hapticAttemptLog = JSON.stringify(attempts);
+        try { (mode.value === 'label' ? label : qmEl.hap).click(); } catch (e) {
+          qmEl.root.dataset.hapticError = e.name;
+        }
+      };
+      const schedule = (session, delay, phase, from, to) => {
+        if (!delay) { attempt(session, phase, from, to); return; }
+        const job = setTimeout(() => {
+          jobs.delete(job);
+          attempt(session, phase, from, to);
+        }, delay);
+        jobs.add(job);
+      };
+      probe.addEventListener('click', (e) => {
+        if (!e.isTrusted || !qm || qm.closing || qm.drag || qm.hapT) return;
+        stop();
+        const session = qm;
+        for (const delay of [0, 150, 300, 450]) schedule(session, delay, 'probe', null, null);
+      });
+      mode.addEventListener('change', () => {
+        stop();
+        qmEl.root.dataset.hapticRoute = mode.value;
+      });
+      qmEl.root.addEventListener('pointerdown', stop, true);
+      qmEl.root.addEventListener('touchstart', stop, { passive: true });
+      document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
+      window.addEventListener('pagehide', stop);
+      return {
+        panel, mode, probe, label, stop,
+        arm() {
+          stop();
+          following = qm;
+          lastStop = qmStop(qm.k.x);
+        },
+        step() {
+          if (!following || qm !== following || qm.closing || qm.drag || qm.hapT) return;
+          const v = qmStop(qm.k.x);
+          const direction = Math.sign(v - lastStop);
+          const now = performance.now();
+          while (lastStop !== v) {
+            const from = lastStop;
+            lastStop += direction;
+            nextAt = Math.max(nextAt, now);
+            schedule(following, nextAt - now, 'settle', from, lastStop);
+            nextAt += 16;
+          }
+        }
+      };
+    })();
     const qmLine = (key) => Array.from(linesEl.children).find((n) => n.dataset.lineKey === key);
     // the stop under a finger, as a fraction, with a little give past the ends
     const qmStopAt = (clientX) => {
@@ -1059,6 +1153,7 @@
       let moving = qm.p.step(dt);
       moving = qm.k.step(dt) || moving;
       moving = qm.s.step(dt) || moving;
+      if (qmReleaseTest) qmReleaseTest.step();
       if (!qm.closing && !qm.settled && qm.p.x > 0.98) { qm.settled = true; qmEl.root.classList.add('is-settled'); }
       if (qm.closing && qm.p.x <= 0.01) { qmFinish(); return; }
       qmPaint();
@@ -1076,6 +1171,7 @@
     const closeQtyMenu = () => {
       if (!qm || qm.closing) return;
       stopTicks();
+      if (qmReleaseTest) qmReleaseTest.stop();
       qm.closing = true;
       qm.drag = null;
       qm.hapT = null;
@@ -1125,6 +1221,7 @@
 
     qmEl.hap.addEventListener('pointerdown', (e) => {
       if (!qm || qm.closing) return;
+      if (qmReleaseTest) qmReleaseTest.stop();
       if (e.pointerType === 'mouse') e.preventDefault();
       qmEl.hap.setPointerCapture(e.pointerId);
       qm.drag = { id: e.pointerId, x0: e.clientX, moved: false };
@@ -1154,6 +1251,7 @@
       const v = qmStop(d.moved ? qm.k.to : qmStopAt(e.clientX));   // a tap jumps to that stop
       qm.k.aim(v, 0.26, 0.86);
       qmShow(v, true);
+      if (qmReleaseTest && d.moved && e.type === 'pointerup') qmReleaseTest.arm();
       qm.s.aim(1, 0.32, 0.55);                       // settles back with a small bounce
       qmRun();
     };
@@ -1198,6 +1296,7 @@
     const hapTouch = (e) => Array.from(e.changedTouches).find((t) => qm && qm.hapT && t.identifier === qm.hapT.id);
     qmEl.hap.addEventListener('touchstart', (e) => {
       if (!useSwitchHaptics || !qm || qm.closing || e.touches.length !== 1) return;
+      if (qmReleaseTest) qmReleaseTest.stop();
       const t = e.changedTouches[0];
       qmEl.hap.checked = false;                      // WebKit starts with the thumb on the left
       qm.hapT = { id: t.identifier, x0: t.clientX, moved: false, t0: performance.now(), side: -1, shown: qm.shown, owed: 0, at: 0, flips: 0 };
@@ -1248,7 +1347,7 @@
     });
     // anywhere but the pill closes it (and saves)
     qmEl.root.addEventListener('pointerdown', (e) => {
-      if (e.target === qmEl.hap || qmEl.pill.contains(e.target)) return;
+      if (e.target === qmEl.hap || qmEl.pill.contains(e.target) || (qmReleaseTest && qmReleaseTest.panel.contains(e.target))) return;
       e.preventDefault();
       closeQtyMenu();
     });

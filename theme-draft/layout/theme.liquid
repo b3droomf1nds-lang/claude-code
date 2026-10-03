@@ -158,7 +158,15 @@
       shipStandard: {{ 'cart.shipping_standard' | t | json }},
       shipFree: {{ 'cart.shipping_free' | t | json }},
       shipFreePrice: {{ 'cart.shipping_free_price' | t | json }},
-      shipAtCheckout: {{ 'cart.shipping_at_checkout' | t | json }}
+      shipAtCheckout: {{ 'cart.shipping_at_checkout' | t | json }},
+      hapticTest: {
+        title: {{ 'cart.haptic_test.title' | t | json }},
+        instructions: {{ 'cart.haptic_test.instructions' | t | json }},
+        route: {{ 'cart.haptic_test.route' | t | json }},
+        direct: {{ 'cart.haptic_test.direct' | t | json }},
+        label: {{ 'cart.haptic_test.label' | t | json }},
+        probe: {{ 'cart.haptic_test.probe' | t | json }}
+      }
     };
   </script>
   {{ 'voltical-data.js' | asset_url | script_tag }}
