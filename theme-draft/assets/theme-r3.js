@@ -741,18 +741,25 @@
       /* Each product is a bubble like the shipping one: the short name
          ("Core", not "Voltical Core 5K & 10K") as the small grey label, the
          options under it, one per line ("Titanium Gold", then "10,000mAh"), the price on the
-         right. No quantity buttons or Remove; a quantity over 1 shows as
-         "× 2" after the name. */
+         right with "Qty 1" and a pencil under it. The pencil (data-qty-edit)
+         will open a small quantity menu; it has no action yet. */
       const shortName = (t) => t.replace(/^Voltical\s+/i, '').replace(/\s+\d+K\s*(&|and|\/)\s*\d+K$/i, '');
       const options = (v) => v.split(' / ').map((o) => `<span>${o.replace(/\s*mah\b/i, 'mAh')}</span>`).join(' ');
       linesEl.innerHTML = realLines.map((i) => `
         <div class="cart-line" data-line-key="${i.key}">
           <div class="cart-line__img">${i.image ? `<img src="${i.image.replace(/(\.[a-z]+)(\?|$)/, '_160x$1$2')}" alt="">` : ''}</div>
           <div class="cart-line__body">
-            <div class="cart-line__title">${shortName(i.product_title)}${i.quantity > 1 ? ` × ${i.quantity}` : ''}</div>
+            <div class="cart-line__title">${shortName(i.product_title)}</div>
             ${i.variant_title && i.variant_title !== 'Default Title' ? `<div class="cart-line__variant">${options(i.variant_title)}</div>` : ''}
           </div>
-          <span class="cart-line__price">${money(i.final_line_price)}</span>
+          <div class="cart-line__side">
+            <span class="cart-line__price">${money(i.final_line_price)}</span>
+            <button type="button" class="cart-line__qty" data-qty-edit aria-label="Quantity ${i.quantity}, edit">
+              <span class="cart-line__qty-label">Qty</span>
+              <span class="cart-line__qty-num">${i.quantity}</span>
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M11.2 2.3a1.6 1.6 0 0 1 2.3 0l.2.2a1.6 1.6 0 0 1 0 2.3L5.6 12.9 2.4 13.6l.7-3.2 8.1-8.1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="m9.9 3.7 2.4 2.4" stroke="currentColor" stroke-width="1.5"/></svg>
+            </button>
+          </div>
         </div>`).join('');
 
       const protLine = cart.items.find(isProtection);
