@@ -894,6 +894,13 @@
        slider's invisible one (.qty-menu__hap, below). */
     const canVibrate = typeof navigator.vibrate === 'function';
     const useSwitchHaptics = !canVibrate && 'switch' in qmEl.hap;
+    let hapFrame = null;
+    let hapPrime = null;
+    const hapSeeds = [];
+    const hapControl = () => hapFrame ? hapFrame.input : qmEl.hap;
+    const hapOrigin = (target) => hapFrame && target === hapFrame.input
+      ? hapFrame.frame.getBoundingClientRect() : { left: 0, top: 0 };
+    const hapClientX = (e) => e.clientX + hapOrigin(e.currentTarget).left;
     let ticksPending = 0;
     let tickTimer = 0;
     const playTick = () => {
@@ -1037,6 +1044,13 @@
         E.hap.style.cssText = 'width:' + w + 'px;height:' + h + 'px;transform:' + E.pill.style.transform +
           (qm.closing ? ';pointer-events:none' : '');
       }
+      if (hapFrame) {
+        E.hap.style.pointerEvents = 'none';
+        const fw = w * qm.s.x, fh = h * qm.s.x;
+        hapFrame.frame.style.cssText = 'position:fixed;border:0;opacity:0;z-index:121;left:' +
+          (cx - fw / 2) + 'px;top:' + (cy - fh / 2) + 'px;width:' + fw + 'px;height:' + fh + 'px';
+        if (!qm.hapT) hapFrame.input.style.cssText = hapFrame.base + 'width:' + fw + 'px;height:' + fh + 'px';
+      }
     };
 
     const qmFinish = () => {
@@ -1078,7 +1092,7 @@
       stopTicks();
       qm.closing = true;
       qm.drag = null;
-      hapReset();
+      hapReset(true);
       const v = qmStop(qm.k.to);
       qm.commitQty = v !== qm.start ? v : null;
       const line = qmLine(qm.key);
@@ -1107,6 +1121,14 @@
       };
       hapReset();
       if (useSwitchHaptics) qmEl.hap.switch = true;
+      if (hapPrime && hapPrime.seed.input.isConnected && !hapPrime.seed.input.disabled && hapPrime.seed.input.switch) {
+        hapFrame = hapPrime.seed;
+        qm.hapWarm = hapPrime.warm || performance.now() >= hapPrime.readyAt && hapPrime.readyAt > 0;
+        qm.hapSide = hapPrime.side;
+        qm.hapResetAt = hapPrime.resetAt;
+        qm.hapReadyAt = hapPrime.readyAt;
+        hapSync(performance.now());
+      }
       const dots = Array.from({ length: n }, () => '<i></i>').join('');
       qmEl.dotsOff.innerHTML = dots;
       qmEl.dotsOn.innerHTML = dots;
@@ -1125,14 +1147,14 @@
       setTimeout(() => { if (qm && !qm.closing) qmEl.pill.focus({ preventScroll: true }); }, 0);
     };
 
-    qmEl.hap.addEventListener('pointerdown', (e) => {
-      if (!qm || qm.closing) return;
+    const qmPointerDown = (e) => {
+      if (!qm || qm.closing || e.currentTarget !== hapControl()) return;
       if (e.pointerType === 'mouse') e.preventDefault();
-      qmEl.hap.setPointerCapture(e.pointerId);
-      qm.drag = { id: e.pointerId, x0: e.clientX, moved: false };
+      e.currentTarget.setPointerCapture(e.pointerId);
+      qm.drag = { id: e.pointerId, x0: hapClientX(e), moved: false };
       qm.s.aim(1.02, 0.2, 1);                        // puffs up under the finger
       qmRun();
-    });
+    };
     const qmMoveTo = (x) => {
       const d = qm.drag;
       if (!d.moved && Math.abs(x - d.x0) < 4) return;
@@ -1140,32 +1162,59 @@
       qm.k.aim(qmStopAt(x), 0.09, 1);               // the knob follows the finger
       qmShow(qmStop(qm.k.to), true, true);
     };
-    qmEl.hap.addEventListener('pointermove', (e) => {
+    const qmPointerMove = (e) => {
       const d = qm && qm.drag;
-      if (!d || e.pointerId !== d.id) return;
+      if (!d || e.pointerId !== d.id || e.currentTarget !== hapControl()) return;
+      const origin = hapOrigin(e.currentTarget);
       const samples = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
-      for (const sample of samples) qmMoveTo(sample.clientX);
-      qmMoveTo(e.clientX);
+      for (const sample of samples) qmMoveTo(sample.clientX + origin.left);
+      qmMoveTo(e.clientX + origin.left);
       qmRun();
-    });
+    };
     const qmRelease = (e) => {
       const d = qm && qm.drag;
-      if (!d || e.pointerId !== d.id) return;
-      if (d.moved && e.type === 'pointerup') qmMoveTo(e.clientX);
+      if (!d || e.pointerId !== d.id || e.currentTarget !== hapControl()) return;
+      const x = hapClientX(e);
+      if (d.moved && e.type === 'pointerup') qmMoveTo(x);
       qm.drag = null;
-      const v = qmStop(d.moved ? qm.k.to : qmStopAt(e.clientX));   // a tap jumps to that stop
+      const v = qmStop(d.moved ? qm.k.to : qmStopAt(x));   // a tap jumps to that stop
       qm.k.aim(v, 0.26, 0.86);
       qmShow(v, true);
       if (d.moved || e.type === 'pointercancel') stopTicks();
       qm.s.aim(1, 0.32, 0.55);                       // settles back with a small bounce
       qmRun();
     };
-    qmEl.hap.addEventListener('pointerup', qmRelease);
-    qmEl.hap.addEventListener('pointercancel', qmRelease);
 
     const HAP = { W: 4000, H: 40, D: 100, RESET: 200, FOLLOW: 205 };
-    const hapReset = () => {
+    const hapPark = (seed) => {
+      seed.frame.style.cssText = 'position:fixed;border:0;opacity:0;pointer-events:none;left:-5000px;top:0;width:334px;height:72px';
+    };
+    const hapClearPrime = () => {
+      hapPrime = null;
+      for (const seed of hapSeeds) {
+        seed.touch = null;
+        seed.candidate = null;
+        seed.priming = false;
+        seed.input.disabled = true;
+        seed.input.switch = false;
+        seed.input.checked = false;
+        seed.input.disabled = false;
+        hapPark(seed);
+      }
+    };
+    const hapReset = (preserve = false) => {
       if (!useSwitchHaptics) return;
+      if (hapFrame) {
+        if (preserve && qm && !qm.hapT) {
+          hapPrime = { seed: hapFrame, warm: qm.hapWarm, side: qm.hapSide,
+            resetAt: qm.hapResetAt, readyAt: qm.hapReadyAt };
+          hapPark(hapFrame);
+        } else {
+          if (qm) qm.drag = null;
+          hapClearPrime();
+        }
+        hapFrame = null;
+      }
       qmEl.hap.disabled = true;
       qmEl.hap.switch = false;
       qmEl.hap.checked = false;
@@ -1189,35 +1238,41 @@
       }
     };
     const hapPlace = (x, y) => {
-      qmEl.hap.style.cssText = 'width:' + HAP.W + 'px;height:' + HAP.H + 'px;transform:translate(' +
-        (x - HAP.W / 2 - qm.hapT.side * HAP.D) + 'px,' + (y - HAP.H / 2) + 'px)';
-      qmEl.hap.getBoundingClientRect();              // lay it out now: WebKit reads it right after this listener
+      const input = hapControl();
+      const origin = hapOrigin(input);
+      input.style.cssText = (hapFrame ? hapFrame.base : '') + 'width:' + HAP.W + 'px;height:' + HAP.H + 'px;transform:translate(' +
+        (x - origin.left - HAP.W / 2 - qm.hapT.side * HAP.D) + 'px,' + (y - origin.top - HAP.H / 2) + 'px)';
+      input.getBoundingClientRect();              // lay it out now: WebKit reads it right after this listener
     };
     const hapTouch = (e) => Array.from(e.changedTouches).find((t) => qm && qm.hapT && t.identifier === qm.hapT.id);
-    qmEl.hap.addEventListener('touchstart', (e) => {
-      if (!useSwitchHaptics || !qm || qm.closing || !e.isTrusted) return;
+    const hapTouchStart = (e) => {
+      if (!useSwitchHaptics || !qm || qm.closing || !e.isTrusted || e.currentTarget !== hapControl()) return;
       if (e.touches.length !== 1) { hapReset(); return; }
       const t = e.changedTouches[0];
+      const origin = hapOrigin(e.currentTarget);
+      const x = t.clientX + origin.left, y = t.clientY + origin.top;
       const now = performance.now();
       hapSync(now);
       if (!qm.hapWarm) {
-        qmEl.hap.checked = false;
-        qmEl.hap.switch = true;
+        hapControl().checked = false;
+        hapControl().switch = true;
         qm.hapSide = -1;
       }
-      qm.hapT = { id: t.identifier, x0: t.clientX, moved: false, side: qm.hapSide, shown: qm.shown, flips: 0 };
+      qm.hapT = { id: t.identifier, x0: x, moved: false, side: qm.hapSide, shown: qm.shown, flips: 0 };
       qm.hapResetAt = now + HAP.RESET;
       qm.hapReadyAt = now + HAP.FOLLOW;
-      hapPlace(t.clientX, t.clientY);
-    }, { passive: true });
-    qmEl.hap.addEventListener('touchmove', (e) => {
+      hapPlace(x, y);
+    };
+    const hapTouchMove = (e) => {
       const t = hapTouch(e);
       if (!t || !e.isTrusted) return;
+      const origin = hapOrigin(e.currentTarget);
+      const x = t.clientX + origin.left, y = t.clientY + origin.top;
       const h = qm.hapT;
       const now = performance.now();
       hapSync(now);
-      if (Math.abs(t.clientX - h.x0) >= 4) h.moved = true;
-      const v = h.moved ? qmStop(qmStopAt(t.clientX)) : h.shown;
+      if (Math.abs(x - h.x0) >= 4) h.moved = true;
+      const v = h.moved ? qmStop(qmStopAt(x)) : h.shown;
       const crossed = v !== h.shown;
       h.shown = v;
       const ready = qm.hapWarm && (!qm.hapReadyAt || qm.hapResetAt > now);
@@ -1226,8 +1281,8 @@
         h.flips++;
       }
       qm.hapSide = h.side;
-      hapPlace(t.clientX, t.clientY);
-    }, { passive: true });
+      hapPlace(x, y);
+    };
     const hapEnd = (e) => {
       const h = hapTouch(e) && qm.hapT;
       if (!h) return;
@@ -1246,16 +1301,27 @@
       qm.hapT = null;
       qmRun();
     };
-    qmEl.hap.addEventListener('touchend', hapEnd, { passive: false });
-    qmEl.hap.addEventListener('touchcancel', hapEnd, { passive: false });
-    qmEl.hap.addEventListener('click', () => {
+    const hapClick = () => {
       if (!useSwitchHaptics || !qm) return;
       qm.hapWarm = false;
       qm.hapSide = -1;
       qm.hapResetAt = 0;
       qm.hapReadyAt = 0;
-    });
+    };
+    const hapBind = (input) => {
+      input.addEventListener('pointerdown', qmPointerDown);
+      input.addEventListener('pointermove', qmPointerMove);
+      input.addEventListener('pointerup', qmRelease);
+      input.addEventListener('pointercancel', qmRelease);
+      input.addEventListener('touchstart', hapTouchStart, { passive: true });
+      input.addEventListener('touchmove', hapTouchMove, { passive: true });
+      input.addEventListener('touchend', hapEnd, { passive: false });
+      input.addEventListener('touchcancel', hapEnd, { passive: false });
+      input.addEventListener('click', hapClick);
+    };
+    hapBind(qmEl.hap);
     const hapSuspend = () => {
+      hapClearPrime();
       if (!qm) return;
       stopTicks();
       qm.drag = null;
@@ -1263,6 +1329,138 @@
     };
     document.addEventListener('visibilitychange', () => { if (document.hidden) hapSuspend(); });
     window.addEventListener('pagehide', hapSuspend);
+    let hapSeedFrame = 0;
+    const hapUpdateSeeds = () => {
+      hapSeedFrame = 0;
+      for (const seed of hapSeeds) {
+        if (seed === hapFrame || seed.touch || seed.candidate) continue;
+        if (document.hidden || isOpen || closing || hapPrime || seed.button.disabled) { hapPark(seed); continue; }
+        const r = seed.button.getBoundingClientRect();
+        if (!r.width || !r.height || r.bottom <= 0 || r.top >= window.innerHeight) { hapPark(seed); continue; }
+        seed.frame.style.pointerEvents = 'none';
+        const under = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        if (!under || !seed.button.contains(under)) { hapPark(seed); continue; }
+        seed.frame.style.cssText = 'position:fixed;border:0;opacity:0;z-index:119;left:' + r.left +
+          'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
+        seed.input.style.cssText = seed.base + 'touch-action:auto;width:' + r.width + 'px;height:' + r.height + 'px';
+      }
+    };
+    const hapQueueSeeds = () => {
+      if (hapSeeds.length && !hapSeedFrame) hapSeedFrame = requestAnimationFrame(hapUpdateSeeds);
+    };
+    const hapMountSeeds = () => {
+      if (!useSwitchHaptics || !window.matchMedia('(pointer: coarse)').matches) return;
+      for (const button of $$('[data-cart-open], [data-atc]')) {
+        const frame = document.createElement('iframe');
+        frame.className = 'qty-haptic-prime';
+        frame.tabIndex = -1;
+        frame.setAttribute('aria-hidden', 'true');
+        frame.title = button.getAttribute('aria-label') || button.textContent.trim();
+        frame.src = 'about:blank';
+        frame.style.cssText = 'position:fixed;border:0;opacity:0;pointer-events:none;left:-5000px;top:0;width:334px;height:72px';
+        frame.addEventListener('load', () => {
+        if (hapSeeds.some((seed) => seed.frame === frame)) return;
+        const doc = frame.contentDocument;
+        if (!doc || !doc.body) { frame.remove(); return; }
+        doc.documentElement.style.cssText = 'overflow:hidden;background:transparent';
+        doc.body.style.cssText = 'margin:0;overflow:hidden;background:transparent';
+        const input = doc.createElement('input');
+        input.type = 'checkbox';
+        input.tabIndex = -1;
+        input.setAttribute('aria-hidden', 'true');
+        const base = 'position:absolute;left:0;top:0;margin:0;padding:0;opacity:0;touch-action:none;';
+        const seed = { frame, input, button, base, touch: null, candidate: null, priming: false, activatedAt: -1000 };
+        hapPark(seed);
+        doc.body.appendChild(input);
+        hapSeeds.push(seed);
+        input.addEventListener('touchstart', (e) => {
+          if (qm || isOpen || closing || !e.isTrusted) return;
+          if (e.touches.length !== 1 || button.disabled) { hapClearPrime(); hapQueueSeeds(); return; }
+          const r = frame.getBoundingClientRect();
+          hapClearPrime();
+          frame.style.cssText = 'position:fixed;border:0;opacity:0;z-index:119;left:' + r.left +
+            'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
+          const t = e.changedTouches[0];
+          input.style.cssText = base + 'touch-action:auto;width:' + r.width + 'px;height:' + r.height + 'px';
+          seed.touch = { id: t.identifier, x: t.clientX, y: t.clientY, moved: false,
+            at: performance.now() };
+        }, { passive: true });
+        input.addEventListener('touchmove', (e) => {
+          const t = Array.from(e.changedTouches).find((t) => seed.touch && t.identifier === seed.touch.id);
+          if (!t || qm || !e.isTrusted) return;
+          if (Math.hypot(t.clientX - seed.touch.x, t.clientY - seed.touch.y) > 8) {
+            seed.touch.moved = true;
+          }
+        }, { passive: true });
+        const finishSeed = (e) => {
+          if (!seed.touch || qm) return;
+          const t = Array.from(e.changedTouches).find((t) => t.identifier === seed.touch.id);
+          if (!t) return;
+          const touch = seed.touch;
+          seed.touch = null;
+          const origin = frame.getBoundingClientRect();
+          const r = button.getBoundingClientRect();
+          const x = t.clientX + origin.left, y = t.clientY + origin.top;
+          const accepted = e.isTrusted && e.type === 'touchend' && e.touches.length === 0 && !touch.moved &&
+            Math.hypot(t.clientX - touch.x, t.clientY - touch.y) <= 8 && !button.disabled &&
+            x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+          if (!accepted) { hapClearPrime(); hapQueueSeeds(); return; }
+          seed.candidate = { at: performance.now() };
+          setTimeout(() => {
+            if (seed.candidate && !seed.priming) { seed.candidate = null; hapQueueSeeds(); }
+          }, 1500);
+        };
+        input.addEventListener('touchend', finishSeed, { passive: true });
+        input.addEventListener('touchcancel', finishSeed, { passive: true });
+        input.addEventListener('mousedown', (e) => {
+          if (!e.isTrusted || e.button !== 0 || qm || isOpen || closing || !seed.candidate ||
+            performance.now() - seed.candidate.at > 1500 || button.disabled) return;
+          input.switch = true;
+          input.style.cssText = base + 'width:' + HAP.W + 'px;height:' + HAP.H + 'px;transform:translate(' +
+            (e.clientX - HAP.W / 2 + HAP.D) + 'px,' + (e.clientY - HAP.H / 2) + 'px)';
+          input.getBoundingClientRect();
+          seed.priming = true;
+        });
+        input.addEventListener('mouseup', (e) => {
+          if (!e.isTrusted || e.button !== 0 || !seed.priming || qm || isOpen || closing || button.disabled) return;
+          seed.priming = false;
+          seed.candidate = null;
+          input.remove();
+          doc.body.appendChild(input);
+          input.getBoundingClientRect();
+          hapPrime = { seed, warm: true, side: -1, resetAt: 0, readyAt: 0 };
+          seed.activatedAt = performance.now();
+          hapPark(seed);
+          button.click();
+          setTimeout(() => { if (!isOpen && hapPrime && hapPrime.seed === seed) { hapClearPrime(); hapQueueSeeds(); } }, 1500);
+        });
+        input.addEventListener('click', (e) => {
+          if (hapPrime && hapPrime.seed === seed) {
+            hapPrime.warm = false;
+            hapPrime.readyAt = 0;
+          }
+          if (qm || isOpen || closing) return;
+          e.preventDefault();
+          if (performance.now() - seed.activatedAt < 600 || button.disabled) return;
+          hapClearPrime();
+          button.click();
+        });
+        hapBind(input);
+        if (typeof ResizeObserver === 'function') new ResizeObserver(hapQueueSeeds).observe(button);
+        if (typeof MutationObserver === 'function') {
+          const observer = new MutationObserver(hapQueueSeeds);
+          observer.observe(button, { attributes: true, attributeFilter: ['class', 'style', 'disabled'] });
+          if (button.parentElement) observer.observe(button.parentElement, { attributes: true, attributeFilter: ['class', 'style'] });
+        }
+        hapQueueSeeds();
+        });
+        document.body.appendChild(frame);
+      }
+      window.addEventListener('scroll', hapQueueSeeds, { passive: true, capture: true });
+      window.addEventListener('resize', hapQueueSeeds, { passive: true });
+      document.addEventListener('visibilitychange', hapQueueSeeds);
+      hapQueueSeeds();
+    };
     qmEl.pill.addEventListener('keydown', (e) => {
       if (!qm || qm.closing) return;
       const step = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
@@ -1378,6 +1576,8 @@
       document.body.style.overflow = '';
       el.style.transform = '';
       stopAnims();
+      hapClearPrime();
+      hapQueueSeeds();
     };
     const atRest = () => { if (isOpen && !closing && scroller.scrollTop <= 1) finishClose(); };
     scroller.addEventListener('scroll', () => {
@@ -1407,6 +1607,7 @@
         scroller.scrollTo({ top: maxTop(), behavior: reduceMotion.matches ? 'auto' : 'smooth' });
       }
       el.focus({ preventScroll: true });            // the card itself, so the X doesn't show a focus ring
+      hapQueueSeeds();
     };
     const cardY = () => {
       const tf = getComputedStyle(el).transform;
@@ -1501,6 +1702,7 @@
     scrim.addEventListener('click', close);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen) close(); });
 
+    hapMountSeeds();
     refresh(false);
     return { refresh, open, close };
   })();

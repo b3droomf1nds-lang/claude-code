@@ -12,6 +12,8 @@ For a drag, a nonpassive `touchend` handler prevents the default lift click befo
 
 This is inferred from [WebKit's switch implementation](https://github.com/WebKit/WebKit/blob/main/Source/WebCore/html/CheckboxInputType.cpp), not a supported haptics API. The first cold swipe can still be silent before native tracking starts. Tapping a quantity or closing resets it. Source-level tracking state is not evidence that the physical phone vibrated, and the timing boundary needs testing on the owner's Safari.
 
+The owner subsequently confirmed that the pencil, slow first drag, and later swipes work, but a quick first swipe is silent. The follow-up [first-swipe priming trial](quantity-first-swipe-prime.md) changes the native-control handoff only and must be confirmed separately on the phone.
+
 Android retains the existing notch pulse queue during contact; lifting or canceling discards queued pulses instead of playing them during the remaining spring settle.
 
 ## Verification and rollback

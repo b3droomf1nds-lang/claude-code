@@ -16,9 +16,12 @@ class Element {
     this.events = new Map();
     this.eventOptions = new Map();
     this.nodes = new Map();
+    this.isConnected = true;
+    this.textContent = '';
   }
   set innerHTML(value) { this.children = Array.from({ length: (value.match(/<i>/g) || []).length }, () => new Element()); }
   setAttribute(name, value) { this.attrs[name] = value; }
+  getAttribute(name) { return this.attrs[name]; }
   addEventListener(name, callback, options) {
     if (!this.events.has(name)) this.events.set(name, []);
     this.events.get(name).push(callback);
@@ -26,7 +29,7 @@ class Element {
   }
   emit(type, data = {}) {
     const event = {
-      type, isTrusted: true, pointerId: 1, pointerType: 'touch', cancelable: true, defaultPrevented: false,
+      type, currentTarget: this, isTrusted: true, pointerId: 1, pointerType: 'touch', cancelable: true, defaultPrevented: false,
       preventDefault() { if (this.cancelable) this.defaultPrevented = true; }, ...data
     };
     for (const callback of this.events.get(type) || []) callback(event);
@@ -43,16 +46,20 @@ class Element {
   }
   getBoundingClientRect() {
     this.measurements = (this.measurements || 0) + 1;
-    return { left: 0, top: 200, width: 390, height: 20 };
+    return this.rect || { left: 0, top: 200, right: 390, bottom: 220, width: 390, height: 20 };
   }
   setPointerCapture() {}
-  appendChild(node) { this.children.push(node); }
+  appendChild(node) { this.children.push(node); node.parentElement = this; node.isConnected = true; }
+  remove() {
+    if (this.parentElement) this.parentElement.children = this.parentElement.children.filter((child) => child !== this);
+    this.isConnected = false;
+  }
   click() { this.clicks = (this.clicks || 0) + 1; this.emit('click', { isTrusted: false }); }
   contains(node) { return node === this || this.children.includes(node) || [...this.nodes.values()].some((child) => child.contains(node)); }
   focus() {}
 }
 
-function harness({ native = false, quantity = 1, reduced = false, experiment = false } = {}) {
+function harness({ native = false, quantity = 1, reduced = false, experiment = false, prime = false, autoOpen = true } = {}) {
   let now = 0;
   let nextTimer = 0;
   const timers = new Map();
@@ -64,22 +71,28 @@ function harness({ native = false, quantity = 1, reduced = false, experiment = f
   const line = new Element();
   const documentEvents = new Element();
   const windowEvents = new Element();
+  const entry = new Element();
+  entry.textContent = 'Your bag';
   line.dataset = { lineKey: item.key };
+  const createElement = (tag) => {
+    const root = new Element();
+    if (native) root.querySelector('.qty-menu__hap').switch = true;
+    if (tag === 'iframe') root.contentDocument = {
+      documentElement: new Element(), body: new Element(), createElement
+    };
+    return root;
+  };
   const context = {
     PENCIL: '<svg></svg>',
     navigator: native ? {} : { vibrate: (duration) => { pulses.push({ at: now, duration }); return true; } },
     document: {
       documentElement: { clientWidth: 390 },
-      body: { appendChild() {} },
-      createElement: () => {
-        const root = new Element();
-        if (native) root.querySelector('.qty-menu__hap').switch = true;
-        return root;
-      },
+      body: new Element(), createElement,
+      elementFromPoint: () => entry,
       addEventListener: (...args) => documentEvents.addEventListener(...args)
     },
     window: {
-      innerHeight: 844, matchMedia: () => ({ matches: reduced }),
+      innerHeight: 844, matchMedia: (query) => ({ matches: query.includes('pointer:') ? prime : reduced }),
       location: { search: experiment ? '?qty_haptics=release-test' : '' },
       addEventListener: (...args) => windowEvents.addEventListener(...args),
       VolticalStrings: { remove: 'Remove' }
@@ -90,7 +103,7 @@ function harness({ native = false, quantity = 1, reduced = false, experiment = f
     clearTimeout: (id) => timers.delete(id),
     requestAnimationFrame: (callback) => { frames.set(++nextTimer, callback); return nextTimer; },
     $: (name, root) => root.querySelector(name),
-    $$: (name, root) => root.querySelectorAll(name),
+    $$: (name, root) => root ? root.querySelectorAll(name) : [entry],
     el: new Element(), linesEl: { children: [line] },
     cart: { items: [item], items_subtotal_price: quantity * 100, total_price: quantity * 100, item_count: quantity },
     money: String, isProtection: () => false,
@@ -100,18 +113,25 @@ function harness({ native = false, quantity = 1, reduced = false, experiment = f
       changes.push(change);
       return Promise.resolve();
     },
-    syncProtectionTier() {}, render() {}, busy: false, qtyOpenKey: null
+    syncProtectionTier() {}, render() {}, busy: false, qtyOpenKey: null, isOpen: false, closing: false
+  };
+  const appendBody = context.document.body.appendChild.bind(context.document.body);
+  context.document.body.appendChild = (node) => {
+    appendBody(node);
+    if (node.contentDocument) context.setTimeout(() => node.emit('load'), 0);
   };
   vm.createContext(context);
-  vm.runInContext(selector + '\nthis.api = { openQtyMenu, closeQtyMenu, qmEl, state: () => qm };', context);
+  vm.runInContext(selector + '\nthis.api = { openQtyMenu, closeQtyMenu, qmEl, state: () => qm, mount: typeof hapMountSeeds === "function" ? hapMountSeeds : () => {}, prime: () => typeof hapPrime === "undefined" ? null : hapPrime, seeds: typeof hapSeeds === "undefined" ? [] : hapSeeds, control: typeof hapControl === "function" ? hapControl : () => qmEl.hap };', context);
   const { api } = context;
-  api.openQtyMenu(item, line);
+  entry.addEventListener('click', () => { context.isOpen = true; });
+  if (autoOpen) api.openQtyMenu(item, line);
   const state = () => api.state();
   const x = (value) => state().to.x - state().W / 2 + 12 + 24 + value * (state().W - 24 - 48) / (state().n - 1);
-  const pointer = (type, value, extra = {}) => api.qmEl.hap.emit(type, { clientX: x(value), ...extra });
+  const origin = () => api.control() === api.qmEl.hap ? { left: 0, top: 0 } : api.seeds[0].frame.getBoundingClientRect();
+  const pointer = (type, value, extra = {}) => api.control().emit(type, { clientX: x(value) - origin().left, ...extra });
   const touch = (type, value, extra = {}) => {
-    const point = { identifier: 1, clientX: x(value), clientY: state().to.y };
-    return api.qmEl.hap.emit(type, {
+    const point = { identifier: 1, clientX: x(value) - origin().left, clientY: state().to.y - origin().top };
+    return api.control().emit(type, {
       changedTouches: [point], touches: ['touchend', 'touchcancel'].includes(type) ? [] : [point], ...extra
     });
   };
@@ -136,8 +156,147 @@ function harness({ native = false, quantity = 1, reduced = false, experiment = f
     for (let i = 0; frames.size && i < 180; i++) frame();
     assert.equal(frames.size, 0, 'animation must finish');
   };
-  return { api, state, x, pointer, touch, advance, frame, settle, frames, context, line, pulses, changes, previews, documentEvents, windowEvents };
+  return { api, state, x, pointer, touch, advance, frame, settle, frames, context, line, item, entry, pulses, changes, previews, documentEvents, windowEvents };
 }
+
+function primeEntry(h, { moved = false, trusted = true, cancel = false } = {}) {
+  h.api.mount();
+  h.frame();
+  const seed = h.api.seeds[0];
+  const point = { identifier: 3, clientX: 150, clientY: 10 };
+  const end = { ...point, clientX: moved ? 180 : point.clientX };
+  seed.input.emit('touchstart', { isTrusted: trusted, changedTouches: [point], touches: [point] });
+  if (moved) seed.input.emit('touchmove', { isTrusted: trusted, changedTouches: [end], touches: [end] });
+  const release = seed.input.emit(cancel ? 'touchcancel' : 'touchend', {
+    isTrusted: trusted, changedTouches: [end], touches: []
+  });
+  seed.input.emit('mousedown', { isTrusted: trusted, button: 0, clientX: end.clientX, clientY: end.clientY });
+  seed.input.emit('mouseup', { isTrusted: trusted, button: 0, clientX: end.clientX, clientY: end.clientY });
+  return { seed, release };
+}
+
+test('cart-opening warm-up leaves the real touch release and pencil switch unchanged', () => {
+  const h = harness({ native: true, prime: true, autoOpen: false });
+  const { seed, release } = primeEntry(h);
+  assert.equal(release.defaultPrevented, false);
+  assert.equal(h.entry.clicks, 1);
+  assert.equal(h.api.prime().warm, true);
+  assert.equal(seed.input.isConnected, true);
+  assert.equal(h.api.qmEl.hap.checkedWrites, undefined);
+  assert.match(source, /<label class="cart-line__qty-tap" data-qty-edit aria-hidden="true"><input type="checkbox" switch tabindex="-1"><\/label>/);
+  assert.match(seed.input.style.cssText, /width:4000px/);
+});
+
+test('the first primed quick swipe requests a native flip before the held delay', () => {
+  const h = harness({ native: true, prime: true, autoOpen: false });
+  const { seed } = primeEntry(h);
+  const writes = seed.input.checkedWrites;
+  h.api.openQtyMenu(h.item, h.line);
+  assert.equal(h.api.control(), seed.input);
+  assert.equal(h.state().hapWarm, true);
+  h.pointer('pointerdown', 1);
+  h.touch('touchstart', 1);
+  h.advance(15);
+  h.pointer('pointermove', 2);
+  h.touch('touchmove', 2);
+  assert.equal(h.state().hapT.flips, 1);
+  assert.equal(seed.input.checkedWrites, writes);
+  assert.equal(h.touch('touchend', 2).defaultPrevented, true);
+  h.pointer('pointerup', 2);
+  assert.equal(h.state().shown, 2);
+});
+
+test('moving or canceling on the cart entry never primes or opens the drawer', () => {
+  for (const options of [{ moved: true }, { cancel: true }, { trusted: false }]) {
+    const h = harness({ native: true, prime: true, autoOpen: false });
+    const { release } = primeEntry(h, options);
+    assert.equal(release.defaultPrevented, false);
+    assert.equal(h.api.prime(), null);
+    assert.equal(h.entry.clicks, undefined);
+  }
+});
+
+test('primed frame coordinates and coalesced events map to the same quantity', () => {
+  const h = harness({ native: true, prime: true, autoOpen: false });
+  const { seed } = primeEntry(h);
+  seed.frame.rect = { left: 28, top: 260, right: 362, bottom: 332, width: 334, height: 72 };
+  h.api.openQtyMenu(h.item, h.line);
+  h.pointer('pointerdown', 1);
+  h.touch('touchstart', 1);
+  h.pointer('pointermove', 4, { getCoalescedEvents: () => [3, 2, 4].map((v) => ({ clientX: h.x(v) - 28 })) });
+  h.touch('touchmove', 4);
+  assert.equal(h.state().shown, 4);
+  assert.equal(h.state().hapT.flips, 1);
+  h.pointer('pointerup', 4);
+  h.touch('touchend', 4);
+  assert.equal(h.state().k.to, 4);
+});
+
+test('closing a primed menu parks tracking without changing the close or save', () => {
+  const h = harness({ native: true, prime: true, autoOpen: false });
+  const { seed } = primeEntry(h);
+  h.api.openQtyMenu(h.item, h.line);
+  h.settle();
+  const writes = seed.input.checkedWrites;
+  h.api.closeQtyMenu();
+  h.settle();
+  assert.equal(h.changes.length, 0);
+  assert.equal(h.api.prime().warm, true);
+  assert.equal(seed.input.checkedWrites, writes);
+  assert.match(seed.frame.style.cssText, /pointer-events:none/);
+  h.api.openQtyMenu(h.item, h.line);
+  assert.equal(h.api.control(), seed.input);
+  assert.equal(h.state().hapWarm, true);
+});
+
+test('a native click that still arrives downgrades priming rather than pretending it stayed warm', () => {
+  const h = harness({ native: true, prime: true, autoOpen: false });
+  const { seed } = primeEntry(h);
+  seed.input.emit('click');
+  assert.equal(h.api.prime().warm, false);
+  assert.equal(h.entry.clicks, 1);
+  h.api.openQtyMenu(h.item, h.line);
+  assert.equal(h.state().hapWarm, false);
+});
+
+test('page exit clears a parked prime even when the quantity menu is not open', () => {
+  const h = harness({ native: true, prime: true, autoOpen: false });
+  const { seed } = primeEntry(h);
+  h.windowEvents.emit('pagehide');
+  assert.equal(h.api.prime(), null);
+  assert.equal(seed.input.switch, false);
+  assert.match(seed.frame.style.cssText, /pointer-events:none/);
+});
+
+test('canceling a primed contact clears its pointer drag so animation cannot run forever', () => {
+  const h = harness({ native: true, prime: true, autoOpen: false });
+  primeEntry(h);
+  h.api.openQtyMenu(h.item, h.line);
+  h.settle();
+  h.pointer('pointerdown', 1);
+  h.touch('touchstart', 1);
+  const point = { identifier: 2, clientX: 200, clientY: 10 };
+  h.touch('touchstart', 1, { touches: [{ identifier: 1 }, point], changedTouches: [point] });
+  assert.equal(h.state().drag, null);
+  assert.equal(h.api.prime(), null);
+  h.settle();
+});
+
+test('priming never overlays a button covered by another interface', () => {
+  const h = harness({ native: true, prime: true, autoOpen: false });
+  h.context.document.elementFromPoint = () => new Element();
+  h.api.mount();
+  h.frame();
+  assert.match(h.api.seeds[0].frame.style.cssText, /pointer-events:none/);
+});
+
+test('the prime overlay is omitted on Android and non-coarse native devices', () => {
+  for (const options of [{ native: false, prime: true }, { native: true, prime: false }]) {
+    const h = harness(options);
+    h.api.mount();
+    assert.equal(h.api.seeds.length, 0);
+  }
+});
 
 test('one fast input crossing four notches delivers four distinct pulses while held', () => {
   const h = harness();
