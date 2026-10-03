@@ -688,6 +688,8 @@
     let protectionProduct = null;
     let cart = null;
     let busy = false;
+    let qtyOpenKey = null;                           // the line whose quantity menu is open (its pencil is hidden)
+    const PENCIL = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M11.2 2.3a1.6 1.6 0 0 1 2.3 0l.2.2a1.6 1.6 0 0 1 0 2.3L5.6 12.9 2.4 13.6l.7-3.2 8.1-8.1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="m9.9 3.7 2.4 2.4" stroke="currentColor" stroke-width="1.5"/></svg>';
 
     if (P.enabled && P.handle) {
       fetchJSON('/products/' + P.handle + '.js')
@@ -746,8 +748,8 @@
       const shortName = (t) => t.replace(/^Voltical\s+/i, '').replace(/\s+\d+K\s*(&|and|\/)\s*\d+K$/i, '');
       const options = (v) => v.split(' / ').map((o) => `<span>${o.replace(/\s*mah\b/i, 'mAh')}</span>`).join(' ');
       linesEl.innerHTML = realLines.map((i) => `
-        <div class="cart-line" data-line-key="${i.key}">
-          <div class="cart-line__img">${i.image ? `<img src="${i.image.replace(/(\.[a-z]+)(\?|$)/, '_160x$1$2')}" alt="">` : ''}</div>
+        <div class="cart-line${i.key === qtyOpenKey ? ' is-qty-open' : ''}" data-line-key="${i.key}">
+          <div class="cart-line__img">${i.image ? `<img src="${i.image.replace(/(\.[a-z]+)(\?|$)/, '_160x$1$2')}" alt="" decoding="sync">` : ''}</div>
           <div class="cart-line__body">
             <div class="cart-line__title">${shortName(i.product_title)}</div>
             ${i.variant_title && i.variant_title !== 'Default Title' ? `<div class="cart-line__variant">${options(i.variant_title)}</div>` : ''}
@@ -756,7 +758,7 @@
             <button type="button" class="cart-line__qty" data-qty-edit aria-label="Quantity ${i.quantity}, edit">
               <span class="cart-line__qty-label">Qty</span>
               <span class="cart-line__qty-num">${i.quantity}</span>
-              <span class="cart-line__pencil"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M11.2 2.3a1.6 1.6 0 0 1 2.3 0l.2.2a1.6 1.6 0 0 1 0 2.3L5.6 12.9 2.4 13.6l.7-3.2 8.1-8.1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="m9.9 3.7 2.4 2.4" stroke="currentColor" stroke-width="1.5"/></svg></span>
+              <span class="cart-line__pencil">${PENCIL}</span>
             </button>
             <span class="cart-line__price">${money(i.final_line_price)}</span>
           </div>
@@ -817,102 +819,296 @@
       if (e.target.closest('[data-qty-edit]')) openQtyMenu(item, line);
     });
 
-    /* Quantity menu, after the iPhone's stepped slider pop-up: the page
-       frosts over, a label sits above a white pill, and in the pill a blue
-       fill follows a white knob across evenly spaced dots. The first stop
-       is 0 (Remove, an empty ring like the slider's lowest setting), then
-       1, 2, 3... Dragging or tapping moves the knob stop to stop and the
-       label follows; letting go saves the quantity and closes. Tapping
-       outside, or Escape, closes without changing anything. */
-    const qtyMenu = (() => {
+    /* Quantity menu, copied from the iPhone's stepped slider pop-up in the
+       owner's screen recording (measured frame by frame at 60fps):
+       - It grows out of the pencil. A 27px circle on the pencil morphs into
+         a 334 x 72 pill centred on the card, on the pencil's row, on a
+         spring fitted to the recording (response 0.338s, damping 0.822,
+         fast start): about a third of a second, ~1% overshoot. The pencil
+         becomes the knob and fades as it grows; "Qty 2" fades in and rises
+         to 70px above the pill's centre. Closing runs it back into the
+         pencil.
+       - The page around it frosts: strongest at the pill, fading out about
+         250px above and below it.
+       - In the pill: a 48px track, a blue fill (#2F5BEF) from the left to
+         4px past a 40px white knob, and 12px dots at the stops (grey, or
+         20% white on the blue). A soft blue glow sits at its right end.
+       - Touching it puffs it up 2%. The knob follows the finger, with a
+         little give past either end, and the label and a haptic tick
+         change at each stop. Letting go springs the knob onto the nearest
+         stop and the pill settles back with a small bounce. Tapping a stop
+         jumps there.
+       - It stays open after letting go. Tapping anywhere else (or Escape,
+         Enter) closes it and saves the quantity. Stop 0 is Remove (the
+         label reads "Remove" in red). */
+    const QM = { W: 334, H: 72, P: 12, T: 48, K: 40, D: 12, FROM: 27 };
+    const qmReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const qmEl = (() => {
       const root = document.createElement('div');
       root.className = 'qty-menu';
       root.hidden = true;
       root.innerHTML = `
-        <div class="qty-menu__label" aria-hidden="true"><b>Qty</b> <span data-qm-value></span></div>
-        <div class="qty-menu__pill">
-          <div class="qty-menu__track" role="slider" tabindex="0" aria-label="Quantity">
-            <div class="qty-menu__fill"></div>
+        <div class="qty-menu__frost" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="qty-menu__glow" aria-hidden="true"></div>
+        <div class="qty-menu__label" aria-hidden="true"><b>Qty</b> <span></span></div>
+        <div class="qty-menu__pill" role="slider" tabindex="-1" aria-label="Quantity" aria-valuemin="0">
+          <div class="qty-menu__track">
             <div class="qty-menu__dots"></div>
-            <div class="qty-menu__knob"></div>
+            <div class="qty-menu__fill"><div class="qty-menu__dots"></div></div>
+            <div class="qty-menu__knob">${PENCIL}</div>
           </div>
         </div>`;
       document.body.appendChild(root);
+      const dots = $$('.qty-menu__dots', root);
       return {
         root,
-        label: $('[data-qm-value]', root),
+        frost: $$('.qty-menu__frost i', root),
+        glow: $('.qty-menu__glow', root),
+        label: $('.qty-menu__label', root),
+        value: $('.qty-menu__label span', root),
         pill: $('.qty-menu__pill', root),
         track: $('.qty-menu__track', root),
         fill: $('.qty-menu__fill', root),
-        dots: $('.qty-menu__dots', root),
-        knob: $('.qty-menu__knob', root)
+        dotsOff: dots[0],
+        dotsOn: dots[1],
+        knob: $('.qty-menu__knob', root),
+        knobPencil: $('.qty-menu__knob svg', root)
       };
     })();
-    let qm = null;                                   // { key, start, value, stops, dragging }
-    const qmText = (v) => (v === 0 ? window.VolticalStrings.remove : String(v));
-    const qmSet = (v) => {
-      v = Math.max(0, Math.min(qm.stops - 1, v));
-      if (v === qm.value && qm.drawn) return;
-      qm.value = v;
-      qm.drawn = true;
-      const t = qtyMenu.track;
-      const r = t.clientHeight / 2;
-      const x = r + ((t.clientWidth - 2 * r) * v) / (qm.stops - 1);
-      qtyMenu.knob.style.transform = 'translateX(' + (x - r) + 'px)';
-      qtyMenu.fill.style.width = (x + r) + 'px';
-      qtyMenu.root.classList.toggle('is-empty', v === 0);
-      Array.from(qtyMenu.dots.children).forEach((d, i) => d.classList.toggle('is-on', i <= v));
-      qtyMenu.label.textContent = qmText(v);
-      t.setAttribute('aria-valuenow', String(v));
-      t.setAttribute('aria-valuetext', qmText(v));
-      if (navigator.vibrate && qm.dragging) navigator.vibrate(5);
+
+    /* A haptic tick. Android has navigator.vibrate. iPhone Safari has no
+       vibration API, but since iOS 18 flipping a native switch
+       (<input type="checkbox" switch>) plays the system's switch tick, so a
+       hidden one is flipped. */
+    const tick = (() => {
+      if (typeof navigator.vibrate === 'function') return () => { try { navigator.vibrate(8); } catch (e) { /* not allowed yet */ } };
+      const label = document.createElement('label');
+      label.setAttribute('aria-hidden', 'true');
+      label.style.display = 'none';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.setAttribute('switch', '');
+      input.tabIndex = -1;
+      label.appendChild(input);
+      label.addEventListener('click', (e) => e.stopPropagation());   // nothing else on the page sees these clicks
+      document.body.appendChild(label);
+      return () => label.click();
+    })();
+
+    // A spring that can be re-aimed mid-flight, stepped each frame.
+    // response in seconds and damping ratio, as SwiftUI describes springs.
+    const qmSpring = (x) => ({
+      x, v: 0, to: x, w: 20, z: 1,
+      aim(to, response, damping, v) {
+        this.to = to; this.w = (2 * Math.PI) / response; this.z = damping;
+        if (v != null) this.v = v;
+      },
+      set(x) { this.x = this.to = x; this.v = 0; },
+      step(dt) {
+        const n = Math.ceil(dt / 0.004);
+        const h = dt / n;
+        for (let i = 0; i < n; i++) {
+          this.v += (-this.w * this.w * (this.x - this.to) - 2 * this.z * this.w * this.v) * h;
+          this.x += this.v * h;
+        }
+        if (Math.abs(this.x - this.to) < 1e-4 && Math.abs(this.v) < 1e-3) { this.x = this.to; this.v = 0; return false; }
+        return true;
+      }
+    });
+
+    let qm = null;
+    let qmFrame = 0;
+    let qmLast = 0;
+    const clamp01 = (x) => Math.max(0, Math.min(1, x));
+    const qmStop = (x) => Math.max(0, Math.min(qm.n - 1, Math.round(x)));
+    const qmLine = (key) => Array.from(linesEl.children).find((n) => n.dataset.lineKey === key);
+    // the stop under a finger, as a fraction, with a little give past the ends
+    const qmStopAt = (clientX) => {
+      const left = qm.to.x - qm.W / 2 + QM.P;
+      let raw = ((clientX - left - QM.T / 2) / (qm.W - 2 * QM.P - QM.T)) * (qm.n - 1);
+      const give = (o) => (1 - 1 / (o * 0.6 + 1)) * 0.12;
+      if (raw < 0) raw = -give(-raw);
+      else if (raw > qm.n - 1) raw = qm.n - 1 + give(raw - (qm.n - 1));
+      return raw;
     };
-    const qmFromX = (clientX) => {
-      const b = qtyMenu.track.getBoundingClientRect();
-      const r = b.height / 2;
-      return Math.round(((clientX - b.left - r) / (b.width - 2 * r)) * (qm.stops - 1));
+    const qmShow = (v, haptic) => {
+      if (v === qm.shown) return;
+      qm.shown = v;
+      const text = v ? String(v) : window.VolticalStrings.remove;
+      qmEl.value.textContent = text;
+      qmEl.label.classList.toggle('is-remove', !v);  // stop 0 reads "Remove", in red
+      qmEl.pill.setAttribute('aria-valuenow', String(v));
+      qmEl.pill.setAttribute('aria-valuetext', text);
+      if (haptic) tick();
     };
-    const closeQtyMenu = (save) => {
-      if (!qm) return;
-      const { key, start, value } = qm;
+
+    const qmPaint = () => {
+      const p = qm.p.x;
+      const pc = Math.max(0, p);
+      const w = QM.FROM + (qm.W - QM.FROM) * pc;
+      const h = QM.FROM + (QM.H - QM.FROM) * pc;
+      const cx = qm.from.x + (qm.to.x - qm.from.x) * p;
+      const cy = qm.from.y + (qm.to.y - qm.from.y) * p;
+      const sc = h / QM.H;
+      const pad = QM.P * sc;
+      const t = QM.T * sc;
+      const tw = w - 2 * pad;
+      const span = Math.max(0, tw - t);
+      const d = QM.D * sc;
+      const kd = QM.K * sc;
+      const kx = t / 2 + (span * qm.k.x) / (qm.n - 1);
+      const E = qmEl;
+      // faded layer by layer: fading their parent would switch the blurs off
+      const fo = String(clamp01(p * 1.15));
+      E.frost.forEach((f) => { f.style.opacity = fo; });
+      E.pill.style.width = w + 'px';
+      E.pill.style.height = h + 'px';
+      E.pill.style.borderRadius = h / 2 + 'px';
+      E.pill.style.opacity = String(clamp01(p / 0.12));
+      E.pill.style.transform = 'translate(' + (cx - w / 2) + 'px,' + (cy - h / 2) + 'px) scale(' + qm.s.x + ')';
+      E.track.style.cssText = 'left:' + pad + 'px;top:' + pad + 'px;width:' + tw + 'px;height:' + t + 'px;border-radius:' + t / 2 + 'px';
+      E.fill.style.width = kx + t / 2 + 'px';
+      E.fill.style.borderRadius = t / 2 + 'px';
+      E.dotsOn.style.width = tw + 'px';
+      for (const layer of [E.dotsOff, E.dotsOn]) {
+        Array.from(layer.children).forEach((dot, i) => {
+          dot.style.cssText = 'width:' + d + 'px;height:' + d + 'px;transform:translate(' +
+            (t / 2 + (span * i) / (qm.n - 1) - d / 2) + 'px,' + (t / 2 - d / 2) + 'px)';
+        });
+      }
+      E.knob.style.cssText = 'width:' + kd + 'px;height:' + kd + 'px;transform:translate(' + (kx - kd / 2) + 'px,' + (t / 2 - kd / 2) + 'px)';
+      E.knobPencil.style.opacity = String(clamp01(1 - p / 0.3));
+      E.label.style.opacity = String(clamp01((p - 0.25) / 0.45));
+      E.label.style.transform = 'translate(' + cx + 'px,' + (cy - h / 2 - 34 * Math.min(1, pc)) + 'px) translate(-50%,-50%)';
+      E.glow.style.transform = 'translate(' + (cx + w / 2 - 6) + 'px,' + cy + 'px)';
+    };
+
+    const qmFinish = () => {
+      const line = qmLine(qm.key);
+      if (line) line.classList.remove('is-qty-open');
+      qtyOpenKey = null;
       qm = null;
-      qtyMenu.root.classList.remove('is-open');
-      setTimeout(() => { if (!qm) qtyMenu.root.hidden = true; }, 220);
-      if (save && value !== start) mutate({ id: key, quantity: value }).then(syncProtectionTier);
+      qmEl.root.hidden = true;
+      qmEl.root.classList.remove('is-settled');
+      el.focus({ preventScroll: true });             // back to the bag card, as when it opened
+    };
+    const qmLoop = (now) => {
+      qmFrame = 0;
+      if (!qm) return;
+      const dt = Math.min(1 / 30, Math.max(0, (now - qmLast) / 1000));
+      qmLast = now;
+      if (qm.closing) {                              // land on the pencil where it is now
+        const pen = qmLine(qm.key);
+        const b = pen && $('.cart-line__pencil', pen).getBoundingClientRect();
+        if (b && b.width) qm.from = { x: b.left + b.width / 2, y: b.top + b.height / 2 };
+      }
+      let moving = qm.p.step(dt);
+      moving = qm.k.step(dt) || moving;
+      moving = qm.s.step(dt) || moving;
+      if (!qm.closing && !qm.settled && qm.p.x > 0.98) { qm.settled = true; qmEl.root.classList.add('is-settled'); }
+      if (qm.closing && qm.p.x <= 0.01) { qmFinish(); return; }
+      qmPaint();
+      if (moving || qm.drag) qmFrame = requestAnimationFrame(qmLoop);
+    };
+    const qmRun = () => {                            // start the frame loop if it's idle
+      if (!qmFrame) { qmLast = performance.now() - 16; qmFrame = requestAnimationFrame(qmLoop); }
+    };
+
+    const applyQty = (key, q) => {                   // wait out a change already on its way
+      if (busy) { setTimeout(() => applyQty(key, q), 120); return; }
+      mutate({ id: key, quantity: q }).then(syncProtectionTier);
+    };
+    const closeQtyMenu = () => {
+      if (!qm || qm.closing) return;
+      qm.closing = true;
+      qm.drag = null;
+      const v = qmStop(qm.k.to);
+      if (v !== qm.start) applyQty(qm.key, v);
+      qmEl.root.classList.remove('is-settled');
+      qm.s.aim(1, 0.2, 1);
+      if (qmReduce.matches) qm.p.set(0);
+      else qm.p.aim(0, 0.3, 1, -4);
+      qmRun();
     };
     const openQtyMenu = (item, line) => {
-      const stops = Math.max(5, item.quantity) + 1;
-      qm = { key: item.key, start: item.quantity, value: item.quantity, stops, dragging: false, drawn: false };
-      qtyMenu.dots.innerHTML = Array.from({ length: stops }, () => '<i></i>').join('');
-      qtyMenu.track.setAttribute('aria-valuemin', '0');
-      qtyMenu.track.setAttribute('aria-valuemax', String(stops - 1));
-      qtyMenu.root.hidden = false;
-      // the pill sits over the product's bubble, the label just above it
-      const b = line.getBoundingClientRect();
-      qtyMenu.root.style.setProperty('--qm-y', Math.round(b.top + b.height / 2) + 'px');
-      qtyMenu.dots.style.setProperty('--qm-n', String(stops));
-      qmSet(item.quantity);
-      requestAnimationFrame(() => qtyMenu.root.classList.add('is-open'));
-      qtyMenu.track.focus({ preventScroll: true });
+      if (qm) return;
+      const pen = $('.cart-line__pencil', line).getBoundingClientRect();
+      const card = el.getBoundingClientRect();
+      const vw = document.documentElement.clientWidth;
+      const vh = window.innerHeight;
+      const W = Math.min(QM.W, vw - 56);
+      const from = { x: pen.left + pen.width / 2, y: pen.top + pen.height / 2 };
+      const to = { x: card.left + card.width / 2, y: Math.min(vh - QM.H / 2 - 16, Math.max(from.y, 130)) };
+      const n = Math.max(5, item.quantity) + 1;
+      qm = {
+        key: item.key, start: item.quantity, n, W, from, to,
+        p: qmSpring(0), k: qmSpring(item.quantity), s: qmSpring(1),
+        shown: -1, drag: null, closing: false, settled: false
+      };
+      const dots = Array.from({ length: n }, () => '<i></i>').join('');
+      qmEl.dotsOff.innerHTML = dots;
+      qmEl.dotsOn.innerHTML = dots;
+      qmEl.pill.setAttribute('aria-valuemax', String(n - 1));
+      qmEl.root.style.setProperty('--qm-y', to.y + 'px');
+      qmEl.root.classList.remove('is-settled');
+      qmEl.root.hidden = false;
+      qtyOpenKey = item.key;
+      line.classList.add('is-qty-open');
+      qmShow(item.quantity, false);
+      if (qmReduce.matches) qm.p.set(1);
+      else qm.p.aim(1, 0.338, 0.822, 8.72);
+      qmPaint();
+      qmRun();
+      qmEl.pill.focus({ preventScroll: true });
     };
-    qtyMenu.track.addEventListener('pointerdown', (e) => {
-      if (!qm) return;
+
+    qmEl.pill.addEventListener('pointerdown', (e) => {
+      if (!qm || qm.closing) return;
       e.preventDefault();
-      qm.dragging = true;
-      qtyMenu.track.setPointerCapture(e.pointerId);
-      qmSet(qmFromX(e.clientX));
+      qmEl.pill.setPointerCapture(e.pointerId);
+      qm.drag = { id: e.pointerId, x0: e.clientX, moved: false };
+      qm.s.aim(1.02, 0.2, 1);                        // puffs up under the finger
+      qmRun();
     });
-    qtyMenu.track.addEventListener('pointermove', (e) => { if (qm && qm.dragging) qmSet(qmFromX(e.clientX)); });
-    qtyMenu.track.addEventListener('pointerup', () => { if (qm && qm.dragging) closeQtyMenu(true); });
-    qtyMenu.track.addEventListener('pointercancel', () => { if (qm) qm.dragging = false; });
-    qtyMenu.track.addEventListener('keydown', (e) => {
-      if (!qm) return;
-      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); qmSet(qm.value + 1); }
-      else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); qmSet(qm.value - 1); }
-      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); closeQtyMenu(true); }
+    qmEl.pill.addEventListener('pointermove', (e) => {
+      const d = qm && qm.drag;
+      if (!d || e.pointerId !== d.id) return;
+      if (!d.moved && Math.abs(e.clientX - d.x0) < 4) return;
+      d.moved = true;
+      qm.k.aim(qmStopAt(e.clientX), 0.09, 1);        // the knob follows the finger
+      qmShow(qmStop(qm.k.to), true);
+      qmRun();
     });
-    qtyMenu.root.addEventListener('pointerdown', (e) => { if (!qtyMenu.pill.contains(e.target)) closeQtyMenu(false); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && qm) { e.stopImmediatePropagation(); closeQtyMenu(false); } }, true);
+    const qmRelease = (e) => {
+      const d = qm && qm.drag;
+      if (!d || e.pointerId !== d.id) return;
+      qm.drag = null;
+      const v = qmStop(d.moved ? qm.k.to : qmStopAt(e.clientX));   // a tap jumps to that stop
+      qm.k.aim(v, 0.26, 0.86);
+      qmShow(v, true);
+      qm.s.aim(1, 0.32, 0.55);                       // settles back with a small bounce
+      qmRun();
+    };
+    qmEl.pill.addEventListener('pointerup', qmRelease);
+    qmEl.pill.addEventListener('pointercancel', qmRelease);
+    qmEl.pill.addEventListener('keydown', (e) => {
+      if (!qm || qm.closing) return;
+      const step = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+      if (step) {
+        e.preventDefault();
+        const v = qmStop(qm.k.to + step);
+        qm.k.aim(v, 0.26, 0.86);
+        qmShow(v, true);
+        qmRun();
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        closeQtyMenu();
+      }
+    });
+    // anywhere but the pill closes it (and saves)
+    qmEl.root.addEventListener('pointerdown', (e) => { if (!qmEl.pill.contains(e.target)) { e.preventDefault(); closeQtyMenu(); } });
+    qmEl.root.addEventListener('touchmove', (e) => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && qm) { e.stopImmediatePropagation(); closeQtyMenu(); } }, true);
 
     if (protectToggle) protectToggle.addEventListener('change', () => {
       const protLine = cart && cart.items.find(isProtection);
