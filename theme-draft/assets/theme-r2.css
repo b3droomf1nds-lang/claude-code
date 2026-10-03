@@ -973,16 +973,20 @@ h1.t-hero em,
 .drawer-scroller .cart-line__qty:active{opacity:.5}
 .drawer-scroller .cart-line__qty-num{font-size:15px;font-weight:600;color:var(--sys-label);font-variant-numeric:tabular-nums}
 .drawer-scroller .cart-line__qty svg{display:block}
-/* the pencil's own tap target: an invisible 27px circle around it (about
-   1.5x the pencil's length), on top of the rest of "Qty 1" being tappable */
 .drawer-scroller .cart-line__pencil{position:relative;display:block;margin-left:2px}
-.drawer-scroller .cart-line__pencil::after{content:"";position:absolute;left:50%;top:50%;width:27px;height:27px;margin:-13.5px 0 0 -13.5px;border-radius:50%}
+/* The tap target over "Qty 1 ✎": a label holding a hidden switch, reaching
+   past the pencil by more than a 27px circle around it (about 1.5x the
+   pencil's length). A tap flips a real switch, so the iPhone ticks
+   (theme-r3.js); the button under it stays for keyboards and screen readers. */
+.drawer-scroller .cart-line__side{position:relative}
+.drawer-scroller .cart-line__qty-tap{position:absolute;z-index:1;top:-6px;left:-8px;right:-8px;height:34px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.drawer-scroller .cart-line__qty-tap input{position:absolute;left:0;top:0;width:1px;height:1px;margin:0;opacity:0;pointer-events:none}
 
 /* Quantity menu (theme-r3.js), copied from the iPhone's stepped slider
    pop-up. Script sets the pill's size and every position each frame (it
    morphs out of the pencil); these are the fixed looks, measured off the
    owner's screen recording. */
-.qty-menu{position:fixed;inset:0;z-index:120;touch-action:none;-webkit-user-select:none;user-select:none;
+.qty-menu{position:fixed;inset:0;z-index:120;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;
   -webkit-tap-highlight-color:transparent;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif}
 .qty-menu[hidden]{display:none}
 /* the frost: three blurs stacked, each fading out further from the pill,
@@ -1020,6 +1024,10 @@ h1.t-hero em,
 .qty-menu__knob{position:absolute;left:0;top:0;display:grid;place-items:center;border-radius:50%;background:#fff;color:rgba(60,60,67,.6)}
 .qty-menu__knob svg{display:block;flex:none}
 @supports (font:-apple-system-title2){.qty-menu__label{font:-apple-system-title2}.qty-menu__label b{font-weight:600}}
+/* the slider's touch surface: an invisible real switch over the pill, so a
+   finger dragging it makes the iPhone tick (theme-r3.js) */
+.qty-menu__hap{position:absolute;left:0;top:0;margin:0;padding:0;opacity:0;cursor:pointer;touch-action:none;
+  transform-origin:50% 50%;-webkit-tap-highlight-color:transparent}
 /* while its menu is open, the line's pencil is "inside" the menu */
 .drawer-scroller .cart-line.is-qty-open .cart-line__pencil svg{opacity:0}
 .drawer-scroller .addon{padding:12px 14px;gap:12px}

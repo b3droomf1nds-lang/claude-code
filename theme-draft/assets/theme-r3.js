@@ -760,6 +760,7 @@
               <span class="cart-line__qty-num">${i.quantity}</span>
               <span class="cart-line__pencil">${PENCIL}</span>
             </button>
+            <label class="cart-line__qty-tap" data-qty-edit aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
             <span class="cart-line__price">${money(i.final_line_price)}</span>
           </div>
         </div>`).join('');
@@ -816,7 +817,7 @@
       const key = line.dataset.lineKey;
       const item = cart.items.find((i) => i.key === key);
       if (!item) return;
-      if (e.target.closest('[data-qty-edit]')) openQtyMenu(item, line);
+      if (e.target.closest('[data-qty-edit]') && !qm) { tick(); openQtyMenu(item, line); }
     });
 
     /* Quantity menu, copied from the iPhone's stepped slider pop-up in the
@@ -857,7 +858,8 @@
             <div class="qty-menu__fill"><div class="qty-menu__dots"></div></div>
             <div class="qty-menu__knob">${PENCIL}</div>
           </div>
-        </div>`;
+        </div>
+        <input type="checkbox" switch class="qty-menu__hap" tabindex="-1" aria-hidden="true">`;
       document.body.appendChild(root);
       const dots = $$('.qty-menu__dots', root);
       return {
@@ -872,28 +874,19 @@
         dotsOff: dots[0],
         dotsOn: dots[1],
         knob: $('.qty-menu__knob', root),
-        knobPencil: $('.qty-menu__knob svg', root)
+        knobPencil: $('.qty-menu__knob svg', root),
+        hap: $('.qty-menu__hap', root)
       };
     })();
 
-    /* A haptic tick. Android has navigator.vibrate. iPhone Safari has no
-       vibration API, but since iOS 18 flipping a native switch
-       (<input type="checkbox" switch>) plays the system's switch tick, so a
-       hidden one is flipped. */
-    const tick = (() => {
-      if (typeof navigator.vibrate === 'function') return () => { try { navigator.vibrate(8); } catch (e) { /* not allowed yet */ } };
-      const label = document.createElement('label');
-      label.setAttribute('aria-hidden', 'true');
-      label.style.display = 'none';
-      const input = document.createElement('input');
-      input.type = 'checkbox';
-      input.setAttribute('switch', '');
-      input.tabIndex = -1;
-      label.appendChild(input);
-      label.addEventListener('click', (e) => e.stopPropagation());   // nothing else on the page sees these clicks
-      document.body.appendChild(label);
-      return () => label.click();
-    })();
+    /* Haptic ticks. Android: navigator.vibrate. iPhone Safari has no
+       vibration API, and since iOS 26.5 a switch flipped from script is
+       silent, so iPhone ticks come from real switches under the finger: a
+       hidden one in the label over "Qty 1" (tapping it ticks) and the
+       slider's invisible one (.qty-menu__hap, below). */
+    const tick = typeof navigator.vibrate === 'function'
+      ? () => { try { navigator.vibrate(8); } catch (e) { /* not allowed yet */ } }
+      : () => {};
 
     // A spring that can be re-aimed mid-flight, stepped each frame.
     // response in seconds and damping ratio, as SwiftUI describes springs.
@@ -981,6 +974,10 @@
       E.label.style.opacity = String(clamp01((p - 0.25) / 0.45));
       E.label.style.transform = 'translate(' + cx + 'px,' + (cy - h / 2 - 34 * Math.min(1, pc)) + 'px) translate(-50%,-50%)';
       E.glow.style.transform = 'translate(' + (cx + w / 2 - 6) + 'px,' + cy + 'px)';
+      if (!qm.hapT) {                                // the invisible switch lies over the pill
+        E.hap.style.cssText = 'width:' + w + 'px;height:' + h + 'px;transform:' + E.pill.style.transform +
+          (qm.closing ? ';pointer-events:none' : '');
+      }
     };
 
     const qmFinish = () => {
@@ -1059,18 +1056,19 @@
       else qm.p.aim(1, 0.338, 0.822, 8.72);
       qmPaint();
       qmRun();
-      qmEl.pill.focus({ preventScroll: true });
+      // after the tapped label has clicked its switch (which may take focus)
+      setTimeout(() => { if (qm && !qm.closing) qmEl.pill.focus({ preventScroll: true }); }, 0);
     };
 
-    qmEl.pill.addEventListener('pointerdown', (e) => {
+    qmEl.hap.addEventListener('pointerdown', (e) => {
       if (!qm || qm.closing) return;
-      e.preventDefault();
-      qmEl.pill.setPointerCapture(e.pointerId);
+      if (e.pointerType === 'mouse') e.preventDefault();
+      qmEl.hap.setPointerCapture(e.pointerId);
       qm.drag = { id: e.pointerId, x0: e.clientX, moved: false };
       qm.s.aim(1.02, 0.2, 1);                        // puffs up under the finger
       qmRun();
     });
-    qmEl.pill.addEventListener('pointermove', (e) => {
+    qmEl.hap.addEventListener('pointermove', (e) => {
       const d = qm && qm.drag;
       if (!d || e.pointerId !== d.id) return;
       if (!d.moved && Math.abs(e.clientX - d.x0) < 4) return;
@@ -1089,8 +1087,45 @@
       qm.s.aim(1, 0.32, 0.55);                       // settles back with a small bounce
       qmRun();
     };
-    qmEl.pill.addEventListener('pointerup', qmRelease);
-    qmEl.pill.addEventListener('pointercancel', qmRelease);
+    qmEl.hap.addEventListener('pointerup', qmRelease);
+    qmEl.hap.addEventListener('pointercancel', qmRelease);
+
+    /* iPhone ticks while dragging. When a real finger drags across a real
+       switch, WebKit ticks each time the switch's thumb would cross its
+       middle, no tap needed (CheckboxInputType::
+       updateIsSwitchVisuallyOnFromAbsoluteLocation, iOS 18+). So while a
+       finger drags, the invisible switch is moved under it, 10px to one
+       side of its middle, and swapped to the other side each time the
+       quantity changes: one tick per stop. WebKit starts following a
+       finger 200ms after it lands, so stops passed before ~0.24s don't
+       tick. A tap on the switch ticks too (WebKit clicks it on lift). */
+    const HAP = { W: 2000, H: 40, D: 10 };
+    const hapPlace = (x, y) => {
+      qmEl.hap.style.cssText = 'width:' + HAP.W + 'px;height:' + HAP.H + 'px;transform:translate(' +
+        (x - HAP.W / 2 - qm.hapT.side * HAP.D) + 'px,' + (y - HAP.H / 2) + 'px)';
+      qmEl.hap.getBoundingClientRect();              // lay it out now: WebKit reads it right after this listener
+    };
+    const hapTouch = (e) => Array.from(e.changedTouches).find((t) => qm && qm.hapT && t.identifier === qm.hapT.id);
+    qmEl.hap.addEventListener('touchstart', (e) => {
+      if (!qm || qm.closing || e.touches.length !== 1) return;
+      const t = e.changedTouches[0];
+      qmEl.hap.checked = false;                      // WebKit starts with the thumb on the left
+      qm.hapT = { id: t.identifier, t0: performance.now(), side: -1, stop: qmStop(qmStopAt(t.clientX)) };
+      hapPlace(t.clientX, t.clientY);
+    }, { passive: true });
+    qmEl.hap.addEventListener('touchmove', (e) => {
+      const t = hapTouch(e);
+      if (!t) return;
+      const s = qmStop(qmStopAt(t.clientX));
+      if (s !== qm.hapT.stop) {
+        if (performance.now() - qm.hapT.t0 > 240) qm.hapT.side = -qm.hapT.side;
+        qm.hapT.stop = s;
+      }
+      hapPlace(t.clientX, t.clientY);
+    }, { passive: true });
+    const hapEnd = (e) => { if (hapTouch(e)) { qm.hapT = null; qmRun(); } };
+    qmEl.hap.addEventListener('touchend', hapEnd);
+    qmEl.hap.addEventListener('touchcancel', hapEnd);
     qmEl.pill.addEventListener('keydown', (e) => {
       if (!qm || qm.closing) return;
       const step = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
@@ -1106,8 +1141,13 @@
       }
     });
     // anywhere but the pill closes it (and saves)
-    qmEl.root.addEventListener('pointerdown', (e) => { if (!qmEl.pill.contains(e.target)) { e.preventDefault(); closeQtyMenu(); } });
-    qmEl.root.addEventListener('touchmove', (e) => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+    qmEl.root.addEventListener('pointerdown', (e) => {
+      if (e.target === qmEl.hap || qmEl.pill.contains(e.target)) return;
+      e.preventDefault();
+      closeQtyMenu();
+    });
+    // no page scrolling under it; touches on the switch are left to WebKit (cancelling them would stop its ticks)
+    qmEl.root.addEventListener('touchmove', (e) => { if (e.target !== qmEl.hap && e.cancelable) e.preventDefault(); }, { passive: false });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && qm) { e.stopImmediatePropagation(); closeQtyMenu(); } }, true);
 
     if (protectToggle) protectToggle.addEventListener('change', () => {
