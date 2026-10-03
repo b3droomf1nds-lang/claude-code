@@ -1,0 +1,11 @@
+<div class="page-narrow">
+  <h1 class="t-lg" style="margin-bottom:8px">{{ 'customer.account' | t }}</h1>
+  <p class="t-muted" style="margin-bottom:32px">{{ customer.email }} · <a href="{{ routes.account_logout_url }}" class="link-arrow">{{ 'customer.logout' | t }}</a></p>
+  <h2 class="t-md" style="margin-bottom:16px">{{ 'customer.orders' | t }}</h2>
+  {% paginate customer.orders by 20 %}
+  {% if customer.orders.size == 0 %}<p class="t-muted">{{ 'customer.no_orders' | t }}</p>{% endif %}
+  {% for order in customer.orders %}
+    <p style="padding:14px 0;border-bottom:1px solid var(--ink-12)"><a href="{{ order.customer_url }}" class="link-arrow">{{ order.name }}</a> · {{ order.created_at | date: '%b %d, %Y' }} · {{ order.total_price | money }}</p>
+  {% endfor %}
+  {% endpaginate %}
+</div>

@@ -1,0 +1,77 @@
+{%- comment -%}
+  Usage calculator landing page. Grid of every product (catalogue-card
+  style, minus Shipping Protection) — each card links straight to that
+  product's own page, where the capacity calculator is shown above the
+  rest of the product content.
+{%- endcomment -%}
+<style>
+  .ucalc-head{padding:clamp(56px,8vw,96px) 0 clamp(24px,3.5vw,36px)}
+  .ucalc-badge{
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:5px 10px;margin-left:10px;vertical-align:middle;
+    color:#fff;background:#696660;border-radius:999px;
+    font-family:var(--sans);font-size:10px;font-weight:700;line-height:1;
+    letter-spacing:-.02em;text-transform:lowercase;
+  }
+  .ucalc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding-bottom:clamp(32px,4vw,48px)}
+  @media (min-width:640px){.ucalc-grid{grid-template-columns:repeat(3,1fr)}}
+  .ucalc-card{
+    display:block;text-align:left;
+    color:inherit;text-decoration:none;background:var(--tile);
+    width:100%;
+    transition:transform .25s cubic-bezier(.4,0,.2,1);
+  }
+  .ucalc-card:hover{transform:translateY(-2px)}
+  .ucalc-grid .product-card__media,
+  .ucalc-grid .product-card__media--framed{
+    padding: clamp(36px,4vw,56px) clamp(12px,2vw,26px) clamp(56px,6vw,84px);
+  }
+</style>
+
+<section class="section ucalc" data-ucalc-root>
+  <div class="wrap wrap--wide">
+    <div class="ucalc-head" data-reveal>
+      <span class="t-eyebrow">Usage calculator<span class="ucalc-badge">new</span></span>
+      <h1 class="t-xl" style="margin-top:8px">Select your device</h1>
+      <p class="t-body-lg" style="margin-top:12px;max-width:640px">
+        Pick one of our products to see its estimated charge speed and how many full charges you'll get.
+      </p>
+    </div>
+
+    {%- comment -%} Products that actually show the calculator on their
+      page — jump straight to it instead of landing at the top. Keep in
+      sync with the calc_handles list in sections/main-product.liquid. {%- endcomment -%}
+    {%- assign calc_handles = 'voltical-core-5k-10k,voltical-core-pro-5k-10k,voltical-puck-5k-10k,voltical-watch-case,voltical-usb-c-charge-data-cable-new,voltical-watch-charge-cable' | split: ',' -%}
+
+    <div class="ucalc-grid" data-ucalc-grid>
+      {%- for product in collections.all.products -%}
+        {%- if product.handle == 'shipping-protection-4' -%}{%- continue -%}{%- endif -%}
+        {%- assign card_url = product.url -%}
+        {%- if calc_handles contains product.handle -%}
+          {%- assign card_url = product.url | append: '?jump=calc' -%}
+        {%- endif -%}
+        <a href="{{ card_url }}" class="product-card ucalc-card" data-reveal>
+          <span class="product-card__media product-card__media--framed">
+            {%- if product.featured_image -%}
+              <img src="{{ product.featured_image | image_url: width: 800 }}"
+                   srcset="{{ product.featured_image | image_url: width: 480 }} 480w, {{ product.featured_image | image_url: width: 800 }} 800w, {{ product.featured_image | image_url: width: 1200 }} 1200w, {{ product.featured_image | image_url: width: 1800 }} 1800w"
+                   sizes="(min-width:900px) 30vw, (min-width:640px) 46vw, 92vw"
+                   alt="{{ product.featured_image.alt | default: product.title | escape }}" loading="lazy">
+            {%- endif -%}
+          </span>
+          <span class="product-card__body">
+            <span class="product-card__title">{{ product.title }}</span>
+            <span class="product-card__meta">{{ product.type | default: 'Charging' }}</span>
+          </span>
+        </a>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Usage calculator",
+  "settings": []
+}
+{% endschema %}

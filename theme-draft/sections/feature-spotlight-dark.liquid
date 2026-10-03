@@ -1,0 +1,242 @@
+{%- comment -%}
+  Dark, centered spotlight block — heavily inspired by the camera-feature
+  banners on apple.com/iphone-17-pro: true edge-to-edge black panel (no
+  card/rounded box), centered eyebrow + big headline, a large dominant
+  product shot with stat callouts beside it, then a centered paragraph
+  and a pill CTA (with a small "+" icon) below. Rebuilt with Voltical's
+  own colors/fonts/spacing — accent is the brand's lilac rather than
+  Apple's orange, and the type is Voltical Relay — but the scale, the
+  full-bleed black canvas and the stat-callout layout follow the
+  reference closely.
+{%- endcomment -%}
+<style>
+  .fdark{ background:#000; color:var(--base); padding:calc(clamp(64px,9vw,120px) + 125px) 0 calc(clamp(72px,10vw,130px) + 125px); }
+  .fdark .wrap--wide{ max-width:1800px; }
+  .fdark__inner{ text-align:center; }
+  .fdark__eyebrow{ color:var(--lilac-m); text-align:center; margin-bottom:14px; }
+  .fdark__heading{
+    font-family:'Voltical Relay',var(--sans);
+    font-size:clamp(2.4rem,5.6vw,4.4rem);
+    font-weight:700; letter-spacing:-0.03em; line-height:1.02;
+    margin:0 0 clamp(40px,6vw,72px);
+    text-transform:none;
+  }
+  .fdark__body{
+    display:flex; flex-direction:column; align-items:center; gap:32px;
+    margin:0 auto clamp(48px,6.5vw,80px);
+  }
+  .fdark__media{ width:100%; max-width:760px; }
+  .fdark__media-frame{
+    position:relative; width:100%;
+    aspect-ratio:2.15/1;
+    overflow:hidden;
+  }
+  .fdark__media-rotate{
+    position:absolute; top:50%; left:50%;
+    width:46.5116%; aspect-ratio:1/2.15;
+    transform:translate(-50%,-50%) rotate(90deg) scale(1.4);
+    transform-origin:center center;
+  }
+  .fdark__media-rotate img{
+    position:absolute; top:0; left:0;
+    width:100%; height:100%; max-width:none;
+    object-fit:contain;
+  }
+  .fdark__stats{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:clamp(32px,5vw,64px);
+  }
+  .fdark__stat{ text-align:left; }
+  .fdark__stat-pre{
+    display:block; font-size:.95rem; color:rgba(250,250,248,.55); margin-bottom:0;
+    line-height:1.3;
+  }
+  .fdark__stat-value{
+    display:block; font-family:'Voltical Relay',var(--sans);
+    font-size:clamp(2.6rem,4.4vw,3.6rem); font-weight:700; letter-spacing:-0.03em;
+    color:var(--lilac-m); line-height:1.08;
+  }
+  .fdark__stat-label{
+    display:block; font-size:.98rem; color:rgba(250,250,248,.75); margin-top:1px;
+  }
+  .fdark__copy{
+    max-width:60ch; margin:-100px auto clamp(28px,3.8vw,40px);
+    color:rgba(250,250,248,.66); font-size:1.575rem; line-height:1.65;
+  }
+  .fdark__copy strong{ color:var(--base); font-weight:600; }
+
+  @media (min-width:900px){
+    .fdark__body{ flex-direction:row; align-items:center; justify-content:center; gap:clamp(8px,1.2vw,18px); transform:translateX(-150px); }
+    .fdark__media{ max-width:none; flex:3.4 1 0%; }
+    .fdark__stats{ flex-direction:column; flex:0 0 auto; text-align:left; gap:clamp(28px,3vw,44px); transform:translate(-200px,-25px); }
+  }
+
+  .fdark__stickybar{
+    position:fixed; top:9px; left:14px; right:14px; z-index:120;
+    margin:0 auto; max-width:1400px;
+    background:rgba(20,20,22,.42);
+    backdrop-filter:blur(18px) saturate(1.4); -webkit-backdrop-filter:blur(18px) saturate(1.4);
+    border:1px solid rgba(250,250,248,.14);
+    border-radius:20px;
+    box-shadow:0 12px 30px rgba(0,0,0,.28);
+    transform:translateY(-140%);
+    transition:transform .4s cubic-bezier(.4,0,.2,1);
+  }
+  .fdark__stickybar.is-visible{ transform:translateY(0); }
+  .fdark__stickybar-inner{
+    padding:12px 16px 12px 22px;
+    display:flex; align-items:center; justify-content:space-between; gap:20px;
+  }
+  .fdark__stickybar-title{
+    font-family:'Inter',var(--sans); font-weight:600;
+    font-size:.98rem; letter-spacing:-0.01em; color:var(--base);
+    white-space:nowrap;
+  }
+  .fdark__stickybar-actions{ display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+  .fdark__stickybar-explore,
+  .fdark__stickybar-buy{
+    font-family:'Inter',var(--sans);
+    display:inline-flex; align-items:center; justify-content:center;
+    border-radius:999px; font-size:.86rem; font-weight:500;
+    padding:8px 20px; white-space:nowrap; line-height:1; box-sizing:border-box;
+  }
+  .fdark__stickybar-explore{
+    background:transparent; color:var(--base);
+    border:1px solid rgba(250,250,248,.4);
+  }
+  .fdark__stickybar-explore:hover{ background:rgba(250,250,248,.1); }
+  .fdark__stickybar-buy{
+    background:var(--base); color:var(--ink); border:1px solid transparent;
+    font-weight:600;
+  }
+  .fdark__stickybar-buy:hover{ filter:brightness(.94); }
+  @media (max-width:899px){
+    .fdark{ padding-top:calc(48px + 120px); padding-bottom:192px; }
+    .fdark__heading{ margin-bottom:14px; }
+    .fdark__body{ gap:10px; overflow:visible; margin-bottom:96px; }
+    .fdark__media{ width:100vw; max-width:100vw; margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw); transform:none; display:flex; justify-content:center; overflow:visible; background:#000; }
+    .fdark__media-frame{
+      width:100vw; max-width:100vw; aspect-ratio:1.4/1; overflow:hidden; background:#000;
+    }
+    .fdark__media-rotate{ width:60vw; transform:translate(-50%,-50%) rotate(90deg) scale(1.8); background:#000; }
+    .fdark__media-rotate img{ background:#000; transform:none !important; }
+    .fdark__stat{ text-align:center; }
+  }
+
+  @media (max-width:640px){
+    .fdark__stickybar{ top:5px; left:10px; right:10px; border-radius:16px; }
+    .fdark__stickybar-inner{ padding:10px 12px 10px 16px; }
+    .fdark__stickybar-title{ font-size:.86rem; }
+    .fdark__stickybar-explore,.fdark__stickybar-buy{ padding:6px 12px; font-size:.78rem; }
+  }
+
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+{%- assign _p = section.settings.product -%}
+{%- unless _p.handle -%}{%- assign _p = all_products[_p] -%}{%- endunless -%}
+{%- assign img = section.settings.image | default: _p.featured_image -%}
+{%- assign _asset_override = section.settings.use_asset_photo -%}
+
+<div class="fdark__stickybar" id="fdark-stickybar-{{ section.id }}">
+  <div class="fdark__stickybar-inner">
+    <span class="fdark__stickybar-title">Voltical Core Pro</span>
+    <div class="fdark__stickybar-actions">
+      <a href="#fdark-{{ section.id }}" class="fdark__stickybar-explore" data-fdark-explore="{{ section.id }}">Explore</a>
+      {%- if _p -%}
+        <a href="{{ _p.url }}" class="fdark__stickybar-buy">Buy</a>
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+<section class="section fdark" id="fdark-{{ section.id }}"
+  {%- if _p %} data-ctapill data-cta-url="{{ _p.url }}" data-cta-label="{{ section.settings.cta | default: 'Calculate usage' }}" data-cta-surface="dark"{% endif %}>
+  <div class="wrap wrap--wide fdark__inner" data-reveal>
+    <h2 class="fdark__heading">{{ section.settings.heading }}</h2>
+
+    <div class="fdark__body">
+      <div class="fdark__media">
+        <div class="fdark__media-frame">
+          <div class="fdark__media-rotate">
+            <img src="{{ 'core-pro-cutout.webp' | file_url }}"
+                 alt="{{ _p.title | default: 'Voltical Core Pro' | escape }}" loading="lazy">
+          </div>
+        </div>
+      </div>
+      <div class="fdark__stats">
+        {%- if section.settings.stat_1_value != blank -%}
+          <div class="fdark__stat">
+            {%- if section.settings.stat_1_prefix != blank -%}
+              <span class="fdark__stat-pre">{{ section.settings.stat_1_prefix }}</span>
+            {%- endif -%}
+            <span class="fdark__stat-value">{{ section.settings.stat_1_value }}</span>
+            <span class="fdark__stat-label">{{ section.settings.stat_1_label }}</span>
+          </div>
+        {%- endif -%}
+        {%- if section.settings.stat_2_value != blank -%}
+          <div class="fdark__stat">
+            {%- if section.settings.stat_2_prefix != blank -%}
+              <span class="fdark__stat-pre">{{ section.settings.stat_2_prefix }}</span>
+            {%- endif -%}
+            <span class="fdark__stat-value">{{ section.settings.stat_2_value }}</span>
+            <span class="fdark__stat-label">{{ section.settings.stat_2_label }}</span>
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+
+    <div class="fdark__copy">{{ section.settings.copy }}</div>
+
+  </div>
+</section>
+
+<script>
+(function(){
+  var root = document.getElementById('fdark-{{ section.id }}');
+  var bar = document.getElementById('fdark-stickybar-{{ section.id }}');
+  if(!root || !bar) return;
+
+  if('IntersectionObserver' in window){
+    var bottomMargin = Math.round(window.innerHeight * 0.7) + 300;
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        bar.classList.toggle('is-visible', entry.isIntersecting);
+      });
+    }, { rootMargin: '-72px 0px -' + bottomMargin + 'px 0px', threshold: 0 });
+    io.observe(root);
+  }
+
+  var exploreLink = bar.querySelector('[data-fdark-explore]');
+  if(exploreLink){
+    exploreLink.addEventListener('click', function(e){
+      e.preventDefault();
+      var barHeight = bar.offsetHeight;
+      var y = root.getBoundingClientRect().top + window.pageYOffset - barHeight - 16;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    });
+  }
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Dark spotlight",
+  "settings": [
+    { "type": "product", "id": "product", "label": "Product" },
+    { "type": "image_picker", "id": "image", "label": "Image override" },
+    { "type": "checkbox", "id": "use_asset_photo", "label": "Use uploaded studio photo (theme asset)", "default": false },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "Power" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Power, at a glance." },
+    { "type": "richtext", "id": "copy", "label": "Copy", "default": "<p>Every Core Pro ships with a live charge readout built into the shell, so you always know exactly how much power is left before you need it. Paired with 20 W two-way fast charging, it's <strong>the most capable charger in the lineup</strong> — quick to top up, and just as quick to top up whatever's plugged into it.</p>" },
+    { "type": "text", "id": "stat_1_prefix", "label": "Stat 1 prefix", "default": "Up to" },
+    { "type": "text", "id": "stat_1_value", "label": "Stat 1 value", "default": "10,000 mAh" },
+    { "type": "text", "id": "stat_2_prefix", "label": "Stat 2 prefix" },
+    { "type": "text", "id": "stat_2_value", "label": "Stat 2 value", "default": "20 W" },
+    { "type": "text", "id": "stat_2_label", "label": "Stat 2 label", "default": "Two-way fast charge" },
+    { "type": "text", "id": "cta", "label": "CTA label", "default": "Calculate usage" }
+  ],
+  "presets": [{ "name": "Dark spotlight" }]
+}
+{% endschema %}
