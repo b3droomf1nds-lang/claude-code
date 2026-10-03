@@ -966,9 +966,9 @@ h1.t-hero em,
 .drawer-scroller .cart-line__title{font-size:13px;font-weight:400;line-height:1.38;color:var(--sys-label-2)}
 .drawer-scroller .cart-line__variant{font-size:15px;font-weight:600;line-height:1.33;color:var(--sys-label);margin-top:0}
 .drawer-scroller .cart-line__variant span{display:block}  /* each option on its own line: colour, then capacity */
-.drawer-scroller .cart-line__side{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:0 0 auto}
+.drawer-scroller .cart-line__side{display:flex;flex-direction:column;align-items:flex-end;gap:2.8px;flex:0 0 auto}  /* with the 2px padding under "Qty": 4.8px between them */
 .drawer-scroller .cart-line__price{font-size:15px;white-space:nowrap}
-/* "Qty 1 ✎" under the price: grey label, the number in the price's weight, and a pencil to edit it */
+/* "Qty 1 ✎" above the price: grey label, the number in the price's weight, and a pencil to edit it */
 .drawer-scroller .cart-line__qty{display:inline-flex;align-items:center;gap:4px;padding:2px 0;color:var(--sys-label-2);font:inherit;font-size:13px;line-height:1.38;-webkit-tap-highlight-color:transparent}
 .drawer-scroller .cart-line__qty:active{opacity:.5}
 .drawer-scroller .cart-line__qty-num{font-size:15px;font-weight:600;color:var(--sys-label);font-variant-numeric:tabular-nums}
