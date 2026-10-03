@@ -150,7 +150,15 @@
       soldOut: {{ 'products.sold_out' | t | json }},
       unavailable: {{ 'products.unavailable' | t | json }},
       error: {{ 'general.error' | t | json }},
-      remove: {{ 'cart.remove' | t | json }}
+      remove: {{ 'cart.remove' | t | json }},
+      subtotal: {{ 'cart.subtotal' | t | json }},
+      total: {{ 'cart.total' | t | json }},
+      taxesNote: {{ 'cart.taxes_note' | t | json }},
+      totalNote: {{ 'cart.total_note' | t | json }},
+      shipStandard: {{ 'cart.shipping_standard' | t | json }},
+      shipFree: {{ 'cart.shipping_free' | t | json }},
+      shipFreePrice: {{ 'cart.shipping_free_price' | t | json }},
+      shipAtCheckout: {{ 'cart.shipping_at_checkout' | t | json }}
     };
   </script>
   {{ 'voltical-data.js' | asset_url | script_tag }}

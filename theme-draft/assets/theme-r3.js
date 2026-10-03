@@ -706,6 +706,26 @@
 
     const isProtection = (item) => protectionProduct && item.product_id === protectionProduct.id;
 
+    /* Shipping, as set in Shopify's delivery profiles: Standard is 6.99 in
+       the customer's currency until the order total reaches that currency's
+       free-shipping amount, then shipping is free. Currencies with no rate
+       here (no delivery zone uses them) show "Calculated at checkout". */
+    const SHIP_RATE = 699;
+    const SHIP_FREE_FROM = {
+      GBP: 45, EUR: 55, AUD: 90, CAD: 90, NZD: 110, DKK: 395, NOK: 590,
+      SEK: 580, CZK: 1270, MXN: 1050, INR: 5720, IDR: 1080000
+    };
+    const shipEl = $('[data-ship]', el);
+    const shipMethod = shipEl && $('[data-ship-method]', shipEl);
+    const shipPrice = shipEl && $('[data-ship-price]', shipEl);
+    const totalLabel = $('[data-total-label]', el);
+    const totalHint = $('[data-total-hint]', el);
+    const shippingFor = (c) => {
+      const from = SHIP_FREE_FROM[c.currency];
+      if (from == null) return null;
+      return c.total_price >= from * 100 ? 0 : SHIP_RATE;
+    };
+
     const render = () => {
       const realLines = cart.items.filter((i) => !isProtection(i));
       countBadges.forEach((b) => {
@@ -742,7 +762,22 @@
         const v = protLine ? { price: protLine.final_line_price } : tierVariant(cart.items_subtotal_price);
         if (protectPrice && v) protectPrice.textContent = money(v.price);
       }
-      subtotalEl.textContent = money(cart.total_price);
+      const S = window.VolticalStrings;
+      const ship = shippingFor(cart);
+      if (shipEl) {
+        shipEl.hidden = cart.item_count === 0;
+        shipMethod.textContent = ship == null ? S.shipAtCheckout : ship === 0 ? S.shipFree : S.shipStandard;
+        shipPrice.textContent = ship == null ? '' : ship === 0 ? S.shipFreePrice : money(ship);
+      }
+      if (ship == null) {
+        totalLabel.textContent = S.subtotal;
+        totalHint.textContent = S.taxesNote;
+        subtotalEl.textContent = money(cart.total_price);
+      } else {
+        totalLabel.textContent = S.total;
+        totalHint.textContent = S.totalNote;
+        subtotalEl.textContent = money(cart.total_price + ship);
+      }
     };
 
     const mutate = (body) => {

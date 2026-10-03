@@ -947,3 +947,41 @@ h1.t-hero em,
     --sys-sep:-apple-system-separator;--sys-fill:-apple-system-tertiary-fill;
   }
 }
+
+/* Bag as bubbles, like the Apple Pay sheet: the card is the light grey
+   grouped background and each product, the shipping line and the
+   protection add-on sit on it as their own white rounded bubble. The
+   total is a small grey label over a large amount, as on the sheet. */
+.drawer-scroller .drawer{background:var(--sys-bg-2)}
+.drawer-scroller .drawer__body{padding:6px 12px 4px}
+.drawer-scroller .cart-line,
+.drawer-scroller .ship-bubble,
+.drawer-scroller .addon{background:var(--sys-bg);border-radius:20px;margin:0 0 8px}
+.drawer-scroller .cart-line{align-items:center;gap:12px;padding:12px 14px 12px 12px}
+.drawer-scroller .cart-line+.cart-line{border-top:0}
+.drawer-scroller .cart-line__img{width:64px;height:64px;border-radius:12px;background:var(--sys-bg-2)}
+.drawer-scroller .cart-line__img img{mix-blend-mode:multiply}  /* product shots have white backgrounds: let the grey tile show through */
+.drawer-scroller .cart-line__row{margin-top:8px}
+.drawer-scroller .cart-line__remove{margin-top:2px;padding:2px 0}
+.drawer-scroller .addon{padding:12px 14px;gap:12px}
+.drawer-scroller .addon__icon,
+.drawer-scroller .ship-bubble__icon{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:var(--sys-bg-2);color:var(--sys-label);flex:0 0 auto}
+.drawer-scroller .ship-bubble{display:flex;align-items:center;gap:12px;padding:12px 16px 12px 14px}
+.drawer-scroller .ship-bubble[hidden]{display:none}
+.drawer-scroller .ship-bubble__body{flex:1;min-width:0;display:flex;flex-direction:column}
+.drawer-scroller .ship-bubble__label{font-size:13px;line-height:1.38;color:var(--sys-label-2)}
+.drawer-scroller .ship-bubble__method{font-size:15px;font-weight:600;line-height:1.33}
+.drawer-scroller .ship-bubble__price{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.drawer-scroller .drawer__foot{padding:10px 24px 20px}
+.drawer-scroller .drawer__subtotal{display:flex;flex-direction:column;align-items:flex-start;gap:0;margin-bottom:2px}
+.drawer-scroller .drawer__subtotal [data-total-label]{font-size:13px;font-weight:400;line-height:1.38;color:var(--sys-label-2)}
+.drawer-scroller .drawer__subtotal [data-drawer-subtotal]{font-size:28px;font-weight:700;line-height:1.2;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+@supports (font:-apple-system-body){
+  .drawer-scroller .ship-bubble__label,
+  .drawer-scroller .drawer__subtotal [data-total-label]{font:-apple-system-footnote}
+  .drawer-scroller .ship-bubble__method,
+  .drawer-scroller .ship-bubble__price{font:-apple-system-subheadline;font-weight:600}
+}
+@supports (font:-apple-system-title1){
+  .drawer-scroller .drawer__subtotal [data-drawer-subtotal]{font:-apple-system-title1;font-weight:700;font-variant-numeric:tabular-nums}
+}
