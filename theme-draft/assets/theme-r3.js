@@ -940,100 +940,6 @@
     let qmLast = 0;
     const clamp01 = (x) => Math.max(0, Math.min(1, x));
     const qmStop = (x) => Math.max(0, Math.min(qm.n - 1, Math.round(x)));
-    const qmReleaseTest = (() => {
-      const theme = window.Shopify && window.Shopify.theme;
-      if (!theme || String(theme.id) !== '193289027910' || theme.role !== 'unpublished' ||
-          new URLSearchParams(window.location.search).get('qty_haptics') !== 'release-test') return null;
-      const S = window.VolticalStrings.hapticTest;
-      const panel = document.createElement('div');
-      panel.className = 'qty-menu__release-test';
-      panel.style.cssText = 'position:absolute;z-index:2;top:calc(env(safe-area-inset-top,0px) + 20px);left:20px;right:20px;padding:14px;border-radius:16px;background:#fff;color:#111;box-shadow:0 4px 24px #0002;font:13px/1.4 system-ui';
-      panel.innerHTML = '<b></b><p style="margin:6px 0 10px"></p><select style="max-width:100%;padding:8px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111"><option value="click"></option><option value="label"></option></select> <button type="button" style="margin-top:6px;padding:8px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111"></button>';
-      $('b', panel).textContent = S.title;
-      $('p', panel).textContent = S.instructions;
-      const mode = $('select', panel);
-      mode.setAttribute('aria-label', S.route);
-      $('option[value="click"]', mode).textContent = S.direct;
-      $('option[value="label"]', mode).textContent = S.label;
-      mode.value = 'click';
-      const probe = $('button', panel);
-      probe.textContent = S.probe;
-      const label = document.createElement('label');
-      qmEl.hap.id = 'qty-menu-release-test-switch';
-      label.htmlFor = qmEl.hap.id;
-      label.hidden = true;
-      qmEl.root.appendChild(label);
-      qmEl.root.appendChild(panel);
-      qmEl.root.dataset.hapticTest = 'release-test';
-      qmEl.root.dataset.hapticRoute = mode.value;
-      qmEl.root.dataset.hapticAttempts = '0';
-      const jobs = new Set();
-      const attempts = [];
-      let following = null;
-      let lastStop = 0;
-      let nextAt = 0;
-      const stop = () => {
-        jobs.forEach(clearTimeout);
-        jobs.clear();
-        following = null;
-        nextAt = 0;
-      };
-      const attempt = (session, phase, from, to) => {
-        if (qm !== session || !qm || qm.closing || qm.drag || qm.hapT || document.hidden) return;
-        const record = { route: mode.value, phase, at: performance.now(), from, to };
-        attempts.push(record);
-        if (attempts.length > 40) attempts.shift();
-        qmEl.root.dataset.hapticAttempts = String(Number(qmEl.root.dataset.hapticAttempts) + 1);
-        qmEl.root.dataset.hapticLastAttempt = JSON.stringify(record);
-        qmEl.root.dataset.hapticAttemptLog = JSON.stringify(attempts);
-        try { (mode.value === 'label' ? label : qmEl.hap).click(); } catch (e) {
-          qmEl.root.dataset.hapticError = e.name;
-        }
-      };
-      const schedule = (session, delay, phase, from, to) => {
-        if (!delay) { attempt(session, phase, from, to); return; }
-        const job = setTimeout(() => {
-          jobs.delete(job);
-          attempt(session, phase, from, to);
-        }, delay);
-        jobs.add(job);
-      };
-      probe.addEventListener('click', (e) => {
-        if (!e.isTrusted || !qm || qm.closing || qm.drag || qm.hapT) return;
-        stop();
-        const session = qm;
-        for (const delay of [0, 150, 300, 450]) schedule(session, delay, 'probe', null, null);
-      });
-      mode.addEventListener('change', () => {
-        stop();
-        qmEl.root.dataset.hapticRoute = mode.value;
-      });
-      qmEl.root.addEventListener('pointerdown', stop, true);
-      qmEl.root.addEventListener('touchstart', stop, { passive: true });
-      document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
-      window.addEventListener('pagehide', stop);
-      return {
-        panel, mode, probe, label, stop,
-        arm() {
-          stop();
-          following = qm;
-          lastStop = qmStop(qm.k.x);
-        },
-        step() {
-          if (!following || qm !== following || qm.closing || qm.drag || qm.hapT) return;
-          const v = qmStop(qm.k.x);
-          const direction = Math.sign(v - lastStop);
-          const now = performance.now();
-          while (lastStop !== v) {
-            const from = lastStop;
-            lastStop += direction;
-            nextAt = Math.max(nextAt, now);
-            schedule(following, nextAt - now, 'settle', from, lastStop);
-            nextAt += 16;
-          }
-        }
-      };
-    })();
     const qmLine = (key) => Array.from(linesEl.children).find((n) => n.dataset.lineKey === key);
     // the stop under a finger, as a fraction, with a little give past the ends
     const qmStopAt = (clientX) => {
@@ -1085,7 +991,6 @@
       previewQty(qm.key, v);
       if (haptic) {
         tick(count);
-        if (crossed) hapRecord(v);
       }
     };
 
@@ -1139,6 +1044,7 @@
       const line = qmLine(qm.key);
       if (line) line.classList.remove('is-qty-open');
       qtyOpenKey = null;
+      hapReset();
       qm = null;
       qmEl.root.hidden = true;
       qmEl.root.classList.remove('is-settled');
@@ -1153,7 +1059,6 @@
       let moving = qm.p.step(dt);
       moving = qm.k.step(dt) || moving;
       moving = qm.s.step(dt) || moving;
-      if (qmReleaseTest) qmReleaseTest.step();
       if (!qm.closing && !qm.settled && qm.p.x > 0.98) { qm.settled = true; qmEl.root.classList.add('is-settled'); }
       if (qm.closing && qm.p.x <= 0.01) { qmFinish(); return; }
       qmPaint();
@@ -1171,10 +1076,9 @@
     const closeQtyMenu = () => {
       if (!qm || qm.closing) return;
       stopTicks();
-      if (qmReleaseTest) qmReleaseTest.stop();
       qm.closing = true;
       qm.drag = null;
-      qm.hapT = null;
+      hapReset();
       const v = qmStop(qm.k.to);
       qm.commitQty = v !== qm.start ? v : null;
       const line = qmLine(qm.key);
@@ -1201,6 +1105,8 @@
         p: qmSpring(0), k: qmSpring(item.quantity), s: qmSpring(1),
         shown: -1, drag: null, closing: false, settled: false
       };
+      hapReset();
+      if (useSwitchHaptics) qmEl.hap.switch = true;
       const dots = Array.from({ length: n }, () => '<i></i>').join('');
       qmEl.dotsOff.innerHTML = dots;
       qmEl.dotsOn.innerHTML = dots;
@@ -1221,7 +1127,6 @@
 
     qmEl.hap.addEventListener('pointerdown', (e) => {
       if (!qm || qm.closing) return;
-      if (qmReleaseTest) qmReleaseTest.stop();
       if (e.pointerType === 'mouse') e.preventDefault();
       qmEl.hap.setPointerCapture(e.pointerId);
       qm.drag = { id: e.pointerId, x0: e.clientX, moved: false };
@@ -1251,42 +1156,37 @@
       const v = qmStop(d.moved ? qm.k.to : qmStopAt(e.clientX));   // a tap jumps to that stop
       qm.k.aim(v, 0.26, 0.86);
       qmShow(v, true);
-      if (qmReleaseTest && d.moved && e.type === 'pointerup') qmReleaseTest.arm();
+      if (d.moved || e.type === 'pointercancel') stopTicks();
       qm.s.aim(1, 0.32, 0.55);                       // settles back with a small bounce
       qmRun();
     };
     qmEl.hap.addEventListener('pointerup', qmRelease);
     qmEl.hap.addEventListener('pointercancel', qmRelease);
 
-    /* iPhone ticks while dragging. When a real finger drags across a real
-       switch, WebKit ticks each time the switch's thumb would cross its
-       middle, no tap needed (CheckboxInputType::
-       updateIsSwitchVisuallyOnFromAbsoluteLocation, iOS 18+). So while a
-       finger drags, the invisible switch is moved under it with its middle
-       100px to one side, and swapped to the other side each time the
-       number changes: one tick per number.
-       - WebKit only starts following a finger 200ms after it lands (a timer
-         in CheckboxInputType::handleTouchEvent that a page can't shorten).
-         So the numbers passed before then are owed, and play one after
-         another on successive real touch events as soon as it follows.
-         There is no extra rate limit or six-tick cap. WebKit can still
-         emit only one tick per real event; a swipe ending before tracking
-         starts cannot produce a separate tick for every stop. Owed ticks
-         expire after the finger has rested on one number for 300ms.
-       - If the finger lifts with ticks still owed, the switch is reset
-         first so WebKit's click on lift ticks once more (after a drag that
-         click is silent).
-       - It's far wider than the screen because WebKit measures the first
-         flip from where the switch was first ever touched, which has to
-         stay clear of its right end.
-       - A tap ticks when the finger lifts (WebKit clicks the switch). */
-    const HAP = { W: 4000, H: 40, D: 100, FOLLOW: 205, STALE: 300 };
-    const hapRecord = (v) => {
-      const h = qm && qm.hapT;
-      if (!h || v === h.shown) return;
-      h.owed += Math.abs(v - h.shown);
-      h.shown = v;
-      h.at = performance.now();
+    const HAP = { W: 4000, H: 40, D: 100, RESET: 200, FOLLOW: 205 };
+    const hapReset = () => {
+      if (!useSwitchHaptics) return;
+      qmEl.hap.disabled = true;
+      qmEl.hap.switch = false;
+      qmEl.hap.checked = false;
+      if (!qm) return;
+      qm.hapT = null;
+      qm.hapWarm = false;
+      qm.hapSide = -1;
+      qm.hapResetAt = 0;
+      qm.hapReadyAt = 0;
+      qmEl.hap.disabled = qm.closing;
+    };
+    const hapSync = (now) => {
+      if (qm.hapResetAt && now >= qm.hapResetAt) {
+        qm.hapSide = -1;
+        if (qm.hapT) qm.hapT.side = -1;
+        qm.hapResetAt = 0;
+      }
+      if (qm.hapReadyAt && now >= qm.hapReadyAt) {
+        qm.hapWarm = true;
+        qm.hapReadyAt = 0;
+      }
     };
     const hapPlace = (x, y) => {
       qmEl.hap.style.cssText = 'width:' + HAP.W + 'px;height:' + HAP.H + 'px;transform:translate(' +
@@ -1295,42 +1195,74 @@
     };
     const hapTouch = (e) => Array.from(e.changedTouches).find((t) => qm && qm.hapT && t.identifier === qm.hapT.id);
     qmEl.hap.addEventListener('touchstart', (e) => {
-      if (!useSwitchHaptics || !qm || qm.closing || e.touches.length !== 1) return;
-      if (qmReleaseTest) qmReleaseTest.stop();
+      if (!useSwitchHaptics || !qm || qm.closing || !e.isTrusted) return;
+      if (e.touches.length !== 1) { hapReset(); return; }
       const t = e.changedTouches[0];
-      qmEl.hap.checked = false;                      // WebKit starts with the thumb on the left
-      qm.hapT = { id: t.identifier, x0: t.clientX, moved: false, t0: performance.now(), side: -1, shown: qm.shown, owed: 0, at: 0, flips: 0 };
+      const now = performance.now();
+      hapSync(now);
+      if (!qm.hapWarm) {
+        qmEl.hap.checked = false;
+        qmEl.hap.switch = true;
+        qm.hapSide = -1;
+      }
+      qm.hapT = { id: t.identifier, x0: t.clientX, moved: false, side: qm.hapSide, shown: qm.shown, flips: 0 };
+      qm.hapResetAt = now + HAP.RESET;
+      qm.hapReadyAt = now + HAP.FOLLOW;
       hapPlace(t.clientX, t.clientY);
     }, { passive: true });
     qmEl.hap.addEventListener('touchmove', (e) => {
       const t = hapTouch(e);
-      if (!t) return;
+      if (!t || !e.isTrusted) return;
       const h = qm.hapT;
       const now = performance.now();
+      hapSync(now);
       if (Math.abs(t.clientX - h.x0) >= 4) h.moved = true;
-      if (h.moved) hapRecord(qmStop(qmStopAt(t.clientX)));
-      if (h.owed && now - h.at > HAP.STALE) h.owed = 0;
-      if (h.owed && now - h.t0 >= HAP.FOLLOW) {     // WebKit is following the finger
+      const v = h.moved ? qmStop(qmStopAt(t.clientX)) : h.shown;
+      const crossed = v !== h.shown;
+      h.shown = v;
+      const ready = qm.hapWarm && (!qm.hapReadyAt || qm.hapResetAt > now);
+      if (crossed && ready) {
         h.side = -h.side;
-        h.owed--;
         h.flips++;
       }
+      qm.hapSide = h.side;
       hapPlace(t.clientX, t.clientY);
     }, { passive: true });
     const hapEnd = (e) => {
       const h = hapTouch(e) && qm.hapT;
       if (!h) return;
-      // ticks still owed: changing the switch from script stops WebKit's
-      // tracking, so its click on lift ticks instead of staying silent
-      if (e.type === 'touchend' && h.owed && h.flips && performance.now() - h.at <= HAP.STALE) {
-        qmEl.hap.checked = !qmEl.hap.checked;
-        qmEl.hap.checked = !qmEl.hap.checked;
+      if (e.type === 'touchcancel' || !e.isTrusted) {
+        if (e.cancelable) e.preventDefault();
+        hapReset();
+      } else if (h.moved && e.cancelable) {
+        e.preventDefault();
+        hapSync(performance.now());
+      } else {
+        qm.hapWarm = false;
+        qm.hapSide = -1;
+        qm.hapResetAt = 0;
+        qm.hapReadyAt = 0;
       }
       qm.hapT = null;
       qmRun();
     };
-    qmEl.hap.addEventListener('touchend', hapEnd);
-    qmEl.hap.addEventListener('touchcancel', hapEnd);
+    qmEl.hap.addEventListener('touchend', hapEnd, { passive: false });
+    qmEl.hap.addEventListener('touchcancel', hapEnd, { passive: false });
+    qmEl.hap.addEventListener('click', () => {
+      if (!useSwitchHaptics || !qm) return;
+      qm.hapWarm = false;
+      qm.hapSide = -1;
+      qm.hapResetAt = 0;
+      qm.hapReadyAt = 0;
+    });
+    const hapSuspend = () => {
+      if (!qm) return;
+      stopTicks();
+      qm.drag = null;
+      hapReset();
+    };
+    document.addEventListener('visibilitychange', () => { if (document.hidden) hapSuspend(); });
+    window.addEventListener('pagehide', hapSuspend);
     qmEl.pill.addEventListener('keydown', (e) => {
       if (!qm || qm.closing) return;
       const step = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
@@ -1347,7 +1279,7 @@
     });
     // anywhere but the pill closes it (and saves)
     qmEl.root.addEventListener('pointerdown', (e) => {
-      if (e.target === qmEl.hap || qmEl.pill.contains(e.target) || (qmReleaseTest && qmReleaseTest.panel.contains(e.target))) return;
+      if (e.target === qmEl.hap || qmEl.pill.contains(e.target)) return;
       e.preventDefault();
       closeQtyMenu();
     });

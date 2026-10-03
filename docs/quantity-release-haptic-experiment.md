@@ -1,5 +1,7 @@
 # Opt-in after-release haptic experiment
 
+Archived on 2026-10-03: the user reported no felt vibration from either probe. The runtime panel, synthetic activation requests, and test translations were removed in the finger-down haptic update. The old query parameter now has no effect. The notes below describe the retired experiment, not the current selector. See [the current finger-down approach](quantity-finger-haptics.md).
+
 Draft only: `193289027910` on `imraiy-tv.myshopify.com`.
 
 ## Enable and disable

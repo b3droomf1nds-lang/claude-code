@@ -97,14 +97,6 @@
     "update": "Update",
     "quantity": "Quantity",
     "remove": "Remove",
-    "haptic_test": {
-      "title": "After-release haptic experiment",
-      "instructions": "Test only — Safari may stay silent. Tap the test button, lift your finger and check for three delayed ticks. Then try flicking the quantity slider.",
-      "route": "Activation route",
-      "direct": "Direct switch",
-      "label": "Via label",
-      "probe": "Test after release"
-    },
     "protect_title": "Protect your order",
     "protect_desc": "Covers loss, damage or theft in transit — we reship or refund, no claims process."
   },

@@ -14,18 +14,26 @@ class Element {
     this.attrs = {};
     this.dataset = {};
     this.events = new Map();
+    this.eventOptions = new Map();
     this.nodes = new Map();
   }
   set innerHTML(value) { this.children = Array.from({ length: (value.match(/<i>/g) || []).length }, () => new Element()); }
   setAttribute(name, value) { this.attrs[name] = value; }
-  addEventListener(name, callback) {
+  addEventListener(name, callback, options) {
     if (!this.events.has(name)) this.events.set(name, []);
     this.events.get(name).push(callback);
+    this.eventOptions.set(name, options);
   }
   emit(type, data = {}) {
-    const event = { type, isTrusted: true, pointerId: 1, pointerType: 'touch', preventDefault() {}, ...data };
+    const event = {
+      type, isTrusted: true, pointerId: 1, pointerType: 'touch', cancelable: true, defaultPrevented: false,
+      preventDefault() { if (this.cancelable) this.defaultPrevented = true; }, ...data
+    };
     for (const callback of this.events.get(type) || []) callback(event);
+    return event;
   }
+  set checked(value) { this._checked = value; this.checkedWrites = (this.checkedWrites || 0) + 1; }
+  get checked() { return this._checked || false; }
   querySelector(name) {
     if (!this.nodes.has(name)) this.nodes.set(name, new Element());
     return this.nodes.get(name);
@@ -44,7 +52,7 @@ class Element {
   focus() {}
 }
 
-function harness({ native = false, quantity = 1, reduced = false, experiment = false, themeId = 193289027910, themeRole = 'unpublished' } = {}) {
+function harness({ native = false, quantity = 1, reduced = false, experiment = false } = {}) {
   let now = 0;
   let nextTimer = 0;
   const timers = new Map();
@@ -54,6 +62,8 @@ function harness({ native = false, quantity = 1, reduced = false, experiment = f
   const previews = [];
   const item = { key: 'test-line', quantity, final_price: 100, final_line_price: quantity * 100 };
   const line = new Element();
+  const documentEvents = new Element();
+  const windowEvents = new Element();
   line.dataset = { lineKey: item.key };
   const context = {
     PENCIL: '<svg></svg>',
@@ -66,17 +76,13 @@ function harness({ native = false, quantity = 1, reduced = false, experiment = f
         if (native) root.querySelector('.qty-menu__hap').switch = true;
         return root;
       },
-      addEventListener() {}
+      addEventListener: (...args) => documentEvents.addEventListener(...args)
     },
     window: {
       innerHeight: 844, matchMedia: () => ({ matches: reduced }),
       location: { search: experiment ? '?qty_haptics=release-test' : '' },
-      Shopify: { theme: { id: themeId, role: themeRole } },
-      addEventListener() {},
-      VolticalStrings: {
-        remove: 'Remove',
-        hapticTest: { title: 'Experiment', instructions: 'Test only', route: 'Route', direct: 'Direct switch', label: 'Via label', probe: 'Test after release' }
-      }
+      addEventListener: (...args) => windowEvents.addEventListener(...args),
+      VolticalStrings: { remove: 'Remove' }
     },
     URLSearchParams,
     performance: { now: () => now },
@@ -97,15 +103,17 @@ function harness({ native = false, quantity = 1, reduced = false, experiment = f
     syncProtectionTier() {}, render() {}, busy: false, qtyOpenKey: null
   };
   vm.createContext(context);
-  vm.runInContext(selector + '\nthis.api = { openQtyMenu, closeQtyMenu, qmEl, qmReleaseTest, state: () => qm };', context);
+  vm.runInContext(selector + '\nthis.api = { openQtyMenu, closeQtyMenu, qmEl, state: () => qm };', context);
   const { api } = context;
   api.openQtyMenu(item, line);
   const state = () => api.state();
   const x = (value) => state().to.x - state().W / 2 + 12 + 24 + value * (state().W - 24 - 48) / (state().n - 1);
   const pointer = (type, value, extra = {}) => api.qmEl.hap.emit(type, { clientX: x(value), ...extra });
-  const touch = (type, value) => {
+  const touch = (type, value, extra = {}) => {
     const point = { identifier: 1, clientX: x(value), clientY: state().to.y };
-    api.qmEl.hap.emit(type, { changedTouches: [point], touches: type === 'touchend' ? [] : [point] });
+    return api.qmEl.hap.emit(type, {
+      changedTouches: [point], touches: ['touchend', 'touchcancel'].includes(type) ? [] : [point], ...extra
+    });
   };
   const advance = (amount) => {
     const end = now + amount;
@@ -128,15 +136,15 @@ function harness({ native = false, quantity = 1, reduced = false, experiment = f
     for (let i = 0; frames.size && i < 180; i++) frame();
     assert.equal(frames.size, 0, 'animation must finish');
   };
-  return { api, state, x, pointer, touch, advance, frame, settle, frames, context, line, pulses, changes, previews };
+  return { api, state, x, pointer, touch, advance, frame, settle, frames, context, line, pulses, changes, previews, documentEvents, windowEvents };
 }
 
-test('one fast input crossing four notches delivers four distinct pulses', () => {
+test('one fast input crossing four notches delivers four distinct pulses while held', () => {
   const h = harness();
   h.pointer('pointerdown', 1);
   h.pointer('pointermove', 5);
-  h.pointer('pointerup', 5);
   h.advance(100);
+  h.pointer('pointerup', 5);
   assert.equal(h.state().shown, 5);
   assert.equal(h.pulses.length, 4);
   assert.deepEqual(h.pulses.map((p) => p.at), [0, 16, 32, 48]);
@@ -151,14 +159,14 @@ test('coalesced samples preserve crossings and reversals inside one event', () =
   assert.equal(h.pulses.length, 7);
 });
 
-test('releasing beyond the last delivered move counts the remaining notches', () => {
+test('releasing beyond the last delivered move selects the target without delayed pulses', () => {
   const h = harness();
   h.pointer('pointerdown', 1);
   h.pointer('pointermove', 2);
   h.pointer('pointerup', 5);
   h.advance(100);
   assert.equal(h.state().k.to, 5);
-  assert.equal(h.pulses.length, 4);
+  assert.equal(h.pulses.length, 1);
 });
 
 test('a tap emits one pulse and repeated positions emit none', () => {
@@ -196,23 +204,26 @@ test('pointer cancel retains the current quantity and unrelated pointers are ign
   h.advance(100);
   assert.equal(h.state().shown, 3);
   assert.equal(h.state().k.to, 3);
-  assert.equal(h.pulses.length, 2);
+  assert.equal(h.pulses.length, 1);
 });
 
-test('native switch counts more than six crossings without double-counting touch and pointer events', () => {
+test('native crossings before tracking starts are not replayed at a stationary finger', () => {
   const h = harness({ native: true, quantity: 12 });
   h.pointer('pointerdown', 12);
   h.touch('touchstart', 12);
   h.pointer('pointermove', 0);
   h.touch('touchmove', 0);
-  assert.equal(h.state().hapT.owed, 12);
+  assert.equal(h.state().hapT.flips, 0);
   h.advance(206);
   h.touch('touchmove', 0);
-  assert.equal(h.state().hapT.owed, 11);
+  assert.equal(h.state().hapT.flips, 0);
   h.advance(8);
   h.touch('touchmove', 0);
-  assert.equal(h.state().hapT.owed, 10);
-  assert.equal(h.state().hapT.flips, 2);
+  assert.equal(h.state().hapT.flips, 0);
+  assert.equal(h.state().hapT.owed, undefined);
+  h.pointer('pointermove', 1);
+  h.touch('touchmove', 1);
+  assert.equal(h.state().hapT.flips, 1);
 });
 
 test('native touch counting does not depend on pointermove being delivered first', () => {
@@ -220,11 +231,11 @@ test('native touch counting does not depend on pointermove being delivered first
   h.touch('touchstart', 1);
   h.advance(206);
   h.touch('touchmove', 5);
-  assert.equal(h.state().hapT.owed, 3);
   assert.equal(h.state().hapT.flips, 1);
   h.pointer('pointerdown', 1);
   h.pointer('pointermove', 5);
-  assert.equal(h.state().hapT.owed, 3);
+  h.touch('touchmove', 5);
+  assert.equal(h.state().hapT.flips, 1);
 });
 
 test('keyboard selection and Remove retain the existing quantity behavior', () => {
@@ -305,147 +316,234 @@ test('the selector cannot reopen with a stale quantity during a cart save', () =
   assert.equal(h.state(), null);
 });
 
-test('the release experiment is absent on normal URLs, other themes, and live themes', () => {
-  for (const options of [{}, { experiment: true, themeId: 192813334854 }, { experiment: true, themeRole: 'main' }]) {
-    const h = harness({ native: true, ...options });
-    assert.equal(h.api.qmReleaseTest, null);
-    assert.equal(h.api.qmEl.root.dataset.hapticTest, undefined);
-    h.pointer('pointerdown', 1);
-    h.pointer('pointermove', 5);
-    h.pointer('pointerup', 5);
-    h.settle();
-    assert.equal(h.api.qmEl.hap.clicks || 0, 0);
-  }
-});
+function warmDrag(h, from = 1, to = 2) {
+  h.pointer('pointerdown', from);
+  h.touch('touchstart', from);
+  h.advance(206);
+  h.pointer('pointermove', to);
+  h.touch('touchmove', to);
+  h.pointer('pointerup', to);
+  return h.touch('touchend', to);
+}
 
-test('the probe requests activations at 0, 150, 300 and 450ms without claiming physical haptics', () => {
-  const h = harness({ native: true, experiment: true });
-  h.api.qmReleaseTest.probe.emit('click');
-  assert.equal(h.api.qmEl.hap.clicks, 1);
-  h.advance(149);
-  assert.equal(h.api.qmEl.hap.clicks, 1);
-  h.advance(301);
-  assert.equal(h.api.qmEl.hap.clicks, 4);
-  const log = JSON.parse(h.api.qmEl.root.dataset.hapticAttemptLog);
-  assert.deepEqual(log.map((entry) => entry.at), [0, 150, 300, 450]);
-  assert.ok(log.every((entry) => entry.phase === 'probe' && entry.route === 'click'));
-  assert.equal(h.pulses.length, 0, 'native switch activation requests are not evidence of physical vibration');
-  assert.equal(h.state().shown, 1);
-});
-
-test('the label probe uses its associated switch without changing quantity', () => {
-  const h = harness({ native: true, experiment: true });
-  const probe = h.api.qmReleaseTest;
-  assert.equal(probe.label.htmlFor, h.api.qmEl.hap.id);
-  probe.mode.value = 'label';
-  probe.mode.emit('change');
-  probe.probe.emit('click');
-  h.advance(450);
-  assert.equal(probe.label.clicks, 4);
+test('a real drag suppresses the lift click before native default handling', () => {
+  const h = harness({ native: true });
+  const end = warmDrag(h);
+  assert.equal(end.defaultPrevented, true);
+  assert.equal(h.api.qmEl.hap.eventOptions.get('touchend').passive, false);
+  assert.equal(h.state().hapWarm, true);
+  assert.equal(h.state().hapT, null);
   assert.equal(h.api.qmEl.hap.clicks || 0, 0);
-  assert.equal(h.api.qmEl.root.dataset.hapticRoute, 'label');
-  assert.equal(h.state().shown, 1);
 });
 
-test('a fast release attempts each remaining animated notch, not the already selected target', () => {
-  const h = harness({ native: true, experiment: true });
-  h.settle();
+test('a warm second drag requests a native flip immediately without resetting checkedness', () => {
+  const h = harness({ native: true });
+  warmDrag(h);
+  const writes = h.api.qmEl.hap.checkedWrites;
+  h.advance(20);
+  h.pointer('pointerdown', 2);
+  h.touch('touchstart', 2);
+  assert.equal(h.api.qmEl.hap.checkedWrites, writes);
+  assert.equal(h.state().hapT.side, 1);
+  h.advance(10);
+  h.pointer('pointermove', 3);
+  h.touch('touchmove', 3);
+  assert.equal(h.state().hapT.flips, 1);
+  assert.equal(h.state().hapT.side, -1);
+  h.touch('touchmove', 3.1);
+  assert.equal(h.state().hapT.flips, 1);
+  h.pointer('pointermove', 2);
+  h.touch('touchmove', 2);
+  assert.equal(h.state().hapT.flips, 2);
+});
+
+test('a short first drag can finish warming during a pause without playing release clicks', () => {
+  const h = harness({ native: true });
   h.pointer('pointerdown', 1);
   h.touch('touchstart', 1);
-  h.pointer('pointermove', 5);
-  h.touch('touchmove', 5);
-  assert.equal(h.state().shown, 5);
-  assert.equal(h.state().k.x, 1);
+  h.advance(80);
+  h.pointer('pointermove', 2);
+  h.touch('touchmove', 2);
+  h.pointer('pointerup', 2);
+  assert.equal(h.touch('touchend', 2).defaultPrevented, true);
+  assert.equal(h.state().hapWarm, false);
+  const writes = h.api.qmEl.hap.checkedWrites;
+  h.advance(150);
+  h.pointer('pointerdown', 2);
+  h.touch('touchstart', 2);
+  assert.equal(h.state().hapWarm, true);
+  assert.equal(h.api.qmEl.hap.checkedWrites, writes);
+  h.pointer('pointermove', 3);
+  h.touch('touchmove', 3);
+  assert.equal(h.state().hapT.flips, 1);
   assert.equal(h.api.qmEl.hap.clicks || 0, 0);
-  h.pointer('pointerup', 5);
-  h.touch('touchend', 5);
-  assert.equal(h.api.qmEl.hap.clicks || 0, 0);
-  h.settle();
-  h.advance(100);
-  const log = JSON.parse(h.api.qmEl.root.dataset.hapticAttemptLog);
-  assert.deepEqual(log.map(({ from, to }) => [from, to]), [[1, 2], [2, 3], [3, 4], [4, 5]]);
-  assert.ok(log.every((entry) => entry.phase === 'settle'));
-  assert.equal(h.api.qmEl.hap.clicks, 4);
-  assert.equal(h.state().shown, 5);
-  h.api.closeQtyMenu();
-  h.settle();
-  assert.deepEqual(JSON.parse(JSON.stringify(h.changes)), [{ id: 'test-line', quantity: 5 }]);
 });
 
-test('release experiment tracks crossings back toward lower quantities', () => {
-  const h = harness({ native: true, experiment: true, quantity: 5 });
-  h.settle();
-  h.pointer('pointerdown', 5);
-  h.pointer('pointermove', 1);
-  h.pointer('pointerup', 1);
-  h.settle();
-  h.advance(100);
-  const log = JSON.parse(h.api.qmEl.root.dataset.hapticAttemptLog);
-  assert.deepEqual(log.map(({ from, to }) => [from, to]), [[5, 4], [4, 3], [3, 2], [2, 1]]);
-  assert.equal(h.state().shown, 1);
+test('a warm gesture resynchronizes at WebKit held tracking restart without an extra requested flip', () => {
+  const h = harness({ native: true });
+  warmDrag(h);
+  h.pointer('pointerdown', 2);
+  h.touch('touchstart', 2);
+  h.advance(190);
+  h.pointer('pointermove', 3);
+  h.touch('touchmove', 3);
+  assert.equal(h.state().hapT.flips, 1);
+  h.advance(10);
+  h.touch('touchmove', 3);
+  assert.equal(h.state().hapT.side, -1);
+  assert.equal(h.state().hapT.flips, 1);
+  h.advance(6);
+  h.touch('touchmove', 3);
+  assert.equal(h.state().hapT.flips, 1);
+  h.pointer('pointermove', 4);
+  h.touch('touchmove', 4);
+  assert.equal(h.state().hapT.flips, 2);
 });
 
-test('a new touch cancels the probe and old released-knob requests', () => {
-  const h = harness({ native: true, experiment: true });
-  h.api.qmReleaseTest.probe.emit('click');
+test('native tracking requests only one flip per delivered touch event, with no delayed replay', () => {
+  const h = harness({ native: true, quantity: 20 });
+  h.pointer('pointerdown', 20);
+  h.touch('touchstart', 20);
+  h.advance(206);
+  h.pointer('pointermove', 0);
+  h.touch('touchmove', 0);
+  assert.equal(h.state().hapT.flips, 1);
+  for (let i = 0; i < 10; i++) h.touch('touchmove', 0);
+  assert.equal(h.state().hapT.flips, 1);
+});
+
+test('a native tap is left to the real switch and makes the next swipe cold', () => {
+  const h = harness({ native: true });
+  warmDrag(h);
+  h.pointer('pointerdown', 2);
+  h.touch('touchstart', 2);
+  h.pointer('pointerup', 4);
+  const end = h.touch('touchend', 4);
+  assert.equal(end.defaultPrevented, false);
+  assert.equal(h.state().shown, 4);
+  assert.equal(h.state().hapWarm, false);
+  h.touch('touchstart', 4);
+  h.touch('touchmove', 3);
+  assert.equal(h.state().hapT.flips, 0);
+});
+
+test('a noncancelable drag ending falls back to cold tracking', () => {
+  const h = harness({ native: true });
   h.pointer('pointerdown', 1);
-  h.advance(500);
-  assert.equal(h.api.qmEl.hap.clicks, 1);
-  h.pointer('pointermove', 5);
-  h.pointer('pointerup', 5);
-  h.frame();
-  h.pointer('pointerdown', 5);
-  const count = h.api.qmEl.hap.clicks;
-  for (let i = 0; i < 30; i++) h.frame();
-  assert.equal(h.api.qmEl.hap.clicks, count);
-  h.pointer('pointercancel', 5);
-  h.settle();
-  h.advance(100);
-  assert.equal(h.api.qmEl.hap.clicks, count);
+  h.touch('touchstart', 1);
+  h.advance(206);
+  h.pointer('pointermove', 2);
+  h.touch('touchmove', 2);
+  h.pointer('pointerup', 2);
+  const end = h.touch('touchend', 2, { cancelable: false });
+  assert.equal(end.defaultPrevented, false);
+  assert.equal(h.state().hapWarm, false);
+  assert.equal(h.state().hapReadyAt, 0);
 });
 
-test('close, visibility loss, and mode changes cancel pending requests', () => {
-  for (const action of ['close', 'hidden', 'mode']) {
-    const h = harness({ native: true, experiment: true });
-    h.api.qmReleaseTest.probe.emit('click');
-    if (action === 'close') h.api.closeQtyMenu();
-    else if (action === 'hidden') h.context.document.hidden = true;
-    else {
-      h.api.qmReleaseTest.mode.value = 'label';
-      h.api.qmReleaseTest.mode.emit('change');
-    }
-    h.advance(500);
-    assert.equal(h.api.qmEl.hap.clicks, 1);
-    assert.equal(h.api.qmReleaseTest.label.clicks || 0, 0);
+test('native cancellation clears tracking, blocks the pending held timer, and allows a new touch', () => {
+  const h = harness({ native: true });
+  warmDrag(h);
+  h.pointer('pointerdown', 2);
+  h.touch('touchstart', 2);
+  h.touch('touchmove', 3);
+  h.pointer('pointercancel', 3);
+  h.touch('touchcancel', 3);
+  assert.equal(h.state().hapT, null);
+  assert.equal(h.state().hapWarm, false);
+  assert.equal(h.api.qmEl.hap.switch, false);
+  assert.equal(h.api.qmEl.hap.disabled, false);
+  h.pointer('pointerdown', 3);
+  h.touch('touchstart', 3);
+  assert.equal(h.api.qmEl.hap.switch, true);
+  h.touch('touchmove', 4);
+  assert.equal(h.state().hapT.flips, 0);
+});
+
+test('untrusted or unrelated touch events do not produce native flip requests', () => {
+  const h = harness({ native: true });
+  h.touch('touchstart', 1, { isTrusted: false });
+  assert.equal(h.state().hapT, null);
+  h.touch('touchstart', 1);
+  h.advance(206);
+  h.touch('touchmove', 2, { isTrusted: false });
+  h.touch('touchmove', 2, { changedTouches: [{ identifier: 2, clientX: h.x(2), clientY: h.state().to.y }] });
+  assert.equal(h.state().hapT.flips, 0);
+  h.touch('touchmove', 2);
+  assert.equal(h.state().hapT.flips, 1);
+});
+
+test('multiple fingers safely cancel the native tracking session', () => {
+  const h = harness({ native: true });
+  warmDrag(h);
+  h.touch('touchstart', 2, { touches: [{ identifier: 1 }, { identifier: 2 }] });
+  assert.equal(h.state().hapWarm, false);
+  assert.equal(h.state().hapT, null);
+  assert.equal(h.api.qmEl.hap.switch, false);
+});
+
+test('closing and reopening clears native warm state without changing the save', () => {
+  const h = harness({ native: true });
+  warmDrag(h);
+  h.api.closeQtyMenu();
+  assert.equal(h.api.qmEl.hap.switch, false);
+  assert.equal(h.api.qmEl.hap.disabled, true);
+  h.settle();
+  assert.deepEqual(JSON.parse(JSON.stringify(h.changes)), [{ id: 'test-line', quantity: 2 }]);
+  h.api.openQtyMenu({ key: 'test-line', quantity: 2 }, h.line);
+  assert.equal(h.state().hapWarm, false);
+  assert.equal(h.api.qmEl.hap.switch, true);
+  assert.equal(h.api.qmEl.hap.disabled, false);
+});
+
+test('visibility loss and page exit clear native capture without changing quantity', () => {
+  for (const action of ['hidden', 'pagehide']) {
+    const h = harness({ native: true });
+    warmDrag(h);
+    if (action === 'hidden') {
+      h.context.document.hidden = true;
+      h.documentEvents.emit('visibilitychange');
+    } else h.windowEvents.emit('pagehide');
+    assert.equal(h.state().hapWarm, false);
+    assert.equal(h.state().hapT, null);
+    assert.equal(h.state().drag, null);
+    assert.equal(h.api.qmEl.hap.switch, false);
+    assert.equal(h.state().shown, 2);
   }
 });
 
-test('programmatic probe clicks, taps, and pointer cancellations do not arm settling requests', () => {
-  const h = harness({ native: true, experiment: true });
-  h.api.qmReleaseTest.probe.emit('click', { isTrusted: false });
-  h.pointer('pointerdown', 1);
-  h.pointer('pointerup', 5);
-  h.settle();
-  assert.equal(h.api.qmEl.hap.clicks || 0, 0);
-  h.pointer('pointerdown', 5);
-  h.pointer('pointermove', 1);
-  h.pointer('pointercancel', 1);
-  h.settle();
-  h.advance(500);
-  assert.equal(h.api.qmEl.hap.clicks || 0, 0);
+test('lifting or canceling stops queued Android pulses but retains the existing spring', () => {
+  for (const end of ['pointerup', 'pointercancel']) {
+    const h = harness();
+    h.settle();
+    h.pointer('pointerdown', 1);
+    h.pointer('pointermove', 5);
+    assert.equal(h.state().k.x, 1);
+    assert.equal(h.state().k.to, 5);
+    assert.equal(h.state().k.w, 2 * Math.PI / 0.09);
+    h.frame();
+    const velocity = h.state().k.v;
+    h.pointer(end, 5);
+    assert.equal(h.state().k.v, velocity);
+    assert.equal(h.state().k.to, 5);
+    assert.equal(h.state().k.w, 2 * Math.PI / 0.26);
+    assert.equal(h.state().k.z, 0.86);
+    const pulses = h.pulses.length;
+    h.settle();
+    h.advance(500);
+    assert.equal(h.pulses.length, pulses);
+    assert.equal(h.state().k.x, 5);
+  }
 });
 
-test('multi-notch frames queue distinct requests without a six-crossing cap', () => {
-  const h = harness({ native: true, experiment: true, quantity: 20 });
+test('the retired experiment cannot create a panel or synthetic release clicks on its old URL', () => {
+  const h = harness({ native: true, experiment: true });
   h.settle();
-  h.pointer('pointerdown', 20);
-  h.pointer('pointermove', 0);
-  h.pointer('pointerup', 0);
+  warmDrag(h, 1, 5);
   h.settle();
-  h.advance(1000);
-  const log = JSON.parse(h.api.qmEl.root.dataset.hapticAttemptLog);
-  assert.equal(log.length, 20);
-  assert.equal(h.api.qmEl.hap.clicks, 20);
-  log.slice(1).forEach((entry, i) => assert.ok(entry.at - log[i].at >= 16 - 1e-6));
-  assert.deepEqual(log.map((entry) => entry.to), Array.from({ length: 20 }, (_, i) => 19 - i));
+  h.advance(500);
+  assert.equal(h.api.qmEl.root.dataset.hapticTest, undefined);
+  assert.equal(h.api.qmEl.hap.clicks || 0, 0);
+  assert.equal(h.pulses.length, 0, 'native position requests are not evidence of physical motor feedback');
+  assert.ok(!source.includes('qmReleaseTest'));
 });
