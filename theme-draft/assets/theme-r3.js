@@ -741,8 +741,8 @@
       /* Each product is a bubble like the shipping one: the short name
          ("Core", not "Voltical Core 5K & 10K") as the small grey label, the
          options under it, one per line ("Titanium Gold", then "10,000mAh"), the price on the
-         right under "Qty 1" and a pencil. The pencil (data-qty-edit)
-         will open a small quantity menu; it has no action yet. */
+         right under "Qty 1" and a pencil. Tapping it (data-qty-edit)
+         opens the quantity menu below. */
       const shortName = (t) => t.replace(/^Voltical\s+/i, '').replace(/\s+\d+K\s*(&|and|\/)\s*\d+K$/i, '');
       const options = (v) => v.split(' / ').map((o) => `<span>${o.replace(/\s*mah\b/i, 'mAh')}</span>`).join(' ');
       linesEl.innerHTML = realLines.map((i) => `
@@ -756,7 +756,7 @@
             <button type="button" class="cart-line__qty" data-qty-edit aria-label="Quantity ${i.quantity}, edit">
               <span class="cart-line__qty-label">Qty</span>
               <span class="cart-line__qty-num">${i.quantity}</span>
-              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M11.2 2.3a1.6 1.6 0 0 1 2.3 0l.2.2a1.6 1.6 0 0 1 0 2.3L5.6 12.9 2.4 13.6l.7-3.2 8.1-8.1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="m9.9 3.7 2.4 2.4" stroke="currentColor" stroke-width="1.5"/></svg>
+              <span class="cart-line__pencil"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M11.2 2.3a1.6 1.6 0 0 1 2.3 0l.2.2a1.6 1.6 0 0 1 0 2.3L5.6 12.9 2.4 13.6l.7-3.2 8.1-8.1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="m9.9 3.7 2.4 2.4" stroke="currentColor" stroke-width="1.5"/></svg></span>
             </button>
             <span class="cart-line__price">${money(i.final_line_price)}</span>
           </div>
@@ -813,12 +813,106 @@
       if (!line) return;
       const key = line.dataset.lineKey;
       const item = cart.items.find((i) => i.key === key);
-      if (e.target.matches('[data-qty]')) {
-        mutate({ id: key, quantity: Math.max(0, item.quantity + Number(e.target.dataset.qty)) }).then(syncProtectionTier);
-      } else if (e.target.matches('[data-remove]')) {
-        mutate({ id: key, quantity: 0 }).then(syncProtectionTier);
-      }
+      if (!item) return;
+      if (e.target.closest('[data-qty-edit]')) openQtyMenu(item, line);
     });
+
+    /* Quantity menu, after the iPhone's stepped slider pop-up: the page
+       frosts over, a label sits above a white pill, and in the pill a blue
+       fill follows a white knob across evenly spaced dots. The first stop
+       is 0 (Remove, an empty ring like the slider's lowest setting), then
+       1, 2, 3... Dragging or tapping moves the knob stop to stop and the
+       label follows; letting go saves the quantity and closes. Tapping
+       outside, or Escape, closes without changing anything. */
+    const qtyMenu = (() => {
+      const root = document.createElement('div');
+      root.className = 'qty-menu';
+      root.hidden = true;
+      root.innerHTML = `
+        <div class="qty-menu__label" aria-hidden="true"><b>Qty</b> <span data-qm-value></span></div>
+        <div class="qty-menu__pill">
+          <div class="qty-menu__track" role="slider" tabindex="0" aria-label="Quantity">
+            <div class="qty-menu__fill"></div>
+            <div class="qty-menu__dots"></div>
+            <div class="qty-menu__knob"></div>
+          </div>
+        </div>`;
+      document.body.appendChild(root);
+      return {
+        root,
+        label: $('[data-qm-value]', root),
+        pill: $('.qty-menu__pill', root),
+        track: $('.qty-menu__track', root),
+        fill: $('.qty-menu__fill', root),
+        dots: $('.qty-menu__dots', root),
+        knob: $('.qty-menu__knob', root)
+      };
+    })();
+    let qm = null;                                   // { key, start, value, stops, dragging }
+    const qmText = (v) => (v === 0 ? window.VolticalStrings.remove : String(v));
+    const qmSet = (v) => {
+      v = Math.max(0, Math.min(qm.stops - 1, v));
+      if (v === qm.value && qm.drawn) return;
+      qm.value = v;
+      qm.drawn = true;
+      const t = qtyMenu.track;
+      const r = t.clientHeight / 2;
+      const x = r + ((t.clientWidth - 2 * r) * v) / (qm.stops - 1);
+      qtyMenu.knob.style.transform = 'translateX(' + (x - r) + 'px)';
+      qtyMenu.fill.style.width = (x + r) + 'px';
+      qtyMenu.root.classList.toggle('is-empty', v === 0);
+      Array.from(qtyMenu.dots.children).forEach((d, i) => d.classList.toggle('is-on', i <= v));
+      qtyMenu.label.textContent = qmText(v);
+      t.setAttribute('aria-valuenow', String(v));
+      t.setAttribute('aria-valuetext', qmText(v));
+      if (navigator.vibrate && qm.dragging) navigator.vibrate(5);
+    };
+    const qmFromX = (clientX) => {
+      const b = qtyMenu.track.getBoundingClientRect();
+      const r = b.height / 2;
+      return Math.round(((clientX - b.left - r) / (b.width - 2 * r)) * (qm.stops - 1));
+    };
+    const closeQtyMenu = (save) => {
+      if (!qm) return;
+      const { key, start, value } = qm;
+      qm = null;
+      qtyMenu.root.classList.remove('is-open');
+      setTimeout(() => { if (!qm) qtyMenu.root.hidden = true; }, 220);
+      if (save && value !== start) mutate({ id: key, quantity: value }).then(syncProtectionTier);
+    };
+    const openQtyMenu = (item, line) => {
+      const stops = Math.max(5, item.quantity) + 1;
+      qm = { key: item.key, start: item.quantity, value: item.quantity, stops, dragging: false, drawn: false };
+      qtyMenu.dots.innerHTML = Array.from({ length: stops }, () => '<i></i>').join('');
+      qtyMenu.track.setAttribute('aria-valuemin', '0');
+      qtyMenu.track.setAttribute('aria-valuemax', String(stops - 1));
+      qtyMenu.root.hidden = false;
+      // the pill sits over the product's bubble, the label just above it
+      const b = line.getBoundingClientRect();
+      qtyMenu.root.style.setProperty('--qm-y', Math.round(b.top + b.height / 2) + 'px');
+      qtyMenu.dots.style.setProperty('--qm-n', String(stops));
+      qmSet(item.quantity);
+      requestAnimationFrame(() => qtyMenu.root.classList.add('is-open'));
+      qtyMenu.track.focus({ preventScroll: true });
+    };
+    qtyMenu.track.addEventListener('pointerdown', (e) => {
+      if (!qm) return;
+      e.preventDefault();
+      qm.dragging = true;
+      qtyMenu.track.setPointerCapture(e.pointerId);
+      qmSet(qmFromX(e.clientX));
+    });
+    qtyMenu.track.addEventListener('pointermove', (e) => { if (qm && qm.dragging) qmSet(qmFromX(e.clientX)); });
+    qtyMenu.track.addEventListener('pointerup', () => { if (qm && qm.dragging) closeQtyMenu(true); });
+    qtyMenu.track.addEventListener('pointercancel', () => { if (qm) qm.dragging = false; });
+    qtyMenu.track.addEventListener('keydown', (e) => {
+      if (!qm) return;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); qmSet(qm.value + 1); }
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); qmSet(qm.value - 1); }
+      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); closeQtyMenu(true); }
+    });
+    qtyMenu.root.addEventListener('pointerdown', (e) => { if (!qtyMenu.pill.contains(e.target)) closeQtyMenu(false); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && qm) { e.stopImmediatePropagation(); closeQtyMenu(false); } }, true);
 
     if (protectToggle) protectToggle.addEventListener('change', () => {
       const protLine = cart && cart.items.find(isProtection);
