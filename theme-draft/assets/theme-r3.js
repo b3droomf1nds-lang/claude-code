@@ -892,9 +892,27 @@
        silent, so iPhone ticks come from real switches under the finger: a
        hidden one in the label over "Qty 1" (tapping it ticks) and the
        slider's invisible one (.qty-menu__hap, below). */
-    const tick = typeof navigator.vibrate === 'function'
-      ? () => { try { navigator.vibrate(8); } catch (e) { /* not allowed yet */ } }
-      : () => {};
+    const canVibrate = typeof navigator.vibrate === 'function';
+    const useSwitchHaptics = !canVibrate && 'switch' in qmEl.hap;
+    let ticksPending = 0;
+    let tickTimer = 0;
+    const playTick = () => {
+      tickTimer = 0;
+      if (!ticksPending) return;
+      ticksPending--;
+      try { navigator.vibrate(8); } catch (e) { ticksPending = 0; }
+      tickTimer = setTimeout(playTick, 16);
+    };
+    const tick = (count = 1) => {
+      if (!canVibrate) return;
+      ticksPending += count;
+      if (!tickTimer) playTick();
+    };
+    const stopTicks = () => {
+      clearTimeout(tickTimer);
+      tickTimer = 0;
+      ticksPending = 0;
+    };
 
     // A spring that can be re-aimed mid-flight, stepped each frame.
     // response in seconds and damping ratio, as SwiftUI describes springs.
@@ -961,8 +979,9 @@
         item_count: cart.item_count + q - item.quantity
       }));
     };
-    const qmShow = (v, haptic) => {
+    const qmShow = (v, haptic, crossed = false) => {
       if (v === qm.shown) return;
+      const count = crossed ? Math.abs(v - qm.shown) : 1;
       qm.shown = v;
       const text = v ? String(v) : window.VolticalStrings.remove;
       qmEl.value.textContent = text;
@@ -970,7 +989,10 @@
       qmEl.pill.setAttribute('aria-valuenow', String(v));
       qmEl.pill.setAttribute('aria-valuetext', text);
       previewQty(qm.key, v);
-      if (haptic) tick();
+      if (haptic) {
+        tick(count);
+        if (crossed) hapRecord(v);
+      }
     };
 
     const qmPaint = () => {
@@ -1056,6 +1078,7 @@
     };
     const closeQtyMenu = () => {
       if (!qm || qm.closing) return;
+      stopTicks();
       qm.closing = true;
       qm.drag = null;
       const v = qmStop(qm.k.to);
@@ -1107,18 +1130,25 @@
       qm.s.aim(1.02, 0.2, 1);                        // puffs up under the finger
       qmRun();
     });
+    const qmMoveTo = (x) => {
+      const d = qm.drag;
+      if (!d.moved && Math.abs(x - d.x0) < 4) return;
+      d.moved = true;
+      qm.k.aim(qmStopAt(x), 0.09, 1);               // the knob follows the finger
+      qmShow(qmStop(qm.k.to), true, true);
+    };
     qmEl.hap.addEventListener('pointermove', (e) => {
       const d = qm && qm.drag;
       if (!d || e.pointerId !== d.id) return;
-      if (!d.moved && Math.abs(e.clientX - d.x0) < 4) return;
-      d.moved = true;
-      qm.k.aim(qmStopAt(e.clientX), 0.09, 1);        // the knob follows the finger
-      qmShow(qmStop(qm.k.to), true);
+      const samples = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+      for (const sample of samples) qmMoveTo(sample.clientX);
+      qmMoveTo(e.clientX);
       qmRun();
     });
     const qmRelease = (e) => {
       const d = qm && qm.drag;
       if (!d || e.pointerId !== d.id) return;
+      if (d.moved && e.type === 'pointerup') qmMoveTo(e.clientX);
       qm.drag = null;
       const v = qmStop(d.moved ? qm.k.to : qmStopAt(e.clientX));   // a tap jumps to that stop
       qm.k.aim(v, 0.26, 0.86);
@@ -1139,10 +1169,11 @@
        - WebKit only starts following a finger 200ms after it lands (a timer
          in CheckboxInputType::handleTouchEvent that a page can't shorten).
          So the numbers passed before then are owed, and play one after
-         another, 30ms apart, as soon as it follows: a fast swipe still
-         gets a tick for every number, the first few a moment late. Owed
-         ticks are dropped once the finger has rested on one number for
-         300ms.
+         another on successive real touch events as soon as it follows.
+         There is no extra rate limit or six-tick cap. WebKit can still
+         emit only one tick per real event; a swipe ending before tracking
+         starts cannot produce a separate tick for every stop. Owed ticks
+         expire after the finger has rested on one number for 300ms.
        - If the finger lifts with ticks still owed, the switch is reset
          first so WebKit's click on lift ticks once more (after a drag that
          click is silent).
@@ -1150,7 +1181,14 @@
          flip from where the switch was first ever touched, which has to
          stay clear of its right end.
        - A tap ticks when the finger lifts (WebKit clicks the switch). */
-    const HAP = { W: 4000, H: 40, D: 100, FOLLOW: 205, GAP: 30, STALE: 300 };
+    const HAP = { W: 4000, H: 40, D: 100, FOLLOW: 205, STALE: 300 };
+    const hapRecord = (v) => {
+      const h = qm && qm.hapT;
+      if (!h || v === h.shown) return;
+      h.owed += Math.abs(v - h.shown);
+      h.shown = v;
+      h.at = performance.now();
+    };
     const hapPlace = (x, y) => {
       qmEl.hap.style.cssText = 'width:' + HAP.W + 'px;height:' + HAP.H + 'px;transform:translate(' +
         (x - HAP.W / 2 - qm.hapT.side * HAP.D) + 'px,' + (y - HAP.H / 2) + 'px)';
@@ -1158,10 +1196,10 @@
     };
     const hapTouch = (e) => Array.from(e.changedTouches).find((t) => qm && qm.hapT && t.identifier === qm.hapT.id);
     qmEl.hap.addEventListener('touchstart', (e) => {
-      if (!qm || qm.closing || e.touches.length !== 1) return;
+      if (!useSwitchHaptics || !qm || qm.closing || e.touches.length !== 1) return;
       const t = e.changedTouches[0];
       qmEl.hap.checked = false;                      // WebKit starts with the thumb on the left
-      qm.hapT = { id: t.identifier, t0: performance.now(), side: -1, shown: qm.shown, owed: 0, at: 0, last: 0, flips: 0 };
+      qm.hapT = { id: t.identifier, x0: t.clientX, moved: false, t0: performance.now(), side: -1, shown: qm.shown, owed: 0, at: 0, flips: 0 };
       hapPlace(t.clientX, t.clientY);
     }, { passive: true });
     qmEl.hap.addEventListener('touchmove', (e) => {
@@ -1169,14 +1207,12 @@
       if (!t) return;
       const h = qm.hapT;
       const now = performance.now();
-      // the number under the finger, as the slider shows it (pointermove)
-      const v = qm.drag && qm.drag.moved ? qmStop(qmStopAt(t.clientX)) : h.shown;
-      if (v !== h.shown) { h.owed = Math.min(6, h.owed + Math.abs(v - h.shown)); h.shown = v; h.at = now; }
+      if (Math.abs(t.clientX - h.x0) >= 4) h.moved = true;
+      if (h.moved) hapRecord(qmStop(qmStopAt(t.clientX)));
       if (h.owed && now - h.at > HAP.STALE) h.owed = 0;
-      if (h.owed && now - h.t0 >= HAP.FOLLOW && now - h.last >= HAP.GAP) {   // WebKit is following the finger
+      if (h.owed && now - h.t0 >= HAP.FOLLOW) {     // WebKit is following the finger
         h.side = -h.side;
         h.owed--;
-        h.last = now;
         h.flips++;
       }
       hapPlace(t.clientX, t.clientY);
