@@ -1136,14 +1136,21 @@
        finger drags, the invisible switch is moved under it with its middle
        100px to one side, and swapped to the other side each time the
        number changes: one tick per number.
-       - WebKit starts following a finger 200ms after it lands. A number
-         passed before then ticks at that moment, unless the finger has
-         since stopped for a while (more than 200ms after the number).
+       - WebKit only starts following a finger 200ms after it lands (a timer
+         in CheckboxInputType::handleTouchEvent that a page can't shorten).
+         So the numbers passed before then are owed, and play one after
+         another, 30ms apart, as soon as it follows: a fast swipe still
+         gets a tick for every number, the first few a moment late. Owed
+         ticks are dropped once the finger has rested on one number for
+         300ms.
+       - If the finger lifts with ticks still owed, the switch is reset
+         first so WebKit's click on lift ticks once more (after a drag that
+         click is silent).
        - It's far wider than the screen because WebKit measures the first
          flip from where the switch was first ever touched, which has to
          stay clear of its right end.
        - A tap ticks when the finger lifts (WebKit clicks the switch). */
-    const HAP = { W: 4000, H: 40, D: 100 };
+    const HAP = { W: 4000, H: 40, D: 100, FOLLOW: 205, GAP: 30, STALE: 300 };
     const hapPlace = (x, y) => {
       qmEl.hap.style.cssText = 'width:' + HAP.W + 'px;height:' + HAP.H + 'px;transform:translate(' +
         (x - HAP.W / 2 - qm.hapT.side * HAP.D) + 'px,' + (y - HAP.H / 2) + 'px)';
@@ -1154,7 +1161,7 @@
       if (!qm || qm.closing || e.touches.length !== 1) return;
       const t = e.changedTouches[0];
       qmEl.hap.checked = false;                      // WebKit starts with the thumb on the left
-      qm.hapT = { id: t.identifier, t0: performance.now(), side: -1, shown: qm.shown, due: null };
+      qm.hapT = { id: t.identifier, t0: performance.now(), side: -1, shown: qm.shown, owed: 0, at: 0, last: 0, flips: 0 };
       hapPlace(t.clientX, t.clientY);
     }, { passive: true });
     qmEl.hap.addEventListener('touchmove', (e) => {
@@ -1164,14 +1171,28 @@
       const now = performance.now();
       // the number under the finger, as the slider shows it (pointermove)
       const v = qm.drag && qm.drag.moved ? qmStop(qmStopAt(t.clientX)) : h.shown;
-      if (v !== h.shown) { h.shown = v; h.due = now; }
-      if (h.due != null && now - h.t0 >= 200) {      // WebKit is following the finger
-        if (now - h.due < 200) h.side = -h.side;
-        h.due = null;
+      if (v !== h.shown) { h.owed = Math.min(6, h.owed + Math.abs(v - h.shown)); h.shown = v; h.at = now; }
+      if (h.owed && now - h.at > HAP.STALE) h.owed = 0;
+      if (h.owed && now - h.t0 >= HAP.FOLLOW && now - h.last >= HAP.GAP) {   // WebKit is following the finger
+        h.side = -h.side;
+        h.owed--;
+        h.last = now;
+        h.flips++;
       }
       hapPlace(t.clientX, t.clientY);
     }, { passive: true });
-    const hapEnd = (e) => { if (hapTouch(e)) { qm.hapT = null; qmRun(); } };
+    const hapEnd = (e) => {
+      const h = hapTouch(e) && qm.hapT;
+      if (!h) return;
+      // ticks still owed: changing the switch from script stops WebKit's
+      // tracking, so its click on lift ticks instead of staying silent
+      if (e.type === 'touchend' && h.owed && h.flips && performance.now() - h.at <= HAP.STALE) {
+        qmEl.hap.checked = !qmEl.hap.checked;
+        qmEl.hap.checked = !qmEl.hap.checked;
+      }
+      qm.hapT = null;
+      qmRun();
+    };
     qmEl.hap.addEventListener('touchend', hapEnd);
     qmEl.hap.addEventListener('touchcancel', hapEnd);
     qmEl.pill.addEventListener('keydown', (e) => {
