@@ -738,22 +738,21 @@
       footEl.hidden = cart.item_count === 0;
       if (protectBox) protectBox.hidden = cart.item_count === 0 || !protectionProduct;
 
+      /* Each product is a bubble like the shipping one: the short name
+         ("Core", not "Voltical Core 5K & 10K") as the small grey label, the
+         options ("Titanium Gold 10,000mAh", wrapping between them when narrow) under it, the price on the
+         right. No quantity buttons or Remove; a quantity over 1 shows as
+         "× 2" after the name. */
+      const shortName = (t) => t.replace(/^Voltical\s+/i, '').replace(/\s+\d+K\s*(&|and|\/)\s*\d+K$/i, '');
+      const options = (v) => v.split(' / ').map((o) => `<span>${o.replace(/\s*mah\b/i, 'mAh')}</span>`).join(' ');
       linesEl.innerHTML = realLines.map((i) => `
         <div class="cart-line" data-line-key="${i.key}">
           <div class="cart-line__img">${i.image ? `<img src="${i.image.replace(/(\.[a-z]+)(\?|$)/, '_160x$1$2')}" alt="">` : ''}</div>
           <div class="cart-line__body">
-            <div class="cart-line__title">${i.product_title}</div>
-            ${i.variant_title && i.variant_title !== 'Default Title' ? `<div class="cart-line__variant">${i.variant_title}</div>` : ''}
-            <div class="cart-line__row">
-              <span class="qty">
-                <button data-qty="-1" aria-label="Decrease quantity">−</button>
-                <output>${i.quantity}</output>
-                <button data-qty="1" aria-label="Increase quantity">+</button>
-              </span>
-              <span class="cart-line__price">${money(i.final_line_price)}</span>
-            </div>
-            <button class="cart-line__remove" data-remove>${window.VolticalStrings.remove}</button>
+            <div class="cart-line__title">${shortName(i.product_title)}${i.quantity > 1 ? ` × ${i.quantity}` : ''}</div>
+            ${i.variant_title && i.variant_title !== 'Default Title' ? `<div class="cart-line__variant">${options(i.variant_title)}</div>` : ''}
           </div>
+          <span class="cart-line__price">${money(i.final_line_price)}</span>
         </div>`).join('');
 
       const protLine = cart.items.find(isProtection);
