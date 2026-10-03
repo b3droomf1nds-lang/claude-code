@@ -740,7 +740,7 @@
 
       /* Each product is a bubble like the shipping one: the short name
          ("Core", not "Voltical Core 5K & 10K") as the small grey label, the
-         options ("Titanium Gold 10,000mAh", wrapping between them when narrow) under it, the price on the
+         options under it, one per line ("Titanium Gold", then "10,000mAh"), the price on the
          right. No quantity buttons or Remove; a quantity over 1 shows as
          "× 2" after the name. */
       const shortName = (t) => t.replace(/^Voltical\s+/i, '').replace(/\s+\d+K\s*(&|and|\/)\s*\d+K$/i, '');
