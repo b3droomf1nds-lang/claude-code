@@ -859,7 +859,7 @@
       root.innerHTML = `
         <div class="qty-menu__frost" aria-hidden="true"><i></i><i></i><i></i></div>
         <div class="qty-menu__glow" aria-hidden="true"></div>
-        <div class="qty-menu__label" aria-hidden="true"><b>Qty</b> <span></span></div>
+        <div class="qty-menu__label" aria-hidden="true"><b>Quantity</b> <span></span></div>
         <div class="qty-menu__pill" role="slider" tabindex="-1" aria-label="Quantity" aria-valuemin="0">
           <div class="qty-menu__track">
             <div class="qty-menu__dots"></div>
