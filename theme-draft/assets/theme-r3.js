@@ -765,27 +765,35 @@
           </div>
         </div>`).join('');
 
-      const protLine = cart.items.find(isProtection);
+      if (shipEl) shipEl.hidden = cart.item_count === 0;
+      paintTotals(cart);
+      if (qm && !qm.closing) previewQty(qm.key, qm.shown);   // its quantity menu is open: keep the slider's number
+    };
+
+    // the bag's sums (protection, shipping, total), for the cart or for the
+    // cart as it would be while the quantity slider moves (previewQty)
+    const paintTotals = (c) => {
+      const protLine = c.items.find(isProtection);
       if (protectToggle) {
         protectToggle.checked = !!protLine;
-        const v = protLine ? { price: protLine.final_line_price } : tierVariant(cart.items_subtotal_price);
+        const v = protLine ? { price: protLine.final_line_price } : tierVariant(c.items_subtotal_price);
         if (protectPrice && v) protectPrice.textContent = money(v.price);
       }
       const S = window.VolticalStrings;
-      const ship = shippingFor(cart);
+      let ship = shippingFor(c);
+      if (ship && !c.items.some((i) => i.quantity && !isProtection(i))) ship = 0;   // nothing left to ship
       if (shipEl) {
-        shipEl.hidden = cart.item_count === 0;
         shipMethod.textContent = ship == null ? S.shipAtCheckout : ship === 0 ? S.shipFree : S.shipStandard;
         shipPrice.textContent = ship == null ? '' : ship === 0 ? S.shipFreePrice : money(ship);
       }
       if (ship == null) {
         totalLabel.textContent = S.subtotal;
         totalHint.textContent = S.taxesNote;
-        subtotalEl.textContent = money(cart.total_price);
+        subtotalEl.textContent = money(c.total_price);
       } else {
         totalLabel.textContent = S.total;
         totalHint.textContent = S.totalNote;
-        subtotalEl.textContent = money(cart.total_price + ship);
+        subtotalEl.textContent = money(c.total_price + ship);
       }
     };
 
@@ -924,6 +932,35 @@
       else if (raw > qm.n - 1) raw = qm.n - 1 + give(raw - (qm.n - 1));
       return raw;
     };
+    /* The bag as it would be with this line at quantity q, worked out here
+       so the line's price, the shipping and the total change with each stop
+       of the slider. Closing the menu saves it, and the store's own numbers
+       then replace these. */
+    const previewQty = (key, q) => {
+      const item = cart.items.find((i) => i.key === key);
+      const line = qmLine(key);
+      if (!item || !line) return;
+      const linePrice = item.final_price * q;
+      let d = linePrice - item.final_line_price;
+      const items = cart.items.map((i) => (i === item ? Object.assign({}, i, { quantity: q, final_line_price: linePrice }) : i));
+      const prot = items.find(isProtection);
+      if (prot) {                                    // protection is priced on the rest of the bag (syncProtectionTier)
+        const tier = tierVariant(cart.items_subtotal_price + d - prot.final_line_price);
+        if (tier) {
+          d += tier.price - prot.final_line_price;
+          items[items.indexOf(prot)] = Object.assign({}, prot, { final_line_price: tier.price });
+        }
+      }
+      $('.cart-line__qty-num', line).textContent = q;
+      $('.cart-line__qty', line).setAttribute('aria-label', 'Quantity ' + q + ', edit');
+      $('.cart-line__price', line).textContent = money(linePrice);
+      paintTotals(Object.assign({}, cart, {
+        items,
+        items_subtotal_price: cart.items_subtotal_price + d,
+        total_price: cart.total_price + d,
+        item_count: cart.item_count + q - item.quantity
+      }));
+    };
     const qmShow = (v, haptic) => {
       if (v === qm.shown) return;
       qm.shown = v;
@@ -932,6 +969,7 @@
       qmEl.label.classList.toggle('is-remove', !v);  // stop 0 reads "Remove", in red
       qmEl.pill.setAttribute('aria-valuenow', String(v));
       qmEl.pill.setAttribute('aria-valuetext', text);
+      previewQty(qm.key, v);
       if (haptic) tick();
     };
 
@@ -1013,7 +1051,8 @@
 
     const applyQty = (key, q) => {                   // wait out a change already on its way
       if (busy) { setTimeout(() => applyQty(key, q), 120); return; }
-      mutate({ id: key, quantity: q }).then(syncProtectionTier);
+      mutate({ id: key, quantity: q }).then(syncProtectionTier)
+        .catch(() => render());                      // refused: back to the bag's real numbers
     };
     const closeQtyMenu = () => {
       if (!qm || qm.closing) return;
@@ -1094,12 +1133,17 @@
        switch, WebKit ticks each time the switch's thumb would cross its
        middle, no tap needed (CheckboxInputType::
        updateIsSwitchVisuallyOnFromAbsoluteLocation, iOS 18+). So while a
-       finger drags, the invisible switch is moved under it, 10px to one
-       side of its middle, and swapped to the other side each time the
-       quantity changes: one tick per stop. WebKit starts following a
-       finger 200ms after it lands, so stops passed before ~0.24s don't
-       tick. A tap on the switch ticks too (WebKit clicks it on lift). */
-    const HAP = { W: 2000, H: 40, D: 10 };
+       finger drags, the invisible switch is moved under it with its middle
+       100px to one side, and swapped to the other side each time the
+       number changes: one tick per number.
+       - WebKit starts following a finger 200ms after it lands. A number
+         passed before then ticks at that moment, unless the finger has
+         since stopped for a while (more than 200ms after the number).
+       - It's far wider than the screen because WebKit measures the first
+         flip from where the switch was first ever touched, which has to
+         stay clear of its right end.
+       - A tap ticks when the finger lifts (WebKit clicks the switch). */
+    const HAP = { W: 4000, H: 40, D: 100 };
     const hapPlace = (x, y) => {
       qmEl.hap.style.cssText = 'width:' + HAP.W + 'px;height:' + HAP.H + 'px;transform:translate(' +
         (x - HAP.W / 2 - qm.hapT.side * HAP.D) + 'px,' + (y - HAP.H / 2) + 'px)';
@@ -1110,16 +1154,20 @@
       if (!qm || qm.closing || e.touches.length !== 1) return;
       const t = e.changedTouches[0];
       qmEl.hap.checked = false;                      // WebKit starts with the thumb on the left
-      qm.hapT = { id: t.identifier, t0: performance.now(), side: -1, stop: qmStop(qmStopAt(t.clientX)) };
+      qm.hapT = { id: t.identifier, t0: performance.now(), side: -1, shown: qm.shown, due: null };
       hapPlace(t.clientX, t.clientY);
     }, { passive: true });
     qmEl.hap.addEventListener('touchmove', (e) => {
       const t = hapTouch(e);
       if (!t) return;
-      const s = qmStop(qmStopAt(t.clientX));
-      if (s !== qm.hapT.stop) {
-        if (performance.now() - qm.hapT.t0 > 240) qm.hapT.side = -qm.hapT.side;
-        qm.hapT.stop = s;
+      const h = qm.hapT;
+      const now = performance.now();
+      // the number under the finger, as the slider shows it (pointermove)
+      const v = qm.drag && qm.drag.moved ? qmStop(qmStopAt(t.clientX)) : h.shown;
+      if (v !== h.shown) { h.shown = v; h.due = now; }
+      if (h.due != null && now - h.t0 >= 200) {      // WebKit is following the finger
+        if (now - h.due < 200) h.side = -h.side;
+        h.due = null;
       }
       hapPlace(t.clientX, t.clientY);
     }, { passive: true });
