@@ -2487,11 +2487,10 @@
     object-position: -100000px 0;
   }
   /* Charging, half full: the mask is battery-charging.webp (bump ?v= when
-     the image changes: the link has no version of its own), drawn to the
-     proportions of Apple's own battery icon at our battery's height: line
-     9% of the height and the same gap again to the charge, with squircle
-     (superellipse) corners instead of round ones, and the original
-     battery's terminal bar.
+     the image changes: the link has no version of its own), shaped like
+     Apple's own battery icon at our battery's height, with squircle
+     (superellipse) corners, but with the original battery's line (42 of
+     its 541px height), a thinner gap to the charge, and its terminal bar.
      The charge is kept up to the middle of the inside, with a solid
      lightning bolt with softly rounded corners centred on it
      so half sits on the charge and half on the empty part. Where it crosses
@@ -2499,8 +2498,8 @@
      the iPhone's charging battery does. The <img> itself (and desktop)
      still uses the original file. */
   .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
-    -webkit-mask: url("battery-charging.webp?v=6") 0 0 / 100% 100% no-repeat;
-    mask: url("battery-charging.webp?v=6") 0 0 / 100% 100% no-repeat;
+    -webkit-mask: url("battery-charging.webp?v=7") 0 0 / 100% 100% no-repeat;
+    mask: url("battery-charging.webp?v=7") 0 0 / 100% 100% no-repeat;
   }
 }
 
