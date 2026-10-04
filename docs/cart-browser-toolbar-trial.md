@@ -1,84 +1,47 @@
-# Cart browser-toolbar trial
+# Retired cart browser-toolbar trial
 
-This is an opt-in experiment, not a confirmed Safari or Google-app feature.
-The browser owns its toolbar. A script cannot assume that scrolling the
-document will collapse it. The owner's iPhone is the acceptance test.
+## Result: failed on the owner's iPhone
 
-## Enable and disable
+The owner reported that the Google app's bottom controls stayed expanded when
+opening the drawer, and that the product page jumped slightly on dismissal.
+The compensated root-scroll approach therefore failed acceptance. A document
+offset changing does not prove the browser's native toolbar will collapse.
 
-Open the unpublished draft product preview with `&carttoolbar=1`:
+The experiment has been removed from `theme-draft/assets/theme-r3.js`.
+`carttoolbar=1` no longer enables anything. Open and close use the original
+immediate body-overflow lock and unlock. No root scroll correction, body
+padding compensation, delayed lock, or trial scroll-event interception remains.
+Claude's quantity controls, haptics, drawer animations and other cart work are
+preserved. The old experiment is recoverable from Git commit `ec71807`; do not
+restore the entire old asset over newer work.
 
-<https://imraiy-tv.myshopify.com/products/voltical-core-5k-10k?preview_theme_id=193289027910&carttoolbar=1>
+## What was tried
 
-Without this parameter, the existing drawer follows its original open/close
-path. No persistent storage or theme setting enables the experiment. The
-theme editor and desktop are excluded.
+The opt-in helper added 96 CSS pixels of body top padding and advanced the
+document scroll offset by 96 pixels in one synchronous operation. The aim was
+to keep the visible content still while provoking a native toolbar collapse.
+It locked background scrolling after 240ms and restored the saved offset and
+styles on close. It passed desktop rendered/model checks but not the real-phone
+test. Do not treat those checks as proof of iPhone browser behavior.
 
-## Implementation
+Chrome for iOS has native logic that explicitly ignores programmatic scrolling
+unless the scroll view is dragging or decelerating. This is supporting evidence
+about Chrome, not proof that the separate Google app uses the same code:
 
-Only `theme-draft/assets/theme-r3.js` is deployed. The isolated
-`cartToolbarTrial` helper runs before the other JavaScript modules. The
-existing drawer calls it at open and at `finishClose`. The quantity selector,
-its native haptic controls, and the sticky-button state machine are not edited.
+<https://chromium.googlesource.com/chromium/src/+/d06a79f3bb5a201c230f5924004be6f26f4f5219/ios/chrome/browser/fullscreen/coordinator/fullscreen_mediator.mm>
 
-When the page is still, the helper increases the body's top padding by 96 CSS
-pixels and instantly advances the root scroll offset by the same amount in
-one synchronous operation. Normal-flow content stays in the same place.
-It checks the main content and header positions immediately; a rejected
-scroll or detected shift causes an immediate rollback.
+There is no verified tap-only website solution from this trial. Do not repeat
+the same nudge with a larger distance or another timing and claim it works.
+A new approach needs evidence and real-device acceptance before deployment as
+normal cart behavior. Requiring a swipe would change the requested interaction.
 
-It temporarily disables transitions on the body's compensation, root scroll
-anchoring, and smooth scrolling; this also avoids the theme's global
-reduced-motion transition duration turning the padding change into an animation.
-It suppresses
-the trial's root scroll events from the background's listeners, and applies
-the normal drawer scroll lock after 240ms. It does not suppress scroll events
-inside the cart. A viewport resize realigns the resting drawer to its bottom
-position, but not while it is being dragged or closed.
+## Rollback checks
 
-Closing restores the exact saved root offset and original inline CSS values
-and priorities, cancels the delayed lock and viewport fit, and allows real
-touch scrolling immediately. Page exit or crossing the desktop boundary
-unwinds the nudge while retaining the normal open-drawer scroll lock.
+Run `node --test tests/cart-toolbar-rollback.test.mjs tests/quantity-haptics.test.mjs`.
+These verify the retired flag has no hooks, open/close do not scroll the root or
+change compensation styles, repeated drawer cycles preserve the model offset,
+and the existing quantity/haptic tests continue to pass.
 
-The trial skips active page scrolling, an unreleased page touch, zoom,
-rubber-banding, an already scroll-locked page, and a pinned sticky Add-to-bag
-button. Skipping leaves the normal drawer behavior intact. For the initial
-phone test, open the header's bag icon while the page is at rest.
-
-There is no visible diagnostic panel. On the test link only,
-`window.__voltCartToolbarTrial.events` records whether the attempt was nudged,
-skipped, rolled back, or restored and any visual-viewport height changes.
-These are diagnostic observations, not proof that a native toolbar collapsed.
-
-## Checks and acceptance
-
-Run `node --test tests/cart-toolbar-trial.test.mjs tests/quantity-haptics.test.mjs`.
-The tests cover isolation, no content movement in the model, exact restoration,
-rapid close/reopen, cancellation, zoom and scrolling guards, nested scroll
-events, viewport changes, and the existing quantity/haptic behavior.
-
-The local `work/cart-toolbar-20261004/fixture.mjs` serves the actual helper and
-drawer animation code for a rendered layout/restore check. Its coarse-pointer
-setting is a fixture override, not a production override or an iPhone test.
-
-On the owner's iPhone, test Safari and the Google app separately:
-
-1. Start with expanded browser controls and let the page stop moving.
-2. Open the header's bag icon without swiping the page first.
-3. Check whether the browser controls shrink by themselves.
-4. Close the drawer and check that the background has not moved.
-5. Repeat and check the pencil, quantity dragging, inner cart scrolling, and
-   drawer dismissal. Record a screen recording if any movement occurs.
-
-Do not claim automatic toolbar collapse until this hardware test succeeds.
-
-## Surgical rollback
-
-Immediate disable: remove `carttoolbar=1` from the URL and reload.
-
-For removal from the shared source, remove the `cartToolbarTrial` helper and
-its two drawer call sites, restoring the original `body.style.overflow` lines.
-Preserve any later Claude edits to the same file. Do not overwrite the whole
-asset with an old snapshot. Then follow AGENTS.md's file-scoped draft push and
-pull-back verification workflow.
+After a file-scoped Shopify draft push, pull back `assets/theme-r3.js` and compare
+it with the working copy. On the owner's iPhone, reload the draft before testing
+open/close so an older loaded script cannot keep the removed trial active.

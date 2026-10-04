@@ -8,131 +8,6 @@
 (function () {
   'use strict';
 
-  const cartToolbarTrial = (() => {
-    const disabled = { open: () => false, close: () => false };
-    if (new URLSearchParams(window.location.search).get('carttoolbar') !== '1' ||
-        (window.Shopify && window.Shopify.designMode)) return disabled;
-    const mobile = window.matchMedia('(max-width: 899px) and (pointer: coarse)');
-    const root = document.documentElement;
-    const body = document.body;
-    let active = null;
-    let touching = false;
-    let lastScroll = -Infinity;
-    let settling = 0;
-    let fitFrame = 0;
-    const events = [];
-    const note = (type, data) => {
-      events.push(Object.assign({ type, time: Math.round(performance.now()) }, data));
-      if (events.length > 30) events.shift();
-    };
-    window.__voltCartToolbarTrial = { events, get active() { return !!active; } };
-    const save = (style, property) => ({ style, property,
-      value: style.getPropertyValue(property), priority: style.getPropertyPriority(property) });
-    const restore = (saved) => {
-      if (saved.value) saved.style.setProperty(saved.property, saved.value, saved.priority);
-      else saved.style.removeProperty(saved.property);
-    };
-    const requestFit = () => {
-      if (!active || fitFrame) return;
-      fitFrame = requestAnimationFrame(() => {
-        fitFrame = 0;
-        if (active && active.canFit()) active.fit();
-      });
-    };
-    window.addEventListener('scroll', (event) => {
-      if (event.target !== document && event.target !== root &&
-          event.target !== body && event.target !== window) return;
-      if (active || settling) event.stopImmediatePropagation();
-      else lastScroll = performance.now();
-    }, { capture: true, passive: true });
-    window.addEventListener('touchstart', () => {
-      touching = true;
-      if (settling) { cancelAnimationFrame(settling); settling = 0; }
-    }, { capture: true, passive: true });
-    const touchEnd = (event) => {
-      touching = !!(event.touches && event.touches.length);
-      if (!touching) requestFit();
-    };
-    window.addEventListener('touchend', touchEnd, { capture: true, passive: true });
-    window.addEventListener('touchcancel', touchEnd, { capture: true, passive: true });
-    window.addEventListener('resize', requestFit, { passive: true });
-    if (window.visualViewport) window.visualViewport.addEventListener('resize', () => {
-      if (active) note('viewport', { height: window.visualViewport.height });
-      requestFit();
-    }, { passive: true });
-    const close = () => {
-      if (!active) return false;
-      const saved = active;
-      active = null;
-      clearTimeout(saved.lockTimer);
-      cancelAnimationFrame(fitFrame);
-      fitFrame = 0;
-      if (settling) cancelAnimationFrame(settling);
-      settling = requestAnimationFrame(() => {
-        settling = requestAnimationFrame(() => { settling = 0; });
-      });
-      root.style.setProperty('scroll-behavior', 'auto', 'important');
-      restore(saved.padding);
-      restore(saved.overflow);
-      window.scrollTo({ left: saved.x, top: saved.y, behavior: 'instant' });
-      saved.anchor.getBoundingClientRect();
-      restore(saved.transition);
-      restore(saved.anchoring);
-      restore(saved.behavior);
-      note('restored', { y: window.scrollY, expectedY: saved.y });
-      return true;
-    };
-    const resumeNormalLock = () => { if (close()) body.style.setProperty('overflow', 'hidden'); };
-    window.addEventListener('pagehide', resumeNormalLock);
-    mobile.addEventListener('change', () => { if (!mobile.matches) resumeNormalLock(); });
-    const open = (fit, canFit) => {
-      if (active) return true;
-      const viewport = window.visualViewport;
-      const anchor = document.getElementById('main');
-      if (!mobile.matches || !anchor || touching || performance.now() - lastScroll < 160 ||
-          (viewport && Math.abs(viewport.scale - 1) > 0.01) || window.scrollY < 0 ||
-          window.scrollY > Math.max(0, root.scrollHeight - root.clientHeight) + 0.5 ||
-          document.querySelector('.atc.is-pinned') || getComputedStyle(body).overflowY === 'hidden') {
-        note('skipped');
-        return false;
-      }
-      if (settling) { cancelAnimationFrame(settling); settling = 0; }
-      const header = document.querySelector('.site-header');
-      const anchorTop = anchor.getBoundingClientRect().top;
-      const headerTop = header && header.getBoundingClientRect().top;
-      const y = window.scrollY;
-      active = { x: window.scrollX, y, anchor, fit, canFit,
-        padding: save(body.style, 'padding-top'), overflow: save(body.style, 'overflow'),
-        transition: save(body.style, 'transition'),
-        anchoring: save(root.style, 'overflow-anchor'), behavior: save(root.style, 'scroll-behavior'),
-        lockTimer: 0 };
-      root.style.setProperty('scroll-behavior', 'auto', 'important');
-      root.style.setProperty('overflow-anchor', 'none', 'important');
-      body.style.setProperty('transition', 'none', 'important');
-      body.style.setProperty('padding-top', ((parseFloat(getComputedStyle(body).paddingTop) || 0) + 96) + 'px', 'important');
-      anchor.getBoundingClientRect();
-      window.scrollTo({ left: active.x, top: y + 96, behavior: 'instant' });
-      const anchorShift = anchor.getBoundingClientRect().top - anchorTop;
-      const headerShift = header ? header.getBoundingClientRect().top - headerTop : 0;
-      if (Math.abs(window.scrollY - y - 96) > 0.5 || Math.abs(anchorShift) > 0.5 || Math.abs(headerShift) > 0.5) {
-        note('rejected', { actualDelta: window.scrollY - y, anchorShift, headerShift,
-          padding: getComputedStyle(body).paddingTop, inlinePadding: body.style.getPropertyValue('padding-top'),
-          priority: body.style.getPropertyPriority('padding-top'), transition: getComputedStyle(body).transition });
-        close();
-        note('rolled-back');
-        return false;
-      }
-      note('nudged', { beforeY: y, afterY: window.scrollY, height: viewport ? viewport.height : window.innerHeight });
-      active.lockTimer = setTimeout(() => {
-        if (!active) return;
-        body.style.setProperty('overflow', 'hidden');
-        requestFit();
-      }, 240);
-      return true;
-    };
-    return { open, close };
-  })();
-
   /* ---------- util ---------- */
   const $ = (s, c) => (c || document).querySelector(s);
   const $$ = (s, c) => Array.from((c || document).querySelectorAll(s));
@@ -1726,14 +1601,13 @@
       scrim.style.opacity = String(m ? Math.min(1, Math.max(0, scroller.scrollTop / m)) : 0);
     };
     const finishClose = () => {
-      const restoredByTrial = cartToolbarTrial.close();
       isOpen = false;
       closing = false;
       el.classList.remove('is-open');
       scroller.hidden = true;
       scrim.hidden = true;
       scrim.style.opacity = '';
-      if (!restoredByTrial) document.body.style.overflow = '';
+      document.body.style.overflow = '';
       el.style.transform = '';
       stopAnims();
       hapClearPrime();
@@ -1752,10 +1626,7 @@
         el.classList.add('is-open');
         scrim.hidden = false;
         scroller.hidden = false;
-        if (!cartToolbarTrial.open(() => {
-          scroller.scrollTop = maxTop();
-          paint();
-        }, () => isOpen && !closing && !drag)) document.body.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
         scroller.scrollTop = maxTop();              // at rest, fully open…
         paint();
         if (el.animate) {                           // …and popped up from just below the screen
