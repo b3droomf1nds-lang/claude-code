@@ -966,12 +966,15 @@ h1.t-hero em,
 .drawer-scroller .cart-line__title{font-size:13px;font-weight:400;line-height:1.38;color:var(--sys-label-2)}
 .drawer-scroller .cart-line__variant{font-size:15px;font-weight:600;line-height:1.33;color:var(--sys-label);margin-top:0}
 .drawer-scroller .cart-line__variant span{display:block}  /* each option on its own line: colour, then capacity */
-.drawer-scroller .cart-line__side{display:flex;flex-direction:column;align-items:flex-end;gap:2.8px;flex:0 0 auto}  /* with the 2px padding under "Qty": 4.8px between them */
+/* the text and the qty/price column in one row, tops level: "Qty 3 ✎" sits
+   on the name's line ("Core") and the price on the first option's line */
+.drawer-scroller .cart-line__info{flex:1;min-width:0;display:flex;align-items:flex-start;gap:14px}
+.drawer-scroller .cart-line__side{display:flex;flex-direction:column;align-items:flex-end;gap:0;flex:0 0 auto}
 .drawer-scroller .cart-line__price{font-size:15px;white-space:nowrap}
-/* "Qty 1 ✎" above the price: grey label, the number in the price's weight, and a pencil to edit it */
-.drawer-scroller .cart-line__qty{display:inline-flex;align-items:center;gap:4px;padding:2px 0;color:var(--sys-label-2);font:inherit;font-size:13px;line-height:1.38;-webkit-tap-highlight-color:transparent}
+/* "Qty 1 ✎" above the price: grey label, the number in the pencil's grey and weight, and a pencil to edit it */
+.drawer-scroller .cart-line__qty{display:inline-flex;align-items:center;gap:4px;padding:0;color:var(--sys-label-2);font:inherit;font-size:13px;line-height:1.38;-webkit-tap-highlight-color:transparent}
 .drawer-scroller .cart-line__qty:active{opacity:.5}
-.drawer-scroller .cart-line__qty-num{font-size:15px;font-weight:600;color:var(--sys-label);font-variant-numeric:tabular-nums}
+.drawer-scroller .cart-line__qty-num{font-size:15px;font-weight:400;line-height:1;color:inherit;font-variant-numeric:tabular-nums}  /* line-height 1: the row stays the name's line height */
 .drawer-scroller .cart-line__qty svg{display:block}
 .drawer-scroller .cart-line__pencil{position:relative;display:block;margin-left:2px}
 /* The tap target over "Qty 1 ✎": a label holding a hidden switch, reaching
@@ -1054,7 +1057,7 @@ h1.t-hero em,
   .drawer-scroller .ship-bubble__price{font:-apple-system-subheadline;font-weight:600}
   .drawer-scroller .cart-line__price{font-variant-numeric:tabular-nums}
   .drawer-scroller .cart-line__qty{font:-apple-system-footnote}
-  .drawer-scroller .cart-line__qty-num{font:-apple-system-subheadline;font-weight:600;font-variant-numeric:tabular-nums}
+  .drawer-scroller .cart-line__qty-num{font:-apple-system-subheadline;font-weight:400;line-height:1;font-variant-numeric:tabular-nums}
 }
 @supports (font:-apple-system-title1){
   .drawer-scroller .drawer__subtotal [data-drawer-subtotal]{font:-apple-system-title1;font-weight:700;font-variant-numeric:tabular-nums}

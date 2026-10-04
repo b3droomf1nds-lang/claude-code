@@ -743,25 +743,29 @@
       /* Each product is a bubble like the shipping one: the short name
          ("Core", not "Voltical Core 5K & 10K") as the small grey label, the
          options under it, one per line ("Titanium Gold", then "10,000mAh"), the price on the
-         right under "Qty 1" and a pencil. Tapping it (data-qty-edit)
+         right under "Qty 1" and a pencil. Both columns sit in one top-aligned
+         row (.cart-line__info), so "Qty" lines up with the name and the price
+         with the first option. Tapping it (data-qty-edit)
          opens the quantity menu below. */
       const shortName = (t) => t.replace(/^Voltical\s+/i, '').replace(/\s+\d+K\s*(&|and|\/)\s*\d+K$/i, '');
       const options = (v) => v.split(' / ').map((o) => `<span>${o.replace(/\s*mah\b/i, 'mAh')}</span>`).join(' ');
       linesEl.innerHTML = realLines.map((i) => `
         <div class="cart-line${i.key === qtyOpenKey ? ' is-qty-open' : ''}" data-line-key="${i.key}">
           <div class="cart-line__img">${i.image ? `<img src="${i.image.replace(/(\.[a-z]+)(\?|$)/, '_160x$1$2')}" alt="" decoding="sync">` : ''}</div>
-          <div class="cart-line__body">
-            <div class="cart-line__title">${shortName(i.product_title)}</div>
-            ${i.variant_title && i.variant_title !== 'Default Title' ? `<div class="cart-line__variant">${options(i.variant_title)}</div>` : ''}
-          </div>
-          <div class="cart-line__side">
-            <button type="button" class="cart-line__qty" data-qty-edit aria-label="Quantity ${i.quantity}, edit">
-              <span class="cart-line__qty-label">Qty</span>
-              <span class="cart-line__qty-num">${i.quantity}</span>
-              <span class="cart-line__pencil">${PENCIL}</span>
-            </button>
-            <label class="cart-line__qty-tap" data-qty-edit aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
-            <span class="cart-line__price">${money(i.final_line_price)}</span>
+          <div class="cart-line__info">
+            <div class="cart-line__body">
+              <div class="cart-line__title">${shortName(i.product_title)}</div>
+              ${i.variant_title && i.variant_title !== 'Default Title' ? `<div class="cart-line__variant">${options(i.variant_title)}</div>` : ''}
+            </div>
+            <div class="cart-line__side">
+              <button type="button" class="cart-line__qty" data-qty-edit aria-label="Quantity ${i.quantity}, edit">
+                <span class="cart-line__qty-label">Qty</span>
+                <span class="cart-line__qty-num">${i.quantity}</span>
+                <span class="cart-line__pencil">${PENCIL}</span>
+              </button>
+              <label class="cart-line__qty-tap" data-qty-edit aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
+              <span class="cart-line__price">${money(i.final_line_price)}</span>
+            </div>
           </div>
         </div>`).join('');
 
