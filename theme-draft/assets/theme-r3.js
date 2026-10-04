@@ -842,11 +842,12 @@
        - In the pill: a 48px track, a blue fill (#2F5BEF) from the left to
          4px past a 40px white knob, and 12px dots at the stops (grey, or
          20% white on the blue). A soft blue glow sits at its right end.
-       - Touching it puffs it up 2%. Dragging anywhere on it moves the knob
-         as far as the finger moves (qmDragAt), with a little give past
-         either end, and the label and a haptic tick change at each stop. Letting go springs the knob onto the nearest
-         stop and the pill settles back with a small bounce. Tapping a stop
-         jumps there.
+       - Touching it puffs it up 2%. The first drag takes the knob to the
+         finger; later drags, from anywhere on it, move the knob as far as
+         the finger moves (qmDragAt). Either way there's a little give past
+         either end, and the label and a haptic tick change at each stop.
+         Letting go springs the knob onto the nearest stop and the pill
+         settles back with a small bounce. Tapping a stop jumps there.
        - It stays open after letting go. Tapping anywhere else (or Escape,
          Enter) closes it and saves the quantity. Stop 0 is Remove (the
          label reads "Remove" in red). */
@@ -948,24 +949,31 @@
     const clamp01 = (x) => Math.max(0, Math.min(1, x));
     const qmStop = (x) => Math.max(0, Math.min(qm.n - 1, Math.round(x)));
     const qmLine = (key) => Array.from(linesEl.children).find((n) => n.dataset.lineKey === key);
+    // the stop under a finger, as a fraction, before any give past the ends
+    const qmRawAt = (clientX) => {
+      const left = qm.to.x - qm.W / 2 + QM.P;
+      return ((clientX - left - QM.T / 2) / (qm.W - 2 * QM.P - QM.T)) * (qm.n - 1);
+    };
     // the stop under a finger, as a fraction, with a little give past the ends
     const qmStopAt = (clientX) => {
-      const left = qm.to.x - qm.W / 2 + QM.P;
-      let raw = ((clientX - left - QM.T / 2) / (qm.W - 2 * QM.P - QM.T)) * (qm.n - 1);
+      let raw = qmRawAt(clientX);
       const give = (o) => (1 - 1 / (o * 0.6 + 1)) * 0.12;
       if (raw < 0) raw = -give(-raw);
       else if (raw > qm.n - 1) raw = qm.n - 1 + give(raw - (qm.n - 1));
       return raw;
     };
-    /* A drag moves the knob as far as the finger moves, from wherever on the
-       pill it starts, so a small push from the middle carries the knob the
-       last stop to an end. The pointer and the native touch share one grip
-       so their stops always agree. Past an end the knob stretches a little;
-       pushing further slides the grip along instead, so coming back moves
-       it again straight away. */
+    /* The first drag after opening takes the knob to the finger, as the
+       thumb arrives from the pencil at the pill's far end with no room to
+       push (and ticks from its first move). After that, a drag moves the
+       knob as far as the finger moves, from wherever on the pill it starts,
+       so lifting the thumb and pushing again from the middle carries the
+       knob the last stop to an end. The pointer and the native touch share
+       one grip so their stops always agree. Past an end the knob stretches
+       a little; pushing further slides the grip along instead, so coming
+       back moves it again straight away. */
     const QM_SLACK = 0.3;                             // stops of push held past an end
     const qmGrip = (x, other) => {                   // other: the other route's gesture
-      if (!other || !qm.grip) qm.grip = { x0: x, k0: qm.shown };
+      if (!other || !qm.grip) qm.grip = { x0: x, k0: qm.grip ? qm.shown : qmRawAt(x) };
     };
     const qmDragAt = (x) => {
       const g = qm.grip;

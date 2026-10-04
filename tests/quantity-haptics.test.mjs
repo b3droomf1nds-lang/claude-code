@@ -707,8 +707,23 @@ test('the retired experiment cannot create a panel or synthetic release clicks o
   assert.ok(!source.includes('qmReleaseTest'));
 });
 
-test('a drag starting away from the knob moves it by the finger distance, not to the finger', () => {
+test('the first drag after opening takes the knob to the thumb arriving from the pencil, and ticks at once', () => {
+  const h = harness({ native: true, prime: true, autoOpen: false, quantity: 1 });
+  primeEntry(h);
+  h.api.openQtyMenu(h.item, h.line);
+  h.pointer('pointerdown', 4.6);                     // where the pencil was, near the far end
+  h.touch('touchstart', 4.6);
+  h.advance(16);
+  h.pointer('pointermove', 4.8);
+  h.touch('touchmove', 4.8);
+  assert.equal(h.state().shown, 5);
+  assert.equal(h.state().hapT.flips, 1);
+});
+
+test('a later drag starting away from the knob moves it by the finger distance, not to the finger', () => {
   const h = harness({ quantity: 4 });
+  h.pointer('pointerdown', 4);                       // a first touch on the knob
+  h.pointer('pointerup', 4);
   h.pointer('pointerdown', 2);
   h.pointer('pointermove', 2.6);
   assert.equal(h.state().shown, 5);
@@ -723,15 +738,17 @@ test('a drag starting away from the knob moves it by the finger distance, not to
 test('pushing past an end holds only a little slack, so coming back moves the knob again', () => {
   const h = harness({ quantity: 4 });
   h.pointer('pointerdown', 0);
-  h.pointer('pointermove', 5);
+  h.pointer('pointermove', 9);
   assert.equal(h.state().shown, 5);
   assert.ok(h.state().k.to > 5 && h.state().k.to < 5.12);
-  h.pointer('pointermove', 4);
+  h.pointer('pointermove', 8);
   assert.equal(h.state().shown, 4);
 });
 
 test('the native touch route counts stops from the same grip as the pointer', () => {
   const h = harness({ native: true, quantity: 4 });
+  h.pointer('pointerdown', 4);                       // a first touch on the knob
+  h.pointer('pointerup', 4);
   h.pointer('pointerdown', 1);
   h.touch('touchstart', 1);
   h.advance(206);

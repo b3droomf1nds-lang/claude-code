@@ -158,12 +158,12 @@ With `prefers-reduced-motion: reduce`, opening/closing progress is set directly 
 
 `qm.k.to` is the knob's target. `qm.k.x` is the knob's current animated position. `qm.shown` is the integer displayed and previewed. Keeping these separate lets the label/prices respond immediately while the knob follows softly.
 
-A drag is **relative**: it moves the knob as far as the finger moves, wherever on the pill the finger starts, so a small push from the middle carries the knob the last stop to an end. The pointer route and the native touch route share one grip (`qm.grip`, started by whichever gesture start arrives first) so the visible stop and the native switch's stop always agree. Past an end the knob stretches by a small give; pushing beyond `QM_SLACK` (0.3 stops) slides the grip instead of building up, so reversing moves the knob again almost at once:
+The **first** drag after the menu opens takes the knob to the finger, as before: the thumb arrives from the pencil near the pill's far end, where a relative push would have no room, and taking the knob to it gives the first quick swipe a crossing (and so a native flip) on its very first move. Every **later** drag is **relative**: it moves the knob as far as the finger moves, wherever on the pill the finger starts, so lifting the thumb and pushing again from the middle carries the knob the last stop to an end. The first grip starts at the raw stop under the finger (`qmRawAt()`); later grips start at the shown stop. The pointer route and the native touch route share one grip (`qm.grip`, started by whichever gesture start arrives first) so the visible stop and the native switch's stop always agree. Past an end the knob stretches by a small give; pushing beyond `QM_SLACK` (0.3 stops) slides the grip instead of building up, so reversing moves the knob again almost at once:
 
 ```js
 const QM_SLACK = 0.3;
 const qmGrip = (x, other) => {
-  if (!other || !qm.grip) qm.grip = { x0: x, k0: qm.shown };
+  if (!other || !qm.grip) qm.grip = { x0: x, k0: qm.grip ? qm.shown : qmRawAt(x) };
 };
 const qmDragAt = (x) => {
   const g = qm.grip;
