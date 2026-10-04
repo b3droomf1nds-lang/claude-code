@@ -156,20 +156,28 @@ With `prefers-reduced-motion: reduce`, opening/closing progress is set directly 
 
 ## 5. Finger position, notch changes, and release
 
-`qm.k.to` is the target under the finger. `qm.k.x` is the knob's current animated position. `qm.shown` is the integer displayed and previewed. Keeping these separate lets the label/prices respond immediately while the knob follows softly.
+`qm.k.to` is the knob's target. `qm.k.x` is the knob's current animated position. `qm.shown` is the integer displayed and previewed. Keeping these separate lets the label/prices respond immediately while the knob follows softly.
 
-The mapping accounts for padding and the knob center. Outside either end, a small nonlinear give replaces unrestricted movement:
+A drag is **relative**: it moves the knob as far as the finger moves, wherever on the pill the finger starts, so a small push from the middle carries the knob the last stop to an end. The pointer route and the native touch route share one grip (`qm.grip`, started by whichever gesture start arrives first) so the visible stop and the native switch's stop always agree. Past an end the knob stretches by a small give; pushing beyond `QM_SLACK` (0.3 stops) slides the grip instead of building up, so reversing moves the knob again almost at once:
 
 ```js
-const qmStopAt = (clientX) => {
-  const left = qm.to.x - qm.W / 2 + QM.P;
-  let raw = ((clientX - left - QM.T / 2) / (qm.W - 2 * QM.P - QM.T)) * (qm.n - 1);
-  const give = (o) => (1 - 1 / (o * 0.6 + 1)) * 0.12;
-  if (raw < 0) raw = -give(-raw);
-  else if (raw > qm.n - 1) raw = qm.n - 1 + give(raw - (qm.n - 1));
-  return raw;
+const QM_SLACK = 0.3;
+const qmGrip = (x, other) => {
+  if (!other || !qm.grip) qm.grip = { x0: x, k0: qm.shown };
+};
+const qmDragAt = (x) => {
+  const g = qm.grip;
+  const step = (qm.W - 2 * QM.P - QM.T) / (qm.n - 1);
+  const end = qm.n - 1;
+  let raw = g.k0 + (x - g.x0) / step;
+  if (raw > end + QM_SLACK) { raw = end + QM_SLACK; g.x0 = x - (raw - g.k0) * step; }
+  else if (raw < -QM_SLACK) { raw = -QM_SLACK; g.x0 = x - (raw - g.k0) * step; }
+  const give = (o) => 0.12 * o / (o + QM_SLACK);
+  return raw > end ? end + give(raw - end) : raw < 0 ? -give(-raw) : raw;
 };
 ```
+
+A tap (no drag) still jumps to the stop under the finger, using the absolute mapping `qmStopAt()`.
 
 `qmStop()` rounds and clamps that value to an actual stop. Movement must exceed 4px before being classified as a drag. A pointer is captured on the active input, so leaving its rectangle does not lose the gesture. Unrelated pointer IDs are ignored.
 
@@ -178,7 +186,7 @@ const qmMoveTo = (x) => {
   const d = qm.drag;
   if (!d.moved && Math.abs(x - d.x0) < 4) return;
   d.moved = true;
-  qm.k.aim(qmStopAt(x), 0.09, 1);
+  qm.k.aim(qmDragAt(x), 0.09, 1);
   qmShow(qmStop(qm.k.to), true, true);
 };
 ```
@@ -338,7 +346,7 @@ The forced rectangle read applies the new geometry before native default handlin
 `hapTouchMove()` checks the actual touch position independently of pointer-event order. Its key gate is:
 
 ```js
-const v = h.moved ? qmStop(qmStopAt(x)) : h.shown;
+const v = h.moved ? qmStop(qmDragAt(x)) : h.shown;
 const crossed = v !== h.shown;
 h.shown = v;
 const ready = qm.hapWarm && (!qm.hapReadyAt || qm.hapResetAt > now);

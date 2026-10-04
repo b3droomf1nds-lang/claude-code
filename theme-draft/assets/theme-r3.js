@@ -842,9 +842,9 @@
        - In the pill: a 48px track, a blue fill (#2F5BEF) from the left to
          4px past a 40px white knob, and 12px dots at the stops (grey, or
          20% white on the blue). A soft blue glow sits at its right end.
-       - Touching it puffs it up 2%. The knob follows the finger, with a
-         little give past either end, and the label and a haptic tick
-         change at each stop. Letting go springs the knob onto the nearest
+       - Touching it puffs it up 2%. Dragging anywhere on it moves the knob
+         as far as the finger moves (qmDragAt), with a little give past
+         either end, and the label and a haptic tick change at each stop. Letting go springs the knob onto the nearest
          stop and the pill settles back with a small bounce. Tapping a stop
          jumps there.
        - It stays open after letting go. Tapping anywhere else (or Escape,
@@ -956,6 +956,26 @@
       if (raw < 0) raw = -give(-raw);
       else if (raw > qm.n - 1) raw = qm.n - 1 + give(raw - (qm.n - 1));
       return raw;
+    };
+    /* A drag moves the knob as far as the finger moves, from wherever on the
+       pill it starts, so a small push from the middle carries the knob the
+       last stop to an end. The pointer and the native touch share one grip
+       so their stops always agree. Past an end the knob stretches a little;
+       pushing further slides the grip along instead, so coming back moves
+       it again straight away. */
+    const QM_SLACK = 0.3;                             // stops of push held past an end
+    const qmGrip = (x, other) => {                   // other: the other route's gesture
+      if (!other || !qm.grip) qm.grip = { x0: x, k0: qm.shown };
+    };
+    const qmDragAt = (x) => {
+      const g = qm.grip;
+      const step = (qm.W - 2 * QM.P - QM.T) / (qm.n - 1);
+      const end = qm.n - 1;
+      let raw = g.k0 + (x - g.x0) / step;
+      if (raw > end + QM_SLACK) { raw = end + QM_SLACK; g.x0 = x - (raw - g.k0) * step; }
+      else if (raw < -QM_SLACK) { raw = -QM_SLACK; g.x0 = x - (raw - g.k0) * step; }
+      const give = (o) => 0.12 * o / (o + QM_SLACK);
+      return raw > end ? end + give(raw - end) : raw < 0 ? -give(-raw) : raw;
     };
     /* The bag as it would be with this line at quantity q, worked out here
        so the line's price, the shipping and the total change with each stop
@@ -1152,6 +1172,7 @@
       if (e.pointerType === 'mouse') e.preventDefault();
       e.currentTarget.setPointerCapture(e.pointerId);
       qm.drag = { id: e.pointerId, x0: hapClientX(e), moved: false };
+      qmGrip(qm.drag.x0, qm.hapT);
       qm.s.aim(1.02, 0.2, 1);                        // puffs up under the finger
       qmRun();
     };
@@ -1159,7 +1180,7 @@
       const d = qm.drag;
       if (!d.moved && Math.abs(x - d.x0) < 4) return;
       d.moved = true;
-      qm.k.aim(qmStopAt(x), 0.09, 1);               // the knob follows the finger
+      qm.k.aim(qmDragAt(x), 0.09, 1);               // the knob moves with the finger
       qmShow(qmStop(qm.k.to), true, true);
     };
     const qmPointerMove = (e) => {
@@ -1259,6 +1280,7 @@
         qm.hapSide = -1;
       }
       qm.hapT = { id: t.identifier, x0: x, moved: false, side: qm.hapSide, shown: qm.shown, flips: 0 };
+      qmGrip(x, qm.drag);
       qm.hapResetAt = now + HAP.RESET;
       qm.hapReadyAt = now + HAP.FOLLOW;
       hapPlace(x, y);
@@ -1272,7 +1294,7 @@
       const now = performance.now();
       hapSync(now);
       if (Math.abs(x - h.x0) >= 4) h.moved = true;
-      const v = h.moved ? qmStop(qmStopAt(x)) : h.shown;
+      const v = h.moved ? qmStop(qmDragAt(x)) : h.shown;
       const crossed = v !== h.shown;
       h.shown = v;
       const ready = qm.hapWarm && (!qm.hapReadyAt || qm.hapResetAt > now);
