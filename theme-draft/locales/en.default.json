@@ -82,7 +82,7 @@
     "title": "Your bag",
     "heading": "Your bag",
     "empty": "Your bag is empty.",
-    "empty_sub": "Everything charges faster once something's in here.",
+    "empty_sub": "Everything charges faster once something's\u00a0in\u00a0here.",
     "continue": "Browse the lineup",
     "subtotal": "Subtotal",
     "total": "Total",
