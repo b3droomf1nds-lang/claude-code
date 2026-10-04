@@ -745,3 +745,24 @@ test('the native touch route counts stops from the same grip as the pointer', ()
   assert.equal(h.state().shown, 4);
   assert.equal(h.state().hapT.shown, 4);
 });
+
+test('lifting the thumb one short of the end and pushing again from the middle reaches the end', () => {
+  const h = harness({ native: true, quantity: 2 });
+  const swipe = (from, to) => {
+    h.pointer('pointerdown', from);
+    h.touch('touchstart', from);
+    h.advance(206);
+    h.pointer('pointermove', to);
+    h.touch('touchmove', to);
+    const flips = h.state().hapT.flips;
+    h.pointer('pointerup', to);
+    h.touch('touchend', to);
+    h.advance(300);
+    return flips;
+  };
+  assert.equal(swipe(2, 4), 1);                      // up to 4, one short of the end
+  assert.equal(h.state().k.to, 4);
+  assert.equal(swipe(2.5, 3.5), 1);                  // thumb back to the middle, a short push
+  assert.equal(h.state().shown, 5);
+  assert.equal(h.state().k.to, 5);
+});
