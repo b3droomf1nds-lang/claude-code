@@ -2487,18 +2487,17 @@
     object-position: -100000px 0;
   }
   /* Charging, half full: the mask is battery-charging.webp (bump ?v= when
-     the image changes: the link has no version of its own), drawn like the
-     pencil and the MagSafe/USB-C icons: one even line weight, a rounded
-     outline in the old battery's footprint, a terminal as a short line with
-     round ends, the charge kept up to the middle of the inside (a gap to the
-     outline), and a solid lightning bolt with rounded corners centred on it
+     the image changes: the link has no version of its own): the original
+     outline and terminal nub (battery-outline.webp), the charge as a rounded
+     bar inset by a gap and kept up to the middle of the inside, and a solid
+     lightning bolt with softly rounded corners centred on it
      so half sits on the charge and half on the empty part. Where it crosses
      the charge, the charge is cut back by the same gap as the outline's, as
      the iPhone's charging battery does. The <img> itself (and desktop)
      still uses the original file. */
   .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
-    -webkit-mask: url("battery-charging.webp?v=3") 0 0 / 100% 100% no-repeat;
-    mask: url("battery-charging.webp?v=3") 0 0 / 100% 100% no-repeat;
+    -webkit-mask: url("battery-charging.webp?v=4") 0 0 / 100% 100% no-repeat;
+    mask: url("battery-charging.webp?v=4") 0 0 / 100% 100% no-repeat;
   }
 }
 
