@@ -744,8 +744,8 @@
          ("Core", not "Voltical Core 5K & 10K") as the small grey label, the
          options under it, one per line ("Titanium Gold", then "10,000mAh"), the price on the
          right under "Qty 1" and a pencil. Both columns sit in one top-aligned
-         row (.cart-line__info), so "Qty" lines up with the name and the price
-         with the first option. Tapping it (data-qty-edit)
+         row (.cart-line__info), so "Qty" lines up with the first option and
+         the price with the second. Tapping it (data-qty-edit)
          opens the quantity menu below. */
       const shortName = (t) => t.replace(/^Voltical\s+/i, '').replace(/\s+\d+K\s*(&|and|\/)\s*\d+K$/i, '');
       const options = (v) => v.split(' / ').map((o) => `<span>${o.replace(/\s*mah\b/i, 'mAh')}</span>`).join(' ');

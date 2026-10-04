@@ -966,15 +966,18 @@ h1.t-hero em,
 .drawer-scroller .cart-line__title{font-size:13px;font-weight:400;line-height:1.38;color:var(--sys-label-2)}
 .drawer-scroller .cart-line__variant{font-size:15px;font-weight:600;line-height:1.33;color:var(--sys-label);margin-top:0}
 .drawer-scroller .cart-line__variant span{display:block}  /* each option on its own line: colour, then capacity */
-/* the text and the qty/price column in one row, tops level: "Qty 3 ✎" sits
-   on the name's line ("Core") and the price on the first option's line */
+/* the text and the qty/price column in one row, tops level: under a blank
+   line as tall as the name ("Core"), "Qty 3 ✎" sits on the first option's
+   line and the price on the second's */
 .drawer-scroller .cart-line__info{flex:1;min-width:0;display:flex;align-items:flex-start;gap:14px}
 .drawer-scroller .cart-line__side{display:flex;flex-direction:column;align-items:flex-end;gap:0;flex:0 0 auto}
+.drawer-scroller .cart-line__side::before{content:"\00a0";font-size:13px;line-height:1.38}
 .drawer-scroller .cart-line__price{font-size:15px;white-space:nowrap}
-/* "Qty 1 ✎" above the price: grey label, the number in the pencil's grey and weight, and a pencil to edit it */
-.drawer-scroller .cart-line__qty{display:inline-flex;align-items:center;gap:4px;padding:0;color:var(--sys-label-2);font:inherit;font-size:13px;line-height:1.38;-webkit-tap-highlight-color:transparent}
+/* "Qty 1 ✎" above the price: label and number dark in the price's weight, and a grey pencil to edit it */
+.drawer-scroller .cart-line__qty{display:inline-flex;align-items:center;gap:4px;padding:0;color:var(--sys-label);font:inherit;font-size:13px;font-weight:600;line-height:1;-webkit-tap-highlight-color:transparent}
+.drawer-scroller .cart-line__pencil{color:var(--sys-label-2)}
 .drawer-scroller .cart-line__qty:active{opacity:.5}
-.drawer-scroller .cart-line__qty-num{font-size:15px;font-weight:400;line-height:1;color:inherit;font-variant-numeric:tabular-nums}  /* line-height 1: the row stays the name's line height */
+.drawer-scroller .cart-line__qty-num{font-size:15px;font-weight:600;line-height:1.33;color:var(--sys-label);font-variant-numeric:tabular-nums}  /* the option line's height, so the price lands on the next */
 .drawer-scroller .cart-line__qty svg{display:block}
 .drawer-scroller .cart-line__pencil{position:relative;display:block;margin-left:2px}
 /* The tap target over "Qty 1 ✎": a label holding a hidden switch, reaching
@@ -982,7 +985,7 @@ h1.t-hero em,
    pencil's length). A tap flips a real switch, so the iPhone ticks
    (theme-r3.js); the button under it stays for keyboards and screen readers. */
 .drawer-scroller .cart-line__side{position:relative}
-.drawer-scroller .cart-line__qty-tap{position:absolute;z-index:1;top:-6px;left:-8px;right:-8px;height:34px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.drawer-scroller .cart-line__qty-tap{position:absolute;z-index:1;top:12px;left:-8px;right:-8px;height:34px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .drawer-scroller .cart-line__qty-tap input{position:absolute;left:0;top:0;width:1px;height:1px;margin:0;opacity:0;pointer-events:none}
 
 /* Quantity menu (theme-r3.js), copied from the iPhone's stepped slider
@@ -1056,8 +1059,9 @@ h1.t-hero em,
   .drawer-scroller .cart-line__price,
   .drawer-scroller .ship-bubble__price{font:-apple-system-subheadline;font-weight:600}
   .drawer-scroller .cart-line__price{font-variant-numeric:tabular-nums}
-  .drawer-scroller .cart-line__qty{font:-apple-system-footnote}
-  .drawer-scroller .cart-line__qty-num{font:-apple-system-subheadline;font-weight:400;line-height:1;font-variant-numeric:tabular-nums}
+  .drawer-scroller .cart-line__side::before{font:-apple-system-footnote}
+  .drawer-scroller .cart-line__qty{font:-apple-system-footnote;font-weight:600;line-height:1}
+  .drawer-scroller .cart-line__qty-num{font:-apple-system-subheadline;font-weight:600;font-variant-numeric:tabular-nums}
 }
 @supports (font:-apple-system-title1){
   .drawer-scroller .drawer__subtotal [data-drawer-subtotal]{font:-apple-system-title1;font-weight:700;font-variant-numeric:tabular-nums}
