@@ -2491,7 +2491,7 @@
      Apple's own battery icon at our battery's height, with squircle
      (superellipse) corners, but with the original battery's line (42 of
      its 541px height), a thinner gap to the charge, and its terminal bar (round ends, same
-     size) bent into a gentle curve beside the body's rounded side.
+     size) running parallel to the body's right edge beside it.
      The charge is kept up to the middle of the inside, with a solid
      lightning bolt with softly rounded corners centred on it
      so half sits on the charge and half on the empty part. Where it crosses
@@ -2499,8 +2499,8 @@
      the iPhone's charging battery does. The <img> itself (and desktop)
      still uses the original file. */
   .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
-    -webkit-mask: url("battery-charging.webp?v=9") 0 0 / 100% 100% no-repeat;
-    mask: url("battery-charging.webp?v=9") 0 0 / 100% 100% no-repeat;
+    -webkit-mask: url("battery-charging.webp?v=10") 0 0 / 100% 100% no-repeat;
+    mask: url("battery-charging.webp?v=10") 0 0 / 100% 100% no-repeat;
   }
 }
 
