@@ -2486,17 +2486,18 @@
     object-fit: none;
     object-position: -100000px 0;
   }
-  /* Charging, half full: the mask is battery-charging.webp, the same
+  /* Charging, half full: the mask is battery-charging.webp (bump ?v= when
+     the image changes: the link has no version of its own), the same
      outline and terminal nub, the charge bar kept up to its middle (the gap
-     to the outline as before), and a lightning bolt drawn as an outline
-     like the cart's pencil, at the outline's thickness, centred on the bar
+     to the outline as before), and a solid lightning bolt with rounded
+     corners like the cart's pencil, centred on the bar
      so half sits on the charge and half on the empty part. Where it crosses
      the charge, the charge is cut back by the same gap as the outline's, as
      the iPhone's charging battery does. The <img> itself (and desktop)
      still uses the original file. */
   .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
-    -webkit-mask: url("battery-charging.webp") 0 0 / 100% 100% no-repeat;
-    mask: url("battery-charging.webp") 0 0 / 100% 100% no-repeat;
+    -webkit-mask: url("battery-charging.webp?v=2") 0 0 / 100% 100% no-repeat;
+    mask: url("battery-charging.webp?v=2") 0 0 / 100% 100% no-repeat;
   }
 }
 
