@@ -49,6 +49,14 @@
     .site-header__inner{ height:48px; }              /* as tall as Apple's bar (was 70px) */
     .site-header__actions{ margin-left:auto; gap:4px; }
     .site-header__actions .cart-btn__count{ display:none; }   /* no count beside the bag */
+    /* the menu: two lines drawn like the bag (its grey, its 2px line,
+       round ends, about its width), level with the middle of the bag's
+       drawing, which sits 2.8px below the middle of its box. Whole pixels,
+       so both lines render equally sharp. */
+    .site-header__actions > .menu-toggle{ gap:6px; translate:0 3px; }
+    .site-header__actions > .menu-toggle span{ width:18.6px; height:2px; border-radius:1px; background:#BFC0C4; }
+    .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(1){ transform:translateY(4px) rotate(45deg); }
+    .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(2){ opacity:1; transform:translateY(-4px) rotate(-45deg); }
   }
 
   /* ---------- product page: hide the real bar ----------
@@ -106,7 +114,7 @@
         <span class="cart-btn__count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
       </button>
       <button class="menu-toggle" data-menu-toggle aria-expanded="false" aria-label="{{ 'general.menu' | t }}">
-        <span></span><span></span><span></span>
+        <span></span><span></span>
       </button>
     </div>
   </div>
@@ -144,7 +152,7 @@
             <span class="cart-btn__count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
           </button>
           <button class="menu-toggle" aria-label="{{ 'general.menu' | t }}" aria-expanded="false" onclick="var t=document.querySelector('[data-menu-toggle]');t.click();this.setAttribute('aria-expanded',t.getAttribute('aria-expanded'))">
-            <span></span><span></span><span></span>
+            <span></span><span></span>
           </button>
         </div>
       </div>
