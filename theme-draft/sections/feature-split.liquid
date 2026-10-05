@@ -88,7 +88,9 @@
     border:1px solid rgba(19,19,22,.1);
     border-radius:20px;
     box-shadow:0 12px 30px rgba(19,19,22,.1);
-    transform:translateY(-140%);
+    /* parked a shadow's reach above the screen: at -140% its 30px shadow
+       still fell onto the top of the page as a grey band */
+    transform:translateY(calc(-100% - 60px));
     transition:transform .4s cubic-bezier(.4,0,.2,1);
   }
   .fsplit2__stickybar.is-visible{ transform:translateY(0); }

@@ -23,45 +23,26 @@
     height:24px;
   }
 
-  /* ---------- phones: the bag and the menu share one clear glass capsule
-     on the right, like the iPhone's Liquid Glass buttons. The glass is the
-     floating Add-to-bag pill's (layout/theme.liquid): almost no fill, a
-     light blur that lifts the colours behind it, a rim that catches the
-     light brightest at the top left, and a soft shadow lifting it off the
-     page. Desktop has no menu button and keeps its bare bag. ---------- */
+  /* ---------- phones: one clear Liquid Glass bar across the top, with the
+     bag and the menu (moved over from the left) on its right. The glass is
+     the floating Add-to-bag pill's (layout/theme.liquid): a faint white
+     fill, a blur that lifts the colours of whatever passes under it, a
+     bright edge where the light catches it and a hairline under it.
+     On the product page it's the copy of the bar laid over the gallery.
+     Desktop keeps its solid bar. ---------- */
   @media (max-width: 899px){
-    .site-header__actions{
-      position:relative;
-      margin-left:auto;
-      gap:0;
-      height:44px;
-      padding:0 6px 0 2px;
-      border-radius:22px;
-      background:linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.06));
-      -webkit-backdrop-filter:blur(8px) saturate(160%);
-      backdrop-filter:blur(8px) saturate(160%);
+    .site-header:not(.site-header--hidden),
+    .site-header-clone{
+      background:linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,.28));
+      -webkit-backdrop-filter:blur(16px) saturate(180%);
+      backdrop-filter:blur(16px) saturate(180%);
       box-shadow:
-        0 0 0 .5px rgba(19,19,22,.07),
-        0 8px 24px rgba(19,19,22,.09),
-        0 2px 6px rgba(19,19,22,.05),
-        inset 0 1px 0 rgba(255,255,255,.85),
-        inset 0 -1px 0 rgba(255,255,255,.35),
-        inset 0 0 10px rgba(255,255,255,.25);
+        inset 0 1px 0 rgba(255,255,255,.8),
+        inset 0 -1px 0 rgba(255,255,255,.65),
+        0 1px 0 rgba(19,19,22,.06);
     }
-    .site-header__actions::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      border-radius:inherit;
-      padding:1px;
-      pointer-events:none;
-      background:linear-gradient(135deg, rgba(255,255,255,.95), rgba(255,255,255,.2) 35%, rgba(255,255,255,.08) 60%, rgba(255,255,255,.6));
-      -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask-composite:xor;
-      mask-composite:exclude;
-    }
-    .site-header__actions > .cart-btn{ height:44px; gap:2px; }   /* the bag's drawing has its own 10px of air: 12px to the count, like the other gaps */
-    .site-header__actions > .menu-toggle{ height:44px; justify-content:center; padding:0 8px 0 12px; }
+    .site-header__actions{ margin-left:auto; gap:4px; }
+    .site-header__actions > .cart-btn{ gap:2px; }   /* the bag's drawing has its own 10px of air: 12px to the count */
   }
 
   /* ---------- product page: hide the real bar ----------
