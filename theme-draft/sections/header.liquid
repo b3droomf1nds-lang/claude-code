@@ -47,21 +47,16 @@
         0 .5px 0 rgba(19,19,22,.12);
     }
     .site-header__inner{ height:48px; }              /* as tall as Apple's bar (was 70px) */
-    /* Sizes and spacing measured from Apple's bar on a 390px-wide iPhone:
-       the menu's two lines 15.3px long, 7px apart, ending 16.3px from the
-       screen's edge; 33px from the bag to the menu; the bag 17.7px tall.
-       Our bag's drawing fills 10.08 of its 20-unit box (and leaves 5.36
-       units of air each side), so a 35px box draws it 17.6px tall and
-       9.4px of air each side. Lines are the bag's line, 5 iPhone pixels
-       (1.67px), on whole iPhone pixels so both render equally sharp.
-       The bag and the lines sit level in the middle of the bar. */
-    .site-header__actions{ margin-left:auto; gap:15.63px; margin-right:-11.67px; }  /* 9.37 + 15.63 + 8 = 33px; 8px padding then 16.33px to the edge */
+    .site-header__actions{ margin-left:auto; gap:4px; }
     .site-header__actions .cart-btn__count{ display:none; }   /* no count beside the bag */
-    .site-header__actions > .cart-btn svg{ width:35px; height:35px; translate:0 -2.43px; }  /* its drawing sits 2.43px below its box's middle */
-    .site-header__actions > .menu-toggle{ gap:5.33px; }
-    .site-header__actions > .menu-toggle span{ width:15.33px; height:1.67px; border-radius:1px; background:#BFC0C4; }
-    .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(1){ transform:translateY(3.5px) rotate(45deg); }
-    .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(2){ opacity:1; transform:translateY(-3.5px) rotate(-45deg); }
+    /* the menu: two lines drawn like the bag (its grey, its 2px line,
+       round ends, about its width), level with the middle of the bag's
+       drawing, which sits 2.8px below the middle of its box. Whole pixels,
+       so both lines render equally sharp. */
+    .site-header__actions > .menu-toggle{ gap:6px; translate:0 3px; }
+    .site-header__actions > .menu-toggle span{ width:18.6px; height:2px; border-radius:1px; background:#BFC0C4; }
+    .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(1){ transform:translateY(4px) rotate(45deg); }
+    .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(2){ opacity:1; transform:translateY(-4px) rotate(-45deg); }
   }
 
   /* ---------- product page: hide the real bar ----------
