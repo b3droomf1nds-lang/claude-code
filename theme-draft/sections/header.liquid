@@ -23,6 +23,47 @@
     height:24px;
   }
 
+  /* ---------- phones: the bag and the menu share one clear glass capsule
+     on the right, like the iPhone's Liquid Glass buttons. The glass is the
+     floating Add-to-bag pill's (layout/theme.liquid): almost no fill, a
+     light blur that lifts the colours behind it, a rim that catches the
+     light brightest at the top left, and a soft shadow lifting it off the
+     page. Desktop has no menu button and keeps its bare bag. ---------- */
+  @media (max-width: 899px){
+    .site-header__actions{
+      position:relative;
+      margin-left:auto;
+      gap:0;
+      height:44px;
+      padding:0 6px 0 2px;
+      border-radius:22px;
+      background:linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.06));
+      -webkit-backdrop-filter:blur(8px) saturate(160%);
+      backdrop-filter:blur(8px) saturate(160%);
+      box-shadow:
+        0 0 0 .5px rgba(19,19,22,.07),
+        0 8px 24px rgba(19,19,22,.09),
+        0 2px 6px rgba(19,19,22,.05),
+        inset 0 1px 0 rgba(255,255,255,.85),
+        inset 0 -1px 0 rgba(255,255,255,.35),
+        inset 0 0 10px rgba(255,255,255,.25);
+    }
+    .site-header__actions::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      padding:1px;
+      pointer-events:none;
+      background:linear-gradient(135deg, rgba(255,255,255,.95), rgba(255,255,255,.2) 35%, rgba(255,255,255,.08) 60%, rgba(255,255,255,.6));
+      -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite:xor;
+      mask-composite:exclude;
+    }
+    .site-header__actions > .cart-btn{ height:44px; gap:2px; }   /* the bag's drawing has its own 10px of air: 12px to the count, like the other gaps */
+    .site-header__actions > .menu-toggle{ height:44px; justify-content:center; padding:0 8px 0 12px; }
+  }
+
   /* ---------- product page: hide the real bar ----------
      Only the top row (.site-header__inner) is hidden here, NOT the
      whole <header> — the clone below's menu button forwards its click
@@ -59,10 +100,6 @@
 </style>
 <header class="site-header{% if template.name == 'product' %} site-header--hidden{% endif %}">
   <div class="wrap wrap--wide site-header__inner">
-    <button class="menu-toggle" data-menu-toggle aria-expanded="false" aria-label="{{ 'general.menu' | t }}">
-      <span></span><span></span><span></span>
-    </button>
-
     <a href="{{ routes.root_url }}" class="site-header__logo" aria-label="{{ shop.name }}">
       {{ shop.name | downcase | capitalize }}
     </a>
@@ -81,6 +118,9 @@
         {% render 'icon', icon: 'bag' %}
         <span class="cart-btn__count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
       </button>
+      <button class="menu-toggle" data-menu-toggle aria-expanded="false" aria-label="{{ 'general.menu' | t }}">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </div>
 
@@ -98,10 +138,6 @@
   <div style="position:relative; height:0;">
     <div class="site-header-clone">
       <div class="wrap wrap--wide site-header__inner">
-        <button class="menu-toggle" aria-label="{{ 'general.menu' | t }}" onclick="document.querySelector('[data-menu-toggle]').click()">
-          <span></span><span></span><span></span>
-        </button>
-
         <a href="{{ routes.root_url }}" class="site-header__logo" aria-label="{{ shop.name }}">
           {{ shop.name | downcase | capitalize }}
         </a>
@@ -116,9 +152,12 @@
         </nav>
 
         <div class="site-header__actions">
-              <button class="cart-btn" data-cart-open aria-label="{{ 'cart.title' | t }}">
+          <button class="cart-btn" data-cart-open aria-label="{{ 'cart.title' | t }}">
             {% render 'icon', icon: 'bag' %}
             <span class="cart-btn__count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
+          </button>
+          <button class="menu-toggle" aria-label="{{ 'general.menu' | t }}" onclick="document.querySelector('[data-menu-toggle]').click()">
+            <span></span><span></span><span></span>
           </button>
         </div>
       </div>
