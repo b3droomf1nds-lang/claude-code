@@ -839,7 +839,7 @@ h1.t-hero em,
    tracking, momentum, snapping and rubber-band move it; theme-r3.js only
    adds the spring that pops it up and the slide away when it's closed.
    Like the Apple Pay sheet it runs to the sides and bottom of the screen
-   (the phone's own screen corners round its bottom), with small round top
+   (the phone's own screen corners round its bottom), with big round top
    corners and no grab handle. It's drawn with the iPhone's own
    parts where Safari offers them (the @supports blocks at the end): the
    system font at the text size set on the phone (Dynamic Type) and the
@@ -864,7 +864,7 @@ h1.t-hero em,
   position:relative;left:auto;bottom:auto;transform:none;transition:none;
   width:min(452px,100%);margin:0 auto;
   max-height:min(760px,calc(100% - max(44px,env(safe-area-inset-top) + 12px)));
-  border-radius:12px 12px 0 0;background:var(--sys-bg);color:var(--sys-label);
+  border-radius:40px 40px 0 0;background:var(--sys-bg);color:var(--sys-label);
   /* the second shadow is the card's own colour, one screen tall, straight
      below it: pulling the open card up past the top shows more card, not a gap */
   box-shadow:0 8px 40px rgba(0,0,0,.16),0 100vh 0 0 var(--sys-bg-2);
