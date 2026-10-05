@@ -46,8 +46,9 @@
         inset 0 1px 0 rgba(255,255,255,.55),
         0 .5px 0 rgba(19,19,22,.12);
     }
+    .site-header__inner{ height:48px; }              /* as tall as Apple's bar (was 70px) */
     .site-header__actions{ margin-left:auto; gap:4px; }
-    .site-header__actions > .cart-btn{ gap:2px; }   /* the bag's drawing has its own 10px of air: 12px to the count */
+    .site-header__actions .cart-btn__count{ display:none; }   /* no count beside the bag */
   }
 
   /* ---------- product page: hide the real bar ----------
