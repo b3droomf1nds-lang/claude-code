@@ -209,6 +209,9 @@
       {%- for link in section.settings.menu.links -%}
         <a href="{{ link.url }}">{{ link.title }}</a>
         {%- if link.title == 'Catalog' -%}
+          <a href="/collections/powerbanks">Powerbanks</a>
+          <a href="/collections/cables">Cables</a>
+          <a href="/collections/chargers">Chargers</a>
           <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator</a>
         {%- endif -%}
       {%- endfor -%}
