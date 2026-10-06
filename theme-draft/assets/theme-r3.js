@@ -31,14 +31,86 @@
   $$('[data-reveal]').forEach((el) => io.observe(el));
 
   /* ---------- header / mobile nav ---------- */
-  const menuBtn = $('[data-menu-toggle]');
+  // The menu and the search are sheets that unfold from the bar (header.liquid
+  // has the motion). One is out at a time; the menu button is its X. Both
+  // bars (the product page's copy too) carry the buttons, so all of them
+  // stay in step.
   const mobileNav = $('[data-mobile-nav]');
-  if (menuBtn && mobileNav) {
-    menuBtn.addEventListener('click', () => {
-      const open = menuBtn.getAttribute('aria-expanded') === 'true';
-      menuBtn.setAttribute('aria-expanded', String(!open));
-      mobileNav.hidden = open;
+  const mobileSearch = $('[data-mobile-search]');
+  if (mobileNav) {
+    const root = document.documentElement;
+    const toggles = $$('[data-menu-toggle]');
+    let sheet = null;
+    $$('.hdr-sheet__body').forEach((body) => {
+      Array.from(body.children).forEach((row, i) => row.style.setProperty('--i', i));
     });
+    const setX = (on) => toggles.forEach((t) => t.setAttribute('aria-expanded', String(on)));
+    const openSheet = (el) => {
+      if (sheet) return;
+      sheet = el;
+      clearTimeout(el._hdrT);
+      root.classList.add('hdr-open');
+      el.hidden = false;
+      setX(true);
+      void el.offsetHeight;                            // start the unfold from the bar's height
+      el.classList.add('is-open');
+    };
+    const closeSheet = () => {
+      const el = sheet;
+      if (!el) return;
+      sheet = null;
+      setX(false);
+      el.classList.remove('is-open');
+      clearTimeout(el._hdrT);
+      el._hdrT = setTimeout(() => {                   // once folded back into the bar
+        if (sheet) return;
+        el.hidden = true;
+        root.classList.remove('hdr-open');
+      }, 480);
+    };
+    toggles.forEach((t) => t.addEventListener('click', () => (sheet ? closeSheet() : openSheet(mobileNav))));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+    matchMedia('(min-width: 900px)').addEventListener('change', (e) => {
+      if (!e.matches || !sheet) return;
+      const el = sheet; closeSheet(); clearTimeout(el._hdrT); el.hidden = true; root.classList.remove('hdr-open');
+    });
+
+    if (mobileSearch) {
+      const input = $('[data-search-input]', mobileSearch);
+      const quick = $('[data-search-quick]', mobileSearch);
+      const results = $('[data-search-results]', mobileSearch);
+      const label = $('[data-search-label]', mobileSearch);
+      $$('[data-search-open]').forEach((b) => b.addEventListener('click', () => {
+        openSheet(mobileSearch);
+        input.focus({ preventScroll: true });          // in the tap itself, so iOS raises the keyboard
+      }));
+      const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      let seq = 0;
+      let timer = 0;
+      const show = (q, items) => {
+        const has = q && items;
+        quick.hidden = !!has;
+        results.hidden = !has;
+        label.textContent = !q ? 'Quick Links' : items && items.length ? 'Products' : 'No matching products';
+        if (!has) return;
+        results.innerHTML = items.map((p) => `<li><a href="${esc(p.url)}">${esc(p.title)}</a></li>`).join('');
+        if (!items.length) { quick.hidden = false; results.hidden = true; }
+      };
+      input.addEventListener('input', () => {
+        const q = input.value.trim();
+        clearTimeout(timer);
+        if (!q) { seq++; show('', null); return; }
+        timer = setTimeout(async () => {
+          const mine = ++seq;
+          try {
+            const r = await fetch(`/search/suggest.json?q=${encodeURIComponent(q)}&resources[type]=product&resources[limit]=8`);
+            const data = await r.json();
+            if (mine !== seq) return;
+            show(q, (data.resources && data.resources.results && data.resources.results.products) || []);
+          } catch (err) { /* keep the quick links */ }
+        }, 120);
+      });
+    }
   }
 
   /* ---------- product gallery ---------- */

@@ -57,6 +57,87 @@
     .site-header__actions > .menu-toggle span{ width:18.6px; height:2px; border-radius:1px; background:#BFC0C4; }
     .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(1){ transform:translateY(4px) rotate(45deg); }
     .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(2){ opacity:1; transform:translateY(-4px) rotate(-45deg); }
+
+    /* search, alone in the left corner, drawn like the bag */
+    .search-btn{
+      display:flex; align-items:center; justify-content:center;
+      height:24px; padding:0; margin:0 0 0 -2px; border:0; background:none; line-height:0;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .search-btn,
+    .site-header__actions > .cart-btn{ transition:opacity .24s ease; }
+
+    /* ---------- the menu and search sheets, unfolding like Apple's: the
+       bar grows down over the page (which blurs out behind it), the
+       search and bag fade away, the lines turn into an X, then the rows
+       fade in one after another. Closing runs it backwards. The sheet is
+       fixed inside the header, under the bar's own icons; while it's out
+       the bar drops its own glass so the sheet carries it (a glass bar
+       would also pin the fixed sheet to its own 48px box). ---------- */
+    .site-header{ z-index:auto; }                    /* the product page's copy of the bar stays over the sheet */
+    .site-header__inner{ position:relative; z-index:2; }
+    .hdr-sheet{
+      position:fixed; top:0; left:0; right:0; z-index:1;
+      height:48px; overflow:hidden; padding:0;
+      background:rgba(232,232,237,.62);
+      -webkit-backdrop-filter:blur(20px) saturate(180%);
+      backdrop-filter:blur(20px) saturate(180%);
+      transition:height .3s cubic-bezier(.4,0,.6,1) .14s, background-color .3s ease .14s;
+    }
+    .hdr-sheet.is-open{
+      height:100vh; height:100dvh;
+      background:rgba(245,245,247,.96);
+      transition:height .34s cubic-bezier(.4,0,.6,1), background-color .34s ease;
+    }
+    .hdr-sheet__body{ height:100%; overflow-y:auto; overscroll-behavior:contain; padding:48px 48px calc(48px + env(safe-area-inset-bottom)); }
+    .hdr-sheet__body > *{ opacity:0; transform:translateY(-6px); transition:opacity .14s ease, transform .14s ease; }
+    .hdr-sheet.is-open .hdr-sheet__body > *{
+      opacity:1; transform:none;
+      transition:opacity .3s ease, transform .3s ease;
+      transition-delay:calc(.2s + var(--i, 0) * 28ms);
+    }
+    html.hdr-open{ overflow:hidden; }
+    html.hdr-open .site-header:not(.site-header--hidden),
+    html.hdr-open #shopify-section-header .site-header-clone{
+      background:transparent; box-shadow:none;
+      -webkit-backdrop-filter:none; backdrop-filter:none;
+    }
+    html.hdr-open .search-btn,
+    html.hdr-open .site-header__actions > .cart-btn{ opacity:0; pointer-events:none; }
+
+    /* menu rows, Apple's size and rhythm */
+    .mobile-nav .hdr-sheet__body > a{
+      display:block; padding:7px 0;
+      font-size:28px; line-height:32px; font-weight:600; letter-spacing:.007em;
+      color:#333336;
+    }
+
+    /* search: a big field where the first row would be, then links */
+    .mobile-search__form{ position:relative; display:flex; align-items:center; height:46px; margin-left:-34px; }
+    .mobile-search__glass{ flex:none; width:24px; height:24px; margin-right:10px; color:#86868B; }
+    .mobile-search__form input[type="search"]{
+      flex:1; min-width:0; height:46px; padding:0; border:0; outline:0; background:none;
+      font:inherit; font-size:24px; font-weight:600; letter-spacing:.009em; color:#1D1D1F;
+      -webkit-appearance:none; appearance:none; border-radius:0;
+    }
+    .mobile-search__form input::placeholder{ color:#86868B; opacity:1; }
+    .mobile-search__form input::-webkit-search-cancel-button{ -webkit-appearance:none; }
+    .mobile-search__label{ margin:28px 0 12px; font-size:12px; line-height:16px; font-weight:400; letter-spacing:0; color:#6E6E73; }
+    .mobile-search__list{ list-style:none; margin:0; padding:0; }
+    .mobile-search__list a{
+      display:flex; align-items:center; gap:12px; padding:9px 0;
+      font-size:17px; line-height:21px; font-weight:600; letter-spacing:-.022em; color:#333336;
+    }
+    .mobile-search__list a::before{
+      content:""; flex:none; width:12px; height:12px;
+      background:#86868B;
+      -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6h8M6.6 2.6 10 6 6.6 9.4' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+              mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6h8M6.6 2.6 10 6 6.6 9.4' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+    .mobile-search__price{ margin-left:auto; padding-left:12px; font-weight:400; color:#6E6E73; font-size:14px; }
+  }
+  @media (min-width: 900px){
+    .search-btn, .hdr-sheet{ display:none; }
   }
 
   /* ---------- product page: hide the real bar ----------
@@ -95,6 +176,9 @@
 </style>
 <header class="site-header{% if template.name == 'product' %} site-header--hidden{% endif %}">
   <div class="wrap wrap--wide site-header__inner">
+    <button class="search-btn" data-search-open aria-label="{{ 'general.search' | t }}">
+      <svg width="40" height="40" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9.05" cy="10.65" r="3.7" stroke="#BFC0C4" stroke-width="0.98"/><path d="M11.75 13.35 14.4 16" stroke="#BFC0C4" stroke-width="0.98" stroke-linecap="round"/></svg>
+    </button>
     <a href="{{ routes.root_url }}" class="site-header__logo" aria-label="{{ shop.name }}">
       {{ shop.name | downcase | capitalize }}
     </a>
@@ -119,20 +203,46 @@
     </div>
   </div>
 
-  <nav class="mobile-nav" data-mobile-nav hidden aria-label="{{ 'general.menu' | t }}">
-    {%- for link in section.settings.menu.links -%}
-      <a href="{{ link.url }}">{{ link.title }}</a>
-      {%- if link.title == 'Catalog' -%}
-        <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator</a>
-      {%- endif -%}
-    {%- endfor -%}
+  <nav class="mobile-nav hdr-sheet" data-mobile-nav hidden aria-label="{{ 'general.menu' | t }}">
+    <div class="hdr-sheet__body">
+      {%- for link in section.settings.menu.links -%}
+        <a href="{{ link.url }}">{{ link.title }}</a>
+        {%- if link.title == 'Catalog' -%}
+          <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator</a>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
   </nav>
+
+  <div class="mobile-search hdr-sheet" data-mobile-search hidden role="dialog" aria-label="{{ 'general.search' | t }}">
+    <div class="hdr-sheet__body">
+      <form class="mobile-search__form" action="{{ routes.search_url }}" method="get" role="search">
+        <svg class="mobile-search__glass" width="24" height="24" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.4" stroke="currentColor" stroke-width="1.5"/><path d="M12.6 12.6 17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input type="search" name="q" data-search-input placeholder="{{ 'general.search_placeholder' | t }}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="{{ 'general.search_placeholder' | t }}">
+        <input type="hidden" name="type" value="product">
+      </form>
+      <p class="mobile-search__label" data-search-label>Quick Links</p>
+      <ul class="mobile-search__list" data-search-quick>
+        <li><a href="/collections/all">Shop all</a></li>
+        <li><a href="/pages/calculator">Usage calculator</a></li>
+        {%- for link in section.settings.menu.links -%}
+          {%- unless link.url == routes.root_url or link.url == '/collections/all' -%}
+            <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+          {%- endunless -%}
+        {%- endfor -%}
+      </ul>
+      <ul class="mobile-search__list" data-search-results hidden></ul>
+    </div>
+  </div>
 </header>
 
 {%- if template.name == 'product' -%}
   <div style="position:relative; height:0;">
     <div class="site-header-clone">
       <div class="wrap wrap--wide site-header__inner">
+        <button class="search-btn" data-search-open aria-label="{{ 'general.search' | t }}">
+          <svg width="40" height="40" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9.05" cy="10.65" r="3.7" stroke="#BFC0C4" stroke-width="0.98"/><path d="M11.75 13.35 14.4 16" stroke="#BFC0C4" stroke-width="0.98" stroke-linecap="round"/></svg>
+        </button>
         <a href="{{ routes.root_url }}" class="site-header__logo" aria-label="{{ shop.name }}">
           {{ shop.name | downcase | capitalize }}
         </a>
@@ -151,7 +261,7 @@
             {% render 'icon', icon: 'bag' %}
             <span class="cart-btn__count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
           </button>
-          <button class="menu-toggle" aria-label="{{ 'general.menu' | t }}" aria-expanded="false" onclick="var t=document.querySelector('[data-menu-toggle]');t.click();this.setAttribute('aria-expanded',t.getAttribute('aria-expanded'))">
+          <button class="menu-toggle" data-menu-toggle aria-expanded="false" aria-label="{{ 'general.menu' | t }}">
             <span></span><span></span>
           </button>
         </div>
