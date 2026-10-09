@@ -107,12 +107,14 @@
         input.focus({ preventScroll: true });          // in the tap itself, so iOS raises the keyboard
       }));
       const searchUrl = input.closest('[data-search-url]').dataset.searchUrl;
-      input.addEventListener('keydown', (e) => {       // the keyboard's search key, as the form used to submit
-        if (e.key !== 'Enter' || e.isComposing) return;
-        e.preventDefault();
-        const q = input.value.trim();
+      const typed = () => input.textContent.replace(/\s+/g, ' ').trim();   // an editable line, not an <input>
+      const go = (e) => {                              // the keyboard's search key, as the form used to submit
+        e.preventDefault();                            // never a new line in the field
+        const q = typed();
         if (q) location.href = `${searchUrl}?q=${encodeURIComponent(q)}&type=product`;
-      });
+      };
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) go(e); });
+      input.addEventListener('beforeinput', (e) => { if (e.inputType === 'insertParagraph' || e.inputType === 'insertLineBreak') go(e); });
       const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       let seq = 0;
       let timer = 0;
@@ -125,7 +127,8 @@
         if (has) results.innerHTML = items.map((p) => `<li><a href="${esc(p.url)}">${esc(p.title)}</a></li>`).join('');
       };
       input.addEventListener('input', () => {
-        const q = input.value.trim();
+        if (!input.textContent) input.textContent = '';  // drop a stray <br> so the placeholder comes back
+        const q = typed();
         clearTimeout(timer);
         if (!q) { seq++; show('', null); return; }
         timer = setTimeout(async () => {
