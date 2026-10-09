@@ -1468,9 +1468,7 @@
         if (hapSeeds.some((seed) => seed.frame === frame)) return;
         const doc = frame.contentDocument;
         if (!doc || !doc.body) { frame.remove(); return; }
-        // iOS draws its grey tap highlight over the tapped element even inside
-        // this invisible frame, which showed as a box on the bag after a tap.
-        doc.documentElement.style.cssText = 'overflow:hidden;background:transparent;-webkit-tap-highlight-color:transparent';
+        doc.documentElement.style.cssText = 'overflow:hidden;background:transparent';
         doc.body.style.cssText = 'margin:0;overflow:hidden;background:transparent';
         const input = doc.createElement('input');
         input.type = 'checkbox';
