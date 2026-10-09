@@ -46,6 +46,10 @@
     });
     const searchBtns = $$('[data-search-open]');
     const isSearch = (el) => el === mobileSearch;
+    // the page's white theme-color would show in the strip above the keyboard
+    const themeColor = $('meta[name="theme-color"]');
+    const pageTint = themeColor && themeColor.content;
+    const tint = (c) => { if (themeColor) themeColor.content = c; };
     // the menu's lines turn into its X; search's magnifier turns into its own
     const setX = (el, on) => (isSearch(el) ? searchBtns : toggles).forEach((t) => t.setAttribute('aria-expanded', String(on)));
     const openSheet = (el) => {
@@ -53,6 +57,7 @@
       sheet = el;
       clearTimeout(el._hdrT);
       root.classList.add('hdr-open', isSearch(el) ? 'hdr-search' : 'hdr-menu');
+      if (isSearch(el)) tint('#F5F5F7');
       el.hidden = false;
       setX(el, true);
       void el.offsetHeight;                            // start the unfold from the bar's height
@@ -66,6 +71,7 @@
       el.classList.remove('is-open');
       if (isSearch(el)) {                              // gone at once; the lines come back as the X folds
         root.classList.remove('hdr-search');
+        tint(pageTint);
         if (el.contains(document.activeElement)) document.activeElement.blur();
       }
       clearTimeout(el._hdrT);
@@ -87,7 +93,7 @@
     }, { passive: false });
     matchMedia('(min-width: 900px)').addEventListener('change', (e) => {
       if (!e.matches || !sheet) return;
-      const el = sheet; closeSheet(); clearTimeout(el._hdrT); el.hidden = true; root.classList.remove('hdr-open', 'hdr-menu', 'hdr-search');
+      const el = sheet; closeSheet(); clearTimeout(el._hdrT); el.hidden = true; root.classList.remove('hdr-open', 'hdr-menu', 'hdr-search'); tint(pageTint);
     });
 
     if (mobileSearch) {
@@ -100,6 +106,13 @@
         openSheet(mobileSearch);
         input.focus({ preventScroll: true });          // in the tap itself, so iOS raises the keyboard
       }));
+      const searchUrl = input.closest('[data-search-url]').dataset.searchUrl;
+      input.addEventListener('keydown', (e) => {       // the keyboard's search key, as the form used to submit
+        if (e.key !== 'Enter' || e.isComposing) return;
+        e.preventDefault();
+        const q = input.value.trim();
+        if (q) location.href = `${searchUrl}?q=${encodeURIComponent(q)}&type=product`;
+      });
       const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
       let seq = 0;
       let timer = 0;

@@ -121,6 +121,7 @@
     html.hdr-open .site-header__actions > .cart-btn{ opacity:0; pointer-events:none; }
     /* search covers the page at once, no unfold; its rows just fade in */
     .mobile-search.hdr-sheet, .mobile-search.hdr-sheet.is-open{ transition:none; }
+    html.hdr-search{ --base:#F5F5F7; }   /* the page's colour (html/body are forced to it) fills the strip behind the keyboard's bar; the sheet hides the rest */
     .mobile-search.is-open .hdr-sheet__body > *{ transition:opacity .2s ease, transform .2s ease; transition-delay:calc(var(--i, 0) * 20ms); }
 
     /* menu rows (and search's copy of them), Apple's size and rhythm */
@@ -238,11 +239,11 @@
 
   <div class="mobile-search hdr-sheet" data-mobile-search hidden role="dialog" aria-label="{{ 'general.search' | t }}">
     <div class="hdr-sheet__body">
-      <form class="mobile-search__form" action="{{ routes.search_url }}" method="get" role="search">
+      {%- comment -%} not a <form>: iOS offers its AutoFill bar (passwords, cards, address) above the keyboard for form fields; the search key is handled in theme-r3.js {%- endcomment -%}
+      <div class="mobile-search__form" role="search" data-search-url="{{ routes.search_url }}">
         <svg class="mobile-search__glass" width="24" height="24" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.4" stroke="currentColor" stroke-width="1.5"/><path d="M12.6 12.6 17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        <input type="search" name="q" data-search-input placeholder="{{ 'general.search' | t }}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="{{ 'general.search' | t }}">
-        <input type="hidden" name="type" value="product">
-      </form>
+        <input type="search" data-search-input placeholder="{{ 'general.search' | t }}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="{{ 'general.search' | t }}">
+      </div>
       <p class="mobile-search__label" data-search-label hidden></p>
       {%- comment -%} the menu's rows, minus Home and Contact {%- endcomment -%}
       {%- for link in section.settings.menu.links -%}
