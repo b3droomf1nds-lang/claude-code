@@ -49,13 +49,13 @@
     .site-header__inner{ height:48px; }              /* as tall as Apple's bar (was 70px) */
     .site-header__actions{ margin-left:auto; gap:4px; }
     .site-header__actions .cart-btn__count{ display:none; }   /* no count beside the bag */
-    /* the menu: two lines drawn like the bag (its grey, its 2.3px line,
+    /* the menu: two lines drawn like the bag (its grey, its ~1.5px line,
        round ends, about its width), level with the middle of the bag's
        drawing, which sits 2.8px below the middle of its box. The bag,
        search and lines all take the cart pencil's grey and its weight
        (its line is about an eighth of the drawing's width). */
-    .site-header__actions > .menu-toggle{ gap:5.7px; translate:0 3px; }
-    .site-header__actions > .menu-toggle span{ width:18.6px; height:2.3px; border-radius:1.15px; background:#8A8A8E; }
+    .site-header__actions > .menu-toggle{ gap:6.506px; translate:0 3px; }   /* line centres stay 8px apart, so the X still crosses */
+    .site-header__actions > .menu-toggle span{ width:18.6px; height:1.494px; border-radius:.747px; background:#8A8A8E; }
     .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(1){ transform:translateY(4px) rotate(45deg); }
     .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(2){ opacity:1; transform:translateY(-4px) rotate(-45deg); }
 
