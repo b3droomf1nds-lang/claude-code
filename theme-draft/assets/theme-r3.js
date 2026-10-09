@@ -57,7 +57,6 @@
       sheet = el;
       clearTimeout(el._hdrT);
       root.classList.add('hdr-open', isSearch(el) ? 'hdr-search' : 'hdr-menu');
-      if (isSearch(el)) tint('#F5F5F7');
       el.hidden = false;
       setX(el, true);
       void el.offsetHeight;                            // start the unfold from the bar's height
@@ -69,9 +68,8 @@
       sheet = null;
       setX(el, false);
       el.classList.remove('is-open');
-      if (isSearch(el)) {                              // gone at once; the lines come back as the X folds
+      if (isSearch(el)) {                              // the lines come back as the X folds
         root.classList.remove('hdr-search');
-        tint(pageTint);
         if (el.contains(document.activeElement)) document.activeElement.blur();
       }
       clearTimeout(el._hdrT);
@@ -79,7 +77,7 @@
         if (sheet) return;
         el.hidden = true;
         root.classList.remove('hdr-open', 'hdr-menu');
-      }, isSearch(el) ? 320 : 480);
+      }, 480);
     };
     toggles.forEach((t) => t.addEventListener('click', () => (sheet ? closeSheet() : openSheet(mobileNav))));
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
@@ -93,7 +91,7 @@
     }, { passive: false });
     matchMedia('(min-width: 900px)').addEventListener('change', (e) => {
       if (!e.matches || !sheet) return;
-      const el = sheet; closeSheet(); clearTimeout(el._hdrT); el.hidden = true; root.classList.remove('hdr-open', 'hdr-menu', 'hdr-search'); tint(pageTint);
+      const el = sheet; closeSheet(); clearTimeout(el._hdrT); el.hidden = true; root.classList.remove('hdr-open', 'hdr-menu', 'hdr-search');
     });
 
     if (mobileSearch) {
@@ -107,6 +105,9 @@
       }));
       const field = input.closest('[data-search-url]');
       const searchUrl = field.dataset.searchUrl;
+      // keyboard up: the strip above it takes the sheet's grey, not the page's white
+      input.addEventListener('focus', () => { root.classList.add('hdr-typing'); tint('#F5F5F7'); });
+      input.addEventListener('blur', () => { root.classList.remove('hdr-typing'); tint(pageTint); });
       field.addEventListener('click', (e) => {         // the whole row (magnifier too) raises the keyboard
         if (e.target !== input) input.focus({ preventScroll: true });
       });
