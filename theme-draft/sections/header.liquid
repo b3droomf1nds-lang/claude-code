@@ -49,15 +49,17 @@
     .site-header__inner{ height:48px; }              /* as tall as Apple's bar (was 70px) */
     .site-header__actions{ margin-left:auto; gap:4px; }
     .site-header__actions .cart-btn__count{ display:none; }   /* no count beside the bag */
-    /* the menu: two lines drawn like the bag (its grey, its ~1.7px line,
+    /* the menu: two lines drawn like the bag (its grey, its 1.494px line,
        round ends, about its width), level with the middle of the bag's
-       drawing, which sits 2.8px below the middle of its box. The bag,
-       search and lines all take the cart pencil's grey and its weight
-       (its line is about an eighth of the drawing's width). */
-    .site-header__actions > .menu-toggle{ gap:6.304px; translate:0 3px; }   /* line centres stay 8px apart, so the X still crosses */
-    .site-header__actions > .menu-toggle span{ width:18.6px; height:1.696px; border-radius:.848px; background:#8A8A8E; }
-    .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(1){ transform:translateY(4px) rotate(45deg); }
-    .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(2){ opacity:1; transform:translateY(-4px) rotate(-45deg); }
+       drawing, which sits 2.8px below the middle of its box. Each line is
+       a 2px box squashed to 1.494px with a transform: a box's own height
+       gets snapped to whole device pixels (on a 3x phone a 1.7px line drew as
+       2px, thicker than the bag), a transform isn't, so the lines come out
+       exactly as thick as the bag's strokes. */
+    .site-header__actions > .menu-toggle{ gap:6px; translate:0 3px; }   /* line centres 8px apart, so the X crosses in the middle */
+    .site-header__actions > .menu-toggle span{ width:18.6px; height:2px; border-radius:1px; background:#8A8A8E; transform:scaleY(.747); }
+    .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(1){ transform:translateY(4px) rotate(45deg) scaleY(.747); }
+    .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(2){ opacity:1; transform:translateY(-4px) rotate(-45deg) scaleY(.747); }
 
     /* search, alone in the left corner, drawn like the bag */
     .search-btn{
