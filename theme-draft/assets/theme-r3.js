@@ -103,10 +103,13 @@
       const label = $('[data-search-label]', mobileSearch);
       searchBtns.forEach((b) => b.addEventListener('click', () => {
         if (sheet) { if (isSearch(sheet)) closeSheet(); return; }
-        openSheet(mobileSearch);
-        input.focus({ preventScroll: true });          // in the tap itself, so iOS raises the keyboard
+        openSheet(mobileSearch);                       // no keyboard yet: it comes up when the field is tapped
       }));
-      const searchUrl = input.closest('[data-search-url]').dataset.searchUrl;
+      const field = input.closest('[data-search-url]');
+      const searchUrl = field.dataset.searchUrl;
+      field.addEventListener('click', (e) => {         // the whole row (magnifier too) raises the keyboard
+        if (e.target !== input) input.focus({ preventScroll: true });
+      });
       const typed = () => input.textContent.replace(/\s+/g, ' ').trim();   // an editable line, not an <input>
       const go = (e) => {                              // the keyboard's search key, as the form used to submit
         e.preventDefault();                            // never a new line in the field
