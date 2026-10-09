@@ -68,7 +68,18 @@
       -webkit-tap-highlight-color:transparent;
     }
     .search-btn,
-    .site-header__actions > .cart-btn{ transition:opacity .24s ease; }
+    .site-header__actions > .cart-btn,
+    .site-header__actions > .menu-toggle{ transition:opacity .24s ease; }
+    /* open, the magnifier becomes the search's X: the ring shrinks away, the
+       handle stretches into one stroke and the other grows from the middle
+       (the X is the menu's size: 9.3 units = 18.6px) — and folds back on close */
+    .search-btn svg *{ transition:stroke-dasharray .3s cubic-bezier(.4,0,.2,1), stroke-dashoffset .3s cubic-bezier(.4,0,.2,1), transform .3s cubic-bezier(.4,0,.2,1), opacity .2s ease; }
+    .search-btn__ring, .search-btn__b{ transform-box:fill-box; transform-origin:center; }
+    .search-btn__a{ stroke-dasharray:3.748 20; stroke-dashoffset:-7.266; }   /* only the handle's last 3.748 of the stroke */
+    .search-btn__b{ opacity:0; transform:scale(0); }
+    .search-btn[aria-expanded="true"] .search-btn__ring{ opacity:0; transform:scale(.3); }
+    .search-btn[aria-expanded="true"] .search-btn__a{ stroke-dasharray:9.3 20; stroke-dashoffset:0; }
+    .search-btn[aria-expanded="true"] .search-btn__b{ opacity:1; transform:none; }
 
     /* ---------- the menu and search sheets, unfolding like Apple's: the
        bar grows down over the page (which blurs out behind it), the
@@ -105,8 +116,12 @@
       background:transparent; box-shadow:none;
       -webkit-backdrop-filter:none; backdrop-filter:none;
     }
-    html.hdr-open .search-btn,
+    html.hdr-menu .search-btn,
+    html.hdr-search .site-header__actions > .menu-toggle,
     html.hdr-open .site-header__actions > .cart-btn{ opacity:0; pointer-events:none; }
+    /* search covers the page at once, no unfold; its rows just fade in */
+    .mobile-search.hdr-sheet, .mobile-search.hdr-sheet.is-open{ transition:none; }
+    .mobile-search.is-open .hdr-sheet__body > *{ transition:opacity .2s ease, transform .2s ease; transition-delay:calc(var(--i, 0) * 20ms); }
 
     /* menu rows (and search's copy of them), Apple's size and rhythm */
     .hdr-sheet__body > a{
@@ -180,8 +195,8 @@
 </style>
 <header class="site-header{% if template.name == 'product' %} site-header--hidden{% endif %}">
   <div class="wrap wrap--wide site-header__inner">
-    <button class="search-btn" data-search-open aria-label="{{ 'general.search' | t }}">
-      <svg width="40" height="40" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9.05" cy="10.65" r="3.7" stroke="#8A8A8E" stroke-width="0.747"/><path d="M11.75 13.35 14.4 16" stroke="#8A8A8E" stroke-width="0.747" stroke-linecap="round"/></svg>
+    <button class="search-btn" data-search-open aria-expanded="false" aria-label="{{ 'general.search' | t }}">
+      <svg width="40" height="40" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle class="search-btn__ring" cx="9.05" cy="10.65" r="3.7" stroke="#8A8A8E" stroke-width="0.747"/><path class="search-btn__a" d="M6.612 8.212 14.4 16" stroke="#8A8A8E" stroke-width="0.747" stroke-linecap="round"/><path class="search-btn__b" d="M13.188 8.212 6.612 14.788" stroke="#8A8A8E" stroke-width="0.747" stroke-linecap="round"/></svg>
     </button>
     <a href="{{ routes.root_url }}" class="site-header__logo" aria-label="{{ shop.name }}">
       {{ shop.name | downcase | capitalize }}
@@ -225,7 +240,7 @@
     <div class="hdr-sheet__body">
       <form class="mobile-search__form" action="{{ routes.search_url }}" method="get" role="search">
         <svg class="mobile-search__glass" width="24" height="24" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.4" stroke="currentColor" stroke-width="1.5"/><path d="M12.6 12.6 17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        <input type="search" name="q" data-search-input placeholder="{{ 'general.search_placeholder' | t }}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="{{ 'general.search_placeholder' | t }}">
+        <input type="search" name="q" data-search-input placeholder="{{ 'general.search' | t }}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="{{ 'general.search' | t }}">
         <input type="hidden" name="type" value="product">
       </form>
       <p class="mobile-search__label" data-search-label hidden></p>
@@ -250,8 +265,8 @@
   <div style="position:relative; height:0;">
     <div class="site-header-clone">
       <div class="wrap wrap--wide site-header__inner">
-        <button class="search-btn" data-search-open aria-label="{{ 'general.search' | t }}">
-          <svg width="40" height="40" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9.05" cy="10.65" r="3.7" stroke="#8A8A8E" stroke-width="0.747"/><path d="M11.75 13.35 14.4 16" stroke="#8A8A8E" stroke-width="0.747" stroke-linecap="round"/></svg>
+        <button class="search-btn" data-search-open aria-expanded="false" aria-label="{{ 'general.search' | t }}">
+          <svg width="40" height="40" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle class="search-btn__ring" cx="9.05" cy="10.65" r="3.7" stroke="#8A8A8E" stroke-width="0.747"/><path class="search-btn__a" d="M6.612 8.212 14.4 16" stroke="#8A8A8E" stroke-width="0.747" stroke-linecap="round"/><path class="search-btn__b" d="M13.188 8.212 6.612 14.788" stroke="#8A8A8E" stroke-width="0.747" stroke-linecap="round"/></svg>
         </button>
         <a href="{{ routes.root_url }}" class="site-header__logo" aria-label="{{ shop.name }}">
           {{ shop.name | downcase | capitalize }}

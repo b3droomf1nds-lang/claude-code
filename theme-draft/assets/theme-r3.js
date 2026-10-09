@@ -44,14 +44,17 @@
     $$('.hdr-sheet__body').forEach((body) => {
       Array.from(body.children).forEach((row, i) => row.style.setProperty('--i', i));
     });
-    const setX = (on) => toggles.forEach((t) => t.setAttribute('aria-expanded', String(on)));
+    const searchBtns = $$('[data-search-open]');
+    const isSearch = (el) => el === mobileSearch;
+    // the menu's lines turn into its X; search's magnifier turns into its own
+    const setX = (el, on) => (isSearch(el) ? searchBtns : toggles).forEach((t) => t.setAttribute('aria-expanded', String(on)));
     const openSheet = (el) => {
       if (sheet) return;
       sheet = el;
       clearTimeout(el._hdrT);
-      root.classList.add('hdr-open');
+      root.classList.add('hdr-open', isSearch(el) ? 'hdr-search' : 'hdr-menu');
       el.hidden = false;
-      setX(true);
+      setX(el, true);
       void el.offsetHeight;                            // start the unfold from the bar's height
       el.classList.add('is-open');
     };
@@ -59,14 +62,18 @@
       const el = sheet;
       if (!el) return;
       sheet = null;
-      setX(false);
+      setX(el, false);
       el.classList.remove('is-open');
+      if (isSearch(el)) {                              // gone at once; the lines come back as the X folds
+        root.classList.remove('hdr-search');
+        if (el.contains(document.activeElement)) document.activeElement.blur();
+      }
       clearTimeout(el._hdrT);
       el._hdrT = setTimeout(() => {                   // once folded back into the bar
         if (sheet) return;
         el.hidden = true;
-        root.classList.remove('hdr-open');
-      }, 480);
+        root.classList.remove('hdr-open', 'hdr-menu');
+      }, isSearch(el) ? 320 : 480);
     };
     toggles.forEach((t) => t.addEventListener('click', () => (sheet ? closeSheet() : openSheet(mobileNav))));
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
@@ -80,7 +87,7 @@
     }, { passive: false });
     matchMedia('(min-width: 900px)').addEventListener('change', (e) => {
       if (!e.matches || !sheet) return;
-      const el = sheet; closeSheet(); clearTimeout(el._hdrT); el.hidden = true; root.classList.remove('hdr-open');
+      const el = sheet; closeSheet(); clearTimeout(el._hdrT); el.hidden = true; root.classList.remove('hdr-open', 'hdr-menu', 'hdr-search');
     });
 
     if (mobileSearch) {
@@ -88,7 +95,8 @@
       const quick = $$('[data-search-quick]', mobileSearch);
       const results = $('[data-search-results]', mobileSearch);
       const label = $('[data-search-label]', mobileSearch);
-      $$('[data-search-open]').forEach((b) => b.addEventListener('click', () => {
+      searchBtns.forEach((b) => b.addEventListener('click', () => {
+        if (sheet) { if (isSearch(sheet)) closeSheet(); return; }
         openSheet(mobileSearch);
         input.focus({ preventScroll: true });          // in the tap itself, so iOS raises the keyboard
       }));
