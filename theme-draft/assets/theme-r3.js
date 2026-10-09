@@ -70,6 +70,14 @@
     };
     toggles.forEach((t) => t.addEventListener('click', () => (sheet ? closeSheet() : openSheet(mobileNav))));
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+    // the page behind an open sheet doesn't scroll (iOS ignores overflow:hidden
+    // once the keyboard is up); only a sheet with more rows than fit scrolls
+    document.addEventListener('touchmove', (e) => {
+      if (!sheet) return;
+      const body = e.target.closest && e.target.closest('.hdr-sheet__body');
+      if (body && body.scrollHeight > body.clientHeight) return;
+      e.preventDefault();
+    }, { passive: false });
     matchMedia('(min-width: 900px)').addEventListener('change', (e) => {
       if (!e.matches || !sheet) return;
       const el = sheet; closeSheet(); clearTimeout(el._hdrT); el.hidden = true; root.classList.remove('hdr-open');
@@ -77,7 +85,7 @@
 
     if (mobileSearch) {
       const input = $('[data-search-input]', mobileSearch);
-      const quick = $('[data-search-quick]', mobileSearch);
+      const quick = $$('[data-search-quick]', mobileSearch);
       const results = $('[data-search-results]', mobileSearch);
       const label = $('[data-search-label]', mobileSearch);
       $$('[data-search-open]').forEach((b) => b.addEventListener('click', () => {
@@ -88,13 +96,12 @@
       let seq = 0;
       let timer = 0;
       const show = (q, items) => {
-        const has = q && items;
-        quick.hidden = !!has;
+        const has = !!(q && items && items.length);
+        quick.forEach((a) => { a.hidden = has; });  // the menu's rows until something matches
         results.hidden = !has;
-        label.textContent = !q ? 'Quick Links' : items && items.length ? 'Products' : 'No matching products';
-        if (!has) return;
-        results.innerHTML = items.map((p) => `<li><a href="${esc(p.url)}">${esc(p.title)}</a></li>`).join('');
-        if (!items.length) { quick.hidden = false; results.hidden = true; }
+        label.hidden = !(q && items);
+        label.textContent = has ? 'Products' : 'No matching products';
+        if (has) results.innerHTML = items.map((p) => `<li><a href="${esc(p.url)}">${esc(p.title)}</a></li>`).join('');
       };
       input.addEventListener('input', () => {
         const q = input.value.trim();
@@ -107,7 +114,7 @@
             const data = await r.json();
             if (mine !== seq) return;
             show(q, (data.resources && data.resources.results && data.resources.results.products) || []);
-          } catch (err) { /* keep the quick links */ }
+          } catch (err) { /* keep the menu's rows */ }
         }, 120);
       });
     }

@@ -88,8 +88,8 @@
       transition:height .3s cubic-bezier(.4,0,.6,1) .14s, background-color .3s ease .14s;
     }
     .hdr-sheet.is-open{
-      height:100vh; height:100dvh;
-      background:rgba(245,245,247,.96);
+      height:100vh; height:100lvh;                   /* the largest viewport: still covers it all when the keyboard is up */
+      background:rgb(245,245,247);                   /* solid: none of the page shows through */
       transition:height .34s cubic-bezier(.4,0,.6,1), background-color .34s ease;
     }
     .hdr-sheet__body{ height:100%; overflow-y:auto; overscroll-behavior:contain; padding:48px 48px calc(48px + env(safe-area-inset-bottom)); }
@@ -108,15 +108,16 @@
     html.hdr-open .search-btn,
     html.hdr-open .site-header__actions > .cart-btn{ opacity:0; pointer-events:none; }
 
-    /* menu rows, Apple's size and rhythm */
-    .mobile-nav .hdr-sheet__body > a{
+    /* menu rows (and search's copy of them), Apple's size and rhythm */
+    .hdr-sheet__body > a{
       display:block; padding:7px 0;
       font-size:28px; line-height:32px; font-weight:600; letter-spacing:.007em;
       color:#333336;
     }
+    .hdr-sheet__body > a[hidden]{ display:none; }
 
-    /* search: a big field where the first row would be, then links */
-    .mobile-search__form{ position:relative; display:flex; align-items:center; height:46px; margin-left:-34px; }
+    /* search: a big field where the first row would be, then the menu's rows */
+    .mobile-search__form{ position:relative; display:flex; align-items:center; height:46px; margin:0 0 16px -34px; }
     .mobile-search__glass{ flex:none; width:24px; height:24px; margin-right:10px; color:#86868B; }
     .mobile-search__form input[type="search"]{
       flex:1; min-width:0; height:46px; padding:0; border:0; outline:0; background:none;
@@ -125,7 +126,7 @@
     }
     .mobile-search__form input::placeholder{ color:#86868B; opacity:1; }
     .mobile-search__form input::-webkit-search-cancel-button{ -webkit-appearance:none; }
-    .mobile-search__label{ margin:28px 0 12px; font-size:12px; line-height:16px; font-weight:400; letter-spacing:0; color:#6E6E73; }
+    .mobile-search__label{ margin:12px 0 12px; font-size:12px; line-height:16px; font-weight:400; letter-spacing:0; color:#6E6E73; }
     .mobile-search__list{ list-style:none; margin:0; padding:0; }
     .mobile-search__list a{
       display:flex; align-items:center; gap:12px; padding:9px 0;
@@ -227,16 +228,19 @@
         <input type="search" name="q" data-search-input placeholder="{{ 'general.search_placeholder' | t }}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" aria-label="{{ 'general.search_placeholder' | t }}">
         <input type="hidden" name="type" value="product">
       </form>
-      <p class="mobile-search__label" data-search-label>Quick Links</p>
-      <ul class="mobile-search__list" data-search-quick>
-        <li><a href="/collections/all">Shop all</a></li>
-        <li><a href="/pages/calculator">Usage calculator</a></li>
-        {%- for link in section.settings.menu.links -%}
-          {%- unless link.url == routes.root_url or link.url == '/collections/all' -%}
-            <li><a href="{{ link.url }}">{{ link.title }}</a></li>
-          {%- endunless -%}
-        {%- endfor -%}
-      </ul>
+      <p class="mobile-search__label" data-search-label hidden></p>
+      {%- comment -%} the menu's rows, minus Home and Contact {%- endcomment -%}
+      {%- for link in section.settings.menu.links -%}
+        {%- unless link.url == routes.root_url or link.title == 'Contact' or link.url contains '/pages/contact' -%}
+          <a href="{{ link.url }}" data-search-quick>{{ link.title }}</a>
+          {%- if link.title == 'Catalog' -%}
+            <a href="/collections/powerbanks" data-search-quick>Powerbanks</a>
+            <a href="/collections/cables" data-search-quick>Cables</a>
+            <a href="/collections/chargers" data-search-quick>Chargers</a>
+            <a href="/pages/calculator" data-search-quick>Usage calculator</a>
+          {%- endif -%}
+        {%- endunless -%}
+      {%- endfor -%}
       <ul class="mobile-search__list" data-search-results hidden></ul>
     </div>
   </div>
