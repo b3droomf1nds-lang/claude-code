@@ -1,0 +1,651 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "related-products": {
+      "type": "related-products",
+      "disabled": true,
+      "settings": {
+        "heading": "You may also like",
+        "heading_size": "h2",
+        "products_to_show": 4,
+        "columns_desktop": 4,
+        "color_scheme": "scheme-1",
+        "image_ratio": "square",
+        "image_shape": "default",
+        "show_secondary_image": true,
+        "show_vendor": false,
+        "show_rating": false,
+        "columns_mobile": "2",
+        "padding_top": 36,
+        "padding_bottom": 28
+      }
+    },
+    "main": {
+      "type": "main-product",
+      "blocks": {
+        "title": {
+          "type": "title",
+          "settings": {
+            "text_size": "h1",
+            "title_alignment": "left",
+            "uppercase_title": false,
+            "margin_top": 0,
+            "margin_bottom": 3
+          }
+        },
+        "rating_stars_KqJMmE": {
+          "type": "rating_stars",
+          "disabled": true,
+          "settings": {
+            "rating": 4.8,
+            "star_color": "#f5c05c",
+            "bg_stars_style": "full",
+            "bg_star_color": "#ececec",
+            "label": "(367",
+            "size": 12,
+            "alignment": "flex-start",
+            "margin_top": 0,
+            "margin_bottom": 12
+          }
+        },
+        "price": {
+          "type": "price",
+          "settings": {
+            "layout": "price_second",
+            "price_color": "text",
+            "compare_price_color": "accent-1",
+            "hide_sale_badge": true,
+            "margin_top": 15,
+            "margin_bottom": 15
+          }
+        },
+        "variant_picker": {
+          "type": "variant_picker",
+          "name": "1",
+          "settings": {
+            "picker_types": "Swatches, pills, pills",
+            "custom_labels": "[selected]",
+            "swatches_custom_colors": "custom",
+            "swatches_custom_colors_list": "#000000, #FFFFFF, #FADDEA, #D6ECFF, #2F5A47, #D92323, #000000, #D92323, #000000, #D92323, #6B7380, #C0C6CF, #EDE9E3, #A67C52, #3A3F45, #EDE9E3, #A67C52, #3A3F45, #EDE9E3, #A67C52, #3A3F45, #EDE9E3, #A67C52, #3A3F45, #EDE9E3, #A67C52, #3A3F45, #D6C8B5, #2B2B2B, #C9C9C7, #4A4A4A, #363635",
+            "margin_top": 0,
+            "margin_bottom": 0
+          }
+        },
+        "emoji_benefits_xFGiTn": {
+          "type": "emoji_benefits",
+          "disabled": true,
+          "settings": {
+            "benefits": "<h5>✨ Exceptional Performance<br/></h5><h5>🌈 Eye-Catching Design Features<br/></h5><h5>😌 User-Friendly and Relaxing to Use</h5>",
+            "margin_top": 15,
+            "margin_bottom": 15
+          }
+        },
+        "quantity_selector": {
+          "type": "quantity_selector",
+          "settings": {
+            "enable_quantity_discounts": true,
+            "headline": "Bundle Deals",
+            "preselected": "option_3",
+            "display_badge": "option_2",
+            "badge_text": "Most Popular",
+            "enable_variant_selectors": true,
+            "color_scheme": "outline-button",
+            "option_1_quantity": 1,
+            "option_1_label": "",
+            "option_1_benefit": "",
+            "option_1_caption": "You save [amount_saved]",
+            "option_1_percentage_off_text": "0",
+            "option_1_fixed_amount_off": "",
+            "option_1_compare_price": "price",
+            "option_2_quantity": 2,
+            "option_2_label": "Home & Travel Kit",
+            "option_2_benefit": "Save 10%",
+            "option_2_caption": "You save [amount_saved]",
+            "option_2_percentage_off_text": "5",
+            "option_2_fixed_amount_off": "0",
+            "option_2_compare_price": "compare_price",
+            "option_3_quantity": 3,
+            "option_3_label": "Family Bundle",
+            "option_3_benefit": "Best value save 25%",
+            "option_3_caption": "You save [amount_saved]",
+            "option_3_percentage_off_text": "25",
+            "option_3_fixed_amount_off": "0",
+            "option_3_compare_price": "compare_price",
+            "option_4_quantity": 0,
+            "option_4_label": "",
+            "option_4_benefit": "",
+            "option_4_caption": "You save [amount_saved]",
+            "option_4_percentage_off_text": "10",
+            "option_4_fixed_amount_off": "",
+            "option_4_compare_price": "compare_price",
+            "margin_top": 15,
+            "margin_bottom": 15
+          },
+          "disabled": true
+        },
+        "buy_buttons": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_dynamic_checkout": true,
+            "skip_cart": false,
+            "uppercase_text": false,
+            "enable_custom_color": false,
+            "custom_color": "#50e6f5",
+            "margin_top": 0,
+            "margin_bottom": 0,
+            "alignment": "center"
+          }
+        },
+        "sticky_atc_xbBkLM": {
+          "type": "sticky_atc",
+          "disabled": true,
+          "settings": {
+            "function": "add_to_cart",
+            "display_when": "after_scroll",
+            "color_scheme": "background-1",
+            "button_label": "Add to cart",
+            "enable_custom_btn_color": true,
+            "custom_btn_color": "#243d00",
+            "show_price_badge": true,
+            "show_variant_picker": true,
+            "desktop_show_title": true,
+            "desktop_show_price": true,
+            "mobile_show_title": false,
+            "mobile_show_price": false
+          }
+        },
+        "payment_badges_NNJJTd": {
+          "type": "payment_badges",
+          "disabled": true,
+          "settings": {
+            "enabled_payment_types": "american_express, apple_pay, bitcoin, google_pay, ideal, jcb, klarna, litecoin, maestro, master, paypal, shopify_pay, sofort, unionpay, visa",
+            "margin_top": 6,
+            "margin_bottom": 6
+          }
+        },
+        "estimated_shipping_jccxdG": {
+          "type": "estimated_shipping",
+          "settings": {
+            "display_icon": true,
+            "icon_size": "small",
+            "icon_alignment": "middle",
+            "message": "<p>Get it between <strong>[start_date]</strong> and <strong>[end_date]</strong>.</p>",
+            "min_shipping_days": 10,
+            "max_shipping_days": 20,
+            "date_format": "day_mm_dd",
+            "days_labels": "Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday",
+            "months_labels": "January, February, March, April, May, June, July, August, September, October, November, December",
+            "margin_top": 15,
+            "margin_bottom": 15
+          }
+        },
+        "reviews_wbqVgr": {
+          "type": "reviews",
+          "settings": {
+            "display_stars": true,
+            "star_color": "#ffcc00",
+            "avatar_alignment": "top",
+            "author_1": "Spencer",
+            "text_1": "<p>what customers of our products say</p><p><br/>Such a small gadget but it keeps me organised, powered, and calm throughout the day</p>",
+            "author_2": "Ivy",
+            "text_2": "<p><br/></p><p>I brought it on a trip and it kept my phone charged the whole weekend, zero stress.</p>",
+            "author_3": "Nolan",
+            "text_3": "<p><br/></p><p>It charges my phone faster than my wall plug, I couldn't believe it!</p>",
+            "margin_top": 18,
+            "margin_bottom": 18
+          }
+        },
+        "bc6150a3e6d27716": {
+          "type": "shopify://apps/section-store/blocks/block-review-summary/d7a2e423-ea88-4344-b866-6d0fb487c3dd",
+          "settings": {
+            "star_style": "mild",
+            "stars_count": 4.5,
+            "stars_size": 14.0,
+            "stars_gap": 1.0,
+            "stars_color": "#50e6f5",
+            "stars_bg_color": "#50e6f5",
+            "stars_bg_half_color": "#D4D4D4",
+            "avatars_position": "first",
+            "avatars_size": 20.0,
+            "avatars_animate": false,
+            "first_text": "<p>&nbsp;</p>",
+            "first_text_size": 12.0,
+            "first_text_color": "#000000",
+            "second_text": "<p>Rated 4.7 | <strong>843 reviews</strong></p>",
+            "second_text_size": 12.0,
+            "second_text_color": "#555555",
+            "border": "none",
+            "border_thickness": 1.0,
+            "border_color": "#000000",
+            "radius": 0.0,
+            "effect": "none",
+            "block_padding_top": 0.0,
+            "block_padding_bottom": 0.0,
+            "padding_vertical": 4.0,
+            "padding_horizontal": 0.0
+          }
+        },
+        "05559c89c4007aee": {
+          "type": "shopify://apps/section-store/blocks/block-benefits-list/d7a2e423-ea88-4344-b866-6d0fb487c3dd",
+          "settings": {
+            "items_gap": 8.0,
+            "first_text": "<p><strong>15W Magnetic Snap-On</strong> — aligns & charges wirelessly in one click</p>",
+            "second_text": "<p><strong>PD 20W Fast Charge</strong> — refuel your iPhone up to 3× faster via USB-C</p>",
+            "third_text": "<p><strong>Ultra-Slim Alloy Body</strong> — just 7.8 mm thin, only 118 g</p>",
+            "fourth_text": "<p><strong>LED Battery Display</strong> — always know your exact charge level</p>",
+            "icon_selection": "icon_2",
+            "icon_size": 18.0,
+            "icon_color": "#50e6f5",
+            "text_size": 14.0,
+            "text_color": "#1A1A1A",
+            "content_align": "left",
+            "border": "none",
+            "border_thickness": 1.0,
+            "border_color": "#000000",
+            "radius": 0.0,
+            "padding_vertical": 8.0,
+            "padding_horizontal": 0.0
+          }
+        },
+        "dbea5d063d4042cb": {
+          "type": "shopify://apps/section-store/blocks/block-badge/d7a2e423-ea88-4344-b866-6d0fb487c3dd",
+          "settings": {
+            "first_icon": "shield_check",
+            "first_title": "CE / FCC / RoHS Certified",
+            "first_bg_color": "#F0F0F0",
+            "first_title_color": "#2A2A2A",
+            "second_icon": "gift",
+            "second_title": "Free Shipping on 2+",
+            "second_bg_color": "#F0F0F0",
+            "second_title_color": "#2A2A2A",
+            "third_icon": "lock",
+            "third_title": "Secure Checkout",
+            "third_bg_color": "#F0F0F0",
+            "third_title_color": "#2A2A2A",
+            "title_size": 11.0,
+            "icon_size": 14.0,
+            "font_weight": "600",
+            "effect": "none",
+            "card_border": "solid",
+            "card_border_width": 0.5,
+            "card_border_color": "#D4D4D4",
+            "card_radius": 8.0,
+            "card_align": "left",
+            "padding_vertical": 6.0,
+            "padding_sides": 0.0,
+            "card_padding_horizontal": 10.0,
+            "card_padding_vertical": 7.0
+          }
+        },
+        "0e670cca9b5277f9": {
+          "type": "shopify://apps/section-store/blocks/block-shipping-info/d7a2e423-ea88-4344-b866-6d0fb487c3dd",
+          "settings": {
+            "use_dot": true,
+            "icon_color": "#50e6f5",
+            "icon_size": 12.0,
+            "ships_by_text": "Ships by",
+            "shipping_within_days": 3,
+            "include_weekend": false,
+            "ships_by_font_size": 13.0,
+            "ships_by_text_color": "#1A1A1A",
+            "fast_shipping_text": "COUNTRY_FLAG <strong>Fast</strong> COUNTRY_CODE Shipping",
+            "allow_all_countries": true,
+            "allowed_countries": "US,CH,DE,AT,FR,IT",
+            "fast_shipping_text_for_rest_countries": "Fast International Shipping",
+            "fast_shipping_text_color": "#1A1A1A",
+            "border_style": "none",
+            "border_width": 1.0,
+            "border_color": "#000000",
+            "border_radius": 8.0,
+            "bg_color": "#F3F3F3",
+            "padding_vertical": 7.0,
+            "padding_horizontal": 14.0
+          }
+        },
+        "6709834bc9962a09": {
+          "type": "shopify://apps/section-store/blocks/block-tabs/d7a2e423-ea88-4344-b866-6d0fb487c3dd",
+          "settings": {
+            "default_tab": "first",
+            "tab_layout": "filled",
+            "enable_fourth_tab": false,
+            "product_description_tab": "second",
+            "review_tab": "first",
+            "show_payment_icons": "first",
+            "first_title": "Expert Review",
+            "first_text": "<p>This magnetic power bank punches well above its price. The 15W MagSafe-compatible wireless output locks on firmly, and PD 20W wired charging keeps things fast when you need a quick top-up. The metal alloy chassis feels premium and adds almost no bulk to your phone. A smart choice for anyone tired of carrying cables everywhere.</p>",
+            "second_title": "Description",
+            "second_text": "<p>Ultra-slim magnetic wireless power bank with premium alloy shell and built-in LED battery display. Compatible with iPhone 12 and newer for snap-on wireless charging, and works with any Qi-enabled device. Features USB-C input/output for two-way fast charging at up to 20W. Available in 5000mAh and 10000mAh capacities.</p>",
+            "third_title": "Specs",
+            "third_text": "<p><strong>Wireless Output:</strong> 15W magnetic (MagSafe compatible)</p><p><strong>Wired Output:</strong> PD 20W USB-C</p><p><strong>Input:</strong> USB-C / Lightning, 20W max</p><p><strong>Battery:</strong> Li-polymer, 5000mAh or 10000mAh</p><p><strong>Dimensions:</strong> 104 × 66 × 7.8 mm (5000mAh)</p><p><strong>Weight:</strong> 118 g (5000mAh) / 180 g (10000mAh)</p><p><strong>Certifications:</strong> CE, FCC, RoHS</p>",
+            "fourth_title": "Specifications",
+            "fourth_text": "<p></p>",
+            "star_style": "mild",
+            "stars_count": 5.0,
+            "stars_color": "#50e6f5",
+            "stars_bg_half_color": "#E5E7EB",
+            "reviewer_name": "James Rivera",
+            "review_date": "March 22, 2025",
+            "reviewer_subtext": "Consumer Electronics Reviewer",
+            "show_verified_badge": true,
+            "verified_badge_color": "#50e6f5",
+            "tab_text_size": 13.0,
+            "tab_font_weight": 500.0,
+            "content_text_size": 13.0,
+            "light_color": "#FFFFFF",
+            "dark_color": "#F3F3F3",
+            "tab_text_color": "#555555",
+            "text_color": "#1A1A1A",
+            "muted_text_color": "#6B6B6B",
+            "effect": "none",
+            "border": "solid",
+            "border_thickness": 1.0,
+            "border_color": "#D4D4D4",
+            "radius": 10.0,
+            "padding_vertical": 18.0,
+            "padding_horizontal": 18.0
+          }
+        },
+        "dad9e2e9bb3bafbc": {
+          "type": "shopify://apps/section-store/blocks/block-comments/d7a2e423-ea88-4344-b866-6d0fb487c3dd",
+          "settings": {
+            "content_alignment": "center",
+            "comment_verified_badge_position": "inline",
+            "verified_badge_color": "#50e6f5",
+            "verified_badge_text": "Verified Buyer",
+            "slide_style": "arrows",
+            "autoplay": 0.0,
+            "comment_name_1": "Marcus T.",
+            "comment_1": "Incredibly thin — barely adds any bulk to my iPhone 15 Pro. The magnetic grip is strong and the wireless charging just works. Love the battery display too.",
+            "comment_name_2": "Emily R.",
+            "comment_2": "I travel a lot and this replaced my bulky power bank. The USB-C fast charge is a lifesaver when I'm in a rush. Metal build feels way more premium than expected at this price.",
+            "comment_name_3": "David K.",
+            "comment_3": "Snaps on perfectly every time. Charged my phone from 20% to 80% on a train ride with no cables. The slim profile means it fits right in my back pocket with my phone.",
+            "avatar_border_radius": 50.0,
+            "avatar_size": 44.0,
+            "author_font_size": 13.0,
+            "author_font_weight": 600.0,
+            "author_font_color": "#1A1A1A",
+            "star_style": "mild",
+            "star_color": "#50e6f5",
+            "star_size": 13.0,
+            "item_border_style": "solid",
+            "item_border_width": 1.0,
+            "item_border_color": "#D4D4D4",
+            "item_border_radius": 10.0,
+            "item_bg_color": "#FAFAFA",
+            "effect": "none",
+            "item_padding_vertical": 12.0,
+            "item_padding_horizontal": 16.0
+          }
+        },
+        "b1012a66434aef53": {
+          "type": "shopify://apps/section-store/blocks/block-atc-style/d7a2e423-ea88-4344-b866-6d0fb487c3dd",
+          "settings": {
+            "background_color": "#1A1A1A",
+            "text_color": "#FFFFFF",
+            "hover_background_color": "#333333",
+            "hover_text_color": "#FFFFFF",
+            "font_size": 0.0,
+            "font_weight": "default",
+            "border_style": "none",
+            "border_width": 1.0,
+            "border_color": "#000000",
+            "border_radius": 8.0,
+            "background_effect": "none",
+            "gradient_color_end": "#333333",
+            "hover_effect": "shine_lift",
+            "animation": "none",
+            "button_icon": "lightning",
+            "use_custom_text": false,
+            "button_text": "Add to cart",
+            "show_price": true,
+            "round_price": false,
+            "compare_at_price_color": "#999999"
+          }
+        }
+      },
+      "block_order": [
+        "bc6150a3e6d27716",
+        "title",
+        "rating_stars_KqJMmE",
+        "price",
+        "dbea5d063d4042cb",
+        "variant_picker",
+        "emoji_benefits_xFGiTn",
+        "05559c89c4007aee",
+        "quantity_selector",
+        "0e670cca9b5277f9",
+        "buy_buttons",
+        "sticky_atc_xbBkLM",
+        "payment_badges_NNJJTd",
+        "6709834bc9962a09",
+        "estimated_shipping_jccxdG",
+        "dad9e2e9bb3bafbc",
+        "reviews_wbqVgr",
+        "b1012a66434aef53"
+      ],
+      "settings": {
+        "enable_sticky_info": true,
+        "display_variant_image_first": true,
+        "disable_prepend": false,
+        "media_size": "small",
+        "constrain_to_viewport": true,
+        "media_fit": "cover",
+        "gallery_layout": "thumbnail_slider",
+        "media_position": "left",
+        "image_zoom": "lightbox",
+        "hide_variants": false,
+        "desktop_thumbnails_count": 4,
+        "video_player": "play_btn",
+        "enable_video_looping": false,
+        "autoplay_videos_pause_btn": true,
+        "play_btn_color_scheme": "background-1",
+        "mobile_thumbnails": "columns",
+        "mobile_media_corner_radius": 0,
+        "mobile_spacing": true,
+        "mobile_preview_media": true,
+        "mobile_thumbnails_count": 5,
+        "mobile_pagination": "dots_under",
+        "hide_arrows": true,
+        "dots_color_scheme": "inverse",
+        "trust_badge_position": "top-right",
+        "trust_badge_size": "small",
+        "mobile_padding_top": 0,
+        "mobile_padding_bottom": 100,
+        "desktop_padding_top": 32,
+        "desktop_padding_bottom": 32
+      }
+    },
+    "collapsible_content_VV38cX": {
+      "type": "collapsible-content",
+      "blocks": {
+        "collapsible_row_GgAVt4": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Product Features",
+            "icon": "none",
+            "row_content": "<h5>Packed with cutting-edge features to make your daily tasks easier, this product combines functionality with sleek design for a seamless experience.</h5><p></p>",
+            "page": "test"
+          }
+        },
+        "collapsible_row_6Nmk66": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "How to Use",
+            "icon": "none",
+            "row_content": "<h5>Simple and intuitive to use. Just follow the included instructions, and you'll be up and running in no time.</h5><p></p>",
+            "page": ""
+          }
+        },
+        "collapsible_row_4pf4pe": {
+          "type": "collapsible_row",
+          "settings": {
+            "heading": "Why You'll Love It",
+            "icon": "none",
+            "row_content": "<h5>Designed to enhance your lifestyle, this product is reliable, efficient, and built to last. Whether for work or leisure, it’s a perfect fit for your needs.</h5>",
+            "page": ""
+          }
+        }
+      },
+      "block_order": [
+        "collapsible_row_GgAVt4",
+        "collapsible_row_6Nmk66",
+        "collapsible_row_4pf4pe"
+      ],
+      "settings": {
+        "caption": "",
+        "heading": "",
+        "heading_size": "h2",
+        "heading_alignment": "center",
+        "layout": "none",
+        "color_scheme": "background-1",
+        "container_color_scheme": "inverse",
+        "open_first_collapsible_row": true,
+        "image_ratio": "adapt",
+        "desktop_layout": "image_second",
+        "padding_top": 36,
+        "padding_bottom": 36,
+        "custom_colors_background": "#58d51d",
+        "custom_gradient_background": "",
+        "custom_colors_text": "#2e2a39",
+        "custom_contaner_colors_background": "#20a3df",
+        "custom_container_gradient_background": "",
+        "custom_contaner_colors_text": "#dd1d1d"
+      }
+    },
+    "rich_text_EpLR7p": {
+      "type": "rich-text",
+      "blocks": {
+        "heading_UYW9Am": {
+          "type": "heading",
+          "settings": {
+            "heading": "<p>Why You’ll Love It</p>",
+            "heading_size": "h2"
+          }
+        },
+        "text_AmgKAq": {
+          "type": "text",
+          "settings": {
+            "text": "<p>This powerbank seamlessly blends functionality and style, offering the perfect solution for your modern lifestyle. Packed with innovative features, durable design, and user-friendly functionality, it’s tailored to meet your everyday needs. Whether it’s work, play, or staying connected, this gadget simplifies your tasks and enhances your experience.</p>"
+          }
+        },
+        "button_xMrFWR": {
+          "type": "button",
+          "settings": {
+            "button_label": "",
+            "button_link": "",
+            "button_style_secondary": false,
+            "button_label_2": "",
+            "button_link_2": "",
+            "button_style_secondary_2": false
+          }
+        }
+      },
+      "block_order": [
+        "heading_UYW9Am",
+        "text_AmgKAq",
+        "button_xMrFWR"
+      ],
+      "settings": {
+        "desktop_content_position": "center",
+        "content_alignment": "center",
+        "color_scheme": "custom",
+        "full_width": true,
+        "padding_top": 56,
+        "padding_bottom": 72,
+        "custom_colors_background": "#000000",
+        "custom_gradient_background": "",
+        "custom_colors_text": "#ffffff",
+        "custom_colors_solid_button_background": "#ffffff",
+        "custom_colors_solid_button_text": "#ffffff"
+      }
+    },
+    "ds_comparison_table_xaDNwU": {
+      "type": "ds-comparison-table",
+      "blocks": {
+        "row_Ey9D8Q": {
+          "type": "row",
+          "settings": {
+            "benefit": "High-quality craftsmanship and durability",
+            "us": true,
+            "others": false
+          }
+        },
+        "row_DBRRnB": {
+          "type": "row",
+          "settings": {
+            "benefit": "Compact and travel-friendly",
+            "us": true,
+            "others": true
+          }
+        },
+        "row_K9hQb8": {
+          "type": "row",
+          "settings": {
+            "benefit": "Everyday-enhancing features",
+            "us": true,
+            "others": false
+          }
+        },
+        "row_NCqEN4": {
+          "type": "row",
+          "settings": {
+            "benefit": "Trusted by customers and built to last",
+            "us": true,
+            "others": false
+          }
+        }
+      },
+      "block_order": [
+        "row_Ey9D8Q",
+        "row_DBRRnB",
+        "row_K9hQb8",
+        "row_NCqEN4"
+      ],
+      "settings": {
+        "title": "Be Sure of Your Choice",
+        "heading_size": "h2",
+        "text": "<p>This portable charger is designed with precision and reliability, delivering top-notch performance and advanced features that set it apart. Backed by excellent reviews and a commitment to quality, it's the perfect choice for work, play, or everyday convenience. Invest in a product that combines innovation, durability, and user satisfaction.</p>",
+        "button_label": "",
+        "link": "",
+        "button_style_secondary": false,
+        "color_scheme": "custom",
+        "layout": "table_second",
+        "benefit_color_scheme": "background-1",
+        "checkmark_color": "#7cbf1e",
+        "icon_cells_color_scheme": "background-1",
+        "us_label": "Our brand",
+        "us_label_size": 12,
+        "logo_width": 90,
+        "mobile_logo_width": 60,
+        "others_label": "Others",
+        "others_label_size": 12,
+        "others_logo_width": 90,
+        "others_mobile_logo_width": 60,
+        "padding_top": 36,
+        "padding_bottom": 36,
+        "custom_colors_background": "#f3f3f3",
+        "custom_gradient_background": "",
+        "custom_colors_text": "#2e2a39",
+        "custom_colors_solid_button_background": "#ffffff",
+        "custom_colors_solid_button_text": "#b71cec",
+        "custom_colors_outline_button": "#34dd1d"
+      }
+    }
+  },
+  "order": [
+    "related-products",
+    "main",
+    "collapsible_content_VV38cX",
+    "rich_text_EpLR7p",
+    "ds_comparison_table_xaDNwU"
+  ]
+}

@@ -1,0 +1,8 @@
+{% layout none %}
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ 'general.gift_card' | t }} · {{ shop.name }}</title>{{ 'theme.css' | asset_url | stylesheet_tag }}</head>
+<body style="display:grid;place-items:center;min-height:100vh;text-align:center;padding:24px">
+<div><h1 class="t-lg">{{ shop.name }}</h1>
+<p class="t-mono" style="font-size:1.4rem;margin:24px 0;color:var(--accent-deep)">{{ gift_card.code | format_code }}</p>
+<p>{{ gift_card.initial_value | money }}</p></div>
+</body></html>

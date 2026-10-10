@@ -1,0 +1,24 @@
+{% if section.settings.show %}
+<div class="announcement" aria-label="{{ section.settings.text | strip_html | escape }}">
+  {%- if section.settings.marquee -%}
+    <div class="announcement__track">
+      {%- for i in (1..6) -%}
+        <span {% unless forloop.first %}aria-hidden="true"{% endunless %}>{{ section.settings.text }}</span>
+      {%- endfor -%}
+    </div>
+  {%- else -%}
+    <div style="text-align:center;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase">{{ section.settings.text }}</div>
+  {%- endif -%}
+</div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Announcement bar",
+  "settings": [
+    { "type": "checkbox", "id": "show", "label": "Show announcement", "default": true },
+    { "type": "checkbox", "id": "marquee", "label": "Continuous marquee animation", "default": true },
+    { "type": "text", "id": "text", "label": "Text", "default": "Free shipping over €60 — 30-day returns — 12-month warranty" }
+  ]
+}
+{% endschema %}

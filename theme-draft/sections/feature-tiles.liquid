@@ -1,0 +1,147 @@
+{%- comment -%}
+  Apple-style "bento" tile grid: several small white cards, each with a
+  headline + short grey caption pinned at the top and a product photo
+  filling the rest of the card — the "sell it with the photo, explain it
+  with the caption underneath" pattern. One tile is usually a cross-sell
+  ("Pair with the X Cable") that links straight to another product.
+{%- endcomment -%}
+<style>
+  .ftiles{ color:var(--ink); padding:clamp(48px,7vw,96px) 0; }
+  .ftiles__head{ text-align:center; max-width:640px; margin:0 auto clamp(28px,4vw,48px); }
+  .ftiles__heading{
+    font-family:var(--sans); font-weight:600; letter-spacing:-0.03em;
+    font-size:clamp(1.7rem,3vw,2.4rem); line-height:1.1; margin:0 0 12px;
+  }
+  .ftiles__sub{ color:var(--ink-60); font-size:clamp(.95rem,1.2vw,1.05rem); margin:0; }
+
+  .ftiles__grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:clamp(12px,1.6vw,20px);
+  }
+  .ftiles__tile{
+    position:relative;
+    display:flex; flex-direction:column;
+    background:#FFFFFF;
+    border-radius:clamp(22px,2.4vw,32px);
+    overflow:hidden;
+    box-shadow:0 1px 2px rgba(19,19,22,.04),0 18px 44px -22px rgba(19,19,22,.14);
+    min-height:380px;
+    text-decoration:none;
+    color:inherit;
+  }
+  .ftiles__tile--wide{ grid-column:span 2; }
+  @media (max-width:640px){ .ftiles__tile--wide{ grid-column:span 1; } }
+
+  .ftiles__tile-text{
+    padding:clamp(20px,2.6vw,30px) clamp(20px,2.6vw,30px) 0;
+    text-align:center;
+    flex:0 0 auto;
+  }
+  .ftiles__tile-heading{
+    font-family:var(--sans); font-weight:600; letter-spacing:-0.02em;
+    font-size:clamp(1.05rem,1.5vw,1.25rem); line-height:1.25; margin:0;
+    color:var(--ink);
+  }
+  .ftiles__tile-sub{
+    font-size:clamp(.85rem,1vw,.95rem); color:var(--ink-60);
+    margin:6px 0 0; line-height:1.35;
+  }
+  .ftiles__tile-media{
+    flex:1 1 auto;
+    display:flex; align-items:flex-end; justify-content:center;
+    padding:clamp(10px,1.6vw,18px);
+    min-height:180px;
+  }
+  .ftiles__tile-media img{
+    max-width:88%; max-height:100%;
+    width:auto; height:auto;
+    object-fit:contain;
+    display:block;
+  }
+  .ftiles__tile-cta{
+    position:absolute; top:16px; right:16px;
+    display:inline-flex; align-items:center; justify-content:center;
+    width:30px; height:30px; border-radius:999px;
+    background:rgba(19,19,22,.06); color:var(--ink);
+    font-size:1rem; line-height:1;
+  }
+</style>
+
+<section class="section ftiles">
+  <div class="wrap wrap--wide">
+    {%- if section.settings.heading != blank or section.settings.subheading != blank -%}
+      <div class="ftiles__head" data-reveal>
+        {%- if section.settings.heading != blank -%}<h2 class="ftiles__heading">{{ section.settings.heading }}</h2>{%- endif -%}
+        {%- if section.settings.subheading != blank -%}<p class="ftiles__sub">{{ section.settings.subheading }}</p>{%- endif -%}
+      </div>
+    {%- endif -%}
+    <div class="ftiles__grid">
+      {%- for block in section.blocks -%}
+        {%- assign _lp = block.settings.link_product -%}
+        {%- unless _lp.handle -%}{%- assign _lp = all_products[_lp] -%}{%- endunless -%}
+        {%- assign _href = block.settings.link_url -%}
+        {%- if _href == blank and _lp -%}{%- assign _href = _lp.url -%}{%- endif -%}
+        {%- assign _img = block.settings.image -%}
+        {%- if _img == blank and _lp -%}{%- assign _img = _lp.featured_image -%}{%- endif -%}
+
+        {%- capture tile_class -%}ftiles__tile{% if block.settings.wide %} ftiles__tile--wide{% endif %}{%- endcapture -%}
+        {%- if _href != blank -%}
+          <a href="{{ _href }}" class="{{ tile_class }}" data-reveal {{ block.shopify_attributes }}>
+        {%- else -%}
+          <div class="{{ tile_class }}" data-reveal {{ block.shopify_attributes }}>
+        {%- endif -%}
+          {%- if _href != blank -%}<span class="ftiles__tile-cta" aria-hidden="true">&rarr;</span>{%- endif -%}
+          <div class="ftiles__tile-text">
+            <h3 class="ftiles__tile-heading">{{ block.settings.heading }}</h3>
+            {%- if block.settings.subheading != blank -%}<p class="ftiles__tile-sub">{{ block.settings.subheading }}</p>{%- endif -%}
+          </div>
+          <div class="ftiles__tile-media">
+            {%- if _img -%}
+              <img src="{{ _img | image_url: width: 1200 }}"
+                   srcset="{{ _img | image_url: width: 700 }} 700w, {{ _img | image_url: width: 1200 }} 1200w"
+                   sizes="(min-width:900px) 30vw, 90vw"
+                   alt="{{ _img.alt | default: block.settings.heading | escape }}" loading="lazy">
+            {%- endif -%}
+          </div>
+        {%- if _href != blank -%}</a>{%- else -%}</div>{%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Feature tile grid",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Made to go with it." },
+    { "type": "textarea", "id": "subheading", "label": "Subheading" }
+  ],
+  "blocks": [
+    {
+      "type": "tile",
+      "name": "Tile",
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Heading", "default": "Pair with the USB-C Cable" },
+        { "type": "text", "id": "subheading", "label": "Caption", "default": "to charge on the go." },
+        { "type": "image_picker", "id": "image", "label": "Image (defaults to linked product's image)" },
+        { "type": "product", "id": "link_product", "label": "Link to product (also supplies the default image)" },
+        { "type": "url", "id": "link_url", "label": "Link (overrides product link)" },
+        { "type": "checkbox", "id": "wide", "label": "Make this tile span two columns", "default": false }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Feature tile grid",
+      "blocks": [
+        { "type": "tile", "settings": { "heading": "Pair with the USB-C Cable", "subheading": "to charge Core straight from the wall.", "wide": true } },
+        { "type": "tile", "settings": { "heading": "Slim enough for any pocket.", "subheading": "Thin, light, and still all-day power." } },
+        { "type": "tile", "settings": { "heading": "Reversible. Magnetic. Effortless.", "subheading": "Snaps on in the dark, first try, every time." } },
+        { "type": "tile", "settings": { "heading": "Charge your phone while you hold it.", "subheading": "No dangling cable, no awkward angle." } },
+        { "type": "tile", "settings": { "heading": "Built to outlast the box it came in.", "subheading": "Aluminium shell, tested past 1,000 cycles." } }
+      ]
+    }
+  ]
+}
+{% endschema %}

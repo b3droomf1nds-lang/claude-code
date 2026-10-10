@@ -1,0 +1,67 @@
+{%- assign _flag = section.settings.flag_product -%}
+{%- if _flag.handle -%}{%- assign _flag = _flag.handle -%}{%- endif -%}
+<style>
+  .lineup{ padding-top: clamp(18px,2.2vw,32px); margin-top:-60px; position:relative; z-index:1; background:var(--base); }
+  @media (max-width:640px){
+    /* Never use a negative margin here — that's what let the grid draw over
+       the hero image before. The gap to the hero above is closed by
+       shrinking the hero section itself (see apple-hero.liquid), so this
+       stays at 0 and the two sections are structurally unable to overlap. */
+    .lineup{ margin-top:0; }
+  }
+  .lineup .lineup__head{ margin-bottom:8px; }
+  .lineup .product-card__word{
+    font-family:'Voltical Relay',var(--sans) !important;
+  }
+  .lineup .product-card__title,
+  .lineup .product-card__price{
+    font-size:clamp(1.45rem,1.7vw,1.85rem);
+  }
+  .lineup .product-card__meta{
+    font-size:clamp(1.2rem,1.24vw,1.32rem);
+  }
+  .lineup .product-card .swatches{ gap:9px; }
+  .lineup .product-card .swatch{ width:19px; height:19px; }
+  .lineup .product-card__media,
+  .lineup .product-card__media--framed{
+    padding: clamp(36px,4vw,56px) clamp(12px,2vw,26px) clamp(56px,6vw,84px);
+  }
+</style>
+<section class="section lineup">
+  <div class="wrap wrap--wide">
+    <div class="lineup__head" data-reveal>
+      <div>
+        <span class="t-eyebrow">{{ section.settings.eyebrow }}</span>
+        <h2 class="t-xl">{{ section.settings.heading }}</h2>
+      </div>
+    </div>
+
+    <div class="lineup__grid">
+      {%- assign _c = section.settings.collection -%}
+      {%- if _c.handle -%}{%- assign col = _c -%}{%- else -%}{%- assign col = collections[_c] -%}{%- endif -%}
+      {%- if col and col.products.size > 0 -%}
+        {%- for product in col.products limit: section.settings.limit -%}
+          {% render 'product-card', product: product, flag_handle: _flag, short_title: true %}
+        {%- endfor -%}
+      {%- else -%}
+        {%- for product in collections.all.products limit: section.settings.limit -%}
+          {% render 'product-card', product: product, flag_handle: _flag, short_title: true %}
+        {%- endfor -%}
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Product lineup",
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "The system" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "One magnet. Six ways to stay charged." },
+    { "type": "collection", "id": "collection", "label": "Collection" },
+    { "type": "range", "id": "limit", "label": "Products shown", "min": 3, "max": 12, "step": 1, "default": 6 },
+    { "type": "product", "id": "flag_product", "label": "Product to flag as \"The flagship\"" }
+  ],
+  "presets": [{ "name": "Product lineup" }]
+}
+{% endschema %}

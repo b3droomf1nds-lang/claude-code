@@ -1,0 +1,13 @@
+{%- comment -%}
+  Spec sheet. Rows come from assets/voltical-data.js (specsSheets) and
+  are rendered client-side by theme.js; the container stays hidden for
+  products without an entry. Values marked * are estimates — the note
+  below appears automatically when any row carries one.
+{%- endcomment -%}
+<div class="specs" data-specs data-handle="{{ product.handle }}" hidden>
+  <div class="specs__head">
+    <h3>{{ 'products.specs_heading' | t }}</h3>
+  </div>
+  <dl class="specs__grid" data-specs-grid></dl>
+  <p class="specs__note" data-specs-note hidden>{{ 'products.specs_note' | t }}</p>
+</div>

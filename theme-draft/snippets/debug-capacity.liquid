@@ -1,0 +1,38 @@
+{%- assign capacity_idx = -1 -%}
+{%- for option in product.options_with_values -%}
+  {%- assign oname_dc = option.name | downcase -%}
+  {%- if oname_dc contains 'capacity' -%}
+    {%- assign capacity_idx = forloop.index0 -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- assign base_variant = product.selected_or_first_available_variant -%}
+<div style="position:fixed;top:100px;left:0;background:#fff;color:#000;z-index:999999;padding:20px;border:4px solid red;font-size:14px;max-width:600px">
+DEBUG<br>
+capacity_idx: {{ capacity_idx }}<br>
+base_variant: {{ base_variant.title }} (id {{ base_variant.id }})<br>
+base_variant.options: {{ base_variant.options | join: ' | ' }}<br>
+{%- assign best_variant = base_variant -%}
+{%- assign best_capacity = -1 -%}
+{%- for v in product.variants -%}
+  {%- assign matches_other_options = true -%}
+  {%- for i in (0..2) -%}
+    {%- if i != capacity_idx -%}
+      {%- assign base_val = base_variant.options[i] -%}
+      {%- assign v_val = v.options[i] -%}
+      {%- if base_val != blank and v_val != base_val -%}
+        {%- assign matches_other_options = false -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- assign cap_str = v.options[capacity_idx] | downcase | remove: ',' | remove: ' ' | remove: 'mah' -%}
+  {%- assign cap_num = cap_str | plus: 0 -%}
+v: {{ v.title }} | matches: {{ matches_other_options }} | avail: {{ v.available }} | cap_str: {{ cap_str }} | cap_num: {{ cap_num }}<br>
+  {%- if matches_other_options and v.available -%}
+    {%- if cap_num > best_capacity -%}
+      {%- assign best_capacity = cap_num -%}
+      {%- assign best_variant = v -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+BEST: {{ best_variant.title }} (cap {{ best_capacity }})
+</div>

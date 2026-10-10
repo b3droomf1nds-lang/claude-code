@@ -1,0 +1,48 @@
+<aside class="drawer" data-drawer role="dialog" aria-modal="true" aria-label="{{ 'cart.title' | t }}">
+  <div class="drawer__head">
+    <h2>{{ 'cart.title' | t }}</h2>
+    <button class="drawer__close" data-drawer-close aria-label="{{ 'general.close' | t }}"><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2.2 2.2l7.6 7.6M9.8 2.2l-7.6 7.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+  </div>
+
+  <div class="drawer__body">
+    <div class="drawer__empty" data-drawer-empty hidden>
+      <p class="t-md" style="margin-bottom:8px">{{ 'cart.empty' | t }}</p>
+      <p class="t-muted" style="font-size:.9rem;margin:0 0 24px">{{ 'cart.empty_sub' | t }}</p>
+    </div>
+
+    <div data-drawer-lines></div>
+
+    <div class="ship-bubble" data-ship hidden>
+      <span class="ship-bubble__icon"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 1.6 15.6 5v8L9 16.4 2.4 13V5L9 1.6Z" fill="currentColor"/><path d="M2.6 5.1 9 8.4l6.4-3.3M9 8.4v7.8" stroke="var(--sys-bg,#fff)" stroke-width="1.2" stroke-linejoin="round"/></svg></span>
+      <div class="ship-bubble__body">
+        <span class="ship-bubble__label">{{ 'cart.shipping' | t }}</span>
+        <span class="ship-bubble__method" data-ship-method></span>
+      </div>
+      <span class="ship-bubble__price" data-ship-price></span>
+    </div>
+
+    <div class="addon" data-protect hidden>
+      <span class="addon__icon">{% render 'icon', icon: 'shield' %}</span>
+      <div class="addon__body">
+        <div class="addon__title">
+          {{ 'cart.protect_title' | t }}
+          <span class="addon__price" data-protect-price></span>
+        </div>
+        <p class="addon__desc">{{ 'cart.protect_desc' | t }}</p>
+      </div>
+      <label class="switch">
+        <input type="checkbox" aria-label="{{ 'cart.protect_title' | t }}">
+        <i></i>
+      </label>
+    </div>
+  </div>
+
+  <div class="drawer__foot" data-drawer-foot hidden>
+    <div class="drawer__subtotal">
+      <span data-total-label>{{ 'cart.subtotal' | t }}</span>
+      <span data-drawer-subtotal></span>
+    </div>
+    <p class="drawer__hint" data-total-hint>{{ 'cart.taxes_note' | t }}</p>
+    <a class="btn btn--accent drawer__checkout" href="{{ routes.cart_url }}/checkout">{{ 'cart.checkout' | t }}</a>
+  </div>
+</aside>
