@@ -38,7 +38,7 @@ test('drawer open and close keep document position and background styles untouch
     for (let repeat = 0; repeat < 3; repeat++) {
       context.drawer.open();
       assert.equal(context.drawer.isOpen, true);
-      assert.equal(bodyStyle.overflow, 'hidden');
+      assert.equal(bodyStyle.overflow, '');   // the page stays scrollable beside the open card
       assert.equal(scroller.scrollTop, 600);
       assert.equal(scroller.hidden, false);
       assert.equal(classes.has('is-open'), true);

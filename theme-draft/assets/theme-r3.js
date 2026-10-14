@@ -1714,7 +1714,6 @@
       scroller.hidden = true;
       scrim.hidden = true;
       scrim.style.opacity = '';
-      document.body.style.overflow = '';
       el.style.transform = '';
       stopAnims();
       hapClearPrime();
@@ -1732,8 +1731,7 @@
         isOpen = true;
         el.classList.add('is-open');
         scrim.hidden = false;
-        scroller.hidden = false;
-        document.body.style.overflow = 'hidden';
+        scroller.hidden = false;                    // the page behind stays scrollable: only the card takes touches
         scroller.scrollTop = maxTop();              // at rest, fully open…
         paint();
         if (el.animate) {                           // …and popped up from just below the screen
@@ -1771,7 +1769,32 @@
       anims = [away, fade];
       away.onfinish = () => { if (closing) finishClose(); };
     };
-    space.addEventListener('click', close);          // tap outside the sheet
+    /* Outside the card the screen is the page's: the full-screen layer
+       passes touches through (theme-r2.css), so the page scrolls and its
+       buttons work. Any swipe there, in any direction, sends the card
+       away, and so does a tap; a tap on a link or button still does its
+       own thing as the card goes (except the bag button, which opens the
+       card, so it doesn't close it first). The quantity
+       picker is its own full-screen layer on <body>, so it doesn't count
+       as outside. */
+    const outside = (t) => t && t.nodeType === 1 && !el.contains(t) && !t.closest('.qty-menu');
+    let away = null;
+    document.addEventListener('touchstart', (e) => {
+      away = null;
+      if (!isOpen || closing || !outside(e.target)) return;
+      away = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }, { capture: true, passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (!away) return;
+      const t = e.touches[0];
+      if (Math.hypot(t.clientX - away.x, t.clientY - away.y) < 8) return;
+      away = null;
+      if (isOpen && !closing) close();
+    }, { capture: true, passive: true });
+    document.addEventListener('click', (e) => {
+      if (!isOpen || closing || !outside(e.target) || e.target.closest('[data-cart-open]')) return;
+      close();
+    }, true);
 
     /* Swiping the card down on a phone is tracked here, from the first
        touch, so that once it's past halfway it is committed to closing and
