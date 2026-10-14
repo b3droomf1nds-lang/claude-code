@@ -1031,7 +1031,8 @@ h1.t-hero em,
 .qty-menu.is-settled .qty-menu__glow{opacity:1}
 .qty-menu__label{position:absolute;left:0;top:0;white-space:nowrap;pointer-events:none;
   font-size:22px;line-height:1.2;color:rgba(60,60,67,.6)}
-.qty-menu__label b{font-weight:600;color:#000}
+.qty-menu__label b{font-weight:500;color:#000}
+.qty-menu__label span{font-weight:500;color:#000}  /* "Quantity" and its number: both halfway between their old 600 and 400, the number in the word's black */
 .qty-menu__label.is-remove b{display:none}
 .qty-menu__label.is-remove span{font-weight:600;color:#ff3b30}
 .qty-menu__pill{position:absolute;left:0;top:0;box-sizing:border-box;outline:none;touch-action:none;cursor:pointer;
@@ -1045,7 +1046,7 @@ h1.t-hero em,
 .qty-menu__fill .qty-menu__dots i{background:rgba(255,255,255,.2)}
 .qty-menu__knob{position:absolute;left:0;top:0;display:grid;place-items:center;border-radius:50%;background:#fff;color:rgba(60,60,67,.6)}
 .qty-menu__knob svg{display:block;flex:none}
-@supports (font:-apple-system-title2){.qty-menu__label{font:-apple-system-title2}.qty-menu__label b{font-weight:600}}
+@supports (font:-apple-system-title2){.qty-menu__label{font:-apple-system-title2}.qty-menu__label b{font-weight:500}}
 /* the slider's touch surface: an invisible real switch over the pill, so a
    finger dragging it makes the iPhone tick (theme-r3.js) */
 .qty-menu__hap{position:absolute;left:0;top:0;margin:0;padding:0;opacity:0;cursor:pointer;touch-action:none;
