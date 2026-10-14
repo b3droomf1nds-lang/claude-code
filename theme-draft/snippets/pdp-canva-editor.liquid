@@ -444,6 +444,43 @@
     ls(false, CHARGE_LOCK4_MIGRATION, '1');
   }
 
+  // The charge tile's battery became a bolt sized in the CSS to exactly the
+  // "59"'s height, 11px after it, the pair centred over "minutes". A size or
+  // phone move saved here for the bolt (made while it was smaller) or the
+  // "59" / its row would be applied on top of that and blow the bolt up past
+  // the number. Drop those once: size and phone offsets go; any shared move
+  // is folded into the desktop-only fields (as charge-lock-v4 does) so the
+  // desktop placement is unchanged; the "59"'s weight and wording stay.
+  var CHARGE_BOLT_MIGRATION = 'volt-canva-charge-bolt-v1';
+  var CHARGE_BOLT_KEYS = [
+    ':nth-child(2)>:nth-child(2)>:nth-child(2)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2)'
+  ];
+  if (ls(true, CHARGE_BOLT_MIGRATION) !== '1'){
+    var chargeBoltChanged = false;
+    CHARGE_BOLT_KEYS.forEach(function(k){
+      var e = layout[k];
+      if (!e) return;
+      if (e.dx || e.dy){
+        e.axd = Math.round(((e.dx || 0) + (e.axd || 0)) * 100) / 100;
+        e.ayd = Math.round(((e.dy || 0) + (e.ayd || 0)) * 100) / 100;
+      }
+      e.dx = 0; e.dy = 0; e.s = 1;
+      delete e.axm; delete e.aym;
+      if (!e.axd) delete e.axd;
+      if (!e.ayd) delete e.ayd;
+      if (!e.axd && !e.ayd && !e.w && e.text == null) delete layout[k];
+      chargeBoltChanged = true;
+    });
+    if (chargeBoltChanged){
+      ls(false, LKEY, JSON.stringify(layout));
+      savedHistory = [];
+      rm(HKEY);
+    }
+    ls(false, CHARGE_BOLT_MIGRATION, '1');
+  }
+
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__feature-icon-wrap, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-number, .pdp-cmp__compact-partial-extra, .pdp-cmp__sub, ' +
     '.pdp-cmp__compact-video-main, .pdp-cmp__compact-video-hours, .pdp-cmp__compact-battery, ' +
