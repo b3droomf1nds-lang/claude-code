@@ -1060,7 +1060,7 @@ h1.t-hero em,
 .drawer-scroller .cart-line.is-qty-open .cart-line__pencil svg{opacity:0}
 .drawer-scroller .addon{padding:12px 14px;gap:12px}
 .drawer-scroller .addon__icon,
-.drawer-scroller .ship-bubble__icon{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:var(--sys-bg-2);color:var(--sys-label);flex:0 0 auto}
+.drawer-scroller .ship-bubble__icon{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:var(--sys-bg-2);color:var(--sys-label-2);flex:0 0 auto}  /* the box drawn like the quantity pencil: its grey, an outline with round joins at the same line weight */
 .drawer-scroller .ship-bubble{display:flex;align-items:center;gap:14px;padding:12px 16px 12px 14px}
 .drawer-scroller .ship-bubble__icon{width:72px;height:48px}  /* as wide as the product photo's tile (72px), with the same 14px gap, so "Shipping" lines up under the product's text */
 .drawer-scroller .ship-bubble[hidden]{display:none}
