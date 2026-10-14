@@ -1714,6 +1714,8 @@
       scrim.hidden = true;
       scrim.style.opacity = '';
       el.style.transform = '';
+      el.style.removeProperty('--rb');
+      el.classList.remove('is-dragging');
       stopAnims();
       hapClearPrime();
       hapQueueSeeds();
@@ -1804,6 +1806,7 @@
     let drag = null;
     const place = (y) => {
       el.style.transform = 'translateY(' + y.toFixed(2) + 'px)';
+      el.style.setProperty('--rb', Math.min(40, Math.max(0, -y * 2)).toFixed(1) + 'px');   // lifted: round at the bottom too
       scrim.style.opacity = String(Math.min(1, Math.max(0, 1 - y / el.offsetHeight)));
     };
     scroller.addEventListener('touchstart', (e) => {
@@ -1827,6 +1830,7 @@
         drag.mode = 1;
         drag.base = cardY();                         // catch it where it is, even mid-pop
         stopAnims();
+        el.classList.add('is-dragging');
       }
       if (e.cancelable) e.preventDefault();
       const h = el.offsetHeight;
@@ -1843,6 +1847,8 @@
     const release = () => {
       const d = drag;
       drag = null;
+      el.classList.remove('is-dragging');
+      el.style.removeProperty('--rb');               // back to square, eased (theme-r2.css), as it settles
       if (!d || d.mode !== 1 || !isOpen || closing) return;
       const a = d.pts[0];
       const b = d.pts[d.pts.length - 1];

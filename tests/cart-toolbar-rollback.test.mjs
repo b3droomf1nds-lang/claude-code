@@ -27,7 +27,7 @@ test('drawer open and close keep document position and background styles untouch
     const context = vm.createContext({
       document: { body: { style: bodyStyle }, documentElement: { style: rootStyle } },
       window: { scrollY: y, scrollTo: () => assert.fail('drawer must not scroll the document') },
-      el: { style: { transform: '' },
+      el: { style: { transform: '', removeProperty: () => {} },
         classList: { add: name => classes.add(name), remove: name => classes.delete(name) },
         focus: options => { assert.equal(options.preventScroll, true); focused++; } },
       scrim, scroller, maxTop: () => 600, paint: () => {}, stopAnims: () => {},
