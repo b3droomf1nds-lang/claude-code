@@ -2575,25 +2575,3 @@
     font-weight: 495 !important;
   }
 }
-
-/* Charge tile: just a lightning bolt, drawn like the cart's pencil. The tile's
-   copy (and the live data-calc-time number) stays in the layout but unseen, so
-   the tile keeps its size on every viewport and in Canva. */
-.pdp-cmp .pdp-cmp__card--charge > :not(.pdp-cmp__charge-bolt) {
-  visibility: hidden !important;
-  opacity: 0 !important;
-}
-.pdp-cmp .pdp-cmp__card--charge > .pdp-cmp__charge-bolt {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-.pdp-cmp .pdp-cmp__charge-bolt svg {
-  display: block;
-  height: 52%;
-  width: auto;
-  aspect-ratio: 1;
-}
