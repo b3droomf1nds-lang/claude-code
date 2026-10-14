@@ -1502,7 +1502,11 @@
         if (hapSeeds.some((seed) => seed.frame === frame)) return;
         const doc = frame.contentDocument;
         if (!doc || !doc.body) { frame.remove(); return; }
-        doc.documentElement.style.cssText = 'overflow:hidden;background:transparent';
+        // iOS greys the tapped seed over the bag. Fully transparent turns the
+        // highlight off, which changed how the tap reached the switch and
+        // weakened the first pencil tick (reverted); a 1%-alpha grey keeps the
+        // same tap path but can't be seen.
+        doc.documentElement.style.cssText = 'overflow:hidden;background:transparent;-webkit-tap-highlight-color:rgba(0,0,0,.01)';
         doc.body.style.cssText = 'margin:0;overflow:hidden;background:transparent';
         const input = doc.createElement('input');
         input.type = 'checkbox';
