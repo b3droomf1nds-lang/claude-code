@@ -1770,30 +1770,52 @@
       anims = [away, fade];
       away.onfinish = () => { if (closing) finishClose(); };
     };
-    /* Outside the card the screen is the page's: the full-screen layer
-       passes touches through (theme-r2.css), so the page scrolls and its
-       buttons work. Any swipe there, in any direction, sends the card
-       away, and so does a tap; a tap on a link or button still does its
-       own thing as the card goes (except the bag button, which opens the
-       card, so it doesn't close it first). The quantity
-       picker is its own full-screen layer on <body>, so it doesn't count
-       as outside. */
+    /* Outside the card: a swipe there scrolls the page (the full-screen
+       layer passes touches through, theme-r2.css) and sends the card away,
+       in any direction; a tap there only sends the card away and never
+       reaches the page underneath. The page doesn't hear the touch at all
+       while the card is out (propagation is stopped here, at the document,
+       before it gets to any of its own handlers); scrolling is the
+       browser's and isn't affected. The quantity picker is its own
+       full-screen layer on <body>, so it doesn't count as outside. A
+       vibration seed over the bag button forwards its tap as
+       button.click(), which lands in the click guard below. */
     const outside = (t) => t && t.nodeType === 1 && !el.contains(t) && !t.closest('.qty-menu');
+    const blocking = (e) => isOpen && outside(e.target);
     let away = null;
     document.addEventListener('touchstart', (e) => {
       away = null;
-      if (!isOpen || closing || !outside(e.target)) return;
-      away = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      if (!blocking(e)) return;
+      e.stopPropagation();
+      away = { x: e.touches[0].clientX, y: e.touches[0].clientY, moved: false };
     }, { capture: true, passive: true });
     document.addEventListener('touchmove', (e) => {
       if (!away) return;
+      e.stopPropagation();
+      if (away.moved) return;
       const t = e.touches[0];
       if (Math.hypot(t.clientX - away.x, t.clientY - away.y) < 8) return;
-      away = null;
-      if (isOpen && !closing) close();
+      away.moved = true;
+      close();
     }, { capture: true, passive: true });
+    document.addEventListener('touchend', (e) => {
+      if (!away) return;
+      const tapped = !away.moved;
+      away = null;
+      e.stopPropagation();
+      if (!tapped) return;
+      if (e.cancelable) e.preventDefault();          // no click, focus or link follows the tap
+      close();
+    }, { capture: true, passive: false });
+    ['pointerdown', 'pointerup', 'mousedown', 'mouseup'].forEach((type) => document.addEventListener(type, (e) => {
+      if (!blocking(e)) return;
+      e.stopPropagation();
+      if (type === 'mousedown') e.preventDefault();  // no focus on a field underneath
+    }, true));
     document.addEventListener('click', (e) => {
-      if (!isOpen || closing || !outside(e.target) || e.target.closest('[data-cart-open]')) return;
+      if (!blocking(e)) return;
+      e.preventDefault();
+      e.stopPropagation();
       close();
     }, true);
 
