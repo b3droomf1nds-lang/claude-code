@@ -978,8 +978,8 @@ h1.t-hero em,
 .drawer-scroller .cart-line,
 .drawer-scroller .ship-bubble,
 .drawer-scroller .addon{background:var(--sys-bg);border-radius:20px;margin:0 0 8px;
-  /* a thin rim all round, strongest at the very edge and fading inward over 1px, like the edge of a Claude-app input box */
-  box-shadow:inset 0 0 0 .5px rgba(0,0,0,.13),inset 0 0 0 1px rgba(0,0,0,.05)}
+  /* edged like the sheet itself: a bright line along the top and just inside the rim, and a soft shadow (the sheet's, scaled to a bubble) */
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 0 0 .5px rgba(255,255,255,.6),0 4px 20px rgba(0,0,0,.08)}
 .drawer-scroller .cart-line{align-items:center;gap:14px;padding:14px 16px 14px 14px}
 .drawer-scroller .cart-line+.cart-line{border-top:0}
 .drawer-scroller .cart-line__img{width:72px;height:72px;border-radius:14px;background:var(--sys-bg-2)}
