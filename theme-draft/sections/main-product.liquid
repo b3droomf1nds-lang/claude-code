@@ -780,7 +780,14 @@
       if (!parts.length) return;
       // The letters themselves, not the (sometimes full-width) box around them.
       function ink(el) {
-        if (el.tagName === 'IMG') return el.getBoundingClientRect();
+        if (el.tagName === 'IMG') {
+          // An image whose drawing fills only part of its box (the charge bolt)
+          // says where, as --ink-x: "<left> <right>" fractions of its width.
+          var b0 = el.getBoundingClientRect();
+          var f = getComputedStyle(el).getPropertyValue('--ink-x').trim().split(/\s+/).map(parseFloat);
+          if (f.length !== 2 || isNaN(f[0]) || isNaN(f[1])) return b0;
+          return { left: b0.left + f[0] * b0.width, right: b0.left + f[1] * b0.width, width: (f[1] - f[0]) * b0.width };
+        }
         var r = document.createRange();
         r.selectNodeContents(el);
         var b = r.getBoundingClientRect();
