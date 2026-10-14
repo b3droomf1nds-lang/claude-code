@@ -2502,18 +2502,18 @@
      so the element's box and the gradient slices don't change) is a solid
      bolt in the proportions of the iPhone status bar's charging bolt (our own
      drawing: 0.66 as wide as tall, every corner well rounded, the two
-     middle edges exactly horizontal, no extra tilt) — 38px tall, centred
-     on the "59" and 11px after it. */
+     middle edges exactly horizontal, no extra tilt) — exactly as tall as
+     the "59" and level with it (60.3px), 11px after it. */
   .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
-    -webkit-mask: url("bolt-charging.webp?v=5") 0 0 / 100% 100% no-repeat;
-    mask: url("bolt-charging.webp?v=5") 0 0 / 100% 100% no-repeat;
-    --ink-x: 0.1764 0.3176;   /* the bolt's left/right in the image, so the shared gradient spans what's drawn (main-product.liquid) */
+    -webkit-mask: url("bolt-charging.webp?v=6") 0 0 / 100% 100% no-repeat;
+    mask: url("bolt-charging.webp?v=6") 0 0 / 100% 100% no-repeat;
+    --ink-x: 0.1764 0.4001;   /* the bolt's left/right in the image, so the shared gradient spans what's drawn (main-product.liquid) */
   }
   /* The bolt is narrower than the battery was, so "59" + bolt move right
      together to sit centred over "minutes" again. */
   .template-product .pdp-cmp__card--charge .pdp-cmp__stat-row {
     position: relative;
-    left: 44.01px;
+    left: 36.3px;
   }
 }
 
