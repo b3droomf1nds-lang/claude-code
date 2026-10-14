@@ -875,7 +875,7 @@ h1.t-hero em,
 .drawer-scroller .drawer::before{display:none}
 .drawer-scroller .drawer:focus{outline:none}
 /* above the floating CTA pill (z-index 110, layout/theme.liquid), like a system pop-up */
-.page-scrim.is-sheet{z-index:112;transition:none;pointer-events:none;background:rgba(0,0,0,.12)}  /* a light dim, so the glass sheet stays bright */
+.page-scrim.is-sheet{z-index:112;transition:none;pointer-events:none;background:rgba(0,0,0,.06)}  /* barely dimmed, so the glass sheet stays bright, as iOS's menus are */
 
 .drawer-scroller .drawer__head{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding:18px 18px 4px}
 .drawer-scroller .drawer__head h2{grid-column:2;text-align:center;font-family:inherit;font-size:20px;font-weight:700;line-height:1.25;letter-spacing:normal}
@@ -960,13 +960,15 @@ h1.t-hero em,
    total is a small grey label over a large amount, as on the sheet. */
 .drawer-scroller .drawer{background:var(--sys-bg-2)}
 /* Liquid glass, like iOS's frosted menus: the sheet is a bright pane the
-   page shows through as soft blurred shapes (heavy blur, a mostly-white
-   tint), with a thin bright top edge and a soft shadow; the white bubbles
-   stay solid on it. The tall second shadow (pulling the sheet up past the
+   page shows through as soft coloured blobs. Tuned against an iOS menu over
+   emoji: an 18px blur keeps each shape a separate blob, and a 60% white tint
+   with extra saturation and brightness lets a yellow emoji through at ~1/3
+   strength (iOS: ~34%) while white stays bright. Thin bright top edge, soft
+   shadow; the white bubbles stay solid on it. The tall second shadow (pulling the sheet up past the
    top) can't be frosted, so it takes the pane's resting colour. */
 .drawer-scroller .drawer{
-  background:rgba(250,250,252,.68);
-  -webkit-backdrop-filter:blur(44px) saturate(180%);backdrop-filter:blur(44px) saturate(180%);
+  background:rgba(255,255,255,.6);
+  -webkit-backdrop-filter:blur(18px) saturate(220%) brightness(1.05);backdrop-filter:blur(18px) saturate(220%) brightness(1.05);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 0 0 .5px rgba(255,255,255,.6),0 10px 50px rgba(0,0,0,.12),0 100vh 0 0 rgba(246,246,248,.96);
 }
 .drawer-scroller .drawer__body{padding:6px 12px 4px}
