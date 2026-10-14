@@ -923,7 +923,7 @@ h1.t-hero em,
 .drawer-scroller .drawer{min-height:min(368px,calc(100% - max(44px,env(safe-area-inset-top) + 12px)))}
 /* empty bag: the message sits in the middle of the card */
 .drawer-scroller .drawer__body:has(>.drawer__empty:not([hidden])){display:flex;flex-direction:column;justify-content:center}
-.drawer-scroller .drawer__empty{padding:0 4px 28px;color:var(--sys-label-2);max-width:300px;margin-inline:auto}  /* narrow enough that the line under the heading always breaks: "Everything charges faster once / something's in here." */
+.drawer-scroller .drawer__empty{padding:0 4px 28px;color:var(--sys-label-2);max-width:332px;margin-inline:auto}  /* 324px of text: on an iPhone the line under the heading (~355px) can't fit, but its first part (~292px) does, so it breaks as "Everything charges faster once something's / in here." ("in here" is joined in the locale) */
 .drawer-scroller .drawer__empty .t-muted{margin:0!important}
 .drawer-scroller .drawer__empty .t-md{font-size:20px;font-weight:700;letter-spacing:normal;color:var(--sys-label)}
 .drawer-scroller .drawer__empty .t-muted{font-size:15px!important;color:var(--sys-label-2)}
