@@ -960,8 +960,8 @@
          Letting go springs the knob onto the nearest stop and the pill
          settles back with a small bounce. Tapping a stop jumps there.
        - It stays open after letting go. Tapping anywhere else (or Escape,
-         Enter) closes it and saves the quantity. Stop 0 is Remove (the
-         label reads "Remove" in red). */
+         Enter) closes it and saves the quantity. Stop 0 removes the item
+         (the label just reads "Quantity 0", like every other stop). */
     const QM = { W: 334, H: 72, P: 12, T: 48, K: 40, D: 12, FROM: 27 };
     const qmReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
     const qmEl = (() => {
@@ -1129,9 +1129,8 @@
       if (v === qm.shown) return;
       const count = crossed ? Math.abs(v - qm.shown) : 1;
       qm.shown = v;
-      const text = v ? String(v) : window.VolticalStrings.remove;
+      const text = String(v);                        // 0 too: "Quantity 0", not a red "Remove"
       qmEl.value.textContent = text;
-      qmEl.label.classList.toggle('is-remove', !v);  // stop 0 reads "Remove", in red
       qmEl.pill.setAttribute('aria-valuenow', String(v));
       qmEl.pill.setAttribute('aria-valuetext', text);
       previewQty(qm.key, v);

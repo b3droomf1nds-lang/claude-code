@@ -397,11 +397,11 @@ test('native touch counting does not depend on pointermove being delivered first
   assert.equal(h.state().hapT.flips, 1);
 });
 
-test('keyboard selection and Remove retain the existing quantity behavior', () => {
+test('keyboard selection to 0 reads "0" and still removes the line', () => {
   const h = harness();
   h.api.qmEl.pill.emit('keydown', { key: 'ArrowLeft' });
   assert.equal(h.state().shown, 0);
-  assert.equal(h.api.qmEl.pill.attrs['aria-valuetext'], 'Remove');
+  assert.equal(h.api.qmEl.pill.attrs['aria-valuetext'], '0');   // "Quantity 0", not a red "Remove"
   h.api.qmEl.pill.emit('keydown', { key: 'Enter' });
   h.settle();
   assert.deepEqual(JSON.parse(JSON.stringify(h.changes)), [{ id: 'test-line', quantity: 0 }]);
