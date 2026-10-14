@@ -2499,20 +2499,20 @@
      the iPhone's charging battery does. The <img> itself (and desktop)
      still uses the original file.
      Now just a bolt, no battery: bolt-charging.webp (same 1672x940 canvas,
-     so the element's box and the gradient slices don't change) is an
-     outline bolt drawn like the MagSafe / USB-C icons below — a 2.5px line,
-     every corner rounded, tilted 8° — as tall as the "59" (58px) and 13px
-     after it, the battery's old gap. */
+     so the element's box and the gradient slices don't change) is a solid
+     bolt in the proportions of the iPhone status bar's charging bolt (our own
+     drawing: 0.66 as wide as tall, tips softly rounded, no extra tilt) — as
+     tall as the "59" (58px) and 13px after it, the battery's old gap. */
   .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
-    -webkit-mask: url("bolt-charging.webp?v=2") 0 0 / 100% 100% no-repeat;
-    mask: url("bolt-charging.webp?v=2") 0 0 / 100% 100% no-repeat;
-    --ink-x: 0.1872 0.4199;   /* the bolt's left/right in the image, so the shared gradient spans what's drawn (main-product.liquid) */
+    -webkit-mask: url("bolt-charging.webp?v=3") 0 0 / 100% 100% no-repeat;
+    mask: url("bolt-charging.webp?v=3") 0 0 / 100% 100% no-repeat;
+    --ink-x: 0.1872 0.3918;   /* the bolt's left/right in the image, so the shared gradient spans what's drawn (main-product.liquid) */
   }
   /* The bolt is narrower than the battery was, so "59" + bolt move right
      together to sit centred over "minutes" again. */
   .template-product .pdp-cmp__card--charge .pdp-cmp__stat-row {
     position: relative;
-    left: 34.46px;
+    left: 37.08px;
   }
 }
 
