@@ -1711,67 +1711,55 @@
       if (window.matchMedia('(prefers-reduced-transparency: reduce)').matches) return null;
       const main = document.getElementById('main');
       if (!main) return null;
-      // Lens profile, measured off a screen recording of the iOS Notification
-      // Centre sheet (121 frames, its edge passing over text): the band pixel
-      // d px below the rim shows the page at depth at(d), always from further
-      // in. Green follows d + 26.14(1 - d/31.41)^2.25 (rms error 0.07px):
-      // 1:1 at 31.4px, stretching more and more towards the fold at 12.4px
-      // (where one line of the page is drawn out into streaks), then the
-      // same strip again, mirrored, down to the rim. In the last 6px the
-      // colours part: red comes from up to 12.6px further in, blue from up
-      // to 11.3px less far, so the edges of whatever passes under the rim
-      // turn to fringes of colour.
-      // Drawn as slices, each a copy of the page stretched (or flipped)
-      // linearly between its two ends; the rim's slices are split into red,
-      // green and blue copies, each stretched to its own curve, and
-      // multiplied back together. Ten copies in all, so a phone keeps up:
-      // green stays within 0.35px of its curve, red and blue (only the
-      // fringes' colours) within 1.4px.
-      const B = 31.41;
-      const at = (d, c) => {
-        let s = d + 26.14 * Math.max(0, 1 - d / B) ** 2.251;
-        if (c === 'r') s += 12.65 * Math.max(0, 1 - d / 6.1) ** 2.29;
-        else if (c === 'b') s -= 11.28 * Math.max(0, 1 - d / 9.07) ** 3.98;
-        return s;
-      };
-      const CUTS = [0, 2.25, 6, 12.39, 19, 24.5, B];
-      const SPLIT = 6;                         // above this depth the three colours have parted
+      // Lens profile, measured off a screen recording of the Apple Store app's
+      // frosted "Show delivery details" card (376 frames, its top edge passing
+      // over text and a photo; the page's scroll tracked frame to frame and
+      // each row of the card matched to the page row it shows): the band pixel
+      // d px below the rim shows the frosted page at depth at(d), always from
+      // further in: d + 35.22(1 - d/19.53)^2.72 (rms 0.4px). 1:1 from 19.5px,
+      // stretched more and more towards the fold at 11.8px, then the page
+      // from 14.6px to 35px in, mirrored and squeezed, down to the rim. The
+      // colours don't part (under 0.4px). The sides bend the same way.
+      // The page is frosted first and then bent (that fits the recording far
+      // better than bending, then frosting): each slice's copy is blurred in
+      // the page's own coordinates, in a window just round the rows it shows,
+      // then stretched, so the squeezed mirror at the rim reads sharper than
+      // the frost, as on the iPhone.
+      // Six slices, each a copy stretched (or flipped) linearly between its
+      // ends: within 0.4px of the curve, far under the frost's 9px blur.
+      const B = 19.53;
+      const at = (d) => d + 35.22 * Math.max(0, 1 - d / B) ** 2.724;
+      const CUTS = [0, 2.75, 5.7, 8.9, 12.5, 17, B];
+      const FROST = 9, M = 3 * FROST;          // the card's blur (theme-r2.css) and how far it reaches
       const band = document.createElement('div');
       band.className = 'drawer-lens';
       band.setAttribute('aria-hidden', 'true');
       band.inert = true;
-      // the slices sit in one frosted pane: the bent page gets the card's own frost (theme-r2.css)
-      const glass = document.createElement('div');
-      glass.className = 'drawer-lens__glass';
-      band.appendChild(glass);
       const layers = [];
-      const layer = (parent, from, s) => {
-        const view = document.createElement('div');
-        view.className = 'drawer-lens__view';
-        parent.appendChild(view);
-        layers.push({ view, root: view.attachShadow({ mode: 'open' }), from, s });
-      };
       for (let i = 0; i < CUTS.length - 1; i++) {
-        const d0 = CUTS[i], d1 = CUTS[i + 1];
+        const d0 = CUTS[i], d1 = CUTS[i + 1], a0 = at(d0), a1 = at(d1);
+        const s = (d1 - d0) / (a1 - a0);       // band px per page px; negative between the rim and the fold (mirrored)
         const slice = document.createElement('div');
         slice.className = 'drawer-lens__slice';
         // 1px longer, under the next slice: the browser rounds fractional clips, which can leave a gap
         slice.style.cssText = 'top:' + d0 + 'px;height:' + (d1 - d0 + 1) + 'px';
-        glass.appendChild(slice);
-        // page px per band px is 1/s; s is negative between the rim and the fold (mirrored)
-        if (d1 > SPLIT) { layer(slice, at(d0), (d1 - d0) / (at(d1) - at(d0))); continue; }
-        slice.classList.add('is-split');
-        ['r', 'g', 'b'].forEach((c) => {
-          const ch = document.createElement('div');
-          ch.className = 'drawer-lens__ch drawer-lens__ch--' + c;
-          slice.appendChild(ch);
-          layer(ch, at(d0, c), (d1 - d0) / (at(d1, c) - at(d0, c)));
-          ch.appendChild(document.createElement('i'));
-        });
+        band.appendChild(slice);
+        // the view's rows are the page's, counted from the row under the rim; this maps them to the slice's
+        const view = document.createElement('div');
+        view.className = 'drawer-lens__view';
+        const tf = 'transform:translateY(' + (-s * a0).toFixed(4) + 'px) scaleY(' + s.toFixed(5) + ')';
+        view.style.cssText = tf;
+        slice.appendChild(view);
+        const root = view.attachShadow({ mode: 'open' });
+        // the window: the page rows this slice shows and the blur's reach round them, frosted
+        // with the card's own blur before the view stretches it (the page's colour beyond its edges)
+        const lo = Math.min(a0, a1) - M, win = document.createElement('div');
+        win.style.cssText = 'position:absolute;left:' + -M + 'px;top:' + lo.toFixed(4) + 'px;width:calc(100% + ' + 2 * M +
+          'px);height:' + (Math.abs(a1 - a0) + 2 * M).toFixed(4) + 'px;overflow:hidden;contain:strict;' +
+          '-webkit-filter:blur(' + FROST + 'px) saturate(180%);filter:blur(' + FROST + 'px) saturate(180%)';
+        root.appendChild(win);
+        layers.push({ view, tf, root, win, lo, page: null });
       }
-      const haze = document.createElement('i');               // the rim's last 5px fade towards the glass
-      haze.className = 'drawer-lens__haze';
-      band.appendChild(haze);
       el.insertBefore(band, el.firstChild);
       let raf = 0, gen = 0, live = false, lastX = NaN, lastY = NaN, off = false;
       // the page's own stylesheet tags, in order (the copied sections bring their own inline ones);
@@ -1903,7 +1891,7 @@
           plan(src, index, css, empty, skip);
           parts.push({ src, from, fixed, css, empty, skip, at: 'position:absolute;margin:0;left:' + (r.left - r0.left) + 'px;top:' + (r.top - r0.top) + 'px;width:' + r.width + 'px' });
         }
-        return { cls: body.className, box: 'position:absolute;left:0;top:0;width:100%;height:' + document.documentElement.scrollHeight + 'px;background:' + bg, parts, y: scrollY };
+        return { cls: body.className, bg, box: 'position:absolute;left:0;top:0;width:100%;height:' + document.documentElement.scrollHeight + 'px;background:' + bg, parts, y: scrollY };
       };
       const paintInto = (t, now) => {          // (re)draws one slice's copy, swapping it in whole
         // stands in for <body>: its classes (.template-product …) and background
@@ -1915,10 +1903,12 @@
           c.style.cssText = p.at;
           page.appendChild(c);
         }
-        t.root.appendChild(page);
+        t.win.style.backgroundColor = now.bg;
+        t.win.appendChild(page);
         page.querySelectorAll('*').forEach((n) => { if (n._lensScroll) { n.scrollLeft = n._lensScroll[0]; n.scrollTop = n._lensScroll[1]; } });
         if (t.page) t.page.remove();
         t.page = page;
+        if (lastX === lastX) place(t);         // already lined up once: the new copy goes where the old one was
       };
       let shownY = 0;                          // the page's scroll when the copies were read off it
       const paint = () => {
@@ -1950,7 +1940,7 @@
         const type = INHERIT.map((k) => k + ':' + cs.getPropertyValue(k)).join(';') +
           ';line-height:' + (lh && fs ? (lh / fs).toFixed(4) : 'normal');
         const run = gen;
-        for (const { view } of layers) view.style.cssText = type;
+        for (const { view, tf } of layers) view.style.cssText = type + ';' + tf;
         building = true;                       // changes from now on repaint once the copies are in
         stale = true;
         for (const src of [main, footer]) {
@@ -1985,14 +1975,19 @@
         };
         requestAnimationFrame(step);
       };
+      // a copy sits in its window where the page sits under the band (the window starts M to the left
+      // and at band-relative row lo)
+      const place = (t) => {
+        if (t.page) t.page.style.transform = 'translate(' + (lastX + M).toFixed(2) + 'px,' + (lastY - t.lo).toFixed(2) + 'px)';
+      };
       // lines the copies up with the page, only when the card or the page has moved since the
-      // last frame: rewriting ten transforms every frame would keep the phone repainting the band
+      // last frame: rewriting the transforms every frame would keep the phone repainting the band
       const align = (force) => {
         const r = main.getBoundingClientRect(), b = band.getBoundingClientRect();
         const x = r.left - b.left, y = r.top - b.top;
         if (!force && Math.abs(x - lastX) < 0.01 && Math.abs(y - lastY) < 0.01) return;
         lastX = x; lastY = y;
-        for (const t of layers) t.view.style.transform = 'translate(' + x.toFixed(2) + 'px,' + (t.s * (y - t.from)).toFixed(2) + 'px) scaleY(' + t.s.toFixed(4) + ')';
+        layers.forEach(place);
       };
       const track = () => { raf = requestAnimationFrame(track); if (live) align(false); };
       // the page scrolled well past what the copies hold: read it again

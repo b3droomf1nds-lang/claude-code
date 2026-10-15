@@ -104,7 +104,7 @@ await page.evaluate(() => {
   // every copy of the page the glass edge puts in, and when
   document.querySelectorAll('.drawer-lens__view').forEach((v) => v.shadowRoot && new MutationObserver((ms) => ms.forEach((m) =>
     m.addedNodes.forEach((n) => { if (n.classList && n.classList.contains('drawer-lens__page')) T.copies.push(performance.now() - T.t0); })))
-    .observe(v.shadowRoot, { childList: true }));
+    .observe(v.shadowRoot, { childList: true, subtree: true }));
   const poll = () => { const b = document.querySelector('.drawer-lens'); if (b && b.classList.contains('is-live')) T.live = performance.now() - T.t0; else requestAnimationFrame(poll); };
   requestAnimationFrame(poll);
 });
