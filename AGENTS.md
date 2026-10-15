@@ -35,6 +35,7 @@ These rules apply to every task in this repository, whether or not a design skil
 - A revert must be surgical: inspect the current diff and preserve unrelated work that landed before or after the change being reversed.
 - For any work on the mobile sticky Add-to-bag bar, read `docs/sticky-cart-prompt.md` first.
 - For any work on the cart sheet's Liquid Glass edge (`.drawer-lens`), or to build that glass edge on another element, read `docs/liquid-glass-lens.md` first.
+- After any change near the cart (bag or Add to bag buttons, header, cart sheet and its glass edge, quantity pencil or slider), run the `haptics-check` skill (`.claude/skills/haptics-check/SKILL.md`) before handing off. If it fails, or the owner says the vibration broke, follow `.claude/skills/haptics-fix/SKILL.md`.
 
 ## Verification before handoff
 

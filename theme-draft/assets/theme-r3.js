@@ -1703,8 +1703,10 @@
     // every frame and stretched the way the glass bends it; theme-r2.css
     // masks it to the rim. Each copy lives in its own shadow root with the
     // page's stylesheet tags, so the card's styles can't reach it and the
-    // theme's scripts can't see it. Built when the card opens, dropped when
-    // it closes.
+    // theme's scripts can't see it. The stylesheet tags go in once, soon
+    // after the page loads; the copies are made the moment the card opens
+    // (so the band is in place while the card is still rising) and dropped
+    // when it closes.
     const lensHalt = (() => {
       if (window.matchMedia('(prefers-reduced-transparency: reduce)').matches) return null;
       const main = document.getElementById('main');
@@ -1767,11 +1769,33 @@
       haze.className = 'drawer-lens__haze';
       band.appendChild(haze);
       el.insertBefore(band, el.firstChild);
-      let raf = 0, gen = 0, live = false, lastX = NaN, lastY = NaN, defer = 0, off = false;
+      let raf = 0, gen = 0, live = false, lastX = NaN, lastY = NaN, off = false;
       // the page's own stylesheet tags, in order (the copied sections bring their own inline ones);
       // the links load from cache, and the band shows once they have
       const styleTags = () => Array.from(document.querySelectorAll('link[rel~="stylesheet"], style'))
         .filter((n) => !el.contains(n) && !main.contains(n) && !band.contains(n));
+      // Each copy's root gets the page's stylesheet tags once, ahead of time (soon after the page
+      // loads, or at the first open if that's sooner) and keeps them, so opening the card never
+      // waits on stylesheets; any the page has added since are put in at the next open.
+      const given = new Set();
+      let ready = Promise.resolve();
+      const prepare = () => {
+        const fresh = styleTags().filter((n) => !given.has(n));
+        if (!fresh.length) return ready;
+        const loads = [];
+        for (const { root } of layers) {
+          for (const tag of fresh) {
+            const t = tag.cloneNode(true);
+            if (t.tagName === 'LINK') loads.push(new Promise((ok) => { t.onload = t.onerror = ok; }));
+            root.appendChild(t);
+          }
+        }
+        fresh.forEach((n) => given.add(n));
+        ready = Promise.race([Promise.all(loads), new Promise((ok) => setTimeout(ok, 1500))]);
+        return ready;
+      };
+      const early = () => setTimeout(() => { if (!raf) prepare(); }, 600);
+      if (document.readyState === 'complete') early(); else addEventListener('load', early, { once: true });
       // the host sits in the card and inherits its type: give it the page's
       const INHERIT = ['font-family', 'font-size', 'font-weight', 'font-style', 'font-stretch', 'letter-spacing',
         'word-spacing', 'color', 'text-align', 'text-transform', 'text-indent', 'white-space', 'font-feature-settings',
@@ -1805,16 +1829,18 @@
         return c;
       };
       const footer = document.getElementById('shopify-section-footer');
-      // Only the page within half a screen of the view can pass under the band (the card covers
-      // the rest of the screen, and the page barely scrolls while it's up), so in the copies
+      // Only the page within a quarter screen of the view can pass under the band (it shows the
+      // page just below the rim, which never rises past the top bar, and the page only scrolls
+      // while the card is leaving), so in the copies
       // whatever lies wholly outside that is an empty box of the same size: the phone styles and
       // lays out a fraction of the page per copy. Boxes stacked in the normal flow get their
       // margins pinned to the gaps they really have, so emptying one moves nothing; grid and
       // flex items and positioned boxes get their width too. Where floats, inline or moved
       // (transformed, offset, sticky) boxes or loose text sit among them, nothing is touched.
+      const ROI = 0.25;
       const px = (v) => v.toFixed(6) + 'px!important;';   // finer than layout's own steps, never in e-notation
       const plan = (src, index, css, empty, skip) => {
-        const lo = -0.5 * innerHeight, hi = 1.5 * innerHeight;
+        const lo = -ROI * innerHeight, hi = (1 + ROI) * innerHeight;
         const visit = (box, depth) => {
           const kids = box.children, bs = getComputedStyle(box);
           if (!kids.length || depth > 12) return;
@@ -1863,7 +1889,7 @@
         for (const src of [main, footer]) {
           if (!src) continue;
           const r = src.getBoundingClientRect();
-          if (src !== main && (r.bottom < -0.5 * innerHeight || r.top > 1.5 * innerHeight)) continue;   // nowhere near
+          if (src !== main && (r.bottom < -ROI * innerHeight || r.top > (1 + ROI) * innerHeight)) continue;   // nowhere near
           const from = src.querySelectorAll('*'), fixed = new Set(), index = new Map();
           for (let i = 0; i < from.length; i++) {
             index.set(from[i], i);
@@ -1906,8 +1932,9 @@
         due = setTimeout(() => {
           due = 0;
           if (!raf) return;
-          // never during a drag (the card follows the finger on this thread) or while the copies go in
-          if (building || el.classList.contains('is-dragging')) { changed(); return; }
+          // never during a drag (the card follows the finger on this thread), while the copies go
+          // in, or while the quantity slider is up (its ticks need every touch on time)
+          if (building || el.classList.contains('is-dragging') || qm) { changed(); return; }
           last = Date.now(); paint();
         }, Math.max(0, 400 - (Date.now() - last)));
       };
@@ -1918,26 +1945,20 @@
         const lh = parseFloat(cs.lineHeight), fs = parseFloat(cs.fontSize);
         const type = INHERIT.map((k) => k + ':' + cs.getPropertyValue(k)).join(';') +
           ';line-height:' + (lh && fs ? (lh / fs).toFixed(4) : 'normal');
-        const run = ++gen, loads = [];
-        for (const { view, root } of layers) {
-          view.style.cssText = type;
-          for (const tag of styleTags()) {
-            const t = tag.cloneNode(true);
-            if (t.tagName === 'LINK') loads.push(new Promise((ok) => { t.onload = t.onerror = ok; }));
-            root.appendChild(t);
-          }
-        }
+        const run = gen;
+        for (const { view } of layers) view.style.cssText = type;
         building = true;                       // changes from now on repaint once the copies are in
         stale = true;
         for (const src of [main, footer]) {
           if (src) watch.observe(src, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'hidden', 'open'] });
         }
-        // The copies go in once the stylesheets have loaded (from cache), so each is laid out
-        // once, styled; one or two a frame, so no frame lays out more than a couple of pages.
-        // The page is read once (again only if it changes meanwhile). The band shows when all are in.
+        // One or two copies a frame, so no frame lays out more than a couple of pages. The page
+        // is read once (again only if it changes meanwhile). The band shows when all are in.
         let i = 0, now = null, fresh = false, prev = 0;
         const step = () => {
           if (run !== gen || !raf) return;
+          // the quantity slider is up: its ticks need every touch on time, so the copies wait
+          if (qm) { prev = 0; requestAnimationFrame(step); return; }
           // A phone that can't keep up (a frame of 400ms, or a step of 150ms) gets no lens this
           // visit, rather than a card that sticks and won't take a tap.
           const t0 = performance.now();
@@ -1958,8 +1979,7 @@
           live = true; align(true);
           band.classList.add('is-live');
         };
-        Promise.race([Promise.all(loads), new Promise((ok) => setTimeout(ok, 1500))])
-          .then(() => { if (run === gen && raf) requestAnimationFrame(step); });
+        requestAnimationFrame(step);
       };
       // lines the copies up with the page, only when the card or the page has moved since the
       // last frame: rewriting ten transforms every frame would keep the phone repainting the band
@@ -1972,23 +1992,23 @@
       };
       const track = () => { raf = requestAnimationFrame(track); if (live) align(false); };
       // the page scrolled well past what the copies hold: read it again
-      const scrolled = () => { if (live && Math.abs(scrollY - shownY) > 0.4 * innerHeight) changed(); };
-      // the copies start going in once the card has finished popping up, so nothing the lens
-      // does can hold up its rise
+      const scrolled = () => { if (live && Math.abs(scrollY - shownY) > 0.8 * ROI * innerHeight) changed(); };
+      // the copies start going in from the next frame, a frame or two each, while the card
+      // rises (its rise is an animation the page's own work doesn't hold up), so the band is in
+      // place before the card has settled
       const start = () => {
         if (raf || off) return;
         raf = requestAnimationFrame(track);
         const run = gen;
-        const rising = el.getAnimations ? el.getAnimations().map((a) => a.finished.catch(() => {})) : [];
-        Promise.all(rising).then(() => { if (run === gen && raf) defer = setTimeout(build, 0); });
+        prepare().then(() => { if (run === gen && raf) build(); });
         addEventListener('scroll', scrolled, { passive: true });
       };
       const stop = () => {
-        gen++; cancelAnimationFrame(raf); raf = 0; clearTimeout(defer);
+        gen++; cancelAnimationFrame(raf); raf = 0;
         removeEventListener('scroll', scrolled);
         building = false; live = false; lastX = lastY = NaN; band.classList.remove('is-live');
         watch.disconnect(); clearTimeout(due); due = 0;
-        layers.forEach((t) => { t.root.replaceChildren(); t.page = null; });
+        layers.forEach((t) => { if (t.page) t.page.remove(); t.page = null; });   // the stylesheet tags stay
       };
       function giveUp() { off = true; stop(); }
       new MutationObserver(() => { el.classList.contains('is-open') ? start() : stop(); })
@@ -1996,7 +2016,7 @@
       // the card is leaving: no more copies or repaints from here, so nothing can slow its exit;
       // what's already shown keeps lining up as it slides away
       return () => {
-        gen++; clearTimeout(defer); clearTimeout(due); due = 0;
+        gen++; clearTimeout(due); due = 0;
         building = false; watch.disconnect(); removeEventListener('scroll', scrolled);
       };
     })();

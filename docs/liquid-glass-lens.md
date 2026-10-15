@@ -156,7 +156,7 @@ The cart sheet is frosted (`::before`: `rgba(248,248,250,.73)` plus `blur(5px) s
 
 ### Making the copies faithful
 
-Each copy is a `cloneNode(true)` of `#main` (and the footer only when within half a screen), placed absolutely at the original's rect inside a body stand-in in a shadow root.
+Each copy is a `cloneNode(true)` of `#main` (and the footer only when within a quarter screen), placed absolutely at the original's rect inside a body stand-in in a shadow root.
 
 - **Styles in:** clone the page's `<link rel=stylesheet>`/`<style>` tags into each shadow root. Cross-origin CSSOM (the myshopify preview against the `www.voltical.store` CDN) blocks `adoptedStyleSheets`.
 - **Styles out:** the card's own styles must not leak in (`.drawer-scroller .addon` and the like), which the shadow root guarantees.
@@ -170,7 +170,7 @@ Each copy is a `cloneNode(true)` of `#main` (and the footer only when within hal
   - `<canvas>` has its pixels copied with drawImage.
   - Scroll offsets are restored after insertion.
   - Anything computed `position:fixed` is hidden, since it belongs to the screen, not the page.
-- **Culling:** whatever lies wholly outside [−½, +1½] screen heights becomes an empty box of the same size.
+- **Culling:** whatever lies wholly outside [−¼, +1¼] screen heights (`ROI = 0.25`) becomes an empty box of the same size. The band only shows the page just below the rim, the rim never rises past the top bar, and the page only scrolls while the card is leaving.
   - Normal-flow blocks get `margin-top`/`margin-bottom` pinned to their real gaps (from rects, printed with `toFixed(6)`, so never in e-notation).
   - Flex/grid items and absolute boxes get width and height plus `flex:none`.
   - Parents with floats, inline boxes, loose text, or transformed, offset or sticky children are left alone.
@@ -178,18 +178,18 @@ Each copy is a `cloneNode(true)` of `#main` (and the footer only when within hal
 
 ### Lifecycle
 
-1. **Start:** when the card gets `is-open`, start a rAF loop that is idle until the copies are in. Wait for `el.getAnimations()` to finish so the pop-up is never held up.
+0. **Prepare (once):** `prepare()` clones the page's style tags into every root 600 ms after `load` and keeps them for good. `stop()` removes only the copies. At an open, any tags the page has added since are put in, and the build waits for their loads (at most 1.5 s), so each copy is laid out once, styled.
+1. **Start:** when the card gets `is-open`, start the rAF loop and build at once. Do not wait for the rise to finish: the rise is an animation that main-thread work doesn't hold up. Waiting for it, then for the link loads, made the glass appear about 1.3 s after the tap. It now appears in about 0.17 s, while the card is still rising.
 2. **Build:**
-   - Clone the style tags into every root.
-   - Wait for the `<link>` loads (at most 1.5 s), so each copy is laid out once, styled.
    - Read the page (`pageNow()`: rects, fixed elements, cull plan) in a frame of its own.
    - Add one or two copies per frame (4 ms budget). If the page changed meanwhile, re-read it in the same frame as the copy.
+   - **While the quantity slider is up (`qm`), do nothing.** Its iPhone ticks need every `touchmove` handled on time, and copies there made the first swipe miss ticks. `scripts/haptics-check.mjs` checks this.
 3. **Live:** `align(true)`, then add `.is-live` (opacity fades in over .25 s). After that, `align()` only writes transforms when main or the band actually moved by at least 0.01 px.
 4. **Repaint:**
-   - A MutationObserver on main and the footer (childList, subtree, `class`/`hidden`/`open`) sets `stale` and repaints at most every 400 ms. It never repaints during a drag (`is-dragging`) or while building.
-   - A page scroll of more than 0.4 screens re-reads the page.
+   - A MutationObserver on main and the footer (childList, subtree, `class`/`hidden`/`open`) sets `stale` and repaints at most every 400 ms. It never repaints during a drag (`is-dragging`), while building, or while the quantity slider is up (`qm`). It catches up once the slider closes.
+   - A page scroll of more than 0.8 × ROI (0.2 screens) re-reads the page.
    - Each slice keeps a reference to its current copy and swaps it whole.
-5. **Halt and stop:** `close()` calls `lensHalt()` first, so no more copies or repaints run while the card leaves. Losing `is-open` runs `stop()`, which empties every root.
+5. **Halt and stop:** `close()` calls `lensHalt()` first, so no more copies or repaints run while the card leaves. Losing `is-open` runs `stop()`, which removes the copies but keeps the style tags.
 6. **Give up:** if a build frame takes over 400 ms, a build step over 150 ms, or a repaint over 250 ms, the lens switches off for the rest of the visit, so the card can't stick. It doesn't trip at 6× CPU throttle.
 7. **Off entirely:** with `prefers-reduced-transparency`, or when there is no `#main`.
 
@@ -198,8 +198,9 @@ Each copy is a `cloneNode(true)` of `#main` (and the footer only when within hal
 - **Stretch versus mirror.** Content comes from further inside the glass, never from outside the edge. My first version stretched from the rim outward and was "not even distorting it".
 - **Fold placement.** The fold is 12.4 pt in with a 12.4 pt mirror zone, not a thin rim fold. The magnification rises to infinity at the fold. An earlier constant 2.5× stretch looked flat.
 - **Huge scales in blended groups hang Safari.** Blend modes make WebKit composite the group. Without clipping, its layer covers the whole stretched page (a −37× slice is about a million device px tall). The bag stuck half-open and the X and page scrolling died. Keep `overflow:hidden; contain:strict` on slices and channel groups, and keep |s| small there.
-- **Too many full copies freeze phones.** 18 full copies built while the card rose meant ~4.7 s of jank at 4× throttle. Building only after the pop, one or two copies a frame, with culling, cut it to 55–90 ms frames.
-- **Stylesheets load asynchronously in shadow roots.** Insert copies before they load and you lay out everything twice: one 300 ms frame.
+- **Too many full copies freeze phones.** 18 full copies built while the card rose meant ~4.7 s of jank at 4× throttle. Culling plus one or two copies a frame cut it to 55–90 ms frames. At that size, building during the rise is fine; waiting for the rise to end made the glass a second late.
+- **Stylesheets load asynchronously in shadow roots.** Insert copies before they load and you lay out everything twice: one 300 ms frame. Load them ahead of time, not at the open.
+- **Any work under the quantity slider costs vibration ticks.** Run the `haptics-check` skill after every lens change.
 - **Rewriting transforms every frame** keeps Safari repainting the band even at rest. Write only on change.
 - **Inherited custom properties reach into shadow copies.** Changing `--rb` on every drag frame restyled all copies, causing 360–480 ms stalls. `@property --rb{inherits:false}` fixed it.
 - **`root.querySelector(':scope > …')` never matches on a ShadowRoot**, so old copies piled up on every repaint. Track the copy by reference.
