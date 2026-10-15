@@ -1,9 +1,13 @@
 # Liquid Glass lens edge (cart sheet)
 
-The cart sheet's top edge bends the page under it like iOS 26 Liquid Glass. The effect is measured, not eyeballed. There are two measured profiles:
+The cart sheet's top edge bends the page under it like iOS 26 Liquid Glass. The effect is measured, not eyeballed.
 
-- **Frosted card (what the cart uses now).** Measured from the owner's recording of the Apple Store app's frosted "Show delivery details" card, with the page scrolling under it (2026-10-15, 14.25 s, 376 frames used). The owner called this "perfect". See section 1a.
-- **Clear sheet (reference).** Measured from the Notification Centre sheet being pulled down over an app (2026-10-15, 14.3 s). Use this profile for clear, unfrosted glass. See section 1. The cart used it from `43faaa3` to `d4178bf`.
+**What the cart does now:** the clear sheet's edge (section 1), bent first, then frosted as one pane at the Apple Store card's frost (section 1a). The owner asked for exactly this: "start from clear glass with the perfect distortion we made and then add a level of frosting over".
+
+Two measured profiles:
+
+- **Clear sheet (the edge in use).** Measured from the Notification Centre sheet being pulled down over an app (2026-10-15, 14.3 s). See section 1. The cart has used it since `43faaa3`, apart from `340eb16`.
+- **Frosted card.** Measured from the owner's recordings of the Apple Store app's frosted "Show delivery details" card, with the page scrolling under it (2026-10-15). The frost level comes from the light-mode recording (192 frames). The card's own edge profile (dark-mode recording, 376 frames) is kept as a reference. Built as `340eb16`, the owner rejected it: "moving in weird like squares". See section 1a.
 
 - **Code:** the `lensHalt` IIFE in `theme-draft/assets/theme-r3.js`, inside the cart sheet code. It sits just after the `.drawer-scroller` setup.
 - **Styles:** the `.drawer-lens*` rules in `theme-draft/assets/theme-r2.css`, plus `@property --rb` beside `.drawer-scroller .drawer`.
@@ -11,7 +15,27 @@ The cart sheet's top edge bends the page under it like iOS 26 Liquid Glass. The 
 
 Read this before changing the lens, porting it to another element, or re-measuring it.
 
-## 1a. The frosted card's edge (current)
+## 1a. The Apple Store card: its frost (in use) and its edge (reference)
+
+### Frost, light mode (what the cart uses)
+
+Recording `ScreenRecording_10-15-2026_22-35-34`: 9.6 s, 1170 × 2532. The card is floating, with its rim at y = 1722, while the product page (a light-blue iPhone photo on light grey, then text) scrolls under it. Frames 0–121 and 171–240 were used. The card dropped to y = 1899 in between.
+
+Fit over rows 1862–2050 and columns 330–1040, which are clear of the card's text: about 1 million samples, with the sample set fixed across σ.
+
+- **Model:** `card = α·W + (1 − α)·saturate_s(gauss_σ(page))`, i.e. the CSS model (backdrop `blur() saturate()`, then a tint painted over).
+- **Blur:** σ ≈ 17–18 device px, so **`blur(6px)`**.
+  - The rms is flat from 16 to 20 px: 2.35 at 16, 2.33 at 17, 2.35 at 18, 2.46 at 20.
+  - A free 3 × 3 colour matrix puts the best fit at 20 px (rms 1.48). The plain per-channel gain puts it at 17 px.
+- **Saturation:** 1.8 to 2.0. The free colour matrix gives about 0.43 chroma gain against 0.278 neutral gain, so about 1.55×. Use `saturate(180%)`.
+- **Tint:** α = 0.74, W = (248.7, 249.2, 252.4). So 26% of what's behind passes.
+  - The earlier light screenshot gave 0.733 × 248, which is nearly the same.
+- **Colour space:** sRGB-encoded values, as CSS does it. Mixing in linear light fits clearly worse: rms 5.9 against 2.7 per channel.
+- **Uniform:** gain and white were checked per region, across rows and columns and up into the header row. The differences track how much contrast each region's source has, not where the region is on the card.
+
+The dark-mode recording below gave a heavier blur: σ 26–36 px, so `blur(9px)`. Built at 9px (`340eb16`), the owner then sent the light recording to show the level they wanted. Go by the light one.
+
+### Edge, dark mode (reference, not in use)
 
 **How it was measured.**
 - Frames were extracted at 30 fps. The card's rim stays at y = 1903 device px from about 1 s in.
@@ -20,12 +44,12 @@ Read this before changing the lens, porting it to another element, or re-measuri
 - Each card row in the text-free columns 530–990 was then matched to the blurred mosaic, row by row and channel by channel, fitting gain and offset. Scripts are in section 4.
 
 **Frost** (deep inside the card, where the mapping is 1:1):
-- **Blur:** Gaussian, σ ≈ 8–10 pt. A least-squares fit over all frames was flat between 26 and 36 device px; the edge of the photo gave 24 px, with a 10–90% width of 21 pt. Use `blur(9px)`.
-- **Passing through:** in dark mode, out ≈ 0.20–0.24 × in + 20, with more blue passing. The light-mode screenshot of the same card gave 0.267 × in + 0.733 × 248, which is what the light cart uses.
+- **Blur:** Gaussian, σ ≈ 8–10 pt. A least-squares fit over all frames was flat between 26 and 36 device px; the edge of the photo gave 24 px, with a 10–90% width of 21 pt. The light recording above disagrees and wins.
+- **Passing through:** in dark mode, out ≈ 0.20–0.24 × in + 20, with more blue passing.
 - **No haze and no colour split.** Gain and offset are the same up to the rim. R−G and B−G are under 0.4 pt everywhere.
 - **Rim:** a hairline brighter by about 12/255 in dark mode.
 
-**Order: blur first, then bend.** The card shows the *blurred* page remapped: rms 2.38, against 3.27 for bending first and then blurring, and 4.38 with no lens. The squeezed mirror at the rim therefore reads sharper than the frost around it.
+**Order: blur first, then bend.** The card shows the *blurred* page remapped: rms 2.38, against 3.27 for bending first and then blurring, and 4.38 with no lens. The squeezed mirror at the rim therefore reads sharper than the frost around it. The cart does the opposite on purpose, at the owner's request: clear glass, then frost.
 
 **Profile** (pt; `d` measured from the rim inwards; green, with a −1.6 px scroll baseline removed):
 
@@ -48,7 +72,7 @@ const at = (d) => d + 35.22 * Math.max(0, 1 - d / B) ** 2.724;   // rms 0.40 pt
 
 **Sides:** the left edge bends the same way horizontally. Measured inward offsets (device px) were 120, 76, 62, 54 and 46 at d = 2, 6, 10, 14 and 18 px, and 1:1 by about 60 px. The cart doesn't draw the sides: its sides are the screen's edges, over the page's plain margins.
 
-## 1. What the iOS clear-sheet edge does (reference profile)
+## 1. What the iOS clear-sheet edge does (the edge in use)
 
 ### Anatomy
 
@@ -127,40 +151,37 @@ Safari can't distort what is behind an element:
 
 So the band holds live DOM copies of the page (`#main` and the footer), lined up with the real page every frame and stretched with plain CSS transforms.
 
-### Structure (current, frosted profile)
+### Structure (current: clear-sheet edge, frosted as one pane)
 
 ```
 .drawer (card; paint order: ::before frost → .drawer-lens → ::after edge light, all z 0 → children z 1)
 └─ .drawer-lens            band: abs inset 0, z 0, overflow hidden, border-radius inherit,
-   │                       pointer-events none, inert, aria-hidden; mask fades 15.5→19.5px
-   ├─ .drawer-lens__slice  one per [d0,d1): top d0, height d1−d0+1 (1px under the next)
-   │  └─ .drawer-lens__view  shadow host; transform-origin 0 0; CONSTANT transform
-   │     │                 translateY(−s·at(d0)) scaleY(s): its rows are band-relative page rows
-   │     └─ #shadow-root   clones of the page's <link>/<style> tags, then the window:
-   │        └─ window      rows [min(at0,at1) − M, max + M], 2M wider than the band (M = 3 × 9),
-   │           │           overflow hidden, contain strict, filter blur(9px) saturate(180%),
-   │           │           background = the page's colour (so the blur's edges clamp to it)
-   │           └─ body stand-in (classes, background) holding the copied #main/footer;
-   │                       the ONLY per-frame write: translate(x + M, y − lo)
+   │                       pointer-events none, inert, aria-hidden; mask fades 24.5→31.4px
+   ├─ .drawer-lens__glass  abs inset 0; filter blur(6px) saturate(180%): the card's frost, one pane
+   │  └─ .drawer-lens__slice  one per [d0,d1): top d0, height d1−d0+1 (1px under the next),
+   │     │                 left/right −P (P = 3 × 6 = 18); the first also reaches P above the rim,
+   │     │                 the last P below the band, so the blur has page to draw on at every edge
+   │     ├─ .drawer-lens__view  (unsplit slice) shadow host; transform-origin 0 0
+   │     └─ .drawer-lens__ch ×3 (split slices, d < 6): r/g/b groups, each with a view + <i> screen
+   │        └─ #shadow-root  clones of the page's <link>/<style> tags, then the body stand-in
+   │                       (classes, background) holding the copied #main/footer
+   ├─ .drawer-lens__haze   the rim's last 5px fading towards white (above the frost, not blurred)
    └─ ::after              the glass tint
 ```
 
-The blur happens in the page's own coordinates, inside the view, before the view's transform stretches it. That is the measured order, blur first and then bend. The window keeps the filtered area small, about 444 × 60 pt per slice. Six copies, no blend modes, no haze.
+The page is bent first, then the whole band is blurred once. That way no slice is blurred on its own: per-slice blurs show seams, and a blur inside a scaled view gets stretched (see section 3). The band's `overflow:hidden` clips the slices' overhang after the blur. Ten copies, as before the frost.
 
-```js
-const CUTS = [0, 2.75, 5.7, 8.9, 12.5, 17, B];   // within 0.4 pt of at(); scales −0.30, −0.45, −0.83, −3.84, 1.83, 1.06
-```
+Checked in Chromium: rows 5–20 pt below the rim match the model to within 1.1–1.3/255 at three scroll positions. The model bends a bare-page screenshot with `at()` (the first slice's line carried on above the rim), applies a σ = 18 device px blur, saturates 1.8×, dims by 12%, tints (239,239,242) at .77 and masks.
 
-Checked in Chromium: the raw band (tint, mask and card hidden) matches `at()` applied to a σ = 27 device px blurred, 1.8× saturated screenshot of the page to within about 1/255.
-
-### The slice maths (clear-sheet profile, before `d4178bf`)
+### The slice maths (current)
 
 A slice covering band depths [d0, d1) shows page depths [at(d0), at(d1)] linearly:
 
 ```js
 const s = (d1 - d0) / (at(d1, c) - at(d0, c));        // band px per page px; negative = mirrored
 // every frame (only if main/band moved): y = main.top - band.top, x = main.left - band.left
-view.style.transform = `translate(${x}px, ${s * (y - at(d0, c))}px) scaleY(${s})`;
+// oy = P for the first slice (it starts P above the rim), else 0; x + P because slices start P to the left
+view.style.transform = `translate(${x + P}px, ${oy + s * (y - at(d0, c))}px) scaleY(${s})`;
 ```
 
 The current cuts give 10 copies:
@@ -182,7 +203,7 @@ Put a cut exactly at the fold (12.39), or a chord across it is nearly flat and i
 
 Keep |s| small in the blended (split) slices. An earlier 18-copy layout had a blue slice at −37×, which most likely hung Safari (see section 3).
 
-### Colour split CSS (clear-sheet profile only)
+### Colour split CSS
 
 Each group keeps one channel by screening the other two to white. The groups then multiply back together:
 
@@ -198,23 +219,25 @@ Each group keeps one channel by screening the other two to white. The groups the
 
 ### Look on a frosted card
 
-The cart sheet is frosted (`::before`: `rgba(248,248,250,.73)` plus `blur(9px) saturate(180%)`, with the blur matching `FROST` in theme-r3.js). The tint, 0.733 × 248 + 0.267 × in, comes from the Apple Store card in light mode; the blur comes from the recording (section 1a).
+The cart sheet is frosted (`::before`: `rgba(249,249,252,.74)` plus `blur(6px) saturate(180%)`, with the blur matching `FROST` in theme-r3.js and `.drawer-lens__glass`). All of it comes from the light-mode Apple Store card recording (section 1a).
 
 How the frost got here:
 - `blur(44px)` at `.68`: far too heavy, the page vanished.
-- `blur(5px)`: estimated from one light screenshot; too light, the owner pointed at the recording.
-- `blur(9px)`: from the recording.
+- `blur(5px)`: estimated from one light screenshot.
+- `blur(9px)` (`340eb16`): from the dark recording, built with a blur inside each slice. The owner rejected it.
+- `blur(6px)`: from the light recording the owner sent to show the level they wanted.
 
 The bubbles are `rgba(255,255,255,.22)` with a 1 px white line. At `.5` they frosted the middle of the card visibly more than its margins.
 
-The band is glass on top of the frost:
+The band is clear glass with the frost over it:
 
-- **Frost in the band:** each slice's window blurs the page before the stretch (see Structure). Two earlier versions both went wrong:
-  - A sharp band under a frosted card made the middle look cloudier than the edge.
-  - One blur over the whole bent band (`d4178bf`) smeared the mirror away.
-- **Tint (`.drawer-lens::after`):** `rgba(237,237,239,.76)` applies the page's 12% scrim dim and then the frost's own 73% white, folded into one colour. The band therefore has the frost's brightness and contrast (27%) and fades into it with no step. Without a tint, the band reads as a grey bar over the white frost. For clear, unfrosted glass, use the iOS 45%.
-- **No haze:** the frosted card has none (the clear sheet's haze, 0.66 → 0 over 5 px, was dropped with the switch).
-- **Mask:** `linear-gradient(#000 15.5px,#0000 19.5px) 0 0/100% 20px`, the same all the way across. At 19.5 the lens is 1:1 and the frosted copy equals the frost. Earlier radial corner masks ended the band in a hard line near the sides.
+- **Frost in the band:** `.drawer-lens__glass` blurs and saturates the bent slices together, exactly as `::before` frosts the page, so the rim is as frosted as the middle. The slices overhang the band by P = 18 px, so the blur doesn't fade out at the band's edges. The history:
+  - A sharp band under a frosted card (`546c27c`) made the middle look cloudier than the edge.
+  - `d4178bf` used this one-pane blur at 5px, with no overhang.
+  - `340eb16` blurred inside each slice, before the stretch. It showed as squares on the phone.
+- **Tint (`.drawer-lens::after`):** `rgba(239,239,242,.77)` applies the page's 12% scrim dim and then the frost's own 74% white, folded into one colour. The band therefore has the frost's brightness and contrast (26%) and fades into it with no step. Without a tint, the band reads as a grey bar over the white frost. For clear, unfrosted glass, use the iOS 45%.
+- **Haze:** the clear sheet's, 0.66 → 0 over 5 px, over the frost and not blurred, since it belongs to the glass, not to what's behind.
+- **Mask:** `linear-gradient(#000 24.5px,#0000 31.4px) 0 0/100% 32px`, the same all the way across. At 31.4 the lens is 1:1 and the band equals the frost. Earlier radial corner masks ended the band in a hard line near the sides.
 - **Corners:** 40 px on the card. The band is clipped by them, but the mapping stays vertical (see section 3 for why not radial).
 
 ### Making the copies faithful
@@ -272,6 +295,9 @@ Each copy is a `cloneNode(true)` of `#main` (and the footer only when within a q
 - **Corner masks must fade the same way as the band,** or the copies' bottom edge shows as dashes at the sides.
 - **Radial corners with page copies don't work.** Uniform-scale rings make stair-step streaks; wedges × rings needs about 100 copies. The faithful route would be an SVG `feDisplacementMap` on a single copy, if Safari draws it.
 - **Don't paint a rainbow.** The colour comes from per-channel sampling of real content.
+- **Never blur inside a stretched slice.** In `340eb16` each slice blurred its own window, and the slice's transform then stretched it, up to 3.8× at the fold. On the owner's iPhone it moved "in weird like squares": the blurred layer is drawn at its own size and then scaled up, and each slice slides at its own rate. Bend first, then blur the whole band once.
+- **A blurred pane fades at its edges** unless what it blurs reaches past them. Give the slices a blur's width (3σ) of overhang beyond the band on every side, and let the band's `overflow:hidden` clip it.
+- **Which recording sets the frost:** the light and dark recordings of the same Apple card gave different blurs (6px against 9px). The owner picked the light one as the level they wanted. Ask which, rather than averaging.
 
 ## 4. Re-measuring from a recording
 
@@ -308,6 +334,10 @@ Each copy is a `cloneNode(true)` of `#main` (and the footer only when within a q
 2. **Scroll per frame:** take the mean luminance per row in six 190 px column bands. For consecutive frames, find the integer shift `s` that maximises NCC of `B[y]` against `A[y+s]` over rows 330–1850 (exclude the top bar). `scroll = cumsum(s)`.
 3. **Mosaic:** `M[y + scroll[k]] += frame_k[y]` for y above the card, then average.
 4. **Frost:** deep inside the card (rows 2060–2235, columns clear of text), fit `card = a·gaussian_filter(M, σ)[y + scroll] + b` per channel for a grid of σ, and check vertical offsets and anisotropy.
+   - Keep the sample set fixed across σ: only rows whose ±125 px are inside the mosaic. Otherwise larger σ fits fewer, easier rows.
+   - Fit the CSS model too. Use one shared gain over `saturate_s(blur)`, with the CSS saturate matrix, and a per-channel offset, over a grid of s. That gives `blur()`, `saturate()` and the tint directly: α = 1 − gain, W = offset / α.
+   - Try linear light (decode sRGB, blur and mix, encode again). It should fit worse, which confirms CSS's sRGB mixing.
+   - For the light recording, the rim was found as the largest row step at columns 560–600 (y = 1722). The mosaic used rows 380–1600, to stay clear of the card's shadow, which reaches about 60 px above it.
 5. **Lens:** for each card row y near the rim and each channel, scan `dy` and least-squares fit `card[y] ≈ a·Mb[y + scroll + dy] + b` with `Mb` blurred at the fitted σ. Refine the best `dy` with a parabola. `at(d) = d + dy + baseline`, where the baseline is the `dy` seen deep inside.
 6. **Order:** compare the rms of remapping the blurred mosaic against blurring the remapped mosaic, over rows 0–48 px.
 7. **Sides:** the same scan along columns near the card's left edge, in deep rows.

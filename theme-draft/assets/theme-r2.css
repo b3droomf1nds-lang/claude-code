@@ -972,17 +972,19 @@ h1.t-hero em,
    protection add-on sit on it as their own white rounded bubble. The
    total is a small grey label over a large amount, as on the sheet. */
 .drawer-scroller .drawer{background:var(--sys-bg-2)}
-/* Liquid glass, like the Apple Store app's delivery card: the sheet is a
-   bright pane the page shows through as soft shapes, the same frost all
-   over (measured off a screen recording of that card: a 9px blur, about
-   the width of the iPhone's; and from the same card in light mode, 73% of
-   a near-white, so 27% of what's behind passes), with a thin bright top
-   edge and a soft shadow; the bubbles are only a touch lighter.
-   Its top edge is a lens, measured off the same recording: across a 19.5px
-   band along the edge and round the top corners, what passes under it is
-   drawn from further in, stretched more and more down to a fold 11.8px
-   from the rim, then shown again mirrored and squeezed (theme-r3.js has
-   the curve; the frost is applied before the bend, as on the iPhone).
+/* Liquid glass: clear glass with the iOS sheet's bent edge, frosted all
+   over like the Apple Store app's delivery card. The frost was measured off
+   a light-mode screen recording of that card, its page scrolling under it
+   (192 frames): a 6px blur, colours saturated 1.8x, then 74% of a
+   near-white, so 26% of what's behind passes. The sheet has a thin bright
+   top edge and a soft shadow; the bubbles are only a touch lighter.
+   Its top edge is a lens, measured off the iOS Notification Centre
+   sheet: across a 31.4px band along the edge and round the top corners,
+   what passes under it is drawn from further in and stretched, more and
+   more down to a fold 12.4px from the rim, then shown again mirrored,
+   with the colours parting in the last 6px (theme-r3.js has the curves).
+   Then the band is frosted like the rest of the card: bent first, then
+   frosted.
    Safari can't bend what's behind a page element, so the band
    (.drawer-lens) holds a live copy of the page, lined up with the real
    one every frame and stretched; it is masked to the rim, fading into
@@ -995,24 +997,45 @@ h1.t-hero em,
 .drawer-scroller .drawer>.drawer-lens{content:"";display:block;position:absolute;inset:0;width:auto;height:auto;transform:none;
   border-radius:inherit;pointer-events:none;z-index:0}
 .drawer-scroller .drawer::before{
-  background:rgba(248,248,250,.73);
-  -webkit-backdrop-filter:blur(9px) saturate(180%);backdrop-filter:blur(9px) saturate(180%);   /* FROST in theme-r3.js */
+  background:rgba(249,249,252,.74);
+  -webkit-backdrop-filter:blur(6px) saturate(180%);backdrop-filter:blur(6px) saturate(180%);   /* FROST in theme-r3.js */
 }
-/* the band shows to 15.5px below the top and fades out by 19.5px, where the
-   lens has gone flat (the frosted copy and the frost then show the same),
-   the same all the way across (the corners' arcs clip it) */
+/* the band shows to 24.5px below the top and fades out by 31.4px, where
+   the lens has gone flat and its copies end, the same all the way across
+   (the corners' arcs clip it), so it never ends in a hard line */
 .drawer-scroller .drawer>.drawer-lens{overflow:hidden;opacity:0;transition:opacity .25s;
-  -webkit-mask:linear-gradient(#000 15.5px,#0000 19.5px) 0 0/100% 20px no-repeat;
-  mask:linear-gradient(#000 15.5px,#0000 19.5px) 0 0/100% 20px no-repeat}
+  -webkit-mask:linear-gradient(#000 24.5px,#0000 31.4px) 0 0/100% 32px no-repeat;
+  mask:linear-gradient(#000 24.5px,#0000 31.4px) 0 0/100% 32px no-repeat}
 .drawer-scroller .drawer>.drawer-lens.is-live{opacity:1}
-/* every slice is clipped and contained to its own thin strip, so Safari
-   never makes a layer for the whole stretched page */
-.drawer-lens__slice{position:absolute;left:0;right:0;overflow:hidden;contain:strict}
+/* the bent page, frosted exactly like the rest of the card (::before's blur
+   and saturation), as one pane so the slices show no seams; the band clips
+   the blur's overhang */
+.drawer-lens__glass{position:absolute;inset:0;-webkit-filter:blur(6px) saturate(180%);filter:blur(6px) saturate(180%)}
+/* every slice (and each colour copy in one) is clipped and contained to its
+   own thin strip, so Safari never makes a layer for the whole stretched page
+   (theme-r3.js sets its sides and ends, a blur's width past the band's) */
+.drawer-lens__slice{position:absolute;overflow:hidden;contain:strict}
+/* the rim's red, green and blue copies: each keeps one channel (screening
+   the other two to white), then the three multiply back into colour */
+.drawer-lens__slice.is-split{isolation:isolate}
+.drawer-lens__ch{position:absolute;inset:0;isolation:isolate;overflow:hidden;contain:strict}
+.drawer-lens__ch+.drawer-lens__ch{mix-blend-mode:multiply}
+.drawer-lens__ch>i{position:absolute;inset:0;mix-blend-mode:screen}
+.drawer-lens__ch--r>i{background:#0ff}
+.drawer-lens__ch--g>i{background:#f0f}
+.drawer-lens__ch--b>i{background:#ff0}
+/* in the last 5px what the rim shows fades towards the glass's own colour
+   (up to 66% at the very edge, as measured on the iOS sheet), above the
+   page's dim; round the corners it follows their arcs */
+.drawer-lens__haze{position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(circle at 100% 100%,#fff0 35px,rgba(255,255,255,.08) 36px,rgba(255,255,255,.17) 37px,rgba(255,255,255,.4) 38px,rgba(255,255,255,.47) 38.5px,rgba(255,255,255,.56) 39.33px,rgba(255,255,255,.66) 40px) 0 0/40px 40px no-repeat,
+    radial-gradient(circle at 0 100%,#fff0 35px,rgba(255,255,255,.08) 36px,rgba(255,255,255,.17) 37px,rgba(255,255,255,.4) 38px,rgba(255,255,255,.47) 38.5px,rgba(255,255,255,.56) 39.33px,rgba(255,255,255,.66) 40px) 100% 0/40px 40px no-repeat,
+    linear-gradient(rgba(255,255,255,.66),rgba(255,255,255,.56) .67px,rgba(255,255,255,.47) 1.5px,rgba(255,255,255,.4) 2px,rgba(255,255,255,.17) 3px,rgba(255,255,255,.08) 4px,#fff0 5px) 40px 0/calc(100% - 80px) 5px no-repeat}
 .drawer-lens__view{position:absolute;left:0;top:0;width:100%;transform-origin:0 0}
 /* the glass's tint: the page's light dim (12% black), then the frost's own
-   white (73%), in one; so the band is the frost's brightness and passes the
-   same 27% of what's under it, and it fades into the frost without a step */
-.drawer-lens::after{content:"";position:absolute;inset:0;background:rgba(237,237,239,.76)}
+   white (74%), in one; so the band is the frost's brightness and passes the
+   same 26% of what's under it, and it fades into the frost without a step */
+.drawer-lens::after{content:"";position:absolute;inset:0;background:rgba(239,239,242,.77)}
 .drawer-scroller .drawer::after{
   background:radial-gradient(120px 70px at 0 0,rgba(255,255,255,.35),#fff0),
     radial-gradient(120px 70px at 100% 0,rgba(255,255,255,.2),#fff0);
