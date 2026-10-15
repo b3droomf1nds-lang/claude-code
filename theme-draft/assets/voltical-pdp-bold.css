@@ -2504,17 +2504,24 @@
      circular arc so the line is the same width all round) in the proportions of the iPhone status bar's charging bolt (our own
      drawing: 0.66 as wide as tall, every corner well rounded, the two
      middle edges exactly horizontal, no extra tilt) — exactly as tall as
-     the "59" and level with it (60.3px), 11px after it. */
+     the "5" and level with it (59.85px), 11px after it. */
   .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
-    -webkit-mask: url("bolt-charging.webp?v=8") 0 0 / 100% 100% no-repeat;
-    mask: url("bolt-charging.webp?v=8") 0 0 / 100% 100% no-repeat;
-    --ink-x: 0.1764 0.3965;   /* the bolt's left/right in the image, so the shared gradient spans what's drawn (main-product.liquid) */
+    -webkit-mask: url("bolt-charging.webp?v=9") 0 0 / 100% 100% no-repeat;
+    mask: url("bolt-charging.webp?v=9") 0 0 / 100% 100% no-repeat;
+    --ink-x: 0.1764 0.3947;   /* the bolt's left/right in the image, so the shared gradient spans what's drawn (main-product.liquid) */
+  }
+  /* iPhone (WebKit) draws the scaled "59" about 1.1px lower than Chromium,
+     measured off an iPhone screenshot, so the bolt follows it there. */
+  @supports (-webkit-touch-callout: none) {
+    .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
+      translate: 0 1.1px;
+    }
   }
   /* The bolt is narrower than the battery was, so "59" + bolt move right
      together to sit centred over "minutes" again. */
   .template-product .pdp-cmp__card--charge .pdp-cmp__stat-row {
     position: relative;
-    left: 36.6px;
+    left: 36.8px;
   }
 }
 
