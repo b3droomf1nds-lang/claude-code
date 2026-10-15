@@ -1740,6 +1740,10 @@
       band.className = 'drawer-lens';
       band.setAttribute('aria-hidden', 'true');
       band.inert = true;
+      // the slices sit in one frosted pane: the bent page gets the card's own frost (theme-r2.css)
+      const glass = document.createElement('div');
+      glass.className = 'drawer-lens__glass';
+      band.appendChild(glass);
       const layers = [];
       const layer = (parent, from, s) => {
         const view = document.createElement('div');
@@ -1753,7 +1757,7 @@
         slice.className = 'drawer-lens__slice';
         // 1px longer, under the next slice: the browser rounds fractional clips, which can leave a gap
         slice.style.cssText = 'top:' + d0 + 'px;height:' + (d1 - d0 + 1) + 'px';
-        band.appendChild(slice);
+        glass.appendChild(slice);
         // page px per band px is 1/s; s is negative between the rim and the fold (mirrored)
         if (d1 > SPLIT) { layer(slice, at(d0), (d1 - d0) / (at(d1) - at(d0))); continue; }
         slice.classList.add('is-split');

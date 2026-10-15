@@ -123,8 +123,19 @@ check('the glass edge is in place within 400ms of the tap (x --throttle), not af
 await page.waitForFunction(() => document.querySelector('.cart-line__qty-tap'), null, { timeout: 5000 }).catch(() => {});
 // the card settles (its rise ends), then a quick reach for the pencil
 await page.evaluate(() => Promise.all(document.querySelector('.drawer-scroller .drawer').getAnimations().map((a) => a.finished.catch(() => {}))));
+// and the cart line is drawn and still (same place for 5 frames)
+const pen = await page.evaluate(() => new Promise((done) => {
+  let last = '', same = 0, n = 0;
+  const look = () => {
+    const t = document.querySelector('.drawer-scroller .cart-line__qty-tap'), r = t && t.getBoundingClientRect();
+    const key = r && r.width ? [r.left, r.top, r.width].map(Math.round).join() : '';
+    same = key && key === last ? same + 1 : 0; last = key;
+    if (same >= 5 || ++n > 300) done(r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : { x: 0, y: 0 });
+    else requestAnimationFrame(look);
+  };
+  look();
+}));
 await page.waitForTimeout(80);
-const pen = await page.evaluate(() => { const r = document.querySelector('.drawer-scroller .cart-line__qty-tap').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
 await tap(pen.x, pen.y);
 const menu = await page.waitForFunction(() => { const m = document.querySelector('.qty-menu'); return m && !m.hidden; }, null, { timeout: 3000 }).then(() => true, () => false);
 check('tapping the pencil opens the quantity slider', menu);

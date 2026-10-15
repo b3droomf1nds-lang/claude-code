@@ -1004,6 +1004,10 @@ h1.t-hero em,
   -webkit-mask:linear-gradient(#000 24.5px,#0000 31.4px) 0 0/100% 32px no-repeat;
   mask:linear-gradient(#000 24.5px,#0000 31.4px) 0 0/100% 32px no-repeat}
 .drawer-scroller .drawer>.drawer-lens.is-live{opacity:1}
+/* the bent page is frosted exactly like the rest of the card (::before's blur and saturation),
+   so the rim is as frosted as the middle: bent, then frosted, as on the Apple Store app's card.
+   Blurred as one pane, so the slices don't show seams. */
+.drawer-lens__glass{position:absolute;inset:0;-webkit-filter:blur(5px) saturate(180%);filter:blur(5px) saturate(180%)}
 /* every slice (and each colour copy in one) is clipped and contained to its
    own thin strip, so Safari never makes a layer for the whole stretched page */
 .drawer-lens__slice{position:absolute;left:0;right:0;overflow:hidden;contain:strict}
