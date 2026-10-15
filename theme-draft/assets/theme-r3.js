@@ -950,7 +950,7 @@
          pencil.
        - The page around it frosts: strongest at the pill, fading out about
          250px above and below it.
-       - In the pill: a 48px track, a blue fill (#2F5BEF) from the left to
+       - In the pill: a 48px track, a blue fill (#0071E3, Checkout's blue) from the left to
          4px past a 40px white knob, and 12px dots at the stops (grey, or
          20% white on the blue). A soft blue glow sits at its right end.
        - Touching it puffs it up 2%. The first drag takes the knob to the

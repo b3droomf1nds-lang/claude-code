@@ -923,13 +923,10 @@ h1.t-hero em,
 .drawer-scroller .drawer__subtotal{font-size:17px;font-weight:600;margin-bottom:2px}
 .drawer-scroller .drawer__hint{font-size:13px;line-height:1.38;color:var(--sys-label-2);margin:0 0 14px}
 .drawer-scroller .drawer__checkout{min-height:50px;padding:14px 28px;font-size:17px;font-weight:600;line-height:1.29;letter-spacing:normal}
-/* Apple's blue (#0071E3, as on apple.com's "Learn more"), solid so it's
-   exactly that colour, with the glass sheet's own edge: a crisp 1px line
-   of pure white all the way round (on an iPhone the sheet's and the
-   bubbles' edges measure 254 white, 1px), and a soft glow just inside */
+/* Apple's blue (#0071E3, as on apple.com's "Learn more"), solid and flat
+   like the Apple Store app's "Add to Bag": no glass edge or glow */
 .drawer-scroller .drawer__checkout,
-.drawer-scroller .drawer__checkout:hover{background:#0071E3;color:#fff;
-  box-shadow:inset 0 0 0 1px #fff,inset 0 0 6px rgba(255,255,255,.18)}
+.drawer-scroller .drawer__checkout:hover{background:#0071E3;color:#fff;box-shadow:none}
 .drawer-scroller .drawer{min-height:min(368px,calc(100% - max(44px,env(safe-area-inset-top) + 12px)))}
 /* empty bag: the message sits in the middle of the card */
 .drawer-scroller .drawer__body:has(>.drawer__empty:not([hidden])){display:flex;flex-direction:column;justify-content:center}
@@ -975,9 +972,10 @@ h1.t-hero em,
    protection add-on sit on it as their own white rounded bubble. The
    total is a small grey label over a large amount, as on the sheet. */
 .drawer-scroller .drawer{background:var(--sys-bg-2)}
-/* Liquid glass, like iOS's frosted menus: the sheet is a bright pane the
-   page shows through as soft blurred shapes (heavy blur, a mostly-white
-   tint), with a thin bright top edge and a soft shadow; the white bubbles
+/* Liquid glass, like the Apple Store app's delivery card: the sheet is a
+   bright pane the page shows through as soft but recognisable shapes
+   (measured off that card: a ~5px blur, and 73% of a near-white, so 27% of
+   what's behind passes), with a thin bright top edge and a soft shadow; the white bubbles
    stay solid on it.
    Its top edge is a lens, measured off the iOS Notification Centre
    sheet: across a 31.4px band along the edge and round the top corners,
@@ -996,8 +994,8 @@ h1.t-hero em,
 .drawer-scroller .drawer>.drawer-lens{content:"";display:block;position:absolute;inset:0;width:auto;height:auto;transform:none;
   border-radius:inherit;pointer-events:none;z-index:0}
 .drawer-scroller .drawer::before{
-  background:rgba(250,250,252,.68);
-  -webkit-backdrop-filter:blur(44px) saturate(180%);backdrop-filter:blur(44px) saturate(180%);
+  background:rgba(248,248,250,.73);
+  -webkit-backdrop-filter:blur(5px) saturate(180%);backdrop-filter:blur(5px) saturate(180%);
 }
 /* the band shows to 24.5px below the top and fades out by 31.4px, where
    the lens has gone flat and its copies end, the same all the way across
@@ -1026,10 +1024,10 @@ h1.t-hero em,
     radial-gradient(circle at 0 100%,#fff0 35px,rgba(255,255,255,.08) 36px,rgba(255,255,255,.17) 37px,rgba(255,255,255,.4) 38px,rgba(255,255,255,.47) 38.5px,rgba(255,255,255,.56) 39.33px,rgba(255,255,255,.66) 40px) 100% 0/40px 40px no-repeat,
     linear-gradient(rgba(255,255,255,.66),rgba(255,255,255,.56) .67px,rgba(255,255,255,.47) 1.5px,rgba(255,255,255,.4) 2px,rgba(255,255,255,.17) 3px,rgba(255,255,255,.08) 4px,#fff0 5px) 40px 0/calc(100% - 80px) 5px no-repeat}
 .drawer-lens__view{position:absolute;left:0;top:0;width:100%;transform-origin:0 0}
-/* the glass's tint: the page's light dim, then half the frost's white, so
-   the band is nearly as bright as the frost below it (not a grey bar) and
-   passes 44% of what's under it (the iOS sheet measured 45%) */
-.drawer-lens::after{content:"";position:absolute;inset:0;background:rgba(223,223,225,.56)}
+/* the glass's tint: the page's light dim (12% black), then the frost's own
+   white (73%), in one; so the band is the frost's brightness and passes the
+   same 27% of what's under it, and it fades into the frost without a step */
+.drawer-lens::after{content:"";position:absolute;inset:0;background:rgba(237,237,239,.76)}
 .drawer-scroller .drawer::after{
   background:radial-gradient(120px 70px at 0 0,rgba(255,255,255,.35),#fff0),
     radial-gradient(120px 70px at 100% 0,rgba(255,255,255,.2),#fff0);
@@ -1096,7 +1094,7 @@ h1.t-hero em,
   mask-image:linear-gradient(transparent calc(var(--qm-y) - 150px),#000 calc(var(--qm-y) - 90px),#000 calc(var(--qm-y) + 90px),transparent calc(var(--qm-y) + 150px))}
 /* the soft blue light at the pill's right end, once it has opened */
 .qty-menu__glow{position:absolute;left:0;top:0;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;pointer-events:none;
-  background:radial-gradient(closest-side,rgba(47,91,239,.5),rgba(47,91,239,.2) 60%,rgba(47,91,239,0));
+  background:radial-gradient(closest-side,rgba(0,113,227,.5),rgba(0,113,227,.2) 60%,rgba(0,113,227,0));
   opacity:0;transition:opacity .35s ease}
 .qty-menu.is-settled .qty-menu__glow{opacity:1}
 .qty-menu__label{position:absolute;left:0;top:0;white-space:nowrap;pointer-events:none;
@@ -1112,7 +1110,7 @@ h1.t-hero em,
 .qty-menu__track{position:absolute;pointer-events:none}
 .qty-menu__dots{position:absolute;left:0;top:0;width:100%;height:100%}
 .qty-menu__dots i{position:absolute;left:0;top:0;border-radius:50%;background:#c2c2c2}
-.qty-menu__fill{position:absolute;left:0;top:0;height:100%;overflow:hidden;background:#2f5bef}
+.qty-menu__fill{position:absolute;left:0;top:0;height:100%;overflow:hidden;background:#0071E3}  /* Checkout's blue */
 .qty-menu__fill .qty-menu__dots i{background:rgba(255,255,255,.2)}
 .qty-menu__knob{position:absolute;left:0;top:0;display:grid;place-items:center;border-radius:50%;background:#fff;color:rgba(60,60,67,.6)}
 .qty-menu__knob svg{display:block;flex:none}

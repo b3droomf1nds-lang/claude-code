@@ -147,9 +147,9 @@ Each group keeps one channel by screening the other two to white. The groups the
 
 ### Look on a frosted card
 
-The cart sheet is frosted (`::before`: `rgba(250,250,252,.68)` plus `blur(44px) saturate(180%)`). The band is clear glass on top of it:
+The cart sheet is frosted (`::before`: `rgba(248,248,250,.73)` plus `blur(5px) saturate(180%)`). Those values were measured from the Apple Store app's delivery card over a black iPhone and its light background: out = 0.733 × 248 + 0.267 × in, with a 10–90% edge width of about 13pt, which gives σ ≈ 5. What's behind stays recognisable as soft shapes. (The earlier `blur(44px)` at `.68` was much heavier, and the page vanished.) The band is glass on top of the frost:
 
-- **Tint (`.drawer-lens::after`):** `rgba(223,223,225,.56)` is the page's 12% scrim dim, then half the frost's white. That leaves 44% of the page's contrast, close to the iOS 45%. Without it, the band reads as a grey bar over the white frost.
+- **Tint (`.drawer-lens::after`):** `rgba(237,237,239,.76)` applies the page's 12% scrim dim and then the frost's own 73% white, folded into one colour. The band therefore has the frost's brightness and contrast (27%) and fades into it with no step. Without a tint, the band reads as a grey bar over the white frost. For clear, unfrosted glass, use the iOS 45%.
 - **Haze (`.drawer-lens__haze`):** white, following the table above (0.66 → 0 over 5 px), linear in the middle and radial in the 40 px corner tiles.
 - **Mask:** `linear-gradient(#000 24.5px,#0000 31.4px) 0 0/100% 32px`, the same all the way across. Earlier radial corner masks ended the band in a hard line near the sides.
 - **Corners:** 40 px on the card. The band is clipped by them, but the mapping stays vertical (see section 3 for why not radial).
