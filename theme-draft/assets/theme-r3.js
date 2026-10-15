@@ -1700,25 +1700,54 @@
     // passes under the card's top edge is magnified across a band along it.
     // Safari can't bend what's behind a page element, so the band holds a
     // live copy of the page (main + footer), lined up with the real page
-    // every frame and stretched tall about the band's middle; theme-r2.css
-    // masks it to the rim. Built when the card opens, dropped when it closes.
+    // every frame and stretched most at the rim, like a lens; theme-r2.css
+    // masks it to the rim. Each copy lives in its own shadow root with the
+    // page's stylesheet tags, so the card's styles can't reach it and the
+    // theme's scripts can't see it. Built when the card opens, dropped when
+    // it closes.
     (() => {
       if (window.matchMedia('(prefers-reduced-transparency: reduce)').matches) return;
-      const B = 18, MID = B * 0.55, S = 1.9;
+      const main = document.getElementById('main');
+      if (!main) return;
+      // Lens profile: the band pixel d px below the edge shows the page at
+      // depth d + A(1 - d/B)^2, so the rim magnifies ~3x and eases back to
+      // 1:1 where the band meets the frost. Drawn as N slices, each a copy
+      // of the page stretched linearly between its two ends.
+      const B = 24, A = B * 0.35, N = 6;
+      const at = (d) => d + A * (1 - d / B) ** 2;
       const band = document.createElement('div');
       band.className = 'drawer-lens';
       band.setAttribute('aria-hidden', 'true');
       band.inert = true;
-      const view = document.createElement('div');
-      view.className = 'drawer-lens__view';
-      band.appendChild(view);
+      const slices = [];
+      for (let i = 0; i < N; i++) {
+        const d0 = (B * i) / N, d1 = (B * (i + 1)) / N;
+        const slice = document.createElement('div');
+        slice.className = 'drawer-lens__slice';
+        slice.style.cssText = 'top:' + d0 + 'px;height:' + (d1 - d0) + 'px';
+        const view = document.createElement('div');
+        view.className = 'drawer-lens__view';
+        slice.appendChild(view);
+        band.appendChild(slice);
+        slices.push({ view, root: view.attachShadow({ mode: 'open' }), from: at(d0), s: (d1 - d0) / (at(d1) - at(d0)) });
+      }
       el.insertBefore(band, el.firstChild);
-      let raf = 0;
-      const copy = (src) => {
+      let raf = 0, gen = 0;
+      // the page's own stylesheet tags, in order (the copied sections bring their own inline ones);
+      // the links load from cache, and the band shows once they have
+      const styleTags = () => Array.from(document.querySelectorAll('link[rel~="stylesheet"], style'))
+        .filter((n) => !el.contains(n) && !main.contains(n) && !band.contains(n));
+      // the host sits in the card and inherits its type: give it the page's
+      const INHERIT = ['font-family', 'font-size', 'font-weight', 'font-style', 'font-stretch', 'letter-spacing',
+        'word-spacing', 'color', 'text-align', 'text-transform', 'text-indent', 'white-space', 'font-feature-settings',
+        'font-variation-settings', 'font-kerning', 'font-variant', 'text-rendering', '-webkit-font-smoothing',
+        '-webkit-text-size-adjust', 'text-size-adjust', 'direction', 'color-scheme', 'visibility'];
+      const copy = (src, from, fixed) => {
         const c = src.cloneNode(true);
-        const from = src.querySelectorAll('*'), to = c.querySelectorAll('*');
+        const to = c.querySelectorAll('*');
         for (let i = 0; i < to.length; i++) {
           const o = from[i], n = to[i];
+          if (fixed.has(i)) n.style.visibility = 'hidden';   // pinned to the screen, not the page
           if (o.scrollLeft || o.scrollTop) n._lensScroll = [o.scrollLeft, o.scrollTop];
           switch (o.tagName) {
             case 'IMG':
@@ -1727,9 +1756,7 @@
             case 'SOURCE': if (o.parentNode && o.parentNode.tagName === 'PICTURE') n.remove(); break;
             case 'IFRAME': n.removeAttribute('src'); n.removeAttribute('srcdoc'); break;
             case 'VIDEO': n.removeAttribute('autoplay'); n.preload = 'none'; break;
-            case 'INPUT':
-              if (n.type === 'radio' && n.name) n.name += '__lens';   // its own group, so it can't uncheck the real one
-              n.checked = o.checked; n.value = o.value; n.removeAttribute('form'); break;
+            case 'INPUT': n.checked = o.checked; n.value = o.value; break;
             case 'CANVAS':
               try { n.getContext('2d').drawImage(o, 0, 0); } catch (e) { /* not a 2d canvas */ }
               break;
@@ -1737,26 +1764,78 @@
         }
         return c;
       };
-      const build = () => {
-        const srcs = [document.getElementById('main'), document.getElementById('shopify-section-footer')].filter(Boolean);
-        if (!srcs.length) return;
-        const r0 = srcs[0].getBoundingClientRect();
-        for (const src of srcs) {
-          const r = src.getBoundingClientRect(), c = copy(src);
-          c.style.cssText = 'position:absolute;margin:0;left:' + (r.left - r0.left) + 'px;top:' + (r.top - r0.top) + 'px;width:' + r.width + 'px';
-          view.appendChild(c);
+      const footer = document.getElementById('shopify-section-footer');
+      const paint = () => {                    // (re)draws every slice's copy, swapping it in whole
+        const srcs = [main, footer].filter(Boolean);
+        const r0 = main.getBoundingClientRect();
+        const body = document.body, cs = getComputedStyle(body);
+        let bg = cs.backgroundColor;
+        if (/^rgba\(.*,\s*0\)$|transparent/.test(bg)) bg = getComputedStyle(document.documentElement).backgroundColor;
+        const kids = srcs.map((src) => {
+          const from = src.querySelectorAll('*'), fixed = new Set();
+          for (let i = 0; i < from.length; i++) if (getComputedStyle(from[i]).position === 'fixed') fixed.add(i);
+          return { from, fixed };
+        });
+        for (const { root } of slices) {
+          // stands in for <body>: its classes (.template-product …) and background
+          const page = document.createElement('div');
+          page.className = body.className;
+          page.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:' + document.documentElement.scrollHeight + 'px;background:' + bg;
+          for (let k = 0; k < srcs.length; k++) {
+            const src = srcs[k], r = src.getBoundingClientRect(), c = copy(src, kids[k].from, kids[k].fixed);
+            c.style.cssText = 'position:absolute;margin:0;left:' + (r.left - r0.left) + 'px;top:' + (r.top - r0.top) + 'px;width:' + r.width + 'px';
+            page.appendChild(c);
+          }
+          const old = root.querySelector(':scope > .drawer-lens__page');
+          page.classList.add('drawer-lens__page');
+          root.appendChild(page);
+          page.querySelectorAll('*').forEach((n) => { if (n._lensScroll) { n.scrollLeft = n._lensScroll[0]; n.scrollTop = n._lensScroll[1]; } });
+          if (old) old.remove();
         }
-        view.querySelectorAll('*').forEach((n) => { if (n._lensScroll) { n.scrollLeft = n._lensScroll[0]; n.scrollTop = n._lensScroll[1]; } });
-        band.classList.add('is-live');
       };
-      const main = document.getElementById('main');
+      // the page changes shape while the card is up (the Add to bag bar pins, sections reveal…):
+      // repaint the copy then, at most every 400ms
+      let due = 0, last = 0;
+      const changed = () => {
+        if (due) return;
+        due = setTimeout(() => { due = 0; last = Date.now(); if (raf) paint(); }, Math.max(0, 400 - (Date.now() - last)));
+      };
+      const watch = new MutationObserver(changed);
+      const build = () => {
+        const body = document.body, cs = getComputedStyle(body);
+        // line-height reads back in px; the page sets it as a ratio, which children rescale by their own size
+        const lh = parseFloat(cs.lineHeight), fs = parseFloat(cs.fontSize);
+        const type = INHERIT.map((k) => k + ':' + cs.getPropertyValue(k)).join(';') +
+          ';line-height:' + (lh && fs ? (lh / fs).toFixed(4) : 'normal');
+        const run = ++gen, loads = [];
+        for (const { view, root } of slices) {
+          view.style.cssText = type;
+          for (const tag of styleTags()) {
+            const t = tag.cloneNode(true);
+            if (t.tagName === 'LINK') loads.push(new Promise((ok) => { t.onload = t.onerror = ok; }));
+            root.appendChild(t);
+          }
+        }
+        paint();
+        last = Date.now();
+        for (const src of [main, footer]) {
+          if (src) watch.observe(src, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'hidden', 'open'] });
+        }
+        Promise.race([Promise.all(loads), new Promise((ok) => setTimeout(ok, 1500))])
+          .then(() => { if (run === gen && raf) band.classList.add('is-live'); });
+      };
       const track = () => {
         raf = requestAnimationFrame(track);
         const r = main.getBoundingClientRect(), b = band.getBoundingClientRect();
-        view.style.transform = 'translate(' + (r.left - b.left).toFixed(2) + 'px,' + (MID + S * (r.top - b.top - MID)).toFixed(2) + 'px) scaleY(' + S + ')';
+        const x = (r.left - b.left).toFixed(2), y = r.top - b.top;
+        for (const t of slices) t.view.style.transform = 'translate(' + x + 'px,' + (t.s * (y - t.from)).toFixed(2) + 'px) scaleY(' + t.s.toFixed(4) + ')';
       };
-      const start = () => { if (raf || !main) return; build(); track(); };
-      const stop = () => { cancelAnimationFrame(raf); raf = 0; band.classList.remove('is-live'); view.textContent = ''; };
+      const start = () => { if (raf) return; track(); build(); };
+      const stop = () => {
+        gen++; cancelAnimationFrame(raf); raf = 0; band.classList.remove('is-live');
+        watch.disconnect(); clearTimeout(due); due = 0;
+        slices.forEach((t) => { t.root.replaceChildren(); });
+      };
       new MutationObserver(() => { el.classList.contains('is-open') ? start() : stop(); })
         .observe(el, { attributes: true, attributeFilter: ['class'] });
     })();
