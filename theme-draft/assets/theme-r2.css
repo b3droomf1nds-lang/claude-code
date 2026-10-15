@@ -976,14 +976,16 @@ h1.t-hero em,
    page shows through as soft blurred shapes (heavy blur, a mostly-white
    tint), with a thin bright top edge and a soft shadow; the white bubbles
    stay solid on it.
-   Its top edge is a lens, like the iOS Notification Centre sheet: what
-   passes under it is magnified across a 26px band along the edge and
-   round the top corners, most at the rim, where it folds back mirrored
-   with colour fringes, and a thin spectrum runs round the corners. Safari can't bend what's behind a page element,
-   so the band (.drawer-lens, theme-r3.js) holds a live copy of the page,
-   lined up with the real one every frame and stretched; it is masked to
-   the rim, fading into the frost. The frost is ::before and the bright
-   edge ::after, so the card's contents (z 1) sit above all three. */
+   Its top edge is a lens, measured off the iOS Notification Centre
+   sheet: across a 31.4px band along the edge and round the top corners,
+   what passes under it is drawn from further in and stretched, more and
+   more down to a fold 12.4px from the rim, then shown again mirrored,
+   with the colours parting in the last 6px (theme-r3.js has the curves).
+   Safari can't bend what's behind a page element, so the band
+   (.drawer-lens) holds a live copy of the page, lined up with the real
+   one every frame and stretched; it is masked to the rim, fading into
+   the frost. The frost is ::before and the bright edge ::after, so the
+   card's contents (z 1) sit above all three. */
 .drawer-scroller .drawer{background:transparent;box-shadow:0 10px 50px rgba(0,0,0,.12)}
 .drawer-scroller .drawer>*{position:relative;z-index:1}
 .drawer-scroller .drawer::before,
@@ -994,12 +996,14 @@ h1.t-hero em,
   background:rgba(250,250,252,.68);
   -webkit-backdrop-filter:blur(44px) saturate(180%);backdrop-filter:blur(44px) saturate(180%);
 }
+/* the band shows to 24.5px from the rim (round the corners, from their
+   arcs) and fades out by 31.4px, where the lens has gone flat */
 .drawer-scroller .drawer>.drawer-lens{overflow:hidden;opacity:0;transition:opacity .25s;
-  -webkit-mask:radial-gradient(circle at 100% 100%,#0000 14px,#000 22px) 0 0/40px 40px no-repeat,
-    radial-gradient(circle at 0 100%,#0000 14px,#000 22px) 100% 0/40px 40px no-repeat,
-    linear-gradient(#000 18px,#0000 26px) 40px 0/calc(100% - 80px) 26px no-repeat;mask:radial-gradient(circle at 100% 100%,#0000 14px,#000 22px) 0 0/40px 40px no-repeat,
-    radial-gradient(circle at 0 100%,#0000 14px,#000 22px) 100% 0/40px 40px no-repeat,
-    linear-gradient(#000 18px,#0000 26px) 40px 0/calc(100% - 80px) 26px no-repeat}
+  -webkit-mask:radial-gradient(circle at 100% 100%,#0000 8.6px,#000 15.5px) 0 0/40px 40px no-repeat,
+    radial-gradient(circle at 0 100%,#0000 8.6px,#000 15.5px) 100% 0/40px 40px no-repeat,
+    linear-gradient(#000 24.5px,#0000 31.4px) 40px 0/calc(100% - 80px) 32px no-repeat;mask:radial-gradient(circle at 100% 100%,#0000 8.6px,#000 15.5px) 0 0/40px 40px no-repeat,
+    radial-gradient(circle at 0 100%,#0000 8.6px,#000 15.5px) 100% 0/40px 40px no-repeat,
+    linear-gradient(#000 24.5px,#0000 31.4px) 40px 0/calc(100% - 80px) 32px no-repeat}
 .drawer-scroller .drawer>.drawer-lens.is-live{opacity:1}
 .drawer-lens__slice{position:absolute;left:0;right:0;overflow:hidden}
 /* the rim's red, green and blue copies: each keeps one channel (screening
@@ -1011,13 +1015,13 @@ h1.t-hero em,
 .drawer-lens__ch--r>i{background:#0ff}
 .drawer-lens__ch--g>i{background:#f0f}
 .drawer-lens__ch--b>i{background:#ff0}
-/* a thin spectrum along each top corner's arc, red on the outside of the
-   bend running to violet at the top, as the glass splits the light */
-.drawer-lens__rainbow{position:absolute;inset:0;opacity:.38;pointer-events:none;
-  background:conic-gradient(from 270deg at 100% 100%,#ff4d4d,#ffa63a 18deg,#ffe74a 36deg,#5ee08a 54deg,#45c4ff 72deg,#8a63ff 90deg,#0000 0) 0 0/40px 40px no-repeat,
-    conic-gradient(from 0deg at 0 100%,#8a63ff,#45c4ff 18deg,#5ee08a 36deg,#ffe74a 54deg,#ffa63a 72deg,#ff4d4d 90deg,#0000 0) 100% 0/40px 40px no-repeat;
-  -webkit-mask:radial-gradient(circle at 100% 100%,#0000 37px,#000 38.5px) 0 0/40px 40px no-repeat,radial-gradient(circle at 0 100%,#0000 37px,#000 38.5px) 100% 0/40px 40px no-repeat;
-  mask:radial-gradient(circle at 100% 100%,#0000 37px,#000 38.5px) 0 0/40px 40px no-repeat,radial-gradient(circle at 0 100%,#0000 37px,#000 38.5px) 100% 0/40px 40px no-repeat}
+/* in the last 5px what the rim shows fades towards the glass's own colour
+   (up to 66% at the very edge, as measured on the iOS sheet), above the
+   page's dim; round the corners it follows their arcs */
+.drawer-lens__haze{position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(circle at 100% 100%,#fff0 35px,rgba(255,255,255,.08) 36px,rgba(255,255,255,.17) 37px,rgba(255,255,255,.4) 38px,rgba(255,255,255,.47) 38.5px,rgba(255,255,255,.56) 39.33px,rgba(255,255,255,.66) 40px) 0 0/40px 40px no-repeat,
+    radial-gradient(circle at 0 100%,#fff0 35px,rgba(255,255,255,.08) 36px,rgba(255,255,255,.17) 37px,rgba(255,255,255,.4) 38px,rgba(255,255,255,.47) 38.5px,rgba(255,255,255,.56) 39.33px,rgba(255,255,255,.66) 40px) 100% 0/40px 40px no-repeat,
+    linear-gradient(rgba(255,255,255,.66),rgba(255,255,255,.56) .67px,rgba(255,255,255,.47) 1.5px,rgba(255,255,255,.4) 2px,rgba(255,255,255,.17) 3px,rgba(255,255,255,.08) 4px,#fff0 5px) 40px 0/calc(100% - 80px) 5px no-repeat}
 .drawer-lens__view{position:absolute;left:0;top:0;width:100%;transform-origin:0 0}
 .drawer-lens::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.12)}  /* the page's light dim */
 .drawer-scroller .drawer::after{

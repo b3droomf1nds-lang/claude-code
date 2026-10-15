@@ -1700,7 +1700,7 @@
     // passes under the card's top edge is magnified across a band along it.
     // Safari can't bend what's behind a page element, so the band holds a
     // live copy of the page (main + footer), lined up with the real page
-    // every frame and stretched most at the rim, like a lens; theme-r2.css
+    // every frame and stretched the way the glass bends it; theme-r2.css
     // masks it to the rim. Each copy lives in its own shadow root with the
     // page's stylesheet tags, so the card's styles can't reach it and the
     // theme's scripts can't see it. Built when the card opens, dropped when
@@ -1709,22 +1709,29 @@
       if (window.matchMedia('(prefers-reduced-transparency: reduce)').matches) return;
       const main = document.getElementById('main');
       if (!main) return;
-      // Lens profile, from the iOS Notification Centre sheet's edge: the band
-      // pixel d px below the rim shows the page at depth at(d). Past the fold
-      // F it magnifies ~2.5x across most of the band, easing back to 1:1
-      // where it meets the frost (B); inside the fold the glass turns the
-      // light back, so the rim shows the stretched line again, mirrored.
+      // Lens profile, measured off a screen recording of the iOS Notification
+      // Centre sheet (121 frames, its edge passing over text): the band pixel
+      // d px below the rim shows the page at depth at(d), always from further
+      // in. Green follows d + 26.14(1 - d/31.41)^2.25 (rms error 0.07px):
+      // 1:1 at 31.4px, stretching more and more towards the fold at 12.4px
+      // (where one line of the page is drawn out into streaks), then the
+      // same strip again, mirrored, down to the rim. In the last 6px the
+      // colours part: red comes from up to 12.6px further in, blue from up
+      // to 11.3px less far, so the edges of whatever passes under the rim
+      // turn to fringes of colour.
       // Drawn as slices, each a copy of the page stretched (or flipped)
-      // linearly between its two ends; the fold's slices are split into
-      // red, green and blue copies a fraction of a pixel apart and
-      // multiplied back together, so dark edges there pick up the colour
-      // fringes of real glass.
-      const B = 26, F = 3.5, K = 0.4;          // K: page px per band px past the fold (1/magnification)
-      const W = B - F, mF = B - (K + (1 - K) / 4) * W;
-      const m = (d) => { const u = (d - F) / W; return mF + K * (d - F) + ((1 - K) * W / 4) * u ** 4; };
-      const at = (d) => (d >= F ? m(d) : mF + (F - d) * K);
-      const CUTS = [0, 1.75, F, 6, 9, 12.5, 16, 19.5, 23, B];
-      const SPLIT = 0.45;                     // px of the page between the red, green and blue copies at the rim
+      // linearly between its two ends (within 0.34px of the curves); the
+      // rim's slices are split into red, green and blue copies, each
+      // stretched to its own curve, and multiplied back together.
+      const B = 31.41;
+      const at = (d, c) => {
+        let s = d + 26.14 * Math.max(0, 1 - d / B) ** 2.251;
+        if (c === 'r') s += 12.65 * Math.max(0, 1 - d / 6.1) ** 2.29;
+        else if (c === 'b') s -= 11.28 * Math.max(0, 1 - d / 9.07) ** 3.98;
+        return s;
+      };
+      const CUTS = [0, 1.2, 2.5, 4, 6, 9.3, 12.39, 15.6, 19.6, 24.5, B];
+      const SPLIT = 6;                         // above this depth the three colours have parted
       const band = document.createElement('div');
       band.className = 'drawer-lens';
       band.setAttribute('aria-hidden', 'true');
@@ -1740,22 +1747,23 @@
         const d0 = CUTS[i], d1 = CUTS[i + 1];
         const slice = document.createElement('div');
         slice.className = 'drawer-lens__slice';
-        slice.style.cssText = 'top:' + d0 + 'px;height:' + (d1 - d0) + 'px';
+        // 1px longer, under the next slice: the browser rounds fractional clips, which can leave a gap
+        slice.style.cssText = 'top:' + d0 + 'px;height:' + (d1 - d0 + 1) + 'px';
         band.appendChild(slice);
-        const s = (d1 - d0) / (at(d1) - at(d0));   // negative inside the fold: flipped
-        if (d1 > F) { layer(slice, at(d0), s); continue; }
+        // page px per band px is 1/s; s is negative between the rim and the fold (mirrored)
+        if (d1 > SPLIT) { layer(slice, at(d0), (d1 - d0) / (at(d1) - at(d0))); continue; }
         slice.classList.add('is-split');
-        [['r', SPLIT], ['g', 0], ['b', -SPLIT]].forEach(([c, off]) => {
+        ['r', 'g', 'b'].forEach((c) => {
           const ch = document.createElement('div');
           ch.className = 'drawer-lens__ch drawer-lens__ch--' + c;
           slice.appendChild(ch);
-          layer(ch, at(d0) + off * (1 - d0 / F), s);
+          layer(ch, at(d0, c), (d1 - d0) / (at(d1, c) - at(d0, c)));
           ch.appendChild(document.createElement('i'));
         });
       }
-      const rainbow = document.createElement('i');            // the light split along the rounded corners
-      rainbow.className = 'drawer-lens__rainbow';
-      band.appendChild(rainbow);
+      const haze = document.createElement('i');               // the rim's last 5px fade towards the glass
+      haze.className = 'drawer-lens__haze';
+      band.appendChild(haze);
       el.insertBefore(band, el.firstChild);
       let raf = 0, gen = 0;
       // the page's own stylesheet tags, in order (the copied sections bring their own inline ones);
@@ -1790,43 +1798,45 @@
         return c;
       };
       const footer = document.getElementById('shopify-section-footer');
-      const paint = () => {                    // (re)draws every slice's copy, swapping it in whole
-        const srcs = [main, footer].filter(Boolean);
-        const r0 = main.getBoundingClientRect();
-        const body = document.body, cs = getComputedStyle(body);
-        let bg = cs.backgroundColor;
+      // where each copied section goes and which of its elements are pinned to the screen, read
+      // off the page once per batch of copies (a copy's elements line up with the page's by index)
+      const pageNow = () => {
+        const r0 = main.getBoundingClientRect(), body = document.body;
+        let bg = getComputedStyle(body).backgroundColor;
         if (/^rgba\(.*,\s*0\)$|transparent/.test(bg)) bg = getComputedStyle(document.documentElement).backgroundColor;
-        const kids = srcs.map((src) => {
-          const from = src.querySelectorAll('*'), fixed = new Set();
+        const parts = [main, footer].filter(Boolean).map((src) => {
+          const from = src.querySelectorAll('*'), fixed = new Set(), r = src.getBoundingClientRect();
           for (let i = 0; i < from.length; i++) if (getComputedStyle(from[i]).position === 'fixed') fixed.add(i);
-          return { from, fixed };
+          return { src, from, fixed, at: 'position:absolute;margin:0;left:' + (r.left - r0.left) + 'px;top:' + (r.top - r0.top) + 'px;width:' + r.width + 'px' };
         });
-        for (const { root } of layers) {
-          // stands in for <body>: its classes (.template-product …) and background
-          const page = document.createElement('div');
-          page.className = body.className;
-          page.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:' + document.documentElement.scrollHeight + 'px;background:' + bg;
-          for (let k = 0; k < srcs.length; k++) {
-            const src = srcs[k], r = src.getBoundingClientRect(), c = copy(src, kids[k].from, kids[k].fixed);
-            c.style.cssText = 'position:absolute;margin:0;left:' + (r.left - r0.left) + 'px;top:' + (r.top - r0.top) + 'px;width:' + r.width + 'px';
-            page.appendChild(c);
-          }
-          const old = root.querySelector(':scope > .drawer-lens__page');
-          page.classList.add('drawer-lens__page');
-          root.appendChild(page);
-          page.querySelectorAll('*').forEach((n) => { if (n._lensScroll) { n.scrollLeft = n._lensScroll[0]; n.scrollTop = n._lensScroll[1]; } });
-          if (old) old.remove();
-        }
+        return { cls: body.className, box: 'position:absolute;left:0;top:0;width:100%;height:' + document.documentElement.scrollHeight + 'px;background:' + bg, parts };
       };
+      const paintInto = (t, now) => {          // (re)draws one slice's copy, swapping it in whole
+        // stands in for <body>: its classes (.template-product …) and background
+        const page = document.createElement('div');
+        page.className = now.cls + ' drawer-lens__page';
+        page.style.cssText = now.box;
+        for (const p of now.parts) {
+          const c = copy(p.src, p.from, p.fixed);
+          c.style.cssText = p.at;
+          page.appendChild(c);
+        }
+        t.root.appendChild(page);
+        page.querySelectorAll('*').forEach((n) => { if (n._lensScroll) { n.scrollLeft = n._lensScroll[0]; n.scrollTop = n._lensScroll[1]; } });
+        if (t.page) t.page.remove();
+        t.page = page;
+      };
+      const paint = () => { const now = pageNow(); for (const t of layers) paintInto(t, now); };
       // the page changes shape while the card is up (the Add to bag bar pins, sections reveal…):
       // repaint the copy then, at most every 400ms
-      let due = 0, last = 0;
+      let due = 0, last = 0, building = false;
       const changed = () => {
         if (due) return;
         due = setTimeout(() => {
           due = 0;
           if (!raf) return;
-          if (el.classList.contains('is-dragging')) { changed(); return; }   // never during a drag: the card follows the finger on this thread
+          // never during a drag (the card follows the finger on this thread) or while the copies go in
+          if (building || el.classList.contains('is-dragging')) { changed(); return; }
           last = Date.now(); paint();
         }, Math.max(0, 400 - (Date.now() - last)));
       };
@@ -1846,13 +1856,24 @@
             root.appendChild(t);
           }
         }
-        paint();
-        last = Date.now();
+        building = true;                       // changes from now on repaint once the copies are in
         for (const src of [main, footer]) {
           if (src) watch.observe(src, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'hidden', 'open'] });
         }
+        // The copies go in once the stylesheets have loaded (from cache), so each is laid out
+        // once, styled, and a few per frame, so no frame lays out more than a couple of pages
+        // and the card starts rising at once. The band shows when all are in.
+        let i = 0;
+        const step = () => {
+          if (run !== gen || !raf) return;
+          const now = pageNow(), until = performance.now() + 6;
+          do paintInto(layers[i++], now); while (i < layers.length && performance.now() < until);
+          if (i < layers.length) { requestAnimationFrame(step); return; }
+          building = false; last = Date.now();
+          band.classList.add('is-live');
+        };
         Promise.race([Promise.all(loads), new Promise((ok) => setTimeout(ok, 1500))])
-          .then(() => { if (run === gen && raf) band.classList.add('is-live'); });
+          .then(() => { if (run === gen && raf) requestAnimationFrame(step); });
       };
       const track = () => {
         raf = requestAnimationFrame(track);
@@ -1862,9 +1883,9 @@
       };
       const start = () => { if (raf) return; track(); build(); };
       const stop = () => {
-        gen++; cancelAnimationFrame(raf); raf = 0; band.classList.remove('is-live');
+        gen++; cancelAnimationFrame(raf); raf = 0; building = false; band.classList.remove('is-live');
         watch.disconnect(); clearTimeout(due); due = 0;
-        layers.forEach((t) => { t.root.replaceChildren(); });
+        layers.forEach((t) => { t.root.replaceChildren(); t.page = null; });
       };
       new MutationObserver(() => { el.classList.contains('is-open') ? start() : stop(); })
         .observe(el, { attributes: true, attributeFilter: ['class'] });
