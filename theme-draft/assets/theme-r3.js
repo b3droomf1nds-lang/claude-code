@@ -1709,28 +1709,53 @@
       if (window.matchMedia('(prefers-reduced-transparency: reduce)').matches) return;
       const main = document.getElementById('main');
       if (!main) return;
-      // Lens profile: the band pixel d px below the edge shows the page at
-      // depth d + A(1 - d/B)^2, so the rim magnifies ~3x and eases back to
-      // 1:1 where the band meets the frost. Drawn as N slices, each a copy
-      // of the page stretched linearly between its two ends.
-      const B = 24, A = B * 0.35, N = 6;
-      const at = (d) => d + A * (1 - d / B) ** 2;
+      // Lens profile, from the iOS Notification Centre sheet's edge: the band
+      // pixel d px below the rim shows the page at depth at(d). Past the fold
+      // F it magnifies ~2.5x across most of the band, easing back to 1:1
+      // where it meets the frost (B); inside the fold the glass turns the
+      // light back, so the rim shows the stretched line again, mirrored.
+      // Drawn as slices, each a copy of the page stretched (or flipped)
+      // linearly between its two ends; the fold's slices are split into
+      // red, green and blue copies a fraction of a pixel apart and
+      // multiplied back together, so dark edges there pick up the colour
+      // fringes of real glass.
+      const B = 26, F = 3.5, K = 0.4;          // K: page px per band px past the fold (1/magnification)
+      const W = B - F, mF = B - (K + (1 - K) / 4) * W;
+      const m = (d) => { const u = (d - F) / W; return mF + K * (d - F) + ((1 - K) * W / 4) * u ** 4; };
+      const at = (d) => (d >= F ? m(d) : mF + (F - d) * K);
+      const CUTS = [0, 1.75, F, 6, 9, 12.5, 16, 19.5, 23, B];
+      const SPLIT = 0.45;                     // px of the page between the red, green and blue copies at the rim
       const band = document.createElement('div');
       band.className = 'drawer-lens';
       band.setAttribute('aria-hidden', 'true');
       band.inert = true;
-      const slices = [];
-      for (let i = 0; i < N; i++) {
-        const d0 = (B * i) / N, d1 = (B * (i + 1)) / N;
+      const layers = [];
+      const layer = (parent, from, s) => {
+        const view = document.createElement('div');
+        view.className = 'drawer-lens__view';
+        parent.appendChild(view);
+        layers.push({ view, root: view.attachShadow({ mode: 'open' }), from, s });
+      };
+      for (let i = 0; i < CUTS.length - 1; i++) {
+        const d0 = CUTS[i], d1 = CUTS[i + 1];
         const slice = document.createElement('div');
         slice.className = 'drawer-lens__slice';
         slice.style.cssText = 'top:' + d0 + 'px;height:' + (d1 - d0) + 'px';
-        const view = document.createElement('div');
-        view.className = 'drawer-lens__view';
-        slice.appendChild(view);
         band.appendChild(slice);
-        slices.push({ view, root: view.attachShadow({ mode: 'open' }), from: at(d0), s: (d1 - d0) / (at(d1) - at(d0)) });
+        const s = (d1 - d0) / (at(d1) - at(d0));   // negative inside the fold: flipped
+        if (d1 > F) { layer(slice, at(d0), s); continue; }
+        slice.classList.add('is-split');
+        [['r', SPLIT], ['g', 0], ['b', -SPLIT]].forEach(([c, off]) => {
+          const ch = document.createElement('div');
+          ch.className = 'drawer-lens__ch drawer-lens__ch--' + c;
+          slice.appendChild(ch);
+          layer(ch, at(d0) + off * (1 - d0 / F), s);
+          ch.appendChild(document.createElement('i'));
+        });
       }
+      const rainbow = document.createElement('i');            // the light split along the rounded corners
+      rainbow.className = 'drawer-lens__rainbow';
+      band.appendChild(rainbow);
       el.insertBefore(band, el.firstChild);
       let raf = 0, gen = 0;
       // the page's own stylesheet tags, in order (the copied sections bring their own inline ones);
@@ -1776,7 +1801,7 @@
           for (let i = 0; i < from.length; i++) if (getComputedStyle(from[i]).position === 'fixed') fixed.add(i);
           return { from, fixed };
         });
-        for (const { root } of slices) {
+        for (const { root } of layers) {
           // stands in for <body>: its classes (.template-product …) and background
           const page = document.createElement('div');
           page.className = body.className;
@@ -1798,7 +1823,12 @@
       let due = 0, last = 0;
       const changed = () => {
         if (due) return;
-        due = setTimeout(() => { due = 0; last = Date.now(); if (raf) paint(); }, Math.max(0, 400 - (Date.now() - last)));
+        due = setTimeout(() => {
+          due = 0;
+          if (!raf) return;
+          if (el.classList.contains('is-dragging')) { changed(); return; }   // never during a drag: the card follows the finger on this thread
+          last = Date.now(); paint();
+        }, Math.max(0, 400 - (Date.now() - last)));
       };
       const watch = new MutationObserver(changed);
       const build = () => {
@@ -1808,7 +1838,7 @@
         const type = INHERIT.map((k) => k + ':' + cs.getPropertyValue(k)).join(';') +
           ';line-height:' + (lh && fs ? (lh / fs).toFixed(4) : 'normal');
         const run = ++gen, loads = [];
-        for (const { view, root } of slices) {
+        for (const { view, root } of layers) {
           view.style.cssText = type;
           for (const tag of styleTags()) {
             const t = tag.cloneNode(true);
@@ -1828,13 +1858,13 @@
         raf = requestAnimationFrame(track);
         const r = main.getBoundingClientRect(), b = band.getBoundingClientRect();
         const x = (r.left - b.left).toFixed(2), y = r.top - b.top;
-        for (const t of slices) t.view.style.transform = 'translate(' + x + 'px,' + (t.s * (y - t.from)).toFixed(2) + 'px) scaleY(' + t.s.toFixed(4) + ')';
+        for (const t of layers) t.view.style.transform = 'translate(' + x + 'px,' + (t.s * (y - t.from)).toFixed(2) + 'px) scaleY(' + t.s.toFixed(4) + ')';
       };
       const start = () => { if (raf) return; track(); build(); };
       const stop = () => {
         gen++; cancelAnimationFrame(raf); raf = 0; band.classList.remove('is-live');
         watch.disconnect(); clearTimeout(due); due = 0;
-        slices.forEach((t) => { t.root.replaceChildren(); });
+        layers.forEach((t) => { t.root.replaceChildren(); });
       };
       new MutationObserver(() => { el.classList.contains('is-open') ? start() : stop(); })
         .observe(el, { attributes: true, attributeFilter: ['class'] });

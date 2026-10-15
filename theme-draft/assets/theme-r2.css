@@ -977,8 +977,9 @@ h1.t-hero em,
    tint), with a thin bright top edge and a soft shadow; the white bubbles
    stay solid on it.
    Its top edge is a lens, like the iOS Notification Centre sheet: what
-   passes under it is magnified across a 24px band along the edge and
-   round the top corners, most at the rim. Safari can't bend what's behind a page element,
+   passes under it is magnified across a 26px band along the edge and
+   round the top corners, most at the rim, where it folds back mirrored
+   with colour fringes, and a thin spectrum runs round the corners. Safari can't bend what's behind a page element,
    so the band (.drawer-lens, theme-r3.js) holds a live copy of the page,
    lined up with the real one every frame and stretched; it is masked to
    the rim, fading into the frost. The frost is ::before and the bright
@@ -994,13 +995,29 @@ h1.t-hero em,
   -webkit-backdrop-filter:blur(44px) saturate(180%);backdrop-filter:blur(44px) saturate(180%);
 }
 .drawer-scroller .drawer>.drawer-lens{overflow:hidden;opacity:0;transition:opacity .25s;
-  -webkit-mask:radial-gradient(circle at 100% 100%,#0000 16px,#000 28px) 0 0/40px 40px no-repeat,
-    radial-gradient(circle at 0 100%,#0000 16px,#000 28px) 100% 0/40px 40px no-repeat,
-    linear-gradient(#000 12px,#0000 24px) 40px 0/calc(100% - 80px) 24px no-repeat;mask:radial-gradient(circle at 100% 100%,#0000 16px,#000 28px) 0 0/40px 40px no-repeat,
-    radial-gradient(circle at 0 100%,#0000 16px,#000 28px) 100% 0/40px 40px no-repeat,
-    linear-gradient(#000 12px,#0000 24px) 40px 0/calc(100% - 80px) 24px no-repeat}
+  -webkit-mask:radial-gradient(circle at 100% 100%,#0000 14px,#000 22px) 0 0/40px 40px no-repeat,
+    radial-gradient(circle at 0 100%,#0000 14px,#000 22px) 100% 0/40px 40px no-repeat,
+    linear-gradient(#000 18px,#0000 26px) 40px 0/calc(100% - 80px) 26px no-repeat;mask:radial-gradient(circle at 100% 100%,#0000 14px,#000 22px) 0 0/40px 40px no-repeat,
+    radial-gradient(circle at 0 100%,#0000 14px,#000 22px) 100% 0/40px 40px no-repeat,
+    linear-gradient(#000 18px,#0000 26px) 40px 0/calc(100% - 80px) 26px no-repeat}
 .drawer-scroller .drawer>.drawer-lens.is-live{opacity:1}
 .drawer-lens__slice{position:absolute;left:0;right:0;overflow:hidden}
+/* the rim's red, green and blue copies: each keeps one channel (screening
+   the other two to white), then the three multiply back into colour */
+.drawer-lens__slice.is-split{isolation:isolate}
+.drawer-lens__ch{position:absolute;inset:0;isolation:isolate}
+.drawer-lens__ch+.drawer-lens__ch{mix-blend-mode:multiply}
+.drawer-lens__ch>i{position:absolute;inset:0;mix-blend-mode:screen}
+.drawer-lens__ch--r>i{background:#0ff}
+.drawer-lens__ch--g>i{background:#f0f}
+.drawer-lens__ch--b>i{background:#ff0}
+/* a thin spectrum along each top corner's arc, red on the outside of the
+   bend running to violet at the top, as the glass splits the light */
+.drawer-lens__rainbow{position:absolute;inset:0;opacity:.38;pointer-events:none;
+  background:conic-gradient(from 270deg at 100% 100%,#ff4d4d,#ffa63a 18deg,#ffe74a 36deg,#5ee08a 54deg,#45c4ff 72deg,#8a63ff 90deg,#0000 0) 0 0/40px 40px no-repeat,
+    conic-gradient(from 0deg at 0 100%,#8a63ff,#45c4ff 18deg,#5ee08a 36deg,#ffe74a 54deg,#ffa63a 72deg,#ff4d4d 90deg,#0000 0) 100% 0/40px 40px no-repeat;
+  -webkit-mask:radial-gradient(circle at 100% 100%,#0000 37px,#000 38.5px) 0 0/40px 40px no-repeat,radial-gradient(circle at 0 100%,#0000 37px,#000 38.5px) 100% 0/40px 40px no-repeat;
+  mask:radial-gradient(circle at 100% 100%,#0000 37px,#000 38.5px) 0 0/40px 40px no-repeat,radial-gradient(circle at 0 100%,#0000 37px,#000 38.5px) 100% 0/40px 40px no-repeat}
 .drawer-lens__view{position:absolute;left:0;top:0;width:100%;transform-origin:0 0}
 .drawer-lens::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.12)}  /* the page's light dim */
 .drawer-scroller .drawer::after{
