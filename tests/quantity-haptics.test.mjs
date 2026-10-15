@@ -98,6 +98,7 @@ function harness({ native = false, quantity = 1, reduced = false, experiment = f
       VolticalStrings: { remove: 'Remove' }
     },
     URLSearchParams,
+    getComputedStyle: () => ({ backgroundColor: 'rgba(0, 0, 0, 0)', borderRadius: '0px' }),
     performance: { now: () => now },
     setTimeout: (callback, delay) => { timers.set(++nextTimer, { callback, at: now + delay }); return nextTimer; },
     clearTimeout: (id) => timers.delete(id),

@@ -1469,6 +1469,32 @@
     };
     document.addEventListener('visibilitychange', () => { if (document.hidden) hapSuspend(); });
     window.addEventListener('pagehide', hapSuspend);
+    // The box iOS flashes over a tapped seed. It stays at iOS's own strength (black at 40%):
+    // fainter (transparent, then 1%) changed how the tap reached the switch and silenced the
+    // pencil tick and then the first swipe. Only its colour changes, to what's behind the
+    // button (its see-through backgrounds, like the frosted header's, laid over the first solid
+    // one), and its corners follow the button's, so the box blends in.
+    const hapTint = (seed) => {
+      const layers = [];
+      for (let n = seed.button; n && n.nodeType === 1; n = n.parentElement) {
+        const m = /^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/.exec(getComputedStyle(n).backgroundColor);
+        const a = m ? (m[4] === undefined ? 1 : +m[4]) : 0;
+        if (!a) continue;
+        layers.push([+m[1], +m[2], +m[3], a]);
+        if (a >= 1) break;
+      }
+      let c = [255, 255, 255];
+      for (let i = layers.length - 1; i >= 0; i--) {
+        const [r, g, b, a] = layers[i];
+        c = [r * a + c[0] * (1 - a), g * a + c[1] * (1 - a), b * a + c[2] * (1 - a)];
+      }
+      const tint = 'rgba(' + c.map(Math.round).join(',') + ',0.4)';
+      if (seed.tint !== tint) {
+        seed.tint = tint;
+        seed.doc.documentElement.style.setProperty('-webkit-tap-highlight-color', tint);
+      }
+      seed.radius = 'border-radius:' + getComputedStyle(seed.button).borderRadius + ';';
+    };
     let hapSeedFrame = 0;
     const hapUpdateSeeds = () => {
       hapSeedFrame = 0;
@@ -1482,7 +1508,8 @@
         if (!under || !seed.button.contains(under)) { hapPark(seed); continue; }
         seed.frame.style.cssText = 'position:fixed;border:0;opacity:0;z-index:119;left:' + r.left +
           'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
-        seed.input.style.cssText = seed.base + 'touch-action:auto;width:' + r.width + 'px;height:' + r.height + 'px';
+        hapTint(seed);
+        seed.input.style.cssText = seed.base + seed.radius + 'touch-action:auto;width:' + r.width + 'px;height:' + r.height + 'px';
       }
     };
     const hapQueueSeeds = () => {
@@ -1502,18 +1529,16 @@
         if (hapSeeds.some((seed) => seed.frame === frame)) return;
         const doc = frame.contentDocument;
         if (!doc || !doc.body) { frame.remove(); return; }
-        // iOS greys the tapped seed over the bag. Fully transparent turns the
-        // highlight off, which changed how the tap reached the switch and
-        // weakened the first pencil tick (reverted); a 1%-alpha grey keeps the
-        // same tap path but can't be seen.
-        doc.documentElement.style.cssText = 'overflow:hidden;background:transparent;-webkit-tap-highlight-color:rgba(0,0,0,.01)';
+        // iOS flashes a box over the tapped seed: hapTint keeps it at its own
+        // strength and gives it the colour behind the button, so it can't be seen
+        doc.documentElement.style.cssText = 'overflow:hidden;background:transparent';
         doc.body.style.cssText = 'margin:0;overflow:hidden;background:transparent';
         const input = doc.createElement('input');
         input.type = 'checkbox';
         input.tabIndex = -1;
         input.setAttribute('aria-hidden', 'true');
         const base = 'position:absolute;left:0;top:0;margin:0;padding:0;opacity:0;touch-action:none;';
-        const seed = { frame, input, button, base, touch: null, candidate: null, priming: false, activatedAt: -1000 };
+        const seed = { frame, doc, input, button, base, touch: null, candidate: null, priming: false, activatedAt: -1000, tint: '', radius: '' };
         hapPark(seed);
         doc.body.appendChild(input);
         hapSeeds.push(seed);
@@ -1525,7 +1550,7 @@
           frame.style.cssText = 'position:fixed;border:0;opacity:0;z-index:119;left:' + r.left +
             'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
           const t = e.changedTouches[0];
-          input.style.cssText = base + 'touch-action:auto;width:' + r.width + 'px;height:' + r.height + 'px';
+          input.style.cssText = base + seed.radius + 'touch-action:auto;width:' + r.width + 'px;height:' + r.height + 'px';
           seed.touch = { id: t.identifier, x: t.clientX, y: t.clientY, moved: false,
             at: performance.now() };
         }, { passive: true });

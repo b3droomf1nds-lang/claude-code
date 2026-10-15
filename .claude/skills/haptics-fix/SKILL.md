@@ -22,12 +22,14 @@ branch rule.
 - **Do not retune the slider's motion, springs, `HAP` constants or the seed
   logic to "make it tick more".** The owner confirmed that code
   (`c8098d8`). Only change it if the diff proves it was changed since.
-- **The seed's 1%-alpha `-webkit-tap-highlight-color` is the owner's choice**
-  (583c192), even though it is a suspect for a silent first swipe. If
-  everything else is clean and the first swipe is still silent on the phone,
-  tell the owner that this is the likely cause and let them choose. Never
-  change it on your own. A fully transparent highlight broke the pencil tick
-  twice.
+- **The seed's tap flash (`-webkit-tap-highlight-color`) stays at iOS's own
+  40% strength.** `hapTint` gives it the colour behind the button, so no grey
+  box shows (the owner's choice). Never make it fainter:
+  - Fully transparent broke the pencil tick twice.
+  - 1% (583c192) silenced the first swipe.
+
+  If something else shows through as a box, fix the colour or corners, never
+  the alpha.
 - **Never fake ticks** with synthetic events, script-flipped switches, replay
   timers or extra test buttons. iOS ignores them, and earlier tries were
   removed.
@@ -57,7 +59,8 @@ branch rule.
    | Fewer flips than stops, or moves not reaching the seed | `touchmove` handling changed, or the input is moved or resized by other code | Diff `hapTouchMove` / `hapPlace` against `c8098d8` and restore. |
    | Glass edge copies while the slider is up | New lens or repaint code ignores `qm` | Every lens step and repaint must wait while `qm` is set (`step()` and `changed()` in the `lensHalt` IIFE). |
    | Glass edge slow to appear | The build waits for the card's rise or for stylesheets again | Stylesheets are prepared at load (`prepare()`), and the copies start on open. See `docs/liquid-glass-lens.md`. |
-   | All pass but the owner feels nothing on the first swipe | Something only real Safari shows. The usual suspect is the seed's tap highlight. | Tell the owner. Offer to test with the highlight reverted (c5d04d6), which is their decision. |
+   | Seed tap flash not at 40%, or not the colour behind the bag | Someone lowered the alpha to hide the box, or `hapTint` reads the wrong background | Restore 40%. Fix the colour lookup, never the alpha. |
+   | All pass but the owner feels nothing on the first swipe | Something only real Safari shows. The tap flash was the cause twice; it is now held at 40% by a check. | Ask exactly what happens (no ticks, only the late ones, from the bag or from Add to bag), then look for anything new on the seed's tap path in Safari. |
 
 4. **Fix only that, then prove it.**
    - Run the check on the fixed tree and on the broken version (`--js`): the

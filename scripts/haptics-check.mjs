@@ -96,7 +96,24 @@ const bagSeed = seeds.find((s) => sameRect(s, bag, 0.5));
 check('a seed sits exactly over the visible bag button and takes touches', !!bagSeed && bagSeed.pe !== 'none' && bagSeed.z === '119', JSON.stringify({ bag, seeds }));
 const onTop = await page.evaluate((b) => { const n = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2); return n && n.className; }, bag);
 check('nothing covers the seed at the bag\'s centre', onTop === 'qty-haptic-prime', 'topmost: ' + onTop);
-check('seed tap highlight is the owner-chosen 1% grey (known risk, see SKILL.md)', !bagSeed || /0\.01\)/.test(bagSeed.hl), String(bagSeed && bagSeed.hl));
+// iOS's tap flash on the seed: its own 40% strength (fainter silenced the ticks twice), in the
+// colour behind the bag so no box shows
+const behind = await page.evaluate(() => {
+  const b = Array.from(document.querySelectorAll('[data-cart-open]')).find((n) => { const r = n.getBoundingClientRect(); return r.width && r.height && r.top >= 0 && r.top < innerHeight; });
+  const layers = [];                           // its see-through backgrounds, down to the first solid one
+  for (let n = b; n && n.nodeType === 1; n = n.parentElement) {
+    const m = /^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/.exec(getComputedStyle(n).backgroundColor);
+    const a = m ? (m[4] === undefined ? 1 : +m[4]) : 0;
+    if (!a) continue;
+    layers.push([+m[1], +m[2], +m[3], a]);
+    if (a >= 1) break;
+  }
+  let c = [255, 255, 255];
+  for (let i = layers.length - 1; i >= 0; i--) { const [r, g, bl, a] = layers[i]; c = [r * a + c[0] * (1 - a), g * a + c[1] * (1 - a), bl * a + c[2] * (1 - a)]; }
+  return c.map(Math.round).join(', ');
+});
+check('seed tap flash keeps iOS\'s 40% strength, in the colour behind the bag (see SKILL.md)', !!bagSeed && bagSeed.hl === 'rgba(' + behind + ', 0.4)',
+  String(bagSeed && bagSeed.hl) + ' (behind the bag: rgb(' + behind + '))');
 
 // 3. a real tap on the bag primes the seed and opens the card
 await page.evaluate(() => {

@@ -39,18 +39,25 @@ ticks depend on, then hands the physical test to the owner.
   moves over the pill (z 121) and becomes `hapFrame`, so the first swipe is
   already tracked.
 - **Known fragile spots:**
-  - **The seed's `-webkit-tap-highlight-color`.** A fully transparent value
-    broke the pencil tick (1effa9e, reverted in c8098d8). The owner chose a
-    1% grey (583c192) to hide the grey tap box. That is a suspected cause of a
-    silent first swipe, but it is the owner's call, so do not change it unless
-    asked.
+  - **The seed's `-webkit-tap-highlight-color` (iOS's tap flash).** Making it
+    fainter broke the ticks twice:
+    - Fully transparent broke the pencil tick (1effa9e, reverted in c8098d8).
+    - A 1% grey (9d8fec7, then 583c192) silenced the first swipe.
+
+    It now keeps iOS's own strength, 40% (WebKit's default is black at alpha
+    102), and only its colour changes. `hapTint` sets it to what's behind the
+    button: the see-through backgrounds, such as the frosted header, laid over
+    the first solid one. That way the box blends in and no grey shows. The
+    owner asked for exactly this: "everything the same as grey box ... but
+    make the box invisible". Never lower its alpha.
   - **Anything covering the bag button.** `hapUpdateSeeds` only places a seed
     when `elementFromPoint` at the button's centre is the button.
   - **Main-thread work while the slider is up.** Long frames coalesce
     `touchmove`s, so crossings are missed. The cart sheet's glass edge
     (`.drawer-lens`) must not copy or repaint while `qm` is set.
-- **Last owner-confirmed state:** commit `c8098d8` (2026-10-09, "Fixed it"),
-  then `583c192`'s 1% highlight by the owner's choice.
+- **Last owner-confirmed state:** commit `c8098d8` (2026-10-09, "Fixed it").
+  It had the default grey flash. The flash is now the same strength, blended
+  in (see above).
 
 ## Steps
 
@@ -63,7 +70,7 @@ ticks depend on, then hands the physical test to the owner.
    with the cart mocked so the real cart is never touched. It checks:
    - the seeds are mounted, sit exactly over the visible bag button, and are
      topmost there;
-   - the highlight value;
+   - the seed's tap flash is at 40% in the colour behind the bag;
    - a tap on the bag opens the card through the seed and leaves it primed;
    - the glass edge is ready within 400ms;
    - the pencil opens the slider with the primed seed moved over it, topmost;
