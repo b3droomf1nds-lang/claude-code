@@ -975,11 +975,62 @@ h1.t-hero em,
 /* Liquid glass, like iOS's frosted menus: the sheet is a bright pane the
    page shows through as soft blurred shapes (heavy blur, a mostly-white
    tint), with a thin bright top edge and a soft shadow; the white bubbles
-   stay solid on it. */
-.drawer-scroller .drawer{
+   stay solid on it.
+   Its edge is a lens rim, like iOS 26's Liquid Glass buttons: a 12px band
+   round the edge where the page shows through nearly sharp, brighter and
+   more saturated, so things passing under the edge light up and smear
+   along it before vanishing into the frost; a bright specular sheen on
+   the top corners. (Real bending of what's behind needs an SVG filter in
+   backdrop-filter, which Safari doesn't draw, so the rim does it with
+   blur/brightness instead.) The frost (::before) and the rim (::after)
+   are two layers with complementary masks, so the rim samples the page
+   itself rather than the frost; the card has no backdrop-filter of its
+   own and its contents sit above both. The masks follow the 40px top
+   corners; the bottom is square at rest, at the screen's edge. */
+.drawer-scroller .drawer{background:transparent;box-shadow:0 10px 50px rgba(0,0,0,.12)}
+.drawer-scroller .drawer>*{position:relative;z-index:1}
+.drawer-scroller .drawer::before,
+.drawer-scroller .drawer::after{content:"";display:block;position:absolute;inset:0;width:auto;height:auto;transform:none;
+  border-radius:inherit;pointer-events:none;z-index:0}
+.drawer-scroller .drawer::before{
   background:rgba(250,250,252,.68);
   -webkit-backdrop-filter:blur(44px) saturate(180%);backdrop-filter:blur(44px) saturate(180%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 0 0 .5px rgba(255,255,255,.6),0 10px 50px rgba(0,0,0,.12);
+  /* everything but the rim: a full layer minus the rim layers below it */
+  -webkit-mask:linear-gradient(#000 0 0),
+    radial-gradient(circle at 100% 100%,#0000 28px,rgba(0,0,0,.55) 36.4px,#000 40px) 0 0/40px 40px no-repeat,
+    radial-gradient(circle at 0 100%,#0000 28px,rgba(0,0,0,.55) 36.4px,#000 40px) 100% 0/40px 40px no-repeat,
+    linear-gradient(to bottom,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 40px 0/calc(100% - 80px) 12px no-repeat,
+    linear-gradient(to right,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 0 40px/12px calc(100% - 40px) no-repeat,
+    linear-gradient(to left,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 100% 40px/12px calc(100% - 40px) no-repeat,
+    linear-gradient(to top,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 0 100%/100% 12px no-repeat;
+  -webkit-mask-composite:source-out,source-over,source-over,source-over,source-over,source-over,source-over;
+  mask:linear-gradient(#000 0 0),
+    radial-gradient(circle at 100% 100%,#0000 28px,rgba(0,0,0,.55) 36.4px,#000 40px) 0 0/40px 40px no-repeat,
+    radial-gradient(circle at 0 100%,#0000 28px,rgba(0,0,0,.55) 36.4px,#000 40px) 100% 0/40px 40px no-repeat,
+    linear-gradient(to bottom,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 40px 0/calc(100% - 80px) 12px no-repeat,
+    linear-gradient(to right,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 0 40px/12px calc(100% - 40px) no-repeat,
+    linear-gradient(to left,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 100% 40px/12px calc(100% - 40px) no-repeat,
+    linear-gradient(to top,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 0 100%/100% 12px no-repeat;
+  mask-composite:subtract,add,add,add,add,add,add;
+}
+.drawer-scroller .drawer::after{
+  background:radial-gradient(140px 90px at 0 0,rgba(255,255,255,.55),#fff0),
+    radial-gradient(140px 90px at 100% 0,rgba(255,255,255,.3),#fff0),rgba(255,255,255,.18);
+  -webkit-backdrop-filter:blur(1px) saturate(160%) brightness(1.3);backdrop-filter:blur(1px) saturate(160%) brightness(1.3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 0 0 .5px rgba(255,255,255,.6);
+  /* the rim: 1 at the edge fading to 0 12px in, round the corners' arcs */
+  -webkit-mask:radial-gradient(circle at 100% 100%,#0000 28px,rgba(0,0,0,.55) 36.4px,#000 40px) 0 0/40px 40px no-repeat,
+    radial-gradient(circle at 0 100%,#0000 28px,rgba(0,0,0,.55) 36.4px,#000 40px) 100% 0/40px 40px no-repeat,
+    linear-gradient(to bottom,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 40px 0/calc(100% - 80px) 12px no-repeat,
+    linear-gradient(to right,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 0 40px/12px calc(100% - 40px) no-repeat,
+    linear-gradient(to left,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 100% 40px/12px calc(100% - 40px) no-repeat,
+    linear-gradient(to top,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 0 100%/100% 12px no-repeat;
+  mask:radial-gradient(circle at 100% 100%,#0000 28px,rgba(0,0,0,.55) 36.4px,#000 40px) 0 0/40px 40px no-repeat,
+    radial-gradient(circle at 0 100%,#0000 28px,rgba(0,0,0,.55) 36.4px,#000 40px) 100% 0/40px 40px no-repeat,
+    linear-gradient(to bottom,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 40px 0/calc(100% - 80px) 12px no-repeat,
+    linear-gradient(to right,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 0 40px/12px calc(100% - 40px) no-repeat,
+    linear-gradient(to left,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 100% 40px/12px calc(100% - 40px) no-repeat,
+    linear-gradient(to top,#000,rgba(0,0,0,.55) 3.6px,#0000 12px) 0 100%/100% 12px no-repeat;
 }
 .drawer-scroller .drawer__body{padding:6px 12px 4px}
 .drawer-scroller .cart-line,
