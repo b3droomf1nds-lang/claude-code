@@ -1696,6 +1696,70 @@
     scroller.appendChild(end);
     scrim.classList.add('is-sheet');
     el.tabIndex = -1;
+    // Liquid Glass edge, like the iOS Notification Centre sheet: whatever
+    // passes under the card's top edge is magnified across a band along it.
+    // Safari can't bend what's behind a page element, so the band holds a
+    // live copy of the page (main + footer), lined up with the real page
+    // every frame and stretched tall about the band's middle; theme-r2.css
+    // masks it to the rim. Built when the card opens, dropped when it closes.
+    (() => {
+      if (window.matchMedia('(prefers-reduced-transparency: reduce)').matches) return;
+      const B = 18, MID = B * 0.55, S = 1.9;
+      const band = document.createElement('div');
+      band.className = 'drawer-lens';
+      band.setAttribute('aria-hidden', 'true');
+      band.inert = true;
+      const view = document.createElement('div');
+      view.className = 'drawer-lens__view';
+      band.appendChild(view);
+      el.insertBefore(band, el.firstChild);
+      let raf = 0;
+      const copy = (src) => {
+        const c = src.cloneNode(true);
+        const from = src.querySelectorAll('*'), to = c.querySelectorAll('*');
+        for (let i = 0; i < to.length; i++) {
+          const o = from[i], n = to[i];
+          if (o.scrollLeft || o.scrollTop) n._lensScroll = [o.scrollLeft, o.scrollTop];
+          switch (o.tagName) {
+            case 'IMG':
+              if (o.currentSrc) { n.removeAttribute('srcset'); n.removeAttribute('sizes'); n.src = o.currentSrc; n.loading = 'eager'; }
+              break;
+            case 'SOURCE': if (o.parentNode && o.parentNode.tagName === 'PICTURE') n.remove(); break;
+            case 'IFRAME': n.removeAttribute('src'); n.removeAttribute('srcdoc'); break;
+            case 'VIDEO': n.removeAttribute('autoplay'); n.preload = 'none'; break;
+            case 'INPUT':
+              if (n.type === 'radio' && n.name) n.name += '__lens';   // its own group, so it can't uncheck the real one
+              n.checked = o.checked; n.value = o.value; n.removeAttribute('form'); break;
+            case 'CANVAS':
+              try { n.getContext('2d').drawImage(o, 0, 0); } catch (e) { /* not a 2d canvas */ }
+              break;
+          }
+        }
+        return c;
+      };
+      const build = () => {
+        const srcs = [document.getElementById('main'), document.getElementById('shopify-section-footer')].filter(Boolean);
+        if (!srcs.length) return;
+        const r0 = srcs[0].getBoundingClientRect();
+        for (const src of srcs) {
+          const r = src.getBoundingClientRect(), c = copy(src);
+          c.style.cssText = 'position:absolute;margin:0;left:' + (r.left - r0.left) + 'px;top:' + (r.top - r0.top) + 'px;width:' + r.width + 'px';
+          view.appendChild(c);
+        }
+        view.querySelectorAll('*').forEach((n) => { if (n._lensScroll) { n.scrollLeft = n._lensScroll[0]; n.scrollTop = n._lensScroll[1]; } });
+        band.classList.add('is-live');
+      };
+      const main = document.getElementById('main');
+      const track = () => {
+        raf = requestAnimationFrame(track);
+        const r = main.getBoundingClientRect(), b = band.getBoundingClientRect();
+        view.style.transform = 'translate(' + (r.left - b.left).toFixed(2) + 'px,' + (MID + S * (r.top - b.top - MID)).toFixed(2) + 'px) scaleY(' + S + ')';
+      };
+      const start = () => { if (raf || !main) return; build(); track(); };
+      const stop = () => { cancelAnimationFrame(raf); raf = 0; band.classList.remove('is-live'); view.textContent = ''; };
+      new MutationObserver(() => { el.classList.contains('is-open') ? start() : stop(); })
+        .observe(el, { attributes: true, attributeFilter: ['class'] });
+    })();
     let isOpen = false;
     let closing = false;
     let restTimer = 0;
