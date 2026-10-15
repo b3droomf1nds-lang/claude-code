@@ -1045,11 +1045,13 @@ h1.t-hero em,
 .drawer-scroller .cart-line,
 .drawer-scroller .ship-bubble,
 .drawer-scroller .addon{border-radius:20px;margin:0 0 8px;
-  /* the glass sheet's own edge: a crisp 1px white line around a pane only
-     a touch whiter than the sheet, so the page shows through the bubbles
-     much as it does round them (the frost reads the same all over, as on
-     the Apple Store app's card); no shadow */
-  background:rgba(255,255,255,.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,.95)}
+  /* each a pane of glass of its own on the sheet: the sheet's frost again
+     (::before's blur, saturation and white), laid over what the sheet
+     already shows, so the page reads fainter and softer inside the bubbles;
+     no lens at their edges, just the sheet's crisp 1px white line; no shadow */
+  background:rgba(249,249,252,.74);
+  -webkit-backdrop-filter:blur(6px) saturate(180%);backdrop-filter:blur(6px) saturate(180%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.95)}
 .drawer-scroller .cart-line{align-items:center;gap:14px;padding:14px 16px 14px 14px}
 .drawer-scroller .cart-line+.cart-line{border-top:0}
 .drawer-scroller .cart-line__img{width:72px;height:72px;border-radius:14px;background:var(--sys-bg-2)}
