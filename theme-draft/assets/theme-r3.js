@@ -2163,11 +2163,14 @@
     }, true);
 
     /* Swiping the card down on a phone is tracked here, from the first
-       touch, so that once it's past halfway it is committed to closing and
-       can't be pulled back up. (Taking over the phone's own scrolling part
-       way through a swipe makes Safari jump, so the swipe is never handed to
-       it.) Lists inside the card that scroll still scroll natively. */
-    const SNAP = spring(0.38, 0.86);                 // springs back when let go before halfway
+       touch. The card follows the finger both ways for as long as it's
+       down, however low it has been dragged, and only goes when let go:
+       low down, or flicked down. Let go on its way back up, or above
+       halfway, and it comes back. (Taking over the phone's own scrolling
+       part way through a swipe makes Safari jump, so the swipe is never
+       handed to it.) Lists inside the card that scroll still scroll
+       natively. */
+    const SNAP = spring(0.38, 0.86);                 // springs back when it isn't closing
     let drag = null;
     const place = (y) => {
       el.style.transform = 'translateY(' + y.toFixed(2) + 'px)';
@@ -2180,7 +2183,7 @@
       const t = e.touches[0];
       const list = e.target.closest && e.target.closest('.drawer__body');
       drag = {
-        x: t.clientX, y: t.clientY, mode: 0, base: 0, cur: 0, peak: 0, locked: false, pts: [],
+        x: t.clientX, y: t.clientY, mode: 0, base: 0, cur: 0, low: 0, rise: 0, pts: [],
         list: list && list.scrollHeight > list.clientHeight + 1 ? list : null
       };
     }, { passive: true });
@@ -2201,10 +2204,9 @@
       const h = el.offsetHeight;
       let y = drag.base + dy;
       if (y < 0) y = -(1 - 1 / ((-y * 0.55) / h + 1)) * h;   // rubber-band above the resting place, like iOS
-      if (drag.locked) y = Math.max(y, drag.peak);   // past halfway: it can only go further down
-      drag.peak = Math.max(drag.peak, y);
-      if (drag.peak > h / 2) drag.locked = true;
       drag.cur = y;
+      // the lowest it has been on this swipe, and the highest it has been pulled back up to since
+      if (y >= drag.low) drag.low = drag.rise = y; else drag.rise = Math.min(drag.rise, y);
       place(y);
       drag.pts.push({ t: e.timeStamp, y: t.clientY });
       while (drag.pts.length > 2 && e.timeStamp - drag.pts[0].t > 100) drag.pts.shift();
@@ -2218,7 +2220,12 @@
       const a = d.pts[0];
       const b = d.pts[d.pts.length - 1];
       const speed = a && b && b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;   // px/ms, down is positive
-      if (d.locked || d.cur > el.offsetHeight / 2 || (speed > 0.5 && d.cur > 0)) { close(speed); return; }
+      // pulled back up from the lowest it went (40px, more than a finger's jitter) and not heading
+      // down again (20px from there, or 6px in its last moves), or let go on the way up: it comes
+      // back, however low it had been
+      const moved = a && b ? b.y - a.y : 0;         // over the last moves, down is positive
+      const back = (d.low - d.rise > 40 && d.cur - d.rise < 20 && moved <= 6) || (speed < -0.1 && moved < -6);
+      if (!back && (d.cur > el.offsetHeight / 2 || (speed > 0.5 && d.cur > 0))) { close(speed); return; }
       el.style.transform = '';
       scrim.style.opacity = '1';
       if (Math.abs(d.cur) < 0.5 || !el.animate) return;
