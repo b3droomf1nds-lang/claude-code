@@ -1061,7 +1061,8 @@ h1.t-hero em,
 .drawer-scroller .cart-line__qty{display:inline-flex;align-items:center;gap:4px;padding:0;color:var(--sys-label);font:inherit;font-size:13px;font-weight:600;line-height:1;-webkit-tap-highlight-color:transparent}
 .drawer-scroller .cart-line__pencil{color:var(--sys-label-2)}
 .drawer-scroller .cart-line__qty:active{opacity:.5}
-.drawer-scroller .cart-line__qty-num{font-size:15px;font-weight:600;line-height:1.33;color:var(--sys-label);font-variant-numeric:tabular-nums}  /* the option line's height, so the price lands on the next */
+.drawer-scroller .cart-line__qty-num{font-size:15px;font-weight:400;line-height:1.33;color:var(--sys-label-2);font-variant-numeric:tabular-nums}  /* the option line's height, so the price lands on the next; regular weight in grey, like "Core" */
+.drawer-scroller .cart-line__qty-label{display:none}  /* just the number and the pencil ("Quantity 1, edit" stays for screen readers) */
 .drawer-scroller .cart-line__qty svg{display:block}
 .drawer-scroller .cart-line__pencil{position:relative;display:block;margin-left:2px}
 /* The tap target over "Qty 1 ✎": a label holding a hidden switch, reaching
@@ -1146,7 +1147,7 @@ h1.t-hero em,
   .drawer-scroller .cart-line__price{font-variant-numeric:tabular-nums}
   .drawer-scroller .cart-line__side::before{font:-apple-system-footnote}
   .drawer-scroller .cart-line__qty{font:-apple-system-footnote;font-weight:600;line-height:1}
-  .drawer-scroller .cart-line__qty-num{font:-apple-system-subheadline;font-weight:600;font-variant-numeric:tabular-nums}
+  .drawer-scroller .cart-line__qty-num{font:-apple-system-subheadline;font-weight:400;font-variant-numeric:tabular-nums}
 }
 @supports (font:-apple-system-title1){
   .drawer-scroller .drawer__subtotal [data-drawer-subtotal]{font:-apple-system-title1;font-weight:700;font-variant-numeric:tabular-nums}
