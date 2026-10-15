@@ -1705,10 +1705,10 @@
     // page's stylesheet tags, so the card's styles can't reach it and the
     // theme's scripts can't see it. Built when the card opens, dropped when
     // it closes.
-    (() => {
-      if (window.matchMedia('(prefers-reduced-transparency: reduce)').matches) return;
+    const lensHalt = (() => {
+      if (window.matchMedia('(prefers-reduced-transparency: reduce)').matches) return null;
       const main = document.getElementById('main');
-      if (!main) return;
+      if (!main) return null;
       // Lens profile, measured off a screen recording of the iOS Notification
       // Centre sheet (121 frames, its edge passing over text): the band pixel
       // d px below the rim shows the page at depth at(d), always from further
@@ -1767,7 +1767,7 @@
       haze.className = 'drawer-lens__haze';
       band.appendChild(haze);
       el.insertBefore(band, el.firstChild);
-      let raf = 0, gen = 0, live = false, lastX = NaN, lastY = NaN, defer = 0;
+      let raf = 0, gen = 0, live = false, lastX = NaN, lastY = NaN, defer = 0, off = false;
       // the page's own stylesheet tags, in order (the copied sections bring their own inline ones);
       // the links load from cache, and the band shows once they have
       const styleTags = () => Array.from(document.querySelectorAll('link[rel~="stylesheet"], style'))
@@ -1891,7 +1891,12 @@
         t.page = page;
       };
       let shownY = 0;                          // the page's scroll when the copies were read off it
-      const paint = () => { const now = pageNow(); for (const t of layers) paintInto(t, now); shownY = now.y; };
+      const paint = () => {
+        const t0 = performance.now(), now = pageNow();
+        for (const t of layers) paintInto(t, now);
+        shownY = now.y;
+        if (performance.now() - t0 > 250) giveUp();
+      };
       // the page changes shape while the card is up (the Add to bag bar pins, sections reveal…):
       // repaint the copy then, at most every 400ms
       let due = 0, last = 0, building = false, stale = true;
@@ -1930,17 +1935,24 @@
         // The copies go in once the stylesheets have loaded (from cache), so each is laid out
         // once, styled; one or two a frame, so no frame lays out more than a couple of pages.
         // The page is read once (again only if it changes meanwhile). The band shows when all are in.
-        let i = 0, now = null, fresh = false;
+        let i = 0, now = null, fresh = false, prev = 0;
         const step = () => {
           if (run !== gen || !raf) return;
+          // A phone that can't keep up (a frame of 400ms, or a step of 150ms) gets no lens this
+          // visit, rather than a card that sticks and won't take a tap.
+          const t0 = performance.now();
+          if (prev && t0 - prev > 400 && document.visibilityState === 'visible') { giveUp(); return; }
+          prev = t0;
           if (stale && !fresh) {               // reading the page gets a frame to itself; a copy always follows
             now = pageNow(); stale = false; fresh = true;
+            if (performance.now() - t0 > 150) { giveUp(); return; }
             requestAnimationFrame(step); return;
           }
           if (stale) { now = pageNow(); stale = false; }   // it changed again meanwhile: the copy must match what's read
           fresh = false;
-          const until = performance.now() + 4;
+          const until = t0 + 4;
           do paintInto(layers[i++], now); while (i < layers.length && performance.now() < until);
+          if (performance.now() - t0 > 150) { giveUp(); return; }
           if (i < layers.length) { requestAnimationFrame(step); return; }
           building = false; last = Date.now(); shownY = now.y;
           live = true; align(true);
@@ -1964,7 +1976,7 @@
       // the copies start going in once the card has finished popping up, so nothing the lens
       // does can hold up its rise
       const start = () => {
-        if (raf) return;
+        if (raf || off) return;
         raf = requestAnimationFrame(track);
         const run = gen;
         const rising = el.getAnimations ? el.getAnimations().map((a) => a.finished.catch(() => {})) : [];
@@ -1978,8 +1990,15 @@
         watch.disconnect(); clearTimeout(due); due = 0;
         layers.forEach((t) => { t.root.replaceChildren(); t.page = null; });
       };
+      function giveUp() { off = true; stop(); }
       new MutationObserver(() => { el.classList.contains('is-open') ? start() : stop(); })
         .observe(el, { attributes: true, attributeFilter: ['class'] });
+      // the card is leaving: no more copies or repaints from here, so nothing can slow its exit;
+      // what's already shown keeps lining up as it slides away
+      return () => {
+        gen++; clearTimeout(defer); clearTimeout(due); due = 0;
+        building = false; watch.disconnect(); removeEventListener('scroll', scrolled);
+      };
     })();
     let isOpen = false;
     let closing = false;
@@ -2044,6 +2063,7 @@
     };
     const close = (speed) => {                       // speed: px/ms the finger was moving down, after a swipe
       if (!isOpen || closing) return;
+      if (lensHalt) lensHalt();                      // the edge's lens stops all work as the card goes
       if (!el.animate) { finishClose(); return; }
       closing = true;
       // Leave from exactly where the card is, even mid-pop or mid-swipe.

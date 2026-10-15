@@ -1006,11 +1006,13 @@ h1.t-hero em,
   -webkit-mask:linear-gradient(#000 24.5px,#0000 31.4px) 0 0/100% 32px no-repeat;
   mask:linear-gradient(#000 24.5px,#0000 31.4px) 0 0/100% 32px no-repeat}
 .drawer-scroller .drawer>.drawer-lens.is-live{opacity:1}
-.drawer-lens__slice{position:absolute;left:0;right:0;overflow:hidden}
+/* every slice (and each colour copy in one) is clipped and contained to its
+   own thin strip, so Safari never makes a layer for the whole stretched page */
+.drawer-lens__slice{position:absolute;left:0;right:0;overflow:hidden;contain:strict}
 /* the rim's red, green and blue copies: each keeps one channel (screening
    the other two to white), then the three multiply back into colour */
 .drawer-lens__slice.is-split{isolation:isolate}
-.drawer-lens__ch{position:absolute;inset:0;isolation:isolate}
+.drawer-lens__ch{position:absolute;inset:0;isolation:isolate;overflow:hidden;contain:strict}
 .drawer-lens__ch+.drawer-lens__ch{mix-blend-mode:multiply}
 .drawer-lens__ch>i{position:absolute;inset:0;mix-blend-mode:screen}
 .drawer-lens__ch--r>i{background:#0ff}
