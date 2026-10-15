@@ -34,6 +34,7 @@ These rules apply to every task in this repository, whether or not a design skil
 - Do not infer visible artwork size from an image element's box when the asset has transparent padding. Measure the non-transparent pixel bounds.
 - A revert must be surgical: inspect the current diff and preserve unrelated work that landed before or after the change being reversed.
 - For any work on the mobile sticky Add-to-bag bar, read `docs/sticky-cart-prompt.md` first.
+- For any work on the cart sheet's Liquid Glass edge (`.drawer-lens`), or to build that glass edge on another element, read `docs/liquid-glass-lens.md` first.
 
 ## Verification before handoff
 
