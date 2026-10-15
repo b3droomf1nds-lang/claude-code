@@ -870,7 +870,7 @@ h1.t-hero em,
      browser's) own rounded edge clips it and it fills the corners exactly;
      pulled up, theme-r3.js sets --rb so the bottom rounds like the top as
      it lifts off the edge, easing back to square as it settles. */
-  border-radius:40px 40px var(--rb,0px) var(--rb,0px);
+  border-radius:40px 40px var(--rb,0px) var(--rb,0px);  /* --rb stays on the card: see @property below */
   transition:border-bottom-left-radius .35s cubic-bezier(.2,.8,.2,1),border-bottom-right-radius .35s cubic-bezier(.2,.8,.2,1);
   box-shadow:0 8px 40px rgba(0,0,0,.16);
   font-family:system-ui,-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
@@ -878,6 +878,9 @@ h1.t-hero em,
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
 }
 .drawer-scroller .drawer::before{display:none}
+/* --rb is the card's own: it changes every frame of a drag, and passed
+   down it would restyle every page copy in the lens (theme-r3.js) */
+@property --rb{syntax:'<length>';inherits:false;initial-value:0px}
 .drawer-scroller .drawer.is-dragging{transition:none}  /* the corners follow the finger directly */
 .drawer-scroller .drawer:focus{outline:none}
 /* above the floating CTA pill (z-index 110, layout/theme.liquid), like a system pop-up */
@@ -996,14 +999,12 @@ h1.t-hero em,
   background:rgba(250,250,252,.68);
   -webkit-backdrop-filter:blur(44px) saturate(180%);backdrop-filter:blur(44px) saturate(180%);
 }
-/* the band shows to 24.5px from the rim (round the corners, from their
-   arcs) and fades out by 31.4px, where the lens has gone flat */
+/* the band shows to 24.5px below the top and fades out by 31.4px, where
+   the lens has gone flat and its copies end, the same all the way across
+   (the corners' arcs clip it), so it never ends in a hard line */
 .drawer-scroller .drawer>.drawer-lens{overflow:hidden;opacity:0;transition:opacity .25s;
-  -webkit-mask:radial-gradient(circle at 100% 100%,#0000 8.6px,#000 15.5px) 0 0/40px 40px no-repeat,
-    radial-gradient(circle at 0 100%,#0000 8.6px,#000 15.5px) 100% 0/40px 40px no-repeat,
-    linear-gradient(#000 24.5px,#0000 31.4px) 40px 0/calc(100% - 80px) 32px no-repeat;mask:radial-gradient(circle at 100% 100%,#0000 8.6px,#000 15.5px) 0 0/40px 40px no-repeat,
-    radial-gradient(circle at 0 100%,#0000 8.6px,#000 15.5px) 100% 0/40px 40px no-repeat,
-    linear-gradient(#000 24.5px,#0000 31.4px) 40px 0/calc(100% - 80px) 32px no-repeat}
+  -webkit-mask:linear-gradient(#000 24.5px,#0000 31.4px) 0 0/100% 32px no-repeat;
+  mask:linear-gradient(#000 24.5px,#0000 31.4px) 0 0/100% 32px no-repeat}
 .drawer-scroller .drawer>.drawer-lens.is-live{opacity:1}
 .drawer-lens__slice{position:absolute;left:0;right:0;overflow:hidden}
 /* the rim's red, green and blue copies: each keeps one channel (screening
@@ -1023,7 +1024,10 @@ h1.t-hero em,
     radial-gradient(circle at 0 100%,#fff0 35px,rgba(255,255,255,.08) 36px,rgba(255,255,255,.17) 37px,rgba(255,255,255,.4) 38px,rgba(255,255,255,.47) 38.5px,rgba(255,255,255,.56) 39.33px,rgba(255,255,255,.66) 40px) 100% 0/40px 40px no-repeat,
     linear-gradient(rgba(255,255,255,.66),rgba(255,255,255,.56) .67px,rgba(255,255,255,.47) 1.5px,rgba(255,255,255,.4) 2px,rgba(255,255,255,.17) 3px,rgba(255,255,255,.08) 4px,#fff0 5px) 40px 0/calc(100% - 80px) 5px no-repeat}
 .drawer-lens__view{position:absolute;left:0;top:0;width:100%;transform-origin:0 0}
-.drawer-lens::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.12)}  /* the page's light dim */
+/* the glass's tint: the page's light dim, then half the frost's white, so
+   the band is nearly as bright as the frost below it (not a grey bar) and
+   passes 44% of what's under it (the iOS sheet measured 45%) */
+.drawer-lens::after{content:"";position:absolute;inset:0;background:rgba(223,223,225,.56)}
 .drawer-scroller .drawer::after{
   background:radial-gradient(120px 70px at 0 0,rgba(255,255,255,.35),#fff0),
     radial-gradient(120px 70px at 100% 0,rgba(255,255,255,.2),#fff0);

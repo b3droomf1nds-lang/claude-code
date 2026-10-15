@@ -1720,9 +1720,11 @@
       // to 11.3px less far, so the edges of whatever passes under the rim
       // turn to fringes of colour.
       // Drawn as slices, each a copy of the page stretched (or flipped)
-      // linearly between its two ends (within 0.34px of the curves); the
-      // rim's slices are split into red, green and blue copies, each
-      // stretched to its own curve, and multiplied back together.
+      // linearly between its two ends; the rim's slices are split into red,
+      // green and blue copies, each stretched to its own curve, and
+      // multiplied back together. Ten copies in all, so a phone keeps up:
+      // green stays within 0.35px of its curve, red and blue (only the
+      // fringes' colours) within 1.4px.
       const B = 31.41;
       const at = (d, c) => {
         let s = d + 26.14 * Math.max(0, 1 - d / B) ** 2.251;
@@ -1730,7 +1732,7 @@
         else if (c === 'b') s -= 11.28 * Math.max(0, 1 - d / 9.07) ** 3.98;
         return s;
       };
-      const CUTS = [0, 1.2, 2.5, 4, 6, 9.3, 12.39, 15.6, 19.6, 24.5, B];
+      const CUTS = [0, 2.25, 6, 12.39, 19, 24.5, B];
       const SPLIT = 6;                         // above this depth the three colours have parted
       const band = document.createElement('div');
       band.className = 'drawer-lens';
@@ -1765,7 +1767,7 @@
       haze.className = 'drawer-lens__haze';
       band.appendChild(haze);
       el.insertBefore(band, el.firstChild);
-      let raf = 0, gen = 0;
+      let raf = 0, gen = 0, live = false, lastX = NaN, lastY = NaN, defer = 0;
       // the page's own stylesheet tags, in order (the copied sections bring their own inline ones);
       // the links load from cache, and the band shows once they have
       const styleTags = () => Array.from(document.querySelectorAll('link[rel~="stylesheet"], style'))
@@ -1775,12 +1777,17 @@
         'word-spacing', 'color', 'text-align', 'text-transform', 'text-indent', 'white-space', 'font-feature-settings',
         'font-variation-settings', 'font-kerning', 'font-variant', 'text-rendering', '-webkit-font-smoothing',
         '-webkit-text-size-adjust', 'text-size-adjust', 'direction', 'color-scheme', 'visibility'];
-      const copy = (src, from, fixed) => {
-        const c = src.cloneNode(true);
+      const copy = (p) => {
+        const c = p.src.cloneNode(true);
         const to = c.querySelectorAll('*');
         for (let i = 0; i < to.length; i++) {
-          const o = from[i], n = to[i];
-          if (fixed.has(i)) n.style.visibility = 'hidden';   // pinned to the screen, not the page
+          if (p.skip[i]) continue;                          // inside an emptied box
+          const o = p.from[i], n = to[i], set = p.css.get(i);
+          if (set) {
+            n.style.cssText += ';' + set;
+            if (p.empty.has(i)) { n.replaceChildren(); continue; }
+          }
+          if (p.fixed.has(i)) n.style.visibility = 'hidden';   // pinned to the screen, not the page
           if (o.scrollLeft || o.scrollTop) n._lensScroll = [o.scrollLeft, o.scrollTop];
           switch (o.tagName) {
             case 'IMG':
@@ -1798,18 +1805,75 @@
         return c;
       };
       const footer = document.getElementById('shopify-section-footer');
-      // where each copied section goes and which of its elements are pinned to the screen, read
-      // off the page once per batch of copies (a copy's elements line up with the page's by index)
+      // Only the page within half a screen of the view can pass under the band (the card covers
+      // the rest of the screen, and the page barely scrolls while it's up), so in the copies
+      // whatever lies wholly outside that is an empty box of the same size: the phone styles and
+      // lays out a fraction of the page per copy. Boxes stacked in the normal flow get their
+      // margins pinned to the gaps they really have, so emptying one moves nothing; grid and
+      // flex items and positioned boxes get their width too. Where floats, inline or moved
+      // (transformed, offset, sticky) boxes or loose text sit among them, nothing is touched.
+      const px = (v) => v.toFixed(6) + 'px!important;';   // finer than layout's own steps, never in e-notation
+      const plan = (src, index, css, empty, skip) => {
+        const lo = -0.5 * innerHeight, hi = 1.5 * innerHeight;
+        const visit = (box, depth) => {
+          const kids = box.children, bs = getComputedStyle(box);
+          if (!kids.length || depth > 12) return;
+          const items = /flex|grid/.test(bs.display);
+          let flow = !items && /^(block|flow-root|list-item)$/.test(bs.display);
+          for (const t of box.childNodes) if (t.nodeType === 3 && t.data.trim()) flow = false;
+          const info = Array.from(kids, (c) => {
+            const cs = getComputedStyle(c), shown = cs.display !== 'none';
+            const placed = cs.position === 'absolute' || cs.position === 'fixed', inflow = shown && !placed;
+            const still = cs.position === 'static' || (cs.position === 'relative' && /^(auto|0px)$/.test(cs.top) && /^(auto|0px)$/.test(cs.bottom));
+            if (cs.display === 'contents' || (inflow && (/^inline/.test(cs.display) || cs.float !== 'none' || !still || cs.transform !== 'none'))) flow = false;
+            return { c, cs, r: c.getBoundingClientRect(), shown, placed, inflow };
+          });
+          if (!flow && !items) return;
+          const stack = flow ? info.filter((k) => k.inflow) : [];
+          const br = box.getBoundingClientRect();
+          const top = br.top + parseFloat(bs.borderTopWidth) + parseFloat(bs.paddingTop);
+          const bottom = br.bottom - parseFloat(bs.borderBottomWidth) - parseFloat(bs.paddingBottom);
+          for (const k of info) {
+            if (!k.shown || k.cs.position === 'fixed') continue;
+            const { c, cs, r } = k, i = index.get(c), j = stack.indexOf(k);
+            let set = '';
+            if (j >= 0) {
+              const above = j ? stack[j - 1].r.bottom : top, below = j < stack.length - 1 ? stack[j + 1].r.top : bottom;
+              set = 'margin-top:' + px(r.top - above) + 'margin-bottom:' + px(below - r.bottom);
+            }
+            const out = r.bottom < lo || r.top > hi;
+            if (out && c.children.length && r.height > 0 && cs.transform === 'none' && (j >= 0 || items || k.placed)) {
+              set += 'box-sizing:border-box!important;height:' + px(r.height) + 'min-height:0!important;max-height:none!important;';
+              if (j < 0) set += 'width:' + px(r.width) + 'min-width:0!important;max-width:none!important;flex:none!important;';
+              empty.add(i);
+              for (let n = i + 1, e = i + c.getElementsByTagName('*').length; n <= e; n++) skip[n] = 1;
+            } else if (!out) visit(c, depth + 1);
+            if (set) css.set(i, set);
+          }
+        };
+        visit(src, 0);
+      };
+      // where each copied part goes, which of its elements are pinned to the screen and which are
+      // emptied, read off the page once per batch of copies (a copy's elements line up by index)
       const pageNow = () => {
         const r0 = main.getBoundingClientRect(), body = document.body;
         let bg = getComputedStyle(body).backgroundColor;
         if (/^rgba\(.*,\s*0\)$|transparent/.test(bg)) bg = getComputedStyle(document.documentElement).backgroundColor;
-        const parts = [main, footer].filter(Boolean).map((src) => {
-          const from = src.querySelectorAll('*'), fixed = new Set(), r = src.getBoundingClientRect();
-          for (let i = 0; i < from.length; i++) if (getComputedStyle(from[i]).position === 'fixed') fixed.add(i);
-          return { src, from, fixed, at: 'position:absolute;margin:0;left:' + (r.left - r0.left) + 'px;top:' + (r.top - r0.top) + 'px;width:' + r.width + 'px' };
-        });
-        return { cls: body.className, box: 'position:absolute;left:0;top:0;width:100%;height:' + document.documentElement.scrollHeight + 'px;background:' + bg, parts };
+        const parts = [];
+        for (const src of [main, footer]) {
+          if (!src) continue;
+          const r = src.getBoundingClientRect();
+          if (src !== main && (r.bottom < -0.5 * innerHeight || r.top > 1.5 * innerHeight)) continue;   // nowhere near
+          const from = src.querySelectorAll('*'), fixed = new Set(), index = new Map();
+          for (let i = 0; i < from.length; i++) {
+            index.set(from[i], i);
+            if (getComputedStyle(from[i]).position === 'fixed') fixed.add(i);
+          }
+          const css = new Map(), empty = new Set(), skip = new Uint8Array(from.length);
+          plan(src, index, css, empty, skip);
+          parts.push({ src, from, fixed, css, empty, skip, at: 'position:absolute;margin:0;left:' + (r.left - r0.left) + 'px;top:' + (r.top - r0.top) + 'px;width:' + r.width + 'px' });
+        }
+        return { cls: body.className, box: 'position:absolute;left:0;top:0;width:100%;height:' + document.documentElement.scrollHeight + 'px;background:' + bg, parts, y: scrollY };
       };
       const paintInto = (t, now) => {          // (re)draws one slice's copy, swapping it in whole
         // stands in for <body>: its classes (.template-product …) and background
@@ -1817,7 +1881,7 @@
         page.className = now.cls + ' drawer-lens__page';
         page.style.cssText = now.box;
         for (const p of now.parts) {
-          const c = copy(p.src, p.from, p.fixed);
+          const c = copy(p);
           c.style.cssText = p.at;
           page.appendChild(c);
         }
@@ -1826,11 +1890,13 @@
         if (t.page) t.page.remove();
         t.page = page;
       };
-      const paint = () => { const now = pageNow(); for (const t of layers) paintInto(t, now); };
+      let shownY = 0;                          // the page's scroll when the copies were read off it
+      const paint = () => { const now = pageNow(); for (const t of layers) paintInto(t, now); shownY = now.y; };
       // the page changes shape while the card is up (the Add to bag bar pins, sections reveal…):
       // repaint the copy then, at most every 400ms
-      let due = 0, last = 0, building = false;
+      let due = 0, last = 0, building = false, stale = true;
       const changed = () => {
+        stale = true;
         if (due) return;
         due = setTimeout(() => {
           due = 0;
@@ -1857,33 +1923,58 @@
           }
         }
         building = true;                       // changes from now on repaint once the copies are in
+        stale = true;
         for (const src of [main, footer]) {
           if (src) watch.observe(src, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'hidden', 'open'] });
         }
         // The copies go in once the stylesheets have loaded (from cache), so each is laid out
-        // once, styled, and a few per frame, so no frame lays out more than a couple of pages
-        // and the card starts rising at once. The band shows when all are in.
-        let i = 0;
+        // once, styled; one or two a frame, so no frame lays out more than a couple of pages.
+        // The page is read once (again only if it changes meanwhile). The band shows when all are in.
+        let i = 0, now = null, fresh = false;
         const step = () => {
           if (run !== gen || !raf) return;
-          const now = pageNow(), until = performance.now() + 6;
+          if (stale && !fresh) {               // reading the page gets a frame to itself; a copy always follows
+            now = pageNow(); stale = false; fresh = true;
+            requestAnimationFrame(step); return;
+          }
+          if (stale) { now = pageNow(); stale = false; }   // it changed again meanwhile: the copy must match what's read
+          fresh = false;
+          const until = performance.now() + 4;
           do paintInto(layers[i++], now); while (i < layers.length && performance.now() < until);
           if (i < layers.length) { requestAnimationFrame(step); return; }
-          building = false; last = Date.now();
+          building = false; last = Date.now(); shownY = now.y;
+          live = true; align(true);
           band.classList.add('is-live');
         };
         Promise.race([Promise.all(loads), new Promise((ok) => setTimeout(ok, 1500))])
           .then(() => { if (run === gen && raf) requestAnimationFrame(step); });
       };
-      const track = () => {
-        raf = requestAnimationFrame(track);
+      // lines the copies up with the page, only when the card or the page has moved since the
+      // last frame: rewriting ten transforms every frame would keep the phone repainting the band
+      const align = (force) => {
         const r = main.getBoundingClientRect(), b = band.getBoundingClientRect();
-        const x = (r.left - b.left).toFixed(2), y = r.top - b.top;
-        for (const t of layers) t.view.style.transform = 'translate(' + x + 'px,' + (t.s * (y - t.from)).toFixed(2) + 'px) scaleY(' + t.s.toFixed(4) + ')';
+        const x = r.left - b.left, y = r.top - b.top;
+        if (!force && Math.abs(x - lastX) < 0.01 && Math.abs(y - lastY) < 0.01) return;
+        lastX = x; lastY = y;
+        for (const t of layers) t.view.style.transform = 'translate(' + x.toFixed(2) + 'px,' + (t.s * (y - t.from)).toFixed(2) + 'px) scaleY(' + t.s.toFixed(4) + ')';
       };
-      const start = () => { if (raf) return; track(); build(); };
+      const track = () => { raf = requestAnimationFrame(track); if (live) align(false); };
+      // the page scrolled well past what the copies hold: read it again
+      const scrolled = () => { if (live && Math.abs(scrollY - shownY) > 0.4 * innerHeight) changed(); };
+      // the copies start going in once the card has finished popping up, so nothing the lens
+      // does can hold up its rise
+      const start = () => {
+        if (raf) return;
+        raf = requestAnimationFrame(track);
+        const run = gen;
+        const rising = el.getAnimations ? el.getAnimations().map((a) => a.finished.catch(() => {})) : [];
+        Promise.all(rising).then(() => { if (run === gen && raf) defer = setTimeout(build, 0); });
+        addEventListener('scroll', scrolled, { passive: true });
+      };
       const stop = () => {
-        gen++; cancelAnimationFrame(raf); raf = 0; building = false; band.classList.remove('is-live');
+        gen++; cancelAnimationFrame(raf); raf = 0; clearTimeout(defer);
+        removeEventListener('scroll', scrolled);
+        building = false; live = false; lastX = lastY = NaN; band.classList.remove('is-live');
         watch.disconnect(); clearTimeout(due); due = 0;
         layers.forEach((t) => { t.root.replaceChildren(); t.page = null; });
       };
