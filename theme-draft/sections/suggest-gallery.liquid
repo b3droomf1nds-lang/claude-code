@@ -1,0 +1,495 @@
+{%- comment -%}
+  Suggested products as a swipeable gallery, after Apple's "Get the
+  highlights" gallery (apple.com/iphone-18-pro). The cards are Apple's size
+  on a phone (87.5vw - 20px wide, 480px tall, 28px corners, 20px apart, the
+  next one peeking) and each looks like the "Pair with the USB-C Cable" tile:
+  heading and grey caption at the top, the product photo filling the card.
+  The photos are 2:3 like the cards, with empty white above the product, so
+  the text sits there.
+
+  Swipe the cards, or use the two frosted bubbles that rise and unfold near
+  the bottom of the screen while the gallery is on screen: the dots (grey,
+  the current card's black) and the arrows. They stick 20px above the bottom
+  (and above the sticky Add to bag bar when it shows) and come to rest under
+  the cards. The rise and unfold are Apple's own: the springs and timings of
+  its gallery controls, read from its page script. The frost is the cart
+  sheet's (its tint over the page's dim, blur 6px, saturation 180%) without
+  the sheet's bright edge.
+{%- endcomment -%}
+<style>
+  .sugg{
+    --pad:max(6.25vw,env(safe-area-inset-left));  /* Apple's gallery margin */
+    --gap:20px;
+    --cw:calc(87.5vw - 20px);                       /* Apple's card: 321 x 480 on a 390 phone */
+    --ch:480px;
+    color:var(--ink); padding:clamp(48px,7vw,96px) 0 0;
+  }
+  .sugg__head{ text-align:center; max-width:640px; margin:0 auto clamp(28px,4vw,48px); }
+  .sugg__heading{
+    font-family:var(--sans); font-weight:600; letter-spacing:-0.03em;
+    font-size:clamp(1.7rem,3vw,2.4rem); line-height:1.1; margin:0 0 12px;
+  }
+  .sugg__sub{ color:var(--ink-60); font-size:clamp(.95rem,1.2vw,1.05rem); margin:0; }
+
+  /* the controls rest 32px under the cards, in the gallery's own room */
+  .sugg__gallery{ position:relative; padding-bottom:88px; }
+  /* room above and below inside the scroller for the cards' shadows */
+  .sugg__track{
+    position:relative; display:flex; gap:var(--gap);
+    overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory; scroll-padding-inline:var(--pad);
+    scrollbar-width:none; -webkit-overflow-scrolling:touch;
+    padding:24px 0 44px; margin:-24px 0 -44px;
+  }
+  .sugg__track::-webkit-scrollbar{ display:none; }
+  /* the margins before the first card and after the last (padding at the
+     end of a scroller isn't kept everywhere) */
+  .sugg__track::before,.sugg__track::after{ content:""; flex:0 0 max(0px,calc(var(--pad) - var(--gap))); }
+
+  .sugg__card{
+    position:relative; display:block; flex:0 0 var(--cw); height:var(--ch);
+    scroll-snap-align:start; border-radius:28px; overflow:hidden;
+    background:#fdfeff;  /* the product photos' own white */
+    box-shadow:0 1px 2px rgba(19,19,22,.04),0 18px 44px -22px rgba(19,19,22,.14);
+    color:inherit; text-decoration:none; -webkit-tap-highlight-color:transparent;
+  }
+  .sugg__img{
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:contain; object-position:50% 100%;
+  }
+  /* the tile's type: 1.05rem semibold heading, grey caption */
+  .sugg__text{ position:relative; padding:32px 32px 0; text-align:center; }
+  .sugg__card-heading{
+    font-family:var(--sans); font-weight:600; font-size:1.05rem; line-height:1.25;
+    letter-spacing:-0.02em; margin:0; color:var(--ink); text-wrap:balance;
+  }
+  /* on a card with the arrow the heading keeps 8px clear of it, and wraps
+     (evenly) on narrow phones rather than run under it */
+  a.sugg__card .sugg__card-heading{ margin-inline:18px; }
+  .sugg__card-sub{ font-size:14px; line-height:1.35; color:var(--ink-60); margin:6px 0 0; text-wrap:balance; }
+  .sugg__cta{
+    position:absolute; top:14px; right:14px;
+    display:inline-flex; align-items:center; justify-content:center;
+    width:28px; height:28px; border-radius:999px;
+    background:rgba(19,19,22,.06); color:var(--ink); font-size:.95rem; line-height:1;
+  }
+
+  /* ---- the frosted controls ---- */
+  /* the controls rise out of a line 24px under their resting place (Apple
+     clips its controls the same way), so they never show over the section
+     below; the 24px leaves room for the springs' overshoot */
+  .sugg__aapbox{
+    position:absolute; inset:0 0 -24px; z-index:2; pointer-events:none; overflow:clip;
+    display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
+  }
+  .sugg__aap{
+    position:sticky; display:flex; align-items:center; gap:16px; margin-bottom:24px; pointer-events:none;
+    bottom:max(calc(20px + env(safe-area-inset-bottom)),calc(var(--sugg-bar,0px) + 12px));
+    transition:bottom .35s cubic-bezier(.25,.8,.25,1);
+  }
+  .sugg.is-static .sugg__aapbox{ display:none; }
+  /* the drop the bubbles grow out of, in the frost's colour, solid */
+  .sugg__drop{
+    position:absolute; left:50%; top:0; width:56px; height:56px; border-radius:56px;
+    background:rgb(239,239,242); opacity:0; transform:translateX(-50%) scale(.01); pointer-events:none;
+  }
+  .sugg__bubble{
+    --alpha:1; position:relative; z-index:1; display:flex; align-items:center; justify-content:center;
+    height:56px; border-radius:28px; opacity:0; pointer-events:none;
+  }
+  /* solid at first, frosted once open: the tint thins from 100% to 77% and
+     the blur halves, as Apple's do */
+  .sugg__bg{
+    --scale:1; position:absolute; left:50%; top:50%; z-index:-1; width:56px; height:56px; border-radius:28px;
+    transform:translate(-50%,-50%) scale(var(--scale)); opacity:0;
+    background:rgba(239,239,242,calc(1 - var(--alpha) * .23));
+    -webkit-backdrop-filter:blur(calc(6px * (2 - var(--alpha)))) saturate(180%);
+    backdrop-filter:blur(calc(6px * (2 - var(--alpha)))) saturate(180%);
+  }
+  .sugg__aap.is-on .sugg__bubble{ opacity:1; pointer-events:auto; }
+  .sugg__aap.is-on .sugg__bg{ opacity:1; }
+
+  .sugg__dots{ display:flex; padding:0 16px; }
+  .sugg__dot{ display:flex; align-items:center; justify-content:center; width:24px; height:56px; opacity:0; -webkit-tap-highlight-color:transparent; }
+  .sugg__dot::before{ content:""; width:8px; height:8px; border-radius:50%; background:rgba(0,0,0,.42); transition:background-color .25s linear; }
+  .sugg__dot[aria-current="true"]::before{ background:var(--ink); }
+  .sugg__aap.is-on .sugg__dot{ opacity:1; transition:opacity .1s ease-in .74s; }
+
+  .sugg__arrow{
+    position:relative; display:flex; align-items:center; justify-content:center; width:52px; height:56px;
+    color:rgb(29,29,31); opacity:0; transform:scale(.5); -webkit-tap-highlight-color:transparent;
+  }
+  .sugg__arrow svg{ position:relative; width:36px; height:36px; fill:currentColor; transition:opacity .1s linear; }
+  .sugg__arrow:disabled{ cursor:default; }
+  .sugg__arrow:disabled svg{ opacity:.42; }
+  .sugg__arrow::before{
+    content:""; position:absolute; left:50%; top:50%; width:44px; height:44px; margin:-22px 0 0 -22px; border-radius:50%;
+    background:rgba(193,193,198,.654); opacity:0; transition:opacity .1s linear;
+  }
+  .sugg__arrow:not(:disabled):active::before{ opacity:1; }
+  @media (hover:hover){ .sugg__arrow:not(:disabled):hover::before{ opacity:.6; } }
+  .sugg__aap.is-on .sugg__arrow{ opacity:1; transform:scale(1); transition:opacity .1s ease-in .94s,transform .2s ease-out .94s; }
+
+  .sugg__dot:focus-visible,.sugg__arrow:focus-visible{ outline:2px solid var(--focus,#0071e3); outline-offset:-4px; border-radius:28px; }
+
+  /* bigger phones and tablets: portrait cards like the photos, 400 x 600 */
+  @media (min-width:600px) and (max-width:899px){
+    .sugg{ --cw:min(calc(87.5vw - 20px),400px); --ch:calc(var(--cw) * 1.5); }
+  }
+  /* desktop: the cards share the width (up to 400px each) so they all show
+     at once; nothing to scroll, so no controls, unless there are too many
+     to fit at 260px */
+  @media (min-width:900px){
+    .sugg{ --pad:max(24px,calc((100vw - 1240px) / 2)); --gap:24px; }
+    .sugg__card{ flex-basis:max(260px,min(400px,calc((100% - 2 * var(--pad) - (var(--n) - 1) * var(--gap)) / var(--n)))); height:auto; aspect-ratio:2 / 3; }
+    .sugg.is-static .sugg__track{ justify-content:center; }
+    .sugg.is-static .sugg__gallery{ padding-bottom:0; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .sugg__aap,.sugg__aap *{ transition:none!important; }
+  }
+</style>
+
+{%- assign card_count = section.blocks.size -%}
+<section class="sugg" style="--n:{{ card_count }}" data-sugg aria-roledescription="carousel"{% if section.settings.heading != blank %} aria-label="{{ section.settings.heading | escape }}"{% endif %}>
+  {%- if section.settings.heading != blank or section.settings.subheading != blank -%}
+    <div class="wrap">
+      <div class="sugg__head" data-reveal>
+        {%- if section.settings.heading != blank -%}<h2 class="sugg__heading">{{ section.settings.heading }}</h2>{%- endif -%}
+        {%- if section.settings.subheading != blank -%}<p class="sugg__sub">{{ section.settings.subheading }}</p>{%- endif -%}
+      </div>
+    </div>
+  {%- endif -%}
+
+  <div class="sugg__gallery" data-sugg-gallery>
+    <div class="sugg__track" data-sugg-track>
+      {%- for block in section.blocks -%}
+        {%- assign card_product = block.settings.link_product -%}
+        {%- unless card_product.handle -%}{%- assign card_product = all_products[card_product] -%}{%- endunless -%}
+        {%- assign card_url = block.settings.link_url -%}
+        {%- if card_url == blank and card_product -%}{%- assign card_url = card_product.url -%}{%- endif -%}
+        {%- assign card_image = block.settings.image -%}
+        {%- if card_image == blank and card_product -%}{%- assign card_image = card_product.featured_image -%}{%- endif -%}
+        {%- capture card_attrs -%}class="sugg__card" data-sugg-card {{ block.shopify_attributes }}{%- endcapture -%}
+        {%- if card_url != blank -%}<a href="{{ card_url }}" {{ card_attrs }}>{%- else -%}<div {{ card_attrs }}>{%- endif -%}
+          {%- if card_image != blank -%}
+            <img class="sugg__img" src="{{ card_image | image_url: width: 1000 }}"
+                 srcset="{{ card_image | image_url: width: 500 }} 500w, {{ card_image | image_url: width: 750 }} 750w, {{ card_image | image_url: width: 1000 }} 1000w, {{ card_image | image_url: width: 1300 }} 1300w"
+                 sizes="(min-width:900px) 400px, calc(87.5vw - 20px)"
+                 width="{{ card_image.width }}" height="{{ card_image.height }}"
+                 alt="{{ card_image.alt | default: block.settings.heading | escape }}" loading="lazy">
+          {%- endif -%}
+          <div class="sugg__text">
+            <h3 class="sugg__card-heading">{{ block.settings.heading }}</h3>
+            {%- if block.settings.caption != blank -%}<p class="sugg__card-sub">{{ block.settings.caption }}</p>{%- endif -%}
+          </div>
+          {%- if card_url != blank -%}<span class="sugg__cta" aria-hidden="true">&rarr;</span>{%- endif -%}
+        {%- if card_url != blank -%}</a>{%- else -%}</div>{%- endif -%}
+      {%- endfor -%}
+    </div>
+
+    {%- if card_count > 1 -%}
+      <div class="sugg__aapbox">
+        <div class="sugg__aap" data-sugg-aap>
+          <span class="sugg__drop" aria-hidden="true"></span>
+          <div class="sugg__bubble" data-sugg-bubble>
+            <span class="sugg__bg"></span>
+            <div class="sugg__dots">
+              {%- for block in section.blocks -%}
+                <button type="button" class="sugg__dot" data-sugg-dot aria-label="Show {{ forloop.index }} of {{ card_count }}"{% if forloop.first %} aria-current="true"{% endif %}></button>
+              {%- endfor -%}
+            </div>
+          </div>
+          <div class="sugg__bubble" data-sugg-bubble>
+            <span class="sugg__bg"></span>
+            <button type="button" class="sugg__arrow" data-sugg-go="-1" aria-label="Previous" disabled>
+              <svg viewBox="0 0 36 36" aria-hidden="true"><path d="m13.44 16.94 5.51-5.5a1.5 1.5 0 0 1 2.12 2.12L16.62 18l4.45 4.44a1.5 1.5 0 0 1-2.12 2.12l-5.51-5.5a1.5 1.5 0 0 1 0-2.12z"/></svg>
+            </button>
+            <button type="button" class="sugg__arrow" data-sugg-go="1" aria-label="Next">
+              <svg viewBox="0 0 36 36" aria-hidden="true"><path d="m22.56 16.94-5.51-5.5a1.5 1.5 0 0 0-2.12 2.12L19.38 18l-4.45 4.44a1.5 1.5 0 0 0 2.12 2.12l5.51-5.5a1.5 1.5 0 0 0 0-2.12z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+<script>
+(function () {
+  if (window.__sugg) { window.__sugg(); return; }
+
+  /* Apple's spring layer, as its gallery controls use it: one damped spring
+     per property (mass 1), stepped at a fixed 60 Hz (semi-implicit Euler)
+     and drawn between steps. A spring given a duration and bounce gets
+     stiffness (2pi/duration)^2 and damping (1 - bounce) 4pi/duration. */
+  const STEP = 1 / 60;
+  const active = new Set();
+  let cues = [], ticking = false, last = 0, acc = 0;
+
+  function Spring(el, props) {
+    this.el = el; this.p = {};
+    for (const n in props) {
+      const d = props[n];
+      let k = d.k, c = d.c;
+      if (d.dur) { k = Math.pow(2 * Math.PI / d.dur, 2); c = (1 - (d.bounce || 0)) * 4 * Math.PI / d.dur; }
+      this.p[n] = { x: d.at, t: d.at, v: 0, k: k, c: c, px: d.at };
+    }
+  }
+  Spring.prototype.snap = function (n, val) {
+    const q = this.p[n]; q.x = q.t = q.px = val; q.v = 0; this.paint(1);
+  };
+  Spring.prototype.to = function (n, val) { this.p[n].t = val; active.add(this); run(); };
+  Spring.prototype.step = function () {
+    let moving = false;
+    for (const n in this.p) {
+      const q = this.p[n];
+      q.px = q.x;
+      if (Math.abs(q.x - q.t) < 1e-3 && Math.abs(q.v) < 1e-3) { q.x = q.px = q.t; q.v = 0; continue; }
+      q.v += (-q.k * (q.x - q.t) - q.c * q.v) * STEP;
+      q.x += q.v * STEP;
+      moving = true;
+    }
+    return moving;
+  };
+  Spring.prototype.paint = function (f) {
+    const s = this.el.style;
+    let x = 0, y = 0, sc = 1, tf = false;
+    for (const n in this.p) {
+      const q = this.p[n], v = q.px + (q.x - q.px) * f;
+      if (n === 'x') { x = v; tf = true; }
+      else if (n === 'y') { y = v; tf = true; }
+      else if (n === 'scale') { sc = v; tf = true; }
+      else if (n === 'width' || n === 'height') s[n] = v.toFixed(2) + 'px';
+      else s.setProperty(n, v.toFixed(4));
+    }
+    if (tf) s.transform = 'translate3d(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px,0) scale(' + sc.toFixed(4) + ')';
+  };
+  function run() { if (!ticking) { ticking = true; last = performance.now(); requestAnimationFrame(frame); } }
+  function frame(now) {
+    const due = cues.filter(function (q) { return now >= q.at; });
+    cues = cues.filter(function (q) { return now < q.at; });
+    due.forEach(function (q) { q.fn(); });
+    acc += Math.min(1 / 30, Math.max(0, now - last) / 1000); last = now;
+    const moving = new Set();
+    while (acc >= STEP) { active.forEach(function (sp) { if (sp.step()) moving.add(sp); }); acc -= STEP; }
+    active.forEach(function (sp) { sp.paint(acc / STEP); if (!moving.has(sp) && sp.atRest()) active.delete(sp); });
+    if (active.size || cues.length) requestAnimationFrame(frame);
+    else ticking = false;
+  }
+  Spring.prototype.atRest = function () {
+    for (const n in this.p) { const q = this.p[n]; if (q.x !== q.t || q.v !== 0) return false; }
+    return true;
+  };
+  function cue(t0, s, fn) { cues.push({ at: t0 + s * 1000, fn: fn }); run(); }
+  function uncue(owner) { cues = cues.filter(function (q) { return q.fn.owner !== owner; }); }
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const atc = document.querySelector('.pdp--bold .atc');   // the sticky Add to bag bar, when pinned
+
+  function Gallery(root) {
+    root.setAttribute('data-sugg-on', '');
+    const gallery = root.querySelector('[data-sugg-gallery]');
+    const track = root.querySelector('[data-sugg-track]');
+    const cards = Array.prototype.slice.call(track.querySelectorAll('[data-sugg-card]'));
+    const aap = root.querySelector('[data-sugg-aap]');
+    const n = cards.length;
+    if (!aap || n < 2) return;
+    const drop = aap.querySelector('.sugg__drop');
+    const dots = Array.prototype.slice.call(aap.querySelectorAll('[data-sugg-dot]'));
+    const prev = aap.querySelector('[data-sugg-go="-1"]'), next = aap.querySelector('[data-sugg-go="1"]');
+    const bubbles = Array.prototype.slice.call(aap.querySelectorAll('[data-sugg-bubble]')).map(function (el, i) {
+      const bg = el.querySelector('.sugg__bg');
+      return {
+        el: el,
+        elS: new Spring(el, { x: { at: 0, k: 100, c: 20 }, '--alpha': { at: 1, k: 100, c: 20 } }),
+        bgS: new Spring(bg, { width: { at: 56, k: 100, c: 10 }, height: { at: 56, k: 100, c: 10 },
+          '--scale': i === 0 ? { at: 1, dur: .3, bounce: 0 } : { at: 1, dur: .65, bounce: 0 } })
+      };
+    });
+    const dotS = dots.map(function (d) { return new Spring(d, { x: { at: 0, k: 200, c: 20 } }); });
+    const aapS = new Spring(aap, { y: { at: 0, k: 100, c: 8 } });
+    const dropS = new Spring(drop, { x: { at: -15, k: 100, c: 8 }, scale: { at: 1.3, dur: .5, bounce: 0 },
+      width: { at: 30, k: 100, c: 8 }, height: { at: 80, k: 100, c: 8 } });
+    let shown = false;
+
+    /* Folded away, ready to unfold: Apple's starting values. Both bubbles sit
+       on the middle of the screen, the dots' as a small solid blob, the
+       arrows' at nothing, and the whole row 180px down. */
+    function fold() {
+      uncue(root); shown = false;
+      aap.classList.remove('is-on');
+      drop.style.opacity = '0';
+      dropS.snap('scale', 1.3); dropS.snap('x', -15); dropS.snap('width', 30); dropS.snap('height', 80);
+      aapS.snap('y', 180);
+      const r = aap.getBoundingClientRect(), mid = r.left + r.width / 2;
+      bubbles.forEach(function (b, i) {
+        b.w = b.el.offsetWidth;
+        b.elS.snap('x', mid - (r.left + b.el.offsetLeft + b.w / 2));
+        b.elS.snap('--alpha', 0);
+        b.bgS.snap('width', i === 0 ? 40 : 80); b.bgS.snap('height', 36); b.bgS.snap('--scale', i === 0 ? 1.3 : 0);
+      });
+      dotS.forEach(function (s) { s.snap('x', 36); });
+    }
+    /* Open fully at once (reduced motion). */
+    function settle() {
+      uncue(root); shown = true;
+      drop.style.opacity = '0'; aapS.snap('y', 0);
+      bubbles.forEach(function (b) {
+        b.w = b.el.offsetWidth;
+        b.elS.snap('x', 0); b.elS.snap('--alpha', 1);
+        b.bgS.snap('width', b.w); b.bgS.snap('height', 56); b.bgS.snap('--scale', 1);
+      });
+      dotS.forEach(function (s) { s.snap('x', 0); });
+      aap.classList.add('is-on');
+    }
+    /* Apple's unfold, step for step (its playIntroAnimation for two
+       bubbles): the drop pops up and rounds into a circle as the row springs
+       up from 180px below; the dots' bubble slides left out of it and
+       stretches, the arrows' slides right and grows; then both grow to full
+       height, the dots slide in, the arrows appear, and the bubbles turn from
+       solid to frost. Times in seconds. */
+    function unfold() {
+      if (reduce.matches) { settle(); return; }
+      fold(); shown = true;
+      const t0 = performance.now(), b0 = bubbles[0], b1 = bubbles[1];
+      const at = function (s, fn) { fn.owner = root; cue(t0, s, fn); };
+      at(0, function () {
+        requestAnimationFrame(function () { aap.classList.add('is-on'); drop.style.opacity = '1'; });
+        dropS.to('scale', .8);
+      });
+      at(.03, function () { aapS.to('y', 0); });
+      at(.05, function () { dropS.to('x', -28); dropS.to('width', 56); });
+      at(.15, function () { dropS.to('height', 56); });
+      at(.3, function () { b0.bgS.to('--scale', 1); });
+      at(.5, function () { b0.elS.to('x', 0); b0.bgS.to('width', b0.w); });
+      at(.52, function () { requestAnimationFrame(function () { drop.style.opacity = '0'; }); });
+      at(.54, function () { b1.elS.to('x', 0); b1.bgS.to('--scale', 1); });
+      at(.7, function () { b0.bgS.to('height', 56); b1.bgS.to('width', b1.w); b1.bgS.to('height', 56); });
+      dotS.forEach(function (s, i) { at(.74 + .02 * i, function () { s.to('x', 0); }); });
+      at(1, function () { b0.elS.to('--alpha', 1); b1.elS.to('--alpha', 1); });
+    }
+
+    /* Which card is showing: the one whose resting place is nearest. The
+       last ones can't come to the start, so theirs is the end. */
+    function stops() {
+      const max = track.scrollWidth - track.clientWidth, pad = cards[0].offsetLeft;
+      return cards.map(function (c) { return Math.max(0, Math.min(max, c.offsetLeft - pad)); });
+    }
+    let idx = -1, want = -1, tick = 0, idle = 0;
+    function show(i) {
+      if (i === idx) return;
+      idx = i;
+      dots.forEach(function (d, k) { d.setAttribute('aria-current', k === i ? 'true' : 'false'); });
+      prev.disabled = i <= 0; next.disabled = i >= n - 1;
+    }
+    function sync() {
+      tick = 0;
+      if (want >= 0) { show(want); return; }
+      const s = stops(), x = track.scrollLeft;
+      let best = 0;
+      s.forEach(function (v, k) { if (Math.abs(v - x) < Math.abs(s[best] - x)) best = k; });
+      show(best);
+    }
+    function go(i) {
+      i = Math.max(0, Math.min(n - 1, i));
+      want = i; show(i);
+      track.scrollTo({ left: stops()[i], behavior: reduce.matches ? 'auto' : 'smooth' });
+      clearTimeout(idle); idle = setTimeout(function () { want = -1; sync(); }, 900);
+    }
+    track.addEventListener('scroll', function () {
+      if (!tick) tick = requestAnimationFrame(sync);
+      if (want >= 0) { clearTimeout(idle); idle = setTimeout(function () { want = -1; sync(); }, 140); }
+    }, { passive: true });
+    track.addEventListener('touchstart', function () { want = -1; }, { passive: true });
+    track.addEventListener('pointerdown', function () { want = -1; }, { passive: true });
+    prev.addEventListener('click', function () { go((want >= 0 ? want : idx) - 1); });
+    next.addEventListener('click', function () { go((want >= 0 ? want : idx) + 1); });
+    dots.forEach(function (d, k) { d.addEventListener('click', function () { go(k); }); });
+
+    /* Unfold once most of the cards are on screen; fold away, unseen, once
+       the whole gallery (controls included) has gone, ready for next time. */
+    const enough = function (h) { return h >= Math.min(.6 * cards[0].offsetHeight, .5 * innerHeight); };
+    const io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (root.classList.contains('is-static')) return;
+        if (e.target === track) {
+          if (!shown && e.isIntersecting && enough(e.intersectionRect.height)) unfold();
+        } else if (!e.isIntersecting && shown) fold();
+      });
+    }, { threshold: [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1] });
+
+    /* All the cards fit (wide screens): nothing to scroll, no controls. If
+       a resize makes them stop fitting while they're on screen, unfold. */
+    function fit() {
+      root.classList.toggle('is-static', track.scrollWidth <= track.clientWidth + 1);
+      if (root.classList.contains('is-static') || shown) return;
+      fold();
+      const r = track.getBoundingClientRect();
+      if (enough(Math.min(r.bottom, innerHeight) - Math.max(r.top, 0))) unfold();
+    }
+    if (window.ResizeObserver) new ResizeObserver(function () { fit(); sync(); }).observe(track);
+    else fit();
+
+    /* Above the sticky Add to bag bar while it shows: --sugg-bar is how far
+       its top is from the bottom of the screen. */
+    function bar() {
+      const on = atc.classList.contains('is-pinned') && atc.style.visibility !== 'hidden';
+      root.style.setProperty('--sugg-bar', on ? Math.max(0, Math.round(innerHeight - atc.getBoundingClientRect().top)) + 'px' : '0px');
+    }
+    if (atc) {
+      new MutationObserver(bar).observe(atc, { attributes: true, attributeFilter: ['class', 'style'] });
+      addEventListener('resize', bar); bar();
+    }
+
+    fold(); sync();
+    io.observe(track); io.observe(gallery);
+
+    // theme editor: selecting a card's block brings it into view
+    root.addEventListener('shopify:block:select', function (e) {
+      const k = cards.indexOf(e.target);
+      if (k >= 0) go(k);
+    });
+  }
+
+  window.__sugg = function () {
+    document.querySelectorAll('[data-sugg]:not([data-sugg-on])').forEach(function (el) { new Gallery(el); });
+  };
+  window.__sugg();
+  document.addEventListener('shopify:section:load', window.__sugg);
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Suggested products",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Made to go with it." },
+    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "A few things that make Core even better." }
+  ],
+  "blocks": [
+    {
+      "type": "card",
+      "name": "Card",
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Heading", "default": "Pair with the USB-C Cable" },
+        { "type": "text", "id": "caption", "label": "Caption", "default": "to charge Core straight from the wall." },
+        { "type": "image_picker", "id": "image", "label": "Image (defaults to linked product's image)" },
+        { "type": "product", "id": "link_product", "label": "Link to product (also supplies the default image)" },
+        { "type": "url", "id": "link_url", "label": "Link (overrides product link)" }
+      ]
+    }
+  ],
+  "max_blocks": 8,
+  "presets": [
+    {
+      "name": "Suggested products",
+      "blocks": [
+        { "type": "card", "settings": { "heading": "Pair with the USB-C Cable", "caption": "to charge Core straight from the wall." } },
+        { "type": "card", "settings": { "heading": "Pair with the Watch Charger", "caption": "to keep your watch topped up." } },
+        { "type": "card", "settings": { "heading": "Pair with the MagSafe Charger", "caption": "to top up your iPhone wirelessly." } }
+      ]
+    }
+  ]
+}
+{% endschema %}
