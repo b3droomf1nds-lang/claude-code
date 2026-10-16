@@ -1141,6 +1141,16 @@ h1.t-hero em,
 .drawer-scroller .protect-bubble__label{font-size:13px;line-height:1.38;color:var(--sys-label-2)}
 .drawer-scroller .protect-bubble__title{font-size:15px;font-weight:600;line-height:1.33;color:var(--sys-label)}
 .drawer-scroller .protect-bubble__side{display:flex;align-items:center;flex:0 0 auto}
+/* the tiles inside the bubbles (the product photo, the shipping box, the
+   shield) have the bubbles' own glass edge: the same crisp 1px white line,
+   laid over the photo so it runs unbroken round its corners */
+.drawer-scroller .cart-line__img,
+.drawer-scroller .ship-bubble__icon,
+.drawer-scroller .protect-bubble__icon{position:relative}
+.drawer-scroller .cart-line__img::after,
+.drawer-scroller .ship-bubble__icon::after,
+.drawer-scroller .protect-bubble__icon::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.95)}
 /* The switch, after iOS 26's: a wide capsule with a pill-shaped white knob.
    Off, a light grey track; on, Checkout's blue with the knob slid across on a
    spring that just overshoots. While a finger is on it the knob swells past
