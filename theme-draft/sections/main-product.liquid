@@ -1127,6 +1127,11 @@
         return spacer.getBoundingClientRect().bottom <= 0 && slot.getBoundingClientRect().top <= 0;
       }
 
+      var stop = document.querySelector('[data-atc-stop]');
+      function pastStop() {
+        return !!stop && stop.getBoundingClientRect().top <= atc.getBoundingClientRect().top;
+      }
+
       function update() {
         ticking = false;
         var y = clampedY();
@@ -1155,10 +1160,14 @@
         if (state !== 'flow') {
           /* A genuine downward scroll hides the bar; scrolling up shows it
              again. It stays out of the flow while hidden, so its closed space
-             doesn't reopen and nothing on the page moves. */
-          if (dir === 1 && !barHidden) {
-            barHidden = true; atc.style.visibility = 'hidden'; note('hidden (scrolling down)');
-          } else if (dir === -1 && barHidden) {
+             doesn't reopen and nothing on the page moves. It also stays
+             hidden from the [data-atc-stop] section down (the suggested
+             products gallery): hidden once that section's top reaches the
+             bar, shown again on the way up once it has dropped back below. */
+          var off = pastStop();
+          if ((dir === 1 || off) && !barHidden) {
+            barHidden = true; atc.style.visibility = 'hidden'; note(off ? 'hidden (past stop)' : 'hidden (scrolling down)');
+          } else if (dir === -1 && !off && barHidden) {
             barHidden = false; atc.style.visibility = ''; note('shown (scrolling up)');
           }
         }

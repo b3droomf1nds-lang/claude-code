@@ -151,7 +151,7 @@
 </style>
 
 {%- assign card_count = section.blocks.size -%}
-<section class="sugg" style="--n:{{ card_count }}" data-sugg aria-roledescription="carousel"{% if section.settings.heading != blank %} aria-label="{{ section.settings.heading | escape }}"{% endif %}>
+<section class="sugg" style="--n:{{ card_count }}" data-sugg data-atc-stop aria-roledescription="carousel"{% if section.settings.heading != blank %} aria-label="{{ section.settings.heading | escape }}"{% endif %}>
   {%- if section.settings.heading != blank or section.settings.subheading != blank -%}
     <div class="wrap">
       <div class="sugg__head" data-reveal>
