@@ -790,7 +790,6 @@
     const countBadges = $$('[data-cart-count]');
     const protectBox = $('[data-protect]', el);
     const protectToggle = protectBox && $('input', protectBox);
-    const protectPrice = protectBox && $('[data-protect-price]', protectBox);
     const P = window.Voltical.protection || {};
     let protectionProduct = null;
     let protectWant = null;                          // the protection switch's flip, until the cart has caught up with it
@@ -888,11 +887,7 @@
     // cart as it would be while the quantity slider moves (previewQty)
     const paintTotals = (c) => {
       const protLine = c.items.find(isProtection);
-      if (protectToggle) {
-        protectToggle.checked = protectWant == null ? !!protLine : protectWant;   // a flip on its way to the cart stays shown
-        const v = protLine ? { price: protLine.final_line_price } : tierVariant(c.items_subtotal_price);
-        if (protectPrice && v) protectPrice.textContent = money(v.price);
-      }
+      if (protectToggle) protectToggle.checked = protectWant == null ? !!protLine : protectWant;   // a flip on its way to the cart stays shown
       const S = window.VolticalStrings;
       let ship = shippingFor(c);
       if (ship && !c.items.some((i) => i.quantity && !isProtection(i))) ship = 0;   // nothing left to ship

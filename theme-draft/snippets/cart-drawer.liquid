@@ -22,7 +22,7 @@
     </div>
 
     {%- comment -%} Shipping protection, laid out like a product line: a tile, a grey label over the cover, then the switch
-      where a product's quantity is and the price under it. The switch is drawn (theme-r2.css, after iOS 26's) over a
+      where the shipping price is. The switch is drawn (theme-r2.css, after iOS 26's) over a
       real one, which iPhones tick for. {%- endcomment -%}
     <div class="protect-bubble" data-protect hidden>
       <span class="protect-bubble__icon"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><defs><mask id="protect-cut"><rect width="30" height="30" fill="#fff"/><path d="M10.5 15.3l3.1 3.1 5.9-6.2" fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></mask></defs><path mask="url(#protect-cut)" fill="currentColor" d="M13.7 2.85A3.4 3.4 0 0 1 16.3 2.85L24.1 5.95C25.1 6.35 25.8 7.35 25.8 8.45V13.6C25.8 19.9 21.9 24.8 16.1 26.85A3.4 3.4 0 0 1 13.9 26.85C8.1 24.8 4.2 19.9 4.2 13.6V8.45C4.2 7.35 4.9 6.35 5.9 5.95Z"/></svg></span>
@@ -35,7 +35,6 @@
           <input type="checkbox" switch aria-label="{{ 'cart.protect_label' | t }}">
           <span class="cart-switch__track" aria-hidden="true"><span class="cart-switch__knob"></span></span>
         </label>
-        <span class="protect-bubble__price" data-protect-price></span>
       </div>
     </div>
   </div>
