@@ -110,10 +110,13 @@
   .sugg__aap.is-on .sugg__bg{ opacity:1; }
 
   .sugg__dots{ display:flex; padding:0 16px; }
-  .sugg__dot{ display:flex; align-items:center; justify-content:center; width:24px; height:56px; opacity:0; -webkit-tap-highlight-color:transparent; }
-  .sugg__dot::before{ content:""; width:8px; height:8px; border-radius:50%; background:rgba(0,0,0,.42); transition:background-color .25s linear; }
-  .sugg__dot[aria-current="true"]::before{ background:var(--ink); }
-  .sugg__aap.is-on .sugg__dot{ opacity:1; transition:opacity .1s ease-in .74s; }
+  /* the current dot stretches into a 32px line, as Apple's does; it grows
+     as the old one shrinks, so the bubble's width never changes */
+  .sugg__dot{ display:flex; align-items:center; justify-content:center; width:24px; height:56px; opacity:0; -webkit-tap-highlight-color:transparent; transition:width .4s cubic-bezier(.4,0,.2,1); }
+  .sugg__dot::before{ content:""; flex:none; width:8px; height:8px; border-radius:4px; background:rgba(0,0,0,.42); transition:width .4s cubic-bezier(.4,0,.2,1),background-color .25s linear; }
+  .sugg__dot[aria-current="true"]{ width:48px; }
+  .sugg__dot[aria-current="true"]::before{ width:32px; background:var(--ink); }
+  .sugg__aap.is-on .sugg__dot{ opacity:1; transition:opacity .1s ease-in .74s,width .4s cubic-bezier(.4,0,.2,1); }
 
   .sugg__arrow{
     position:relative; display:flex; align-items:center; justify-content:center; width:52px; height:56px;
@@ -146,7 +149,7 @@
     .sugg.is-static .sugg__gallery{ padding-bottom:0; }
   }
   @media (prefers-reduced-motion:reduce){
-    .sugg__aap,.sugg__aap *{ transition:none!important; }
+    .sugg__aap,.sugg__aap *,.sugg__aap *::before{ transition:none!important; }
   }
 </style>
 
