@@ -97,8 +97,9 @@
     "update": "Update",
     "quantity": "Quantity",
     "remove": "Remove",
-    "protect_title": "Protect your order",
-    "protect_desc": "Covers loss, damage or theft in transit — we reship or refund, no claims process."
+    "protect_label": "Shipping Protection",
+    "protect_title": "Loss, Damage & Theft",
+    "protect_desc": "Reshipped or refunded"
   },
   "footer": {
     "shop": "Shop",

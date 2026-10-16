@@ -10,7 +10,7 @@
 {
   "current": {
     "protection_enabled": true,
-    "protection_handle": "shipping-protection",
+    "protection_handle": "shipping-protection-4",
     "protection_thresholds": "50,100,150",
     "dispatch_cutoff": 14
   }

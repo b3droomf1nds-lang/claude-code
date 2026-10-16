@@ -227,7 +227,7 @@ How the frost got here:
 - `blur(9px)` (`340eb16`): from the dark recording, built with a blur inside each slice. The owner rejected it.
 - `blur(6px)`: from the light recording the owner sent to show the level they wanted.
 
-The bubbles (product lines, shipping, add-on) are panes of their own: the sheet's frost again (`rgba(249,249,252,.74)` plus `blur(6px) saturate(180%)` as a `backdrop-filter`) over what the sheet already shows, with a 1 px white line and no lens. The owner asked for each item to have "its own layer" of the frosting. Earlier they were `.5` white, then `.22`, with no blur of their own.
+The bubbles (product lines, shipping, shipping protection) are panes of their own: the sheet's frost again (`rgba(249,249,252,.74)` plus `blur(6px) saturate(180%)` as a `backdrop-filter`) over what the sheet already shows, with a 1 px white line and no lens. The owner asked for each item to have "its own layer" of the frosting. Earlier they were `.5` white, then `.22`, with no blur of their own.
 
 The band is clear glass with the frost over it:
 

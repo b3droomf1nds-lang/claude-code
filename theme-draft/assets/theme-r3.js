@@ -793,6 +793,7 @@
     const protectPrice = protectBox && $('[data-protect-price]', protectBox);
     const P = window.Voltical.protection || {};
     let protectionProduct = null;
+    let protectWant = null;                          // the protection switch's flip, until the cart has caught up with it
     let cart = null;
     let busy = false;
     let qtyOpenKey = null;                           // the line whose quantity menu is open (its pencil is hidden)
@@ -800,7 +801,7 @@
 
     if (P.enabled && P.handle) {
       fetchJSON('/products/' + P.handle + '.js')
-        .then((p) => { protectionProduct = p; })
+        .then((p) => { protectionProduct = p; if (cart) render(); })   // the bag may already be drawn: show the switch, and its line as protection
         .catch(() => { if (protectBox) protectBox.hidden = true; });
     } else if (protectBox) protectBox.hidden = true;
 
@@ -843,9 +844,11 @@
         b.hidden = n === 0;
         b.classList.add('bump'); setTimeout(() => b.classList.remove('bump'), 350);
       });
-      emptyEl.hidden = cart.item_count !== 0;
-      footEl.hidden = cart.item_count === 0;
-      if (protectBox) protectBox.hidden = cart.item_count === 0 || !protectionProduct;
+      // protection alone protects nothing: it leaves with the last product, and the bag reads empty
+      if (!realLines.length && cart.items.some(isProtection) && protectWant == null) { protectWant = false; protectSync(); }
+      emptyEl.hidden = realLines.length !== 0;
+      footEl.hidden = realLines.length === 0;
+      if (protectBox) protectBox.hidden = realLines.length === 0 || !protectionProduct;
 
       /* Each product is a bubble like the shipping one: the short name
          ("Core", not "Voltical Core 5K & 10K") as the small grey label, the
@@ -876,7 +879,7 @@
           </div>
         </div>`).join('');
 
-      if (shipEl) shipEl.hidden = cart.item_count === 0;
+      if (shipEl) shipEl.hidden = realLines.length === 0;
       paintTotals(cart);
       if (qm && !qm.closing) previewQty(qm.key, qm.shown);   // its quantity menu is open: keep the slider's number
     };
@@ -886,7 +889,7 @@
     const paintTotals = (c) => {
       const protLine = c.items.find(isProtection);
       if (protectToggle) {
-        protectToggle.checked = !!protLine;
+        protectToggle.checked = protectWant == null ? !!protLine : protectWant;   // a flip on its way to the cart stays shown
         const v = protLine ? { price: protLine.final_line_price } : tierVariant(c.items_subtotal_price);
         if (protectPrice && v) protectPrice.textContent = money(v.price);
       }
@@ -1654,24 +1657,36 @@
     qmEl.root.addEventListener('touchmove', (e) => { if (e.target !== qmEl.hap && e.cancelable) e.preventDefault(); }, { passive: false });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && qm) { e.stopImmediatePropagation(); closeQtyMenu(); } }, true);
 
-    if (protectToggle) protectToggle.addEventListener('change', () => {
-      const protLine = cart && cart.items.find(isProtection);
-      if (protectToggle.checked && !protLine) {
-        const v = tierVariant(cart.items_subtotal_price);
-        if (!v) return;
-        fetchJSON('/cart/add.js', { method: 'POST', body: JSON.stringify({ id: v.id, quantity: 1, properties: { _protection: 'true' } }) })
-          .then(() => refresh());
-      } else if (!protectToggle.checked && protLine) {
-        mutate({ id: protLine.key, quantity: 0 });
-      }
-    });
-
-    /* On iPhone Safari (17.4+) the protection toggle is the native iOS
-       switch, the phone's own control rather than a drawn copy. */
-    if (protectToggle && 'switch' in protectToggle) {
-      protectToggle.switch = true;
-      protectToggle.parentNode.classList.add('is-native');
+    /* The protection switch flips at once (it's the phone's own switch, drawn
+       over in theme-r2.css); the cart follows. Flips made while a request is
+       out are kept, and once it's back the cart is brought round to the last
+       one, so quick on-off-on taps end where the switch shows. */
+    let protectBusy = false;
+    function protectSync() {
+      if (protectBusy || !cart || protectWant == null) return;
+      const line = cart.items.find(isProtection);
+      if (protectWant === !!line) { protectWant = null; return; }
+      const v = protectWant && tierVariant(cart.items_subtotal_price);
+      if (protectWant && !v) { protectWant = null; paintTotals(cart); return; }
+      protectBusy = true;
+      const asked = protectWant;
+      const req = asked
+        ? fetchJSON('/cart/add.js', { method: 'POST', body: JSON.stringify({ id: v.id, quantity: 1, properties: { _protection: 'true' } }) })
+        : fetchJSON('/cart/change.js', { method: 'POST', body: JSON.stringify({ id: line.key, quantity: 0 }) });
+      let failed = false;
+      req.catch(() => { failed = true; })
+        .then(() => fetchJSON('/cart.js')).then((c) => { cart = c; }).catch(() => { failed = true; })
+        .finally(() => {
+          protectBusy = false;
+          if (failed && protectWant === asked) protectWant = null;   // the cart said no: show what it has
+          render();
+          protectSync();
+        });
     }
+    if (protectToggle) protectToggle.addEventListener('change', () => {
+      protectWant = protectToggle.checked;
+      protectSync();
+    });
 
     /* The card, styled after the iPhone's AirPods pop-up (theme-r2.css).
        Its swipe comes from the phone itself: the drawer is placed inside a
