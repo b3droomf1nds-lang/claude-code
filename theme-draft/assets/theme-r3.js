@@ -832,7 +832,10 @@
     const shippingFor = (c) => {
       const from = SHIP_FREE_FROM[c.currency];
       if (from == null) return null;
-      return c.total_price >= from * 100 ? 0 : SHIP_RATE;
+      // shipping protection isn't shipped (the product doesn't need shipping), so like at checkout it
+      // doesn't count towards free shipping
+      const prot = c.items.reduce((sum, i) => sum + (isProtection(i) ? i.final_line_price : 0), 0);
+      return c.total_price - prot >= from * 100 ? 0 : SHIP_RATE;
     };
 
     const render = () => {
