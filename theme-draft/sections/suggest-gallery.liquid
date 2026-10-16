@@ -9,9 +9,10 @@
 
   Swipe the cards, or use the two frosted bubbles that rise and unfold near
   the bottom of the screen while the gallery is on screen: the dots (grey,
-  the current card's a grey line, as on Apple's) and the arrows (the dots' grey, no press highlight).
-  The cards themselves have no corner arrow; the whole card is the link. They stick 20px above the bottom
-  (and above the sticky Add to bag bar when it shows) and come to rest under
+  the current card's a grey line, as on Apple's) and the arrows (the dots'
+  grey, no press highlight). The cards themselves have no corner arrow; the
+  whole card is the link. The bubbles stick half of (20px + the home
+  indicator's inset) above the bottom of the screen, and come to rest under
   the cards. The rise and unfold are Apple's own: the springs and timings of
   its gallery controls, read from its page script. The frost is the cart
   sheet's (its tint over the page's dim, blur 6px, saturation 180%) without
@@ -79,7 +80,7 @@
   }
   .sugg__aap{
     position:sticky; display:flex; align-items:center; gap:16px; margin-bottom:24px; pointer-events:none;
-    bottom:max(calc(20px + env(safe-area-inset-bottom)),calc(var(--sugg-bar,0px) + 12px));
+    bottom:max(calc((20px + env(safe-area-inset-bottom)) / 2),calc(var(--sugg-bar,0px) + 12px));
     transition:bottom .35s cubic-bezier(.25,.8,.25,1);
   }
   .sugg.is-static .sugg__aapbox{ display:none; }
