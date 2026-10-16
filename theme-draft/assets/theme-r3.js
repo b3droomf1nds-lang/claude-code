@@ -886,9 +886,26 @@
       if (qm && !qm.closing) previewQty(qm.key, qm.shown);   // its quantity menu is open: keep the slider's number
     };
 
+    // the bag as it will be once the protection switch's flip has reached the cart, at the price
+    // the cart will charge (its tier), so the total moves the moment the switch does
+    const withProtectWant = (c) => {
+      if (protectWant == null || !protectionProduct) return c;
+      const line = c.items.find(isProtection);
+      if (protectWant === !!line) return c;
+      if (!protectWant) {
+        return Object.assign({}, c, { items: c.items.filter((i) => i !== line), item_count: c.item_count - line.quantity,
+          items_subtotal_price: c.items_subtotal_price - line.final_line_price, total_price: c.total_price - line.final_line_price });
+      }
+      const v = tierVariant(c.items_subtotal_price);
+      if (!v) return c;
+      return Object.assign({}, c, { items: c.items.concat([{ key: '', product_id: protectionProduct.id, quantity: 1, final_line_price: v.price }]),
+        item_count: c.item_count + 1, items_subtotal_price: c.items_subtotal_price + v.price, total_price: c.total_price + v.price });
+    };
+
     // the bag's sums (protection, shipping, total), for the cart or for the
     // cart as it would be while the quantity slider moves (previewQty)
-    const paintTotals = (c) => {
+    const paintTotals = (base) => {
+      const c = withProtectWant(base);
       const protLine = c.items.find(isProtection);
       if (protectToggle) protectToggle.checked = protectWant == null ? !!protLine : protectWant;   // a flip on its way to the cart stays shown
       const S = window.VolticalStrings;
@@ -1683,6 +1700,7 @@
     }
     if (protectToggle) protectToggle.addEventListener('change', () => {
       protectWant = protectToggle.checked;
+      if (cart) paintTotals(cart);                   // the total moves with the switch, before the cart answers
       protectSync();
     });
 
