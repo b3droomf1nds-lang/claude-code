@@ -1049,12 +1049,12 @@ h1.t-hero em,
 .drawer-scroller .cart-line__variant{font-size:15px;font-weight:600;line-height:1.33;color:var(--sys-label);margin-top:0}
 .drawer-scroller .cart-line__variant span{display:block}  /* each option on its own line: colour, then capacity */
 /* "Core ✎" across the top, the options under it, and the price to their
-   right, centred on the two option lines (as the shipping bubble's price is
-   centred on its two) */
+   right on the first option's line ("Titanium Gold", the middle of three),
+   in that line's size and height so the two share a baseline */
 .drawer-scroller .cart-line__info{flex:1;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:14px;align-items:center}
 .drawer-scroller .cart-line__head{grid-column:1/-1;display:flex;align-items:center;gap:5px;min-width:0}
 .drawer-scroller .cart-line__variant{grid-column:1}
-.drawer-scroller .cart-line__price{grid-column:2;grid-row:2;font-size:15px;white-space:nowrap}
+.drawer-scroller .cart-line__price{grid-column:2;grid-row:2;align-self:start;font-size:15px;line-height:1.33;white-space:nowrap}
 /* the pencil beside the name, in its grey; the quantity's number stays in
    the button for the slider and screen readers, unseen */
 .drawer-scroller .cart-line__edit{position:relative;display:flex}
