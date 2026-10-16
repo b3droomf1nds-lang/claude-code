@@ -796,7 +796,10 @@
     let cart = null;
     let busy = false;
     let qtyOpenKey = null;                           // the line whose quantity menu is open (its pencil is hidden)
-    const PENCIL = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M11.2 2.3a1.6 1.6 0 0 1 2.3 0l.2.2a1.6 1.6 0 0 1 0 2.3L5.6 12.9 2.4 13.6l.7-3.2 8.1-8.1Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="m9.9 3.7 2.4 2.4" stroke="currentColor" stroke-width="1.3"/></svg>';  // 1.3 of 16 at 13px = the stem of "Core" beside it (~1.07px)
+    /* The pencil, its box cropped to its ink (stroke included) so it can be sized to the name's
+       capitals: 9.2px here (13px SF's cap height), 1cap beside the name (theme-r2.css). Its lines,
+       1.55 of the box's 13.34, come to ~1.07px: the stems of "Core" next to it. */
+    const PENCIL = '<svg width="9.2" height="9.2" viewBox="1.625 1.035 13.34 13.34" fill="none" aria-hidden="true"><path d="M11.2 2.3a1.6 1.6 0 0 1 2.3 0l.2.2a1.6 1.6 0 0 1 0 2.3L5.6 12.9 2.4 13.6l.7-3.2 8.1-8.1Z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><path d="m9.9 3.7 2.4 2.4" stroke="currentColor" stroke-width="1.55"/></svg>';
 
     if (P.enabled && P.handle) {
       fetchJSON('/products/' + P.handle + '.js')
@@ -960,7 +963,7 @@
     /* Quantity menu, copied from the iPhone's stepped slider pop-up in the
        owner's screen recording (measured frame by frame at 60fps):
        - It grows out of the pencil. A 27px circle on the pencil morphs into
-         a 334 x 72 pill centred on the card, on the pencil's row, on a
+         a 334 x 72 pill centred on the card, on the first option's row, on a
          spring fitted to the recording (response 0.338s, damping 0.822,
          fast start): about a third of a second, ~1% overshoot. The pencil
          becomes the knob and fades as it grows; "Qty 2" fades in and rises
@@ -1268,7 +1271,10 @@
       const vh = window.innerHeight;
       const W = Math.min(QM.W, vw - 56);
       const from = { x: pen.left + pen.width / 2, y: pen.top + pen.height / 2 };
-      const to = { x: card.left + card.width / 2, y: Math.min(vh - QM.H / 2 - 16, Math.max(from.y, 130)) };
+      // the pill opens on the first option's line ("Titanium Gold"), where the pencil was before it
+      // moved up beside the name; a product with no options opens on the pencil's own row
+      const row = ($('.cart-line__variant span', line) || $('.cart-line__pencil', line)).getBoundingClientRect();
+      const to = { x: card.left + card.width / 2, y: Math.min(vh - QM.H / 2 - 16, Math.max(row.top + row.height / 2, 130)) };
       const n = Math.max(5, item.quantity) + 1;
       qm = {
         key: item.key, start: item.quantity, n, W, from, to,

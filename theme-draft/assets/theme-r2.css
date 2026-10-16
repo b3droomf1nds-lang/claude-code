@@ -1052,7 +1052,7 @@ h1.t-hero em,
    right on the first option's line ("Titanium Gold", the middle of three),
    in that line's size and height so the two share a baseline */
 .drawer-scroller .cart-line__info{flex:1;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:14px;align-items:center}
-.drawer-scroller .cart-line__head{grid-column:1/-1;display:flex;align-items:center;gap:5px;min-width:0}
+.drawer-scroller .cart-line__head{grid-column:1/-1;display:flex;align-items:baseline;gap:5px;min-width:0}
 .drawer-scroller .cart-line__variant{grid-column:1}
 .drawer-scroller .cart-line__price{grid-column:2;grid-row:2;align-self:start;font-size:15px;line-height:1.33;white-space:nowrap}
 /* the pencil beside the name, in its grey; the quantity's number stays in
@@ -1064,11 +1064,17 @@ h1.t-hero em,
 .drawer-scroller .cart-line__qty-label{display:none}
 .drawer-scroller .cart-line__qty svg{display:block}
 .drawer-scroller .cart-line__pencil{position:relative;display:block;color:var(--sys-label-2)}
+/* the pencil as tall as the name's capitals, standing on the name's baseline
+   (the row lines up by baseline), so it reaches neither above "Core"'s top
+   nor below its bottom */
+.drawer-scroller .cart-line__pencil{font-size:13px}
+.drawer-scroller .cart-line__pencil svg{display:inline;vertical-align:baseline;width:.705em;height:.705em;width:1cap;height:1cap}
 /* The tap target over the pencil: a label holding a hidden switch, reaching
-   12px past it every way (37 x 37, more than a 27px circle round it). A tap
+   12px above and below it and 14px each side (37 x 37, more than a 27px
+   circle round it). A tap
    flips a real switch, so the iPhone ticks (theme-r3.js); the button under
    it stays for keyboards and screen readers. */
-.drawer-scroller .cart-line__qty-tap{position:absolute;z-index:1;inset:-12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.drawer-scroller .cart-line__qty-tap{position:absolute;z-index:1;inset:-12px -14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .drawer-scroller .cart-line__qty-tap input{position:absolute;left:0;top:0;width:1px;height:1px;margin:0;opacity:0;pointer-events:none}
 
 /* Quantity menu (theme-r3.js), copied from the iPhone's stepped slider
@@ -1182,6 +1188,7 @@ h1.t-hero em,
   .drawer-scroller .ship-bubble__label,
   .drawer-scroller .protect-bubble__label,
   .drawer-scroller .cart-line__title,
+  .drawer-scroller .cart-line__pencil,
   .drawer-scroller .drawer__subtotal [data-total-label]{font:-apple-system-footnote}
   .drawer-scroller .ship-bubble__method,
   .drawer-scroller .protect-bubble__title,
