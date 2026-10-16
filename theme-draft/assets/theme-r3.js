@@ -974,10 +974,16 @@
        - In the pill: a 48px track, a blue fill (#0071E3, Checkout's blue) from the left to
          4px past a 40px white knob, and 12px dots at the stops (grey, or
          20% white on the blue). A soft blue glow sits at its right end.
+       - Pushed past either end, the pill stretches that way, like the
+         iPhone's volume slider held past full or silent (owner's recording,
+         measured frame by frame): at most 5.1% longer and 5.7% thinner
+         (its area kept), and slid 5.4% of its length that way, so the far
+         end moves about three times as far as the near one. It builds over
+         about a third of a second and snaps back in under a tenth.
        - Touching it puffs it up 2%. The first drag takes the knob to the
          finger; later drags, from anywhere on it, move the knob as far as
-         the finger moves (qmDragAt). Either way there's a little give past
-         either end, and the label and a haptic tick change at each stop.
+         the finger moves (qmDragAt). Either way the label and a haptic
+         tick change at each stop.
          Letting go springs the knob onto the nearest stop and the pill
          settles back with a small bounce. Tapping a stop jumps there.
        - It stays open after letting go. Tapping anywhere else (or Escape,
@@ -1100,9 +1106,9 @@
        knob as far as the finger moves, from wherever on the pill it starts,
        so lifting the thumb and pushing again from the middle carries the
        knob the last stop to an end. The pointer and the native touch share
-       one grip so their stops always agree. Past an end the knob stretches
-       a little; pushing further slides the grip along instead, so coming
-       back moves it again straight away. */
+       one grip so their stops always agree. Past an end the push is held
+       (the pill stretches, qmStretch); pushing further slides the grip
+       along instead, so coming back moves it again straight away. */
     const QM_SLACK = 0.3;                             // stops of push held past an end
     const qmGrip = (x, other) => {                   // other: the other route's gesture
       if (!other || !qm.grip) qm.grip = { x0: x, k0: qm.grip ? qm.shown : qmRawAt(x) };
@@ -1116,6 +1122,17 @@
       else if (raw < -QM_SLACK) { raw = -QM_SLACK; g.x0 = x - (raw - g.k0) * step; }
       const give = (o) => 0.12 * o / (o + QM_SLACK);
       return raw > end ? end + give(raw - end) : raw < 0 ? -give(-raw) : raw;
+    };
+    // the stretch past an end, -1 (left) to 1 (right), from how far the knob is
+    // pushed past it (its give tops out at 0.06 of a stop, at the slack)
+    const QM_STRETCH = { L: 0.051, H: 0.057, X: 0.054 };
+    const qmStretch = (k) => {
+      const past = k > qm.n - 1 ? k - (qm.n - 1) : k < 0 ? k : 0;
+      const to = Math.max(-1, Math.min(1, past / 0.06));
+      const a = qm.st;
+      // pushing further builds slowly, as the volume slider does; easing off snaps back
+      if (Math.abs(to) > Math.abs(a.to) || Math.sign(to) !== Math.sign(a.to)) a.aim(to, to ? 0.3 : 0.1, 1);
+      else a.aim(to, 0.1, 1);
     };
     /* The bag as it would be with this line at quantity q, worked out here
        so the line's price, the shipping and the total change with each stop
@@ -1167,23 +1184,29 @@
       const h = QM.FROM + (QM.H - QM.FROM) * pc;
       const cx = qm.from.x + (qm.to.x - qm.from.x) * p;
       const cy = qm.from.y + (qm.to.y - qm.from.y) * p;
-      const sc = h / QM.H;
+      // the pill as drawn: stretched past an end (qmStretch). What the finger
+      // touches (the invisible switches) keeps the unstretched w, h, cx.
+      const st = Math.abs(qm.st.x) * qm.stFit, sd = Math.sign(qm.st.x);
+      const pw = w * (1 + QM_STRETCH.L * st), ph = h * (1 - QM_STRETCH.H * st);
+      const pcx = cx + sd * QM_STRETCH.X * st * w;
+      const sc = ph / QM.H;
       const pad = QM.P * sc;
       const t = QM.T * sc;
-      const tw = w - 2 * pad;
+      const tw = pw - 2 * pad;
       const span = Math.max(0, tw - t);
       const d = QM.D * sc;
       const kd = QM.K * sc;
-      const kx = t / 2 + (span * qm.k.x) / (qm.n - 1);
+      // the knob stays on the end stop when pushed past it: the pill's stretch shows the push
+      const kx = t / 2 + (span * Math.max(0, Math.min(qm.n - 1, qm.k.x))) / (qm.n - 1);
       const E = qmEl;
       // faded layer by layer: fading their parent would switch the blurs off
       const fo = String(clamp01(p * 1.15));
       E.frost.forEach((f) => { f.style.opacity = fo; });
-      E.pill.style.width = w + 'px';
-      E.pill.style.height = h + 'px';
-      E.pill.style.borderRadius = h / 2 + 'px';
+      E.pill.style.width = pw + 'px';
+      E.pill.style.height = ph + 'px';
+      E.pill.style.borderRadius = ph / 2 + 'px';
       E.pill.style.opacity = String(clamp01(p / 0.12));
-      E.pill.style.transform = 'translate(' + (cx - w / 2) + 'px,' + (cy - h / 2) + 'px) scale(' + qm.s.x + ')';
+      E.pill.style.transform = 'translate(' + (pcx - pw / 2) + 'px,' + (cy - ph / 2) + 'px) scale(' + qm.s.x + ')';
       E.track.style.cssText = 'left:' + pad + 'px;top:' + pad + 'px;width:' + tw + 'px;height:' + t + 'px;border-radius:' + t / 2 + 'px';
       E.fill.style.width = kx + t / 2 + 'px';
       E.fill.style.borderRadius = t / 2 + 'px';
@@ -1198,9 +1221,9 @@
       E.knobPencil.style.opacity = String(clamp01(1 - p / 0.3));
       E.label.style.opacity = String(clamp01((p - 0.25) / 0.45));
       E.label.style.transform = 'translate(' + cx + 'px,' + (cy - h / 2 - 34 * Math.min(1, pc)) + 'px) translate(-50%,-50%)';
-      E.glow.style.transform = 'translate(' + (cx + w / 2 - 6) + 'px,' + cy + 'px)';
+      E.glow.style.transform = 'translate(' + (pcx + pw / 2 - 6) + 'px,' + cy + 'px)';
       if (!qm.hapT) {                                // the invisible switch lies over the pill
-        E.hap.style.cssText = 'width:' + w + 'px;height:' + h + 'px;transform:' + E.pill.style.transform +
+        E.hap.style.cssText = 'width:' + w + 'px;height:' + h + 'px;transform:translate(' + (cx - w / 2) + 'px,' + (cy - h / 2) + 'px) scale(' + qm.s.x + ')' +
           (qm.closing ? ';pointer-events:none' : '');
       }
       if (hapFrame) {
@@ -1232,6 +1255,7 @@
       let moving = qm.p.step(dt);
       moving = qm.k.step(dt) || moving;
       moving = qm.s.step(dt) || moving;
+      moving = qm.st.step(dt) || moving;
       if (!qm.closing && !qm.settled && qm.p.x > 0.98) { qm.settled = true; qmEl.root.classList.add('is-settled'); }
       if (qm.closing && qm.p.x <= 0.01) { qmFinish(); return; }
       qmPaint();
@@ -1259,6 +1283,7 @@
       if (pen && pen.width) qm.from = { x: pen.left + pen.width / 2, y: pen.top + pen.height / 2 };
       qmEl.root.classList.remove('is-settled');
       qm.s.aim(1, 0.2, 1);
+      qm.st.aim(0, 0.1, 1);
       if (qmReduce.matches) qm.p.set(0);
       else qm.p.aim(0, 0.2, 1, -8 * Math.max(0, qm.p.x));
       qmRun();
@@ -1278,7 +1303,10 @@
       const n = Math.max(5, item.quantity) + 1;
       qm = {
         key: item.key, start: item.quantity, n, W, from, to,
-        p: qmSpring(0), k: qmSpring(item.quantity), s: qmSpring(1),
+        p: qmSpring(0), k: qmSpring(item.quantity), s: qmSpring(1), st: qmSpring(0),
+        // the stretch's far end (puffed 2%) stops 4px short of the screen's edge: on a
+        // 390pt iPhone that's 78% of the recording's stretch, wider screens get all of it
+        stFit: clamp01((Math.min(to.x - W / 2, vw - to.x - W / 2) - 0.011 * W - 4) / ((QM_STRETCH.X + QM_STRETCH.L / 2) * W)),
         shown: -1, drag: null, closing: false, settled: false
       };
       hapReset();
@@ -1323,6 +1351,7 @@
       if (!d.moved && Math.abs(x - d.x0) < 4) return;
       d.moved = true;
       qm.k.aim(qmDragAt(x), 0.09, 1);               // the knob moves with the finger
+      if (!qmReduce.matches) qmStretch(qm.k.to);
       qmShow(qmStop(qm.k.to), true, true);
     };
     const qmPointerMove = (e) => {
@@ -1342,6 +1371,7 @@
       qm.drag = null;
       const v = qmStop(d.moved ? qm.k.to : qmStopAt(x));   // a tap jumps to that stop
       qm.k.aim(v, 0.26, 0.86);
+      qm.st.aim(0, 0.1, 1);                          // the stretch snaps back
       qmShow(v, true);
       if (d.moved || e.type === 'pointercancel') stopTicks();
       qm.s.aim(1, 0.32, 0.55);                       // settles back with a small bounce
@@ -1463,6 +1493,7 @@
         qm.hapReadyAt = 0;
       }
       qm.hapT = null;
+      qm.st.aim(0, 0.1, 1);
       qmRun();
     };
     const hapClick = () => {
@@ -1489,6 +1520,7 @@
       if (!qm) return;
       stopTicks();
       qm.drag = null;
+      qm.st.set(0);
       hapReset();
     };
     document.addEventListener('visibilitychange', () => { if (document.hidden) hapSuspend(); });
