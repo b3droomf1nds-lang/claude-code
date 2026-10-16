@@ -1151,8 +1151,6 @@ h1.t-hero em,
 .drawer-scroller .ship-bubble__icon::after,
 .drawer-scroller .protect-bubble__icon::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.95)}
-/* and the X's circle (its ::after is the bigger tap area, so the edge is on the button itself) */
-.drawer-scroller .drawer__close{box-shadow:inset 0 0 0 1px rgba(255,255,255,.95)}
 /* The switch, after iOS 26's: a wide capsule with a pill-shaped white knob.
    Off, a light grey track; on, Checkout's blue with the knob slid across on a
    spring that just overshoots. While a finger is on it the knob swells past
