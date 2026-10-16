@@ -122,7 +122,8 @@
       "block_order": ["t2", "t3", "t4", "t5"],
       "settings": {
         "heading": "",
-        "subheading": ""
+        "subheading": "",
+        "hide_keep_space": true
       }
     },
     "standard": {

@@ -4,6 +4,7 @@
   filling the rest of the card — the "sell it with the photo, explain it
   with the caption underneath" pattern. One tile is usually a cross-sell
   ("Pair with the X Cable") that links straight to another product.
+  "Hide (keep its space empty)" makes it invisible but leaves its space.
 {%- endcomment -%}
 <style>
   .ftiles{ color:var(--ink); padding:clamp(48px,7vw,96px) 0; }
@@ -68,7 +69,7 @@
   }
 </style>
 
-<section class="section ftiles">
+<section class="section ftiles"{% if section.settings.hide_keep_space %} style="visibility:hidden" aria-hidden="true" inert{% endif %}>
   <div class="wrap wrap--wide">
     {%- if section.settings.heading != blank or section.settings.subheading != blank -%}
       <div class="ftiles__head" data-reveal>
@@ -115,7 +116,8 @@
   "name": "Feature tile grid",
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading", "default": "Made to go with it." },
-    { "type": "textarea", "id": "subheading", "label": "Subheading" }
+    { "type": "textarea", "id": "subheading", "label": "Subheading" },
+    { "type": "checkbox", "id": "hide_keep_space", "label": "Hide (keep its space empty)", "default": false }
   ],
   "blocks": [
     {
