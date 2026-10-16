@@ -796,7 +796,7 @@
     let cart = null;
     let busy = false;
     let qtyOpenKey = null;                           // the line whose quantity menu is open (its pencil is hidden)
-    const PENCIL = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M11.2 2.3a1.6 1.6 0 0 1 2.3 0l.2.2a1.6 1.6 0 0 1 0 2.3L5.6 12.9 2.4 13.6l.7-3.2 8.1-8.1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="m9.9 3.7 2.4 2.4" stroke="currentColor" stroke-width="1.5"/></svg>';
+    const PENCIL = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M11.2 2.3a1.6 1.6 0 0 1 2.3 0l.2.2a1.6 1.6 0 0 1 0 2.3L5.6 12.9 2.4 13.6l.7-3.2 8.1-8.1Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="m9.9 3.7 2.4 2.4" stroke="currentColor" stroke-width="1.3"/></svg>';  // 1.3 of 16 at 13px = the stem of "Core" beside it (~1.07px)
 
     if (P.enabled && P.handle) {
       fetchJSON('/products/' + P.handle + '.js')
