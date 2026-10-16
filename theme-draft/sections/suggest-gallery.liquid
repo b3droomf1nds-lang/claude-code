@@ -9,7 +9,7 @@
 
   Swipe the cards, or use the two frosted bubbles that rise and unfold near
   the bottom of the screen while the gallery is on screen: the dots (grey,
-  the current card's a grey line, as on Apple's) and the arrows (no press highlight).
+  the current card's a grey line, as on Apple's) and the arrows (the dots' grey, no press highlight).
   The cards themselves have no corner arrow; the whole card is the link. They stick 20px above the bottom
   (and above the sticky Add to bag bar when it shows) and come to rest under
   the cards. The rise and unfold are Apple's own: the springs and timings of
@@ -112,11 +112,11 @@
 
   .sugg__arrow{
     position:relative; display:flex; align-items:center; justify-content:center; width:52px; height:56px;
-    color:rgb(29,29,31); opacity:0; transform:scale(.5); -webkit-tap-highlight-color:transparent;
+    color:rgba(0,0,0,.42); opacity:0; transform:scale(.5); -webkit-tap-highlight-color:transparent;
   }
-  .sugg__arrow svg{ position:relative; width:36px; height:36px; fill:currentColor; transition:opacity .1s linear; }
+  /* the same grey as the dots, whether or not there's anywhere to go */
+  .sugg__arrow svg{ position:relative; width:36px; height:36px; fill:currentColor; }
   .sugg__arrow:disabled{ cursor:default; }
-  .sugg__arrow:disabled svg{ opacity:.42; }
   .sugg__aap.is-on .sugg__arrow{ opacity:1; transform:scale(1); transition:opacity .1s ease-in .94s,transform .2s ease-out .94s; }
 
   .sugg__dot:focus-visible,.sugg__arrow:focus-visible{ outline:2px solid var(--focus,#0071e3); outline-offset:-4px; border-radius:28px; }
