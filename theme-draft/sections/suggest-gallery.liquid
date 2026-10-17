@@ -15,7 +15,8 @@
   The small line under the heading is the current card's own (its "small
   line", or the subheading if it has none); it rolls up to the next card's,
   or down to the one before's, as the dots change. When all the cards show
-  at once it's the subheading.
+  at once it's the subheading. "Hide the small line" takes it away and
+  moves the heading down into its place.
 
   Swipe the cards, or use the two frosted bubbles that rise and unfold near
   the bottom of the screen while the gallery is on screen: the dots (grey,
@@ -65,6 +66,10 @@
   .sugg__line.is-up{ transform:translateY(-100%); }
   .sugg__line.is-on{ opacity:1; transform:none; }
   .sugg__sub--lines.is-instant .sugg__line{ transition:none; }
+  /* "Hide the small line": the heading moves down into its place (a blank
+     line of its size goes above the heading instead), so the cards stay
+     where they are */
+  .sugg__sub.sugg__room{ margin:0 0 12px; }
 
   /* the controls rest 32px under the cards, in the gallery's own room */
   .sugg__gallery{ position:relative; padding-bottom:88px; }
@@ -243,10 +248,13 @@
 {%- assign card_count = section.blocks.size -%}
 {%- assign card_lines = false -%}
 {%- for block in section.blocks -%}{%- if block.settings.line != blank -%}{%- assign card_lines = true -%}{%- endif -%}{%- endfor -%}
+{%- assign sub_text = section.settings.subheading -%}
+{%- if section.settings.hide_sub -%}{%- assign card_lines = false -%}{%- assign sub_text = '' -%}{%- endif -%}
 <section class="sugg{% if section.settings.hide_card_text %} sugg--bare{% endif %}" style="--n:{{ card_count }}" data-sugg data-atc-stop aria-roledescription="carousel"{% if section.settings.heading != blank %} aria-label="{{ section.settings.heading | escape }}"{% endif %}>
-  {%- if section.settings.heading != blank or section.settings.subheading != blank or card_lines -%}
+  {%- if section.settings.heading != blank or sub_text != blank or card_lines -%}
     <div class="wrap">
       <div class="sugg__head" data-reveal>
+        {%- if section.settings.hide_sub and section.settings.heading != blank -%}<div class="sugg__sub sugg__room" aria-hidden="true">&nbsp;</div>{%- endif -%}
         {%- if section.settings.heading != blank -%}<h2 class="sugg__heading">{{ section.settings.heading }}</h2>{%- endif -%}
         {%- if card_lines -%}
           {%- comment -%} the subheading (when all the cards show at once), then each card's line {%- endcomment -%}
@@ -256,8 +264,8 @@
               <span class="sugg__line{% if forloop.first %} is-on{% endif %}"{% unless forloop.first %} aria-hidden="true"{% endunless %}>{{ block.settings.line | default: section.settings.subheading }}</span>
             {%- endfor -%}
           </p>
-        {%- elsif section.settings.subheading != blank -%}
-          <p class="sugg__sub">{{ section.settings.subheading }}</p>
+        {%- elsif sub_text != blank -%}
+          <p class="sugg__sub">{{ sub_text }}</p>
         {%- endif -%}
       </div>
     </div>
@@ -638,6 +646,7 @@
     const main = document.getElementById('main');
     const head = root.querySelector('.sugg__head');
     const lead = head ? head.parentNode : track;   // the heading's wrapper: where it sits without its fade-in nudge
+    const blank = root.querySelector('.sugg__room');   // "Hide the small line": the blank line above the heading
     // the top bar: the header's own, or on a product page the copy laid over the page
     const bars = document.querySelectorAll('#shopify-section-header .site-header, #shopify-section-header .site-header-clone');
     const de = document.documentElement, DECEL = .998;
@@ -647,9 +656,11 @@
        enough that the controls have come to rest under the cards (their
        place at least the resting gap, or the stick height if that's more,
        above the bottom of the screen) with 4px to spare; on a screen too
-       short for all of it the cards and controls win. */
+       short for all of it the cards and controls win. It's measured from
+       the heading itself, under any blank line above it. */
     function spot() {
-      const top = lead.getBoundingClientRect().top, size = gallery.getBoundingClientRect().bottom - top;
+      const skip = blank ? blank.offsetHeight + parseFloat(getComputedStyle(blank).marginBottom) : 0;
+      const top = lead.getBoundingClientRect().top + skip, size = gallery.getBoundingClientRect().bottom - top;
       let under = 0;
       bars.forEach(function (el) { under = Math.max(under, el.getBoundingClientRect().bottom); });
       const free = innerHeight - under - size, room = free - Math.max(liftPx(), restGap());
@@ -813,6 +824,7 @@
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading", "default": "Made to go with it." },
     { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "A few things that make Core even better.", "info": "A card's own small line takes its place while that card is showing." },
+    { "type": "checkbox", "id": "hide_sub", "label": "Hide the small line under the heading", "info": "The heading moves down into its place; the cards stay where they are.", "default": false },
     { "type": "checkbox", "id": "hide_card_text", "label": "Hide the heading and caption at the top of the cards", "default": false }
   ],
   "blocks": [

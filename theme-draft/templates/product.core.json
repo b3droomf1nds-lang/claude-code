@@ -90,6 +90,7 @@
       "settings": {
         "heading": "Made to go with it.",
         "subheading": "A few things that make Core even better.",
+        "hide_sub": true,
         "hide_card_text": true
       }
     },
