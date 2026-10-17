@@ -17,6 +17,9 @@
   its gallery controls, read from its page script. The frost is the cart
   sheet's (its tint over the page's dim, blur 6px, saturation 180%) without
   the sheet's bright edge.
+
+  A vertical scroll that stops near the gallery glides the last bit, so the
+  heading, the cards and the resting controls all fit on screen.
 {%- endcomment -%}
 <style>
   .sugg{
@@ -433,6 +436,41 @@
       new MutationObserver(bar).observe(atc, { attributes: true, attributeFilter: ['class', 'style'] });
       addEventListener('resize', bar); bar();
     }
+
+    /* Landing on the gallery: on a phone only a few pixels of scroll show
+       the heading, the cards and the controls resting under them all at
+       once, so when a scroll stops near that spot the page glides the last
+       bit. The spot puts the gallery, heading to controls, midway between
+       the header and the bottom of the screen, but never so low that the
+       controls are held up off their resting place; on a screen too short
+       for all of it the cards and controls win. Stops more than a quarter
+       of the screen away, and scrolls a finger is still on, are left alone.
+       Phones and tablets only, and not with reduced motion. */
+    const small = matchMedia('(max-width: 899px)');
+    const head = root.querySelector('.sugg__head');
+    const lead = head ? head.parentNode : track;   // the heading's wrapper: where it sits without its fade-in nudge
+    // the top bar: the header's own, or on a product page the copy laid over the page
+    const bars = document.querySelectorAll('#shopify-section-header .site-header, #shopify-section-header .site-header-clone');
+    let touching = false, moved = false, landT = 0;
+    function landing() {
+      const top = lead.getBoundingClientRect().top, size = gallery.getBoundingClientRect().bottom - top;
+      let under = 0;
+      bars.forEach(function (el) { under = Math.max(under, el.getBoundingClientRect().bottom); });
+      const lift = parseFloat(getComputedStyle(aap).bottom) || 0;   // how high the controls stick
+      return top - Math.min(under + Math.max(0, innerHeight - under - size) / 2, innerHeight - lift - size);
+    }
+    function land() {
+      moved = false;
+      if (touching || reduce.matches || !small.matches || root.classList.contains('is-static')) return;
+      const d = landing();
+      if (Math.abs(d) > 2 && Math.abs(d) <= innerHeight / 4) window.scrollTo({ top: scrollY + d, behavior: 'smooth' });
+    }
+    function later() { clearTimeout(landT); landT = setTimeout(land, 150); }
+    addEventListener('touchstart', function () { touching = true; clearTimeout(landT); }, { passive: true });
+    ['touchend', 'touchcancel'].forEach(function (t) {
+      addEventListener(t, function (e) { touching = e.touches.length > 0; if (!touching && moved) later(); }, { passive: true });
+    });
+    addEventListener('scroll', function () { moved = true; if (!touching) later(); }, { passive: true });
 
     fold(); sync();
     io.observe(track); io.observe(gallery);
