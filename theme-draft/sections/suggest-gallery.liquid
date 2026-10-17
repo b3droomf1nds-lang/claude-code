@@ -12,8 +12,10 @@
   the current card's a grey line, as on Apple's) and the arrows (the dots'
   grey, no press highlight). The cards themselves have no corner arrow; the
   whole card is the link. The bubbles stick half of (20px + the home
-  indicator's inset) above the bottom of the screen, and come to rest under
-  the cards. The rise and unfold are Apple's own: the springs and timings of
+  indicator's inset) above the bottom of the screen until the gap above
+  them, up to the cards, is as big as the one below them; then both gaps
+  grow together until they're the 32px the bubbles rest under the cards, and
+  from there the bubbles move with the cards. The rise and unfold are Apple's own: the springs and timings of
   its gallery controls, read from its page script. The frost is the cart
   sheet's (its tint over the page's dim, blur 6px, saturation 180%) without
   the sheet's bright edge.
@@ -441,6 +443,25 @@
       addEventListener('resize', bar); bar();
     }
 
+    /* The controls stick lift px above the bottom of the screen (the CSS's
+       sticky bottom) until the gap above them, up to the cards, has grown
+       as big as the gap below them. From there they rise at half the
+       scroll's speed, so both gaps grow together, until both are the gap
+       they rest at under the cards (32px); from there they move with the
+       cards. The CSS does the sticking and the resting; this adds the rise
+       in between, as a translate (their transform is the springs'). */
+    const liftPx = function () { return parseFloat(getComputedStyle(aap).bottom) || 0; };
+    const restGap = function () { return parseFloat(getComputedStyle(gallery).paddingBottom) - aap.offsetHeight; };
+    function rise() {
+      if (root.classList.contains('is-static')) return;
+      const d = innerHeight - gallery.getBoundingClientRect().bottom;   // how far their resting place is above the bottom of the screen
+      const up = Math.max(0, (d + restGap()) / 2 - Math.max(liftPx(), d));
+      aap.style.translate = up ? '0 ' + (-up).toFixed(2) + 'px' : '';
+    }
+    addEventListener('scroll', rise, { passive: true });
+    addEventListener('resize', rise);
+    rise();
+
     /* Aim assist, as in a shooter, for landing on the gallery. There's one
        spot (on a phone only a few pixels of scroll) where the heading, the
        cards and the controls resting under them all fit on screen. The
@@ -469,14 +490,15 @@
     const de = document.documentElement, SLOW = .3, DECEL = .998;
     /* The spot, as a scroll position: the gallery, heading to controls,
        midway between the top bar and the bottom of the screen, but high
-       enough that the controls rest under the cards with 4px to spare; on a
-       screen too short for all of it the cards and controls win. */
+       enough that the controls have come to rest under the cards (their
+       place at least the resting gap, or the stick height if that's more,
+       above the bottom of the screen) with 4px to spare; on a screen too
+       short for all of it the cards and controls win. */
     function spot() {
       const top = lead.getBoundingClientRect().top, size = gallery.getBoundingClientRect().bottom - top;
       let under = 0;
       bars.forEach(function (el) { under = Math.max(under, el.getBoundingClientRect().bottom); });
-      const lift = parseFloat(getComputedStyle(aap).bottom) || 0;   // how high the controls stick
-      const free = innerHeight - under - size, room = free - lift;
+      const free = innerHeight - under - size, room = free - Math.max(liftPx(), restGap());
       return scrollY + top - under - (room >= 0 ? Math.min(free / 2, Math.max(room / 2, room - 4)) : room);
     }
     let at = 0, pos = 0, mine = false, off = !main, drag = null, fling = 0, caught = false, held = false, behavior = '';
@@ -490,6 +512,7 @@
       const want = pos + du * gain(pos + du * gain(pos) / 2);
       pos = Math.max(0, Math.min(de.scrollHeight - innerHeight, want));
       window.scrollTo(0, pos);
+      rise();   // in the same frame as the page, not one behind
       return pos === want;
     }
     // the theme's smooth scrolling would animate every step
