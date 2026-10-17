@@ -66,7 +66,8 @@
           "settings": {
             "heading": "Pair with the Watch Charger",
             "caption": "to keep your watch topped up.",
-            "link_product": "voltical-watch-charge-cable"
+            "link_product": "voltical-watch-charge-cable",
+            "img_drop": 15
           }
         },
         "s3": {
