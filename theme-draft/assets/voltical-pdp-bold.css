@@ -2622,11 +2622,15 @@
    of pixels ("As low as" -26.49px, "59" 18.86px, "minutes" 41.06px, caption
    48.09px) that a smaller font doesn't shrink, so each translate takes the
    same share off its shift and the spacing shrinks evenly too. (The owner's
-   later lock-in was arranged on top of these, so they stay as they are.) */
+   later lock-in was arranged on top of these, so they stay as they are.)
+   "minutes" alone was then put back to its full size, 44px on screen, the
+   same as "minutes" in the "As little as 31" tile; the tile is taller by
+   the extra height of its line (0.95 line-height), so nothing above it
+   moves and the caption keeps its gap below it. */
 @media (max-width: 899px) {
   .template-product .pdp-cmp__card--charge {
     --cr: 0.93761;
-    height: calc((442.78px - (1 - var(--cn)) * 94.95px - (1 - var(--cz)) * 71.29px) * var(--cr));
+    height: calc((442.78px - (1 - var(--cn)) * 94.95px - (1 - var(--cz)) * 71.29px) * var(--cr) + (1 - var(--cr)) * 0.95 * 72px * var(--cz));
     padding-top: calc(19.21px * var(--cr)) !important;
     padding-bottom: calc(46.43px * var(--cr)) !important;
     gap: calc(3.28px * var(--cr));
@@ -2647,7 +2651,7 @@
     width: calc(101.73px * var(--cn) * var(--cr)) !important;
   }
   .template-product .pdp-cmp__card--charge .pdp-cmp__sub--unit {
-    font-size: calc(72px * var(--cz) * var(--cr)) !important;
+    font-size: calc(72px * var(--cz)) !important;
     margin-top: calc((1 - var(--cz)) * -9.79px * var(--cr));
     translate: 0 calc((var(--cr) - 1) * 41.0635px);
   }
