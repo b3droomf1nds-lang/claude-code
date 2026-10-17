@@ -79,6 +79,9 @@
     letter-spacing:-0.02em; margin:0; color:var(--ink); text-wrap:balance;
   }
   .sugg__card-sub{ font-size:14px; line-height:1.35; color:var(--ink-60); margin:6px 0 0; text-wrap:balance; }
+  /* "Hide the text on the cards": just the photos (the photo's alt, or the
+     card's heading, still names the link) */
+  .sugg--bare .sugg__text{ visibility:hidden; }
 
   /* ---- the frosted controls ---- */
   /* the controls rise out of a line 24px under their resting place (Apple
@@ -157,7 +160,7 @@
 </style>
 
 {%- assign card_count = section.blocks.size -%}
-<section class="sugg" style="--n:{{ card_count }}" data-sugg data-atc-stop aria-roledescription="carousel"{% if section.settings.heading != blank %} aria-label="{{ section.settings.heading | escape }}"{% endif %}>
+<section class="sugg{% if section.settings.hide_card_text %} sugg--bare{% endif %}" style="--n:{{ card_count }}" data-sugg data-atc-stop aria-roledescription="carousel"{% if section.settings.heading != blank %} aria-label="{{ section.settings.heading | escape }}"{% endif %}>
   {%- if section.settings.heading != blank or section.settings.subheading != blank -%}
     <div class="wrap">
       <div class="sugg__head" data-reveal>
@@ -664,7 +667,8 @@
   "name": "Suggested products",
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading", "default": "Made to go with it." },
-    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "A few things that make Core even better." }
+    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "A few things that make Core even better." },
+    { "type": "checkbox", "id": "hide_card_text", "label": "Hide the text on the cards", "default": false }
   ],
   "blocks": [
     {
