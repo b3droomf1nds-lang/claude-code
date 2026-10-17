@@ -6,11 +6,10 @@
   heading and grey caption at the top, the product photo filling the card.
   The photos are 2:3 like the cards, with empty white above the product, so
   the text sits there. At the bottom, as on the Apple Store's product cards:
-  a small label (Apple's "New"), the product's name and a line of grey,
-  then a bar in the bubbles' frost (below) with a small Add pill at its
-  end (straight into the bag, without opening it; "Add to bag" to a screen
-  reader). The photo fades to the card's white above the text, as Apple's
-  fade to black.
+  a small label (Apple's "New") and the product's name on the photo, then a
+  bar in the bubbles' frost (below) with a line of grey on the left and a
+  small Add pill on the right (straight into the bag, without opening it;
+  "Add to bag" to a screen reader).
 
   The small line under the heading is the current card's own (its "small
   line", or the subheading if it has none); it rolls up to the next card's,
@@ -106,34 +105,28 @@
   .sugg--bare .sugg__card--info .sugg__img{ transform:translateY(-14%); }
 
   /* ---- the foot of a card: Apple's product card text, then the bar ---- */
-  /* the photo fades to the card's white over the 120px above it, eased at
-     both ends (smoothstep) so the fade has no edge; its corners are the
-     card's own (the bar's too), in case the card's clip misses the frost's
-     layer */
+  /* straight on the photo, no fade; its corners are the card's own (the
+     bar's too), in case the card's clip misses the frost's layer */
   .sugg__foot{
     position:absolute; left:0; right:0; bottom:0; display:flex; flex-direction:column;
-    background:#fdfeff; border-bottom-left-radius:inherit; border-bottom-right-radius:inherit;
+    border-bottom-left-radius:inherit; border-bottom-right-radius:inherit;
   }
-  .sugg__foot::before{
-    content:""; position:absolute; left:0; right:0; bottom:100%; height:120px; pointer-events:none;
-    background:linear-gradient(rgba(253,254,255,0), rgba(253,254,255,.04) 15px, rgba(253,254,255,.16) 30px, rgba(253,254,255,.32) 45px,
-      rgba(253,254,255,.5) 60px, rgba(253,254,255,.68) 75px, rgba(253,254,255,.84) 90px, rgba(253,254,255,.96) 105px, #fdfeff 120px);
-  }
-  /* Apple's type: its small label and bold name in ink, a line of grey
-     under them, 24px in from the card's sides */
-  .sugg__info{ padding:0 24px 20px; }
+  /* Apple's type: its small label and bold name in ink, 24px in from the
+     card's sides */
+  .sugg__info{ padding:0 24px 16px; }
   .sugg__info:last-child{ padding-bottom:28px; }
   .sugg__label{ font:600 15px/1.25 var(--sans); letter-spacing:-.01em; margin:0 0 4px; color:var(--ink); }
   .sugg__title{
     font-family:var(--sans); font-weight:700; font-size:26px; line-height:1.15;
     letter-spacing:-.03em; margin:0; color:var(--ink); text-wrap:balance;
   }
-  .sugg__desc{ font:600 16px/1.35 var(--sans); letter-spacing:-.01em; color:var(--ink-60); margin:6px 0 0; text-wrap:pretty; }
   /* the bar: in the bubbles' frost (their tint and blur once open), as tall
-     as Apple's; a tap on it, off the pill, goes through to the card */
+     as Apple's, the line of grey on the left where Apple has its price and
+     the Add pill on the right; a tap on it, off the pill, goes through to
+     the card */
   .sugg__buy{
     position:relative; z-index:2; flex:none; height:80px; pointer-events:none;
-    display:flex; align-items:center; justify-content:flex-end; padding:0 24px;
+    display:flex; align-items:center; gap:12px; padding:0 24px;
     border-bottom-left-radius:inherit; border-bottom-right-radius:inherit;
     background:rgba(239,239,242,.77);
     -webkit-backdrop-filter:blur(6px) saturate(180%); backdrop-filter:blur(6px) saturate(180%);
@@ -142,7 +135,9 @@
      card used to; it's the card's link for keyboards and screen readers too */
   .sugg__hit{ position:absolute; inset:0; z-index:1; border-radius:inherit; -webkit-tap-highlight-color:transparent; }
   .sugg__hit:focus-visible{ outline:2px solid var(--focus,#0071e3); outline-offset:-2px; }
-  .sugg__add{ display:flex; margin:0; pointer-events:auto; }
+  /* the page's grey a shade darker, for the frost behind it */
+  .sugg__desc{ flex:1 1 auto; min-width:0; font:500 14px/1.3 var(--sans); letter-spacing:-.005em; color:rgba(19,19,22,.66); margin:0; text-wrap:pretty; }
+  .sugg__add{ display:flex; margin:0 0 0 auto; pointer-events:auto; }
   /* a small pill: 30px tall, 14px either side of a 15px semibold label */
   .sugg__btn{
     position:relative; flex:none; display:flex; align-items:center; justify-content:center; height:30px; padding:0 14px;
@@ -272,7 +267,9 @@
         {%- assign card_name = card_product.title | default: block.settings.heading -%}
         {%- assign card_title = block.settings.title | default: card_product.title -%}
         {%- assign card_info = false -%}
-        {%- if block.settings.label != blank or card_title != blank or block.settings.desc != blank -%}{%- assign card_info = true -%}{%- endif -%}
+        {%- if block.settings.label != blank or card_title != blank -%}{%- assign card_info = true -%}{%- endif -%}
+        {%- assign card_bar = false -%}
+        {%- if card_product or block.settings.desc != blank -%}{%- assign card_bar = true -%}{%- endif -%}
         <div class="sugg__card{% if card_info %} sugg__card--info{% endif %}" data-sugg-card{% if block.settings.img_drop > 0 %} style="--img-drop:{{ block.settings.img_drop }}px"{% endif %} {{ block.shopify_attributes }}>
           {%- if card_image != blank -%}
             <img class="sugg__img" src="{{ card_image | image_url: width: 1000 }}"
@@ -288,24 +285,26 @@
           {%- if card_url != blank -%}
             <a class="sugg__hit" href="{{ card_url }}" aria-label="{{ card_name | default: card_title | escape }}"></a>
           {%- endif -%}
-          {%- if card_info or card_product -%}
+          {%- if card_info or card_bar -%}
             <div class="sugg__foot">
               {%- if card_info -%}
                 <div class="sugg__info">
                   {%- if block.settings.label != blank -%}<p class="sugg__label">{{ block.settings.label }}</p>{%- endif -%}
                   {%- if card_title != blank -%}<h3 class="sugg__title">{{ card_title }}</h3>{%- endif -%}
-                  {%- if block.settings.desc != blank -%}<p class="sugg__desc">{{ block.settings.desc }}</p>{%- endif -%}
                 </div>
               {%- endif -%}
-              {%- if card_product -%}
+              {%- if card_bar -%}
                 <div class="sugg__buy">
-                  <form class="sugg__add" action="{{ routes.cart_add_url }}" method="post" data-quick-add data-error="Try again">
-                    <input type="hidden" name="id" value="{{ card_product.selected_or_first_available_variant.id }}">
-                    <button type="submit" class="sugg__btn sugg__btn--add"{% unless card_product.available %} disabled{% endunless %}>
-                      <span data-quick-add-label aria-live="polite">{% if card_product.available %}Add{% else %}{{ 'products.sold_out' | t }}{% endif %}</span>
-                      <span class="visually-hidden">{% if card_product.available %} to bag{% endif %}: {{ card_name | escape }}</span>
-                    </button>
-                  </form>
+                  {%- if block.settings.desc != blank -%}<p class="sugg__desc">{{ block.settings.desc }}</p>{%- endif -%}
+                  {%- if card_product -%}
+                    <form class="sugg__add" action="{{ routes.cart_add_url }}" method="post" data-quick-add data-error="Try again">
+                      <input type="hidden" name="id" value="{{ card_product.selected_or_first_available_variant.id }}">
+                      <button type="submit" class="sugg__btn sugg__btn--add"{% unless card_product.available %} disabled{% endunless %}>
+                        <span data-quick-add-label aria-live="polite">{% if card_product.available %}Add{% else %}{{ 'products.sold_out' | t }}{% endif %}</span>
+                        <span class="visually-hidden">{% if card_product.available %} to bag{% endif %}: {{ card_name | escape }}</span>
+                      </button>
+                    </form>
+                  {%- endif -%}
                 </div>
               {%- endif -%}
             </div>
@@ -819,7 +818,7 @@
         { "type": "header", "content": "Text at the bottom of the card" },
         { "type": "text", "id": "label", "label": "Small label above the name", "info": "Like Apple's \"New\". Leave empty for none." },
         { "type": "text", "id": "title", "label": "Name", "info": "Defaults to the linked product's name." },
-        { "type": "textarea", "id": "desc", "label": "Description", "info": "One short line under the name." },
+        { "type": "textarea", "id": "desc", "label": "Description", "info": "A short line in the frosted bar, beside Add." },
         { "type": "header", "content": "Product and photo" },
         { "type": "image_picker", "id": "image", "label": "Image (defaults to linked product's image)" },
         { "type": "product", "id": "link_product", "label": "Link to product (also supplies the default image)" },
