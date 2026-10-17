@@ -2665,3 +2665,26 @@
     font-size: calc(19.34px * var(--cr)) !important;
   }
 }
+
+/* Charge tile, mobile only: trimmed top and bottom to match the MagSafe tile
+   below it. The space from this tile's top edge to the top of the "59"
+   equals the space above that tile's phone icon, and the space below the
+   caption's last line equals the space below that tile's copy. Those two
+   spaces are each half of that tile's free height, which follows the screen
+   width, so this tile's height is the MagSafe tile's height plus a constant
+   and the match holds on every phone. The content here is centred, so the
+   bottom padding sets how the trim splits between top and bottom. Pixel
+   measured at 390px wide; the iPhone branch mirrors the MagSafe tile's own
+   iPhone-only height, gap and nudge. */
+@media (max-width: 899px) {
+  .template-product .pdp-cmp__card--charge {
+    height: calc(min(calc(52.3868vw + 7.0453px), 244.36px) + 50.01px);
+    padding-bottom: 67.54px !important;
+  }
+  @supports (-webkit-touch-callout: none) {
+    .template-product .pdp-cmp__card--charge {
+      height: calc(min(calc(52.3868vw + 69.3352px), 306.6499px) + 21px);
+      padding-bottom: 43.83px !important;
+    }
+  }
+}
