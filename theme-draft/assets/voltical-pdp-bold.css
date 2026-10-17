@@ -2517,11 +2517,15 @@
       translate: 0 1.1px;
     }
   }
-  /* The bolt is narrower than the battery was, so "59" + bolt move right
-     together to sit centred over "minutes" again. */
+  /* The bolt is hidden: the "59" stands alone, centred in the tile (and
+     over "minutes"). The row is a centred flex line, so this offset only
+     undoes the number's own baked sideways shift and holds for any value. */
+  .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
+    display: none;
+  }
   .template-product .pdp-cmp__card--charge .pdp-cmp__stat-row {
     position: relative;
-    left: 36.8px;
+    left: 51.46px;
   }
 }
 

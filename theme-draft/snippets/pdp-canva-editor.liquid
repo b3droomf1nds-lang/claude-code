@@ -37,7 +37,8 @@
     Every visible text group inside every tile is centered horizontally
     while keeping its vertical position, size, and wording. The two feature
     icons are centred left-to-right too, without changing their height or
-    size. Other images stay exactly where you put them. The entire
+    size. On the phone the charge tile's number (its bolt is hidden there)
+    is centred on its digits. Other images stay exactly where you put them. The entire
     repair is one Undo step. Phone and desktop centering corrections are
     kept separate, so aligning one layout cannot knock the other off-centre.
 
@@ -542,9 +543,13 @@
     }
     // The charge-time number and its battery form one deliberately composed
     // visual. Align all must leave that pair exactly where the editor placed it.
+    // Where the battery/bolt is hidden (the phone), the number stands alone
+    // and Align centres it like any other text.
     function isAlignExcluded(el){
-      return !!el.closest('.pdp-cmp__card--charge') &&
-        el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row');
+      var card = el.closest('.pdp-cmp__card--charge');
+      if (!card || !el.matches('.pdp-cmp__stat, .pdp-cmp__stat-row')) return false;
+      var icon = card.querySelector('.pdp-cmp__battery-icon');
+      return !!(icon && icon.getClientRects().length);
     }
 
     var editingEl = null;
@@ -2072,6 +2077,14 @@
         var er = el.getBoundingClientRect(), cr = card.getBoundingClientRect();
         if (!er.width || !er.height || !cr.width) return;
         var centreX = er.left + er.width/2;
+        // A number row is wider than its number: centre the digits themselves.
+        var digits = el.matches('.pdp-cmp__stat-row') && el.querySelector('.pdp-cmp__stat');
+        if (digits){
+          var dr = document.createRange();
+          dr.selectNodeContents(digits);
+          var db = dr.getBoundingClientRect();
+          if (db.width) centreX = db.left + db.width/2;
+        }
         if (el.tagName === 'IMG'){
           loadInk(el.currentSrc || el.src);                  // in case the <picture> swapped source
           var subject = subjectCentreX(el, er);
