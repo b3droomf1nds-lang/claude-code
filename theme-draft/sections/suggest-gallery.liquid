@@ -136,13 +136,15 @@
   /* the bar: in the bubbles' frost (their tint and blur once open), as tall
      as Apple's, the line of grey on the left where Apple has its price and
      the Add pill on the right; a tap on it, off the pill, goes through to
-     the card */
+     the card. Only the card's own white is ever behind it, so the frost
+     (rgba(239,239,242,.77) over white blurred and saturated 180%) is this
+     one solid colour: drawn solid, it costs nothing to scroll, and nothing
+     to copy into the cart sheet's glass edge. */
   .sugg__buy{
     position:relative; z-index:2; flex:none; height:80px; pointer-events:none;
     display:flex; align-items:center; gap:12px; padding:0 24px;
     border-bottom-left-radius:inherit; border-bottom-right-radius:inherit;
-    background:rgba(239,239,242,.77);
-    -webkit-backdrop-filter:blur(6px) saturate(180%); backdrop-filter:blur(6px) saturate(180%);
+    background:rgb(243,243,245);
   }
   /* the rest of the card, text included, opens the product, as the whole
      card used to; it's the card's link for keyboards and screen readers too */
@@ -197,11 +199,18 @@
     --scale:1; position:absolute; left:50%; top:50%; z-index:-1; width:56px; height:56px; border-radius:28px;
     transform:translate(-50%,-50%) scale(var(--scale)); opacity:0;
     background:rgba(239,239,242,calc(1 - var(--alpha) * .23));
+  }
+  .sugg__aap.is-on .sugg__bubble{ opacity:1; pointer-events:auto; }
+  /* frosted only while showing: no blur kept running for hidden bubbles */
+  .sugg__aap.is-on .sugg__bg{
+    opacity:1;
     -webkit-backdrop-filter:blur(calc(6px * (2 - var(--alpha)))) saturate(180%);
     backdrop-filter:blur(calc(6px * (2 - var(--alpha)))) saturate(180%);
   }
-  .sugg__aap.is-on .sugg__bubble{ opacity:1; pointer-events:auto; }
-  .sugg__aap.is-on .sugg__bg{ opacity:1; }
+  /* in the cart sheet's copies of the page (its glass edge) the bubbles
+     keep their tint but not a blur of their own: the edge blurs the copies
+     anyway, and ten copies each blurring live made the sheet lag here */
+  :host .sugg__aap.is-on .sugg__bg{ -webkit-backdrop-filter:none; backdrop-filter:none; }
 
   .sugg__dots{ display:flex; padding:0 16px; }
   /* the current dot stretches into a 32px line, as Apple's does; it grows
@@ -276,6 +285,8 @@
       {%- for block in section.blocks -%}
         {%- assign card_product = block.settings.link_product -%}
         {%- unless card_product.handle -%}{%- assign card_product = all_products[card_product] -%}{%- endunless -%}
+        {%- comment -%} no product chosen: all_products[blank] is an empty product, not nothing {%- endcomment -%}
+        {%- if card_product.handle == blank -%}{%- assign card_product = nil -%}{%- endif -%}
         {%- assign card_url = block.settings.link_url -%}
         {%- if card_url == blank and card_product -%}{%- assign card_url = card_product.url -%}{%- endif -%}
         {%- assign card_image = block.settings.image -%}
