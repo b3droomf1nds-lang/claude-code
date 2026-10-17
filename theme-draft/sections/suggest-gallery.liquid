@@ -1,0 +1,850 @@
+{%- comment -%}
+  Suggested products as a swipeable gallery, after Apple's "Get the
+  highlights" gallery (apple.com/iphone-18-pro). The cards are Apple's size
+  on a phone (87.5vw - 20px wide, 480px tall, 28px corners, 20px apart, the
+  next one peeking) and each looks like the "Pair with the USB-C Cable" tile:
+  heading and grey caption at the top, the product photo filling the card.
+  The photos are 2:3 like the cards, with empty white above the product, so
+  the text sits there. At the bottom, as on the Apple Store's product cards:
+  a small label (Apple's "New") and the product's name, then a bar in the
+  bubbles' frost (below) with a line of grey on the left and a small Add
+  pill on the right (straight into the bag, without opening it; "Add to
+  bag" to a screen reader). The photo fades to the card's white above the
+  name, as Apple's fade to black.
+
+  The small line under the heading is the current card's own (its "small
+  line", or the subheading if it has none); it rolls up to the next card's,
+  or down to the one before's, as the dots change. When all the cards show
+  at once it's the subheading.
+
+  Swipe the cards, or use the two frosted bubbles that rise and unfold near
+  the bottom of the screen while the gallery is on screen: the dots (grey,
+  the current card's a grey line, as on Apple's) and the arrows (the dots'
+  grey, no press highlight). The cards themselves have no corner arrow; a
+  tap anywhere on a card, off its Add, opens the product. The bubbles stick
+  12px above the bottom of the page's view, the same whether or not the
+  browser's bottom toolbar is showing (no extra for the home indicator),
+  until the gap above them, up to the cards, is as big as the one below
+  them; then both gaps grow together until they're the 32px the bubbles
+  rest under the cards, and from there the bubbles move with the cards. The
+  rise and unfold are Apple's own: the springs and timings of its gallery
+  controls, read from its page script. The frost is the cart sheet's (its
+  tint over the page's dim, blur 6px, saturation 180%) without the sheet's
+  bright edge.
+
+  Aim assist near the spot where the heading, the cards and the resting
+  controls all fit on screen: scrolling slows down as the page nears it,
+  and a flick that would stop near it brakes onto it.
+{%- endcomment -%}
+<style>
+  .sugg{
+    --pad:max(6.25vw,env(safe-area-inset-left));  /* Apple's gallery margin */
+    --gap:20px;
+    --cw:calc(87.5vw - 20px);                       /* Apple's card: 321 x 480 on a 390 phone */
+    --ch:480px;
+    /* the photo sits 15px lower than it would resting on the card's bottom
+       (--img-y), so the space between the caption and the product is half as
+       big again, plus the card's own "lower the photo by" (--img-drop) for a
+       photo whose product starts higher up; what runs past the bottom is
+       cropped */
+    --img-y:max(0px,calc(var(--ch) - var(--cw) * 1.5));
+    color:var(--ink); padding:clamp(48px,7vw,96px) 0 0;
+  }
+  .sugg__head{ text-align:center; max-width:640px; margin:0 auto clamp(28px,4vw,48px); }
+  .sugg__heading{
+    font-family:var(--sans); font-weight:600; letter-spacing:-0.03em;
+    font-size:clamp(1.7rem,3vw,2.4rem); line-height:1.1; margin:0 0 12px;
+  }
+  .sugg__sub{ color:var(--ink-60); font-size:clamp(.95rem,1.2vw,1.05rem); margin:0; }
+  /* a line per card, all in one place so the height never changes, the
+     current card's showing: the ones before it wait above and the ones
+     after below, so it rolls up to the next card's and down to the one
+     before's */
+  .sugg__sub--lines{ display:grid; overflow:hidden; }
+  .sugg__line{ grid-area:1 / 1; opacity:0; transform:translateY(100%); transition:transform .5s var(--ease), opacity .35s ease; }
+  .sugg__line.is-up{ transform:translateY(-100%); }
+  .sugg__line.is-on{ opacity:1; transform:none; }
+  .sugg__sub--lines.is-instant .sugg__line{ transition:none; }
+
+  /* the controls rest 32px under the cards, in the gallery's own room */
+  .sugg__gallery{ position:relative; padding-bottom:88px; }
+  /* room above and below inside the scroller for the cards' shadows */
+  .sugg__track{
+    position:relative; display:flex; gap:var(--gap);
+    overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory; scroll-padding-inline:var(--pad);
+    scrollbar-width:none; -webkit-overflow-scrolling:touch;
+    padding:24px 0 44px; margin:-24px 0 -44px;
+  }
+  .sugg__track::-webkit-scrollbar{ display:none; }
+  /* the margins before the first card and after the last (padding at the
+     end of a scroller isn't kept everywhere) */
+  .sugg__track::before,.sugg__track::after{ content:""; flex:0 0 max(0px,calc(var(--pad) - var(--gap))); }
+
+  .sugg__card{
+    position:relative; display:block; flex:0 0 var(--cw); height:var(--ch);
+    scroll-snap-align:start; border-radius:28px; overflow:hidden; isolation:isolate;
+    background:#fdfeff;  /* the product photos' own white */
+    box-shadow:0 1px 2px rgba(19,19,22,.04),0 18px 44px -22px rgba(19,19,22,.14);
+    color:inherit; text-decoration:none; -webkit-tap-highlight-color:transparent;
+  }
+  .sugg__img{
+    position:absolute; left:0; top:calc(var(--img-y) + 15px + var(--img-drop,0px)); width:100%; height:auto;
+  }
+  /* the tile's type: 1.05rem semibold heading, grey caption */
+  .sugg__text{ position:relative; padding:32px 32px 0; text-align:center; }
+  .sugg__card-heading{
+    font-family:var(--sans); font-weight:600; font-size:1.05rem; line-height:1.25;
+    letter-spacing:-0.02em; margin:0; color:var(--ink); text-wrap:balance;
+  }
+  .sugg__card-sub{ font-size:14px; line-height:1.35; color:var(--ink-60); margin:6px 0 0; text-wrap:balance; }
+  /* "Hide the heading and caption at the top": just the photos (the text
+     at the bottom, the photo's alt and the bar's buttons still name the
+     product). The photo's white above the product isn't needed then, so a
+     card with text at the bottom has its photo moved up to make room. */
+  .sugg--bare .sugg__text{ visibility:hidden; }
+  .sugg--bare .sugg__card--info .sugg__img{ transform:translateY(-14%); }
+
+  /* ---- the foot of a card: Apple's product card text, then the bar ---- */
+  /* the photo fades to the card's white over the 120px above the name,
+     eased at both ends (smoothstep) so the fade has no edge; its corners
+     are the card's own (the bar's too), in case the card's clip misses the
+     frost's layer */
+  .sugg__foot{
+    position:absolute; left:0; right:0; bottom:0; display:flex; flex-direction:column;
+    background:#fdfeff; border-bottom-left-radius:inherit; border-bottom-right-radius:inherit;
+  }
+  .sugg__foot::before{
+    content:""; position:absolute; left:0; right:0; bottom:100%; height:120px; pointer-events:none;
+    background:linear-gradient(rgba(253,254,255,0), rgba(253,254,255,.04) 15px, rgba(253,254,255,.16) 30px, rgba(253,254,255,.32) 45px,
+      rgba(253,254,255,.5) 60px, rgba(253,254,255,.68) 75px, rgba(253,254,255,.84) 90px, rgba(253,254,255,.96) 105px, #fdfeff 120px);
+  }
+  /* Apple's type: its small label and bold name in ink, 24px in from the
+     card's sides */
+  .sugg__info{ padding:0 24px 16px; }
+  .sugg__info:last-child{ padding-bottom:28px; }
+  .sugg__label{ font:600 15px/1.25 var(--sans); letter-spacing:-.01em; margin:0 0 4px; color:var(--ink); }
+  .sugg__title{
+    font-family:var(--sans); font-weight:700; font-size:26px; line-height:1.15;
+    letter-spacing:-.03em; margin:0; color:var(--ink); text-wrap:balance;
+  }
+  /* the bar: in the bubbles' frost (their tint and blur once open), as tall
+     as Apple's, the line of grey on the left where Apple has its price and
+     the Add pill on the right; a tap on it, off the pill, goes through to
+     the card */
+  .sugg__buy{
+    position:relative; z-index:2; flex:none; height:80px; pointer-events:none;
+    display:flex; align-items:center; gap:12px; padding:0 24px;
+    border-bottom-left-radius:inherit; border-bottom-right-radius:inherit;
+    background:rgba(239,239,242,.77);
+    -webkit-backdrop-filter:blur(6px) saturate(180%); backdrop-filter:blur(6px) saturate(180%);
+  }
+  /* the rest of the card, text included, opens the product, as the whole
+     card used to; it's the card's link for keyboards and screen readers too */
+  .sugg__hit{ position:absolute; inset:0; z-index:1; border-radius:inherit; -webkit-tap-highlight-color:transparent; }
+  .sugg__hit:focus-visible{ outline:2px solid var(--focus,#0071e3); outline-offset:-2px; }
+  /* the page's grey a shade darker, for the frost behind it */
+  .sugg__desc{ flex:1 1 auto; min-width:0; font:500 14px/1.3 var(--sans); letter-spacing:-.005em; color:rgba(19,19,22,.66); margin:0; text-wrap:pretty; }
+  .sugg__add{ display:flex; margin:0 0 0 auto; pointer-events:auto; }
+  /* a small pill: 30px tall, 14px either side of a 15px semibold label */
+  .sugg__btn{
+    position:relative; flex:none; display:flex; align-items:center; justify-content:center; height:30px; padding:0 14px;
+    border:0; border-radius:15px; font:600 15px/1 var(--sans); letter-spacing:-.01em; white-space:nowrap;
+    text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent;
+    transition:transform .2s var(--ease), background-color .25s, opacity .25s;
+  }
+  .sugg__btn::after{ content:""; position:absolute; inset:-7px -8px; }   /* 44px tall to a finger */
+  .sugg__btn:active{ transform:scale(.96); }
+  /* black like the page's own Add to bag, which also stays black once added */
+  .sugg__btn--add{ background:var(--ink); color:var(--base); }
+  .sugg__btn--add.is-adding{ opacity:.6; }
+  .sugg__btn--add:disabled{ opacity:.45; cursor:default; }
+  @media (hover:hover){
+    .sugg__btn--add:hover:not(:disabled){ background:#000; }
+  }
+
+  /* ---- the frosted controls ---- */
+  /* the controls rise out of a line 24px under their resting place (Apple
+     clips its controls the same way), so they never show over the section
+     below; the 24px leaves room for the springs' overshoot */
+  .sugg__aapbox{
+    position:absolute; inset:0 0 -24px; z-index:2; pointer-events:none; overflow:clip;
+    display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
+  }
+  .sugg__aap{
+    position:sticky; display:flex; align-items:center; gap:16px; margin-bottom:24px; pointer-events:none;
+    bottom:calc(var(--sugg-bar,0px) + 12px);
+    transition:bottom .35s cubic-bezier(.25,.8,.25,1);
+  }
+  .sugg.is-static .sugg__aapbox{ display:none; }
+  /* the drop the bubbles grow out of, in the frost's colour, solid */
+  .sugg__drop{
+    position:absolute; left:50%; top:0; width:56px; height:56px; border-radius:56px;
+    background:rgb(239,239,242); opacity:0; transform:translateX(-50%) scale(.01); pointer-events:none;
+  }
+  .sugg__bubble{
+    --alpha:1; position:relative; z-index:1; display:flex; align-items:center; justify-content:center;
+    height:56px; border-radius:28px; opacity:0; pointer-events:none;
+  }
+  /* solid at first, frosted once open: the tint thins from 100% to 77% and
+     the blur halves, as Apple's do */
+  .sugg__bg{
+    --scale:1; position:absolute; left:50%; top:50%; z-index:-1; width:56px; height:56px; border-radius:28px;
+    transform:translate(-50%,-50%) scale(var(--scale)); opacity:0;
+    background:rgba(239,239,242,calc(1 - var(--alpha) * .23));
+    -webkit-backdrop-filter:blur(calc(6px * (2 - var(--alpha)))) saturate(180%);
+    backdrop-filter:blur(calc(6px * (2 - var(--alpha)))) saturate(180%);
+  }
+  .sugg__aap.is-on .sugg__bubble{ opacity:1; pointer-events:auto; }
+  .sugg__aap.is-on .sugg__bg{ opacity:1; }
+
+  .sugg__dots{ display:flex; padding:0 16px; }
+  /* the current dot stretches into a 32px line, as Apple's does; it grows
+     as the old one shrinks, so the bubble's width never changes */
+  .sugg__dot{ display:flex; align-items:center; justify-content:center; width:24px; height:56px; opacity:0; -webkit-tap-highlight-color:transparent; transition:width .4s cubic-bezier(.4,0,.2,1); }
+  .sugg__dot::before{ content:""; flex:none; width:8px; height:8px; border-radius:4px; background:rgba(0,0,0,.42); transition:width .4s cubic-bezier(.4,0,.2,1); }
+  .sugg__dot[aria-current="true"]{ width:48px; }
+  .sugg__dot[aria-current="true"]::before{ width:32px; }
+  .sugg__aap.is-on .sugg__dot{ opacity:1; transition:opacity .1s ease-in .74s,width .4s cubic-bezier(.4,0,.2,1); }
+
+  .sugg__arrow{
+    position:relative; display:flex; align-items:center; justify-content:center; width:52px; height:56px;
+    color:rgba(0,0,0,.42); opacity:0; transform:scale(.5); -webkit-tap-highlight-color:transparent;
+  }
+  /* the same grey as the dots, whether or not there's anywhere to go */
+  .sugg__arrow svg{ position:relative; width:36px; height:36px; fill:currentColor; }
+  .sugg__arrow:disabled{ cursor:default; }
+  .sugg__aap.is-on .sugg__arrow{ opacity:1; transform:scale(1); transition:opacity .1s ease-in .94s,transform .2s ease-out .94s; }
+
+  .sugg__dot:focus-visible,.sugg__arrow:focus-visible{ outline:2px solid var(--focus,#0071e3); outline-offset:-4px; border-radius:28px; }
+
+  /* bigger phones and tablets: portrait cards like the photos, 400 x 600 */
+  @media (min-width:600px) and (max-width:899px){
+    .sugg{ --cw:min(calc(87.5vw - 20px),400px); --ch:calc(var(--cw) * 1.5); }
+  }
+  /* desktop: the cards share the width (up to 400px each) so they all show
+     at once; nothing to scroll, so no controls, unless there are too many
+     to fit at 260px */
+  @media (min-width:900px){
+    .sugg{ --pad:max(24px,calc((100vw - 1240px) / 2)); --gap:24px; --img-y:0px; }
+    .sugg__card{ flex-basis:max(260px,min(400px,calc((100% - 2 * var(--pad) - (var(--n) - 1) * var(--gap)) / var(--n)))); height:auto; aspect-ratio:2 / 3; }
+    .sugg.is-static .sugg__track{ justify-content:center; }
+    .sugg.is-static .sugg__gallery{ padding-bottom:0; }
+  }
+  /* aim assist (see the script): near the gallery, up-and-down drags are
+     the script's and sideways swipes stay the browser's */
+  html.sugg-aim #main,html.sugg-aim #main *{ touch-action:pan-x; touch-action:pan-x pinch-zoom; }
+  @media (prefers-reduced-motion:reduce){
+    .sugg__aap,.sugg__aap *,.sugg__aap *::before{ transition:none!important; }
+    .sugg__line,.sugg__line.is-up{ transform:none; }   /* the small line fades instead of rolling */
+  }
+</style>
+
+{%- assign card_count = section.blocks.size -%}
+{%- assign card_lines = false -%}
+{%- for block in section.blocks -%}{%- if block.settings.line != blank -%}{%- assign card_lines = true -%}{%- endif -%}{%- endfor -%}
+<section class="sugg{% if section.settings.hide_card_text %} sugg--bare{% endif %}" style="--n:{{ card_count }}" data-sugg data-atc-stop aria-roledescription="carousel"{% if section.settings.heading != blank %} aria-label="{{ section.settings.heading | escape }}"{% endif %}>
+  {%- if section.settings.heading != blank or section.settings.subheading != blank or card_lines -%}
+    <div class="wrap">
+      <div class="sugg__head" data-reveal>
+        {%- if section.settings.heading != blank -%}<h2 class="sugg__heading">{{ section.settings.heading }}</h2>{%- endif -%}
+        {%- if card_lines -%}
+          {%- comment -%} the subheading (when all the cards show at once), then each card's line {%- endcomment -%}
+          <p class="sugg__sub sugg__sub--lines" data-sugg-sub>
+            <span class="sugg__line is-up" aria-hidden="true">{{ section.settings.subheading }}</span>
+            {%- for block in section.blocks -%}
+              <span class="sugg__line{% if forloop.first %} is-on{% endif %}"{% unless forloop.first %} aria-hidden="true"{% endunless %}>{{ block.settings.line | default: section.settings.subheading }}</span>
+            {%- endfor -%}
+          </p>
+        {%- elsif section.settings.subheading != blank -%}
+          <p class="sugg__sub">{{ section.settings.subheading }}</p>
+        {%- endif -%}
+      </div>
+    </div>
+  {%- endif -%}
+
+  <div class="sugg__gallery" data-sugg-gallery>
+    <div class="sugg__track" data-sugg-track>
+      {%- for block in section.blocks -%}
+        {%- assign card_product = block.settings.link_product -%}
+        {%- unless card_product.handle -%}{%- assign card_product = all_products[card_product] -%}{%- endunless -%}
+        {%- assign card_url = block.settings.link_url -%}
+        {%- if card_url == blank and card_product -%}{%- assign card_url = card_product.url -%}{%- endif -%}
+        {%- assign card_image = block.settings.image -%}
+        {%- if card_image == blank and card_product -%}{%- assign card_image = card_product.featured_image -%}{%- endif -%}
+        {%- assign card_name = card_product.title | default: block.settings.heading -%}
+        {%- assign card_title = block.settings.title | default: card_product.title -%}
+        {%- assign card_info = false -%}
+        {%- if block.settings.label != blank or card_title != blank -%}{%- assign card_info = true -%}{%- endif -%}
+        {%- assign card_bar = false -%}
+        {%- if card_product or block.settings.desc != blank -%}{%- assign card_bar = true -%}{%- endif -%}
+        <div class="sugg__card{% if card_info %} sugg__card--info{% endif %}" data-sugg-card{% if block.settings.img_drop > 0 %} style="--img-drop:{{ block.settings.img_drop }}px"{% endif %} {{ block.shopify_attributes }}>
+          {%- if card_image != blank -%}
+            <img class="sugg__img" src="{{ card_image | image_url: width: 1000 }}"
+                 srcset="{{ card_image | image_url: width: 500 }} 500w, {{ card_image | image_url: width: 750 }} 750w, {{ card_image | image_url: width: 1000 }} 1000w, {{ card_image | image_url: width: 1300 }} 1300w"
+                 sizes="(min-width:900px) 400px, calc(87.5vw - 20px)"
+                 width="{{ card_image.width }}" height="{{ card_image.height }}"
+                 alt="{{ card_image.alt | default: card_name | escape }}" loading="lazy">
+          {%- endif -%}
+          <div class="sugg__text">
+            <h3 class="sugg__card-heading">{{ block.settings.heading }}</h3>
+            {%- if block.settings.caption != blank -%}<p class="sugg__card-sub">{{ block.settings.caption }}</p>{%- endif -%}
+          </div>
+          {%- if card_url != blank -%}
+            <a class="sugg__hit" href="{{ card_url }}" aria-label="{{ card_name | default: card_title | escape }}"></a>
+          {%- endif -%}
+          {%- if card_info or card_bar -%}
+            <div class="sugg__foot">
+              {%- if card_info -%}
+                <div class="sugg__info">
+                  {%- if block.settings.label != blank -%}<p class="sugg__label">{{ block.settings.label }}</p>{%- endif -%}
+                  {%- if card_title != blank -%}<h3 class="sugg__title">{{ card_title }}</h3>{%- endif -%}
+                </div>
+              {%- endif -%}
+              {%- if card_bar -%}
+                <div class="sugg__buy">
+                  {%- if block.settings.desc != blank -%}<p class="sugg__desc">{{ block.settings.desc }}</p>{%- endif -%}
+                  {%- if card_product -%}
+                    <form class="sugg__add" action="{{ routes.cart_add_url }}" method="post" data-quick-add data-error="Try again">
+                      <input type="hidden" name="id" value="{{ card_product.selected_or_first_available_variant.id }}">
+                      <button type="submit" class="sugg__btn sugg__btn--add"{% unless card_product.available %} disabled{% endunless %}>
+                        <span data-quick-add-label aria-live="polite">{% if card_product.available %}Add{% else %}{{ 'products.sold_out' | t }}{% endif %}</span>
+                        <span class="visually-hidden">{% if card_product.available %} to bag{% endif %}: {{ card_name | escape }}</span>
+                      </button>
+                    </form>
+                  {%- endif -%}
+                </div>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endfor -%}
+    </div>
+
+    {%- if card_count > 1 -%}
+      <div class="sugg__aapbox">
+        <div class="sugg__aap" data-sugg-aap>
+          <span class="sugg__drop" aria-hidden="true"></span>
+          <div class="sugg__bubble" data-sugg-bubble>
+            <span class="sugg__bg"></span>
+            <div class="sugg__dots">
+              {%- for block in section.blocks -%}
+                <button type="button" class="sugg__dot" data-sugg-dot aria-label="Show {{ forloop.index }} of {{ card_count }}"{% if forloop.first %} aria-current="true"{% endif %}></button>
+              {%- endfor -%}
+            </div>
+          </div>
+          <div class="sugg__bubble" data-sugg-bubble>
+            <span class="sugg__bg"></span>
+            <button type="button" class="sugg__arrow" data-sugg-go="-1" aria-label="Previous" disabled>
+              <svg viewBox="0 0 36 36" aria-hidden="true"><path d="m13.44 16.94 5.51-5.5a1.5 1.5 0 0 1 2.12 2.12L16.62 18l4.45 4.44a1.5 1.5 0 0 1-2.12 2.12l-5.51-5.5a1.5 1.5 0 0 1 0-2.12z"/></svg>
+            </button>
+            <button type="button" class="sugg__arrow" data-sugg-go="1" aria-label="Next">
+              <svg viewBox="0 0 36 36" aria-hidden="true"><path d="m22.56 16.94-5.51-5.5a1.5 1.5 0 0 0-2.12 2.12L19.38 18l-4.45 4.44a1.5 1.5 0 0 0 2.12 2.12l5.51-5.5a1.5 1.5 0 0 0 0-2.12z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+<script>
+(function () {
+  if (window.__sugg) { window.__sugg(); return; }
+
+  /* Apple's spring layer, as its gallery controls use it: one damped spring
+     per property (mass 1), stepped at a fixed 60 Hz (semi-implicit Euler)
+     and drawn between steps. A spring given a duration and bounce gets
+     stiffness (2pi/duration)^2 and damping (1 - bounce) 4pi/duration. */
+  const STEP = 1 / 60;
+  const active = new Set();
+  let cues = [], ticking = false, last = 0, acc = 0;
+
+  function Spring(el, props) {
+    this.el = el; this.p = {};
+    for (const n in props) {
+      const d = props[n];
+      let k = d.k, c = d.c;
+      if (d.dur) { k = Math.pow(2 * Math.PI / d.dur, 2); c = (1 - (d.bounce || 0)) * 4 * Math.PI / d.dur; }
+      this.p[n] = { x: d.at, t: d.at, v: 0, k: k, c: c, px: d.at };
+    }
+  }
+  Spring.prototype.snap = function (n, val) {
+    const q = this.p[n]; q.x = q.t = q.px = val; q.v = 0; this.paint(1);
+  };
+  Spring.prototype.to = function (n, val) { this.p[n].t = val; active.add(this); run(); };
+  Spring.prototype.step = function () {
+    let moving = false;
+    for (const n in this.p) {
+      const q = this.p[n];
+      q.px = q.x;
+      if (Math.abs(q.x - q.t) < 1e-3 && Math.abs(q.v) < 1e-3) { q.x = q.px = q.t; q.v = 0; continue; }
+      q.v += (-q.k * (q.x - q.t) - q.c * q.v) * STEP;
+      q.x += q.v * STEP;
+      moving = true;
+    }
+    return moving;
+  };
+  Spring.prototype.paint = function (f) {
+    const s = this.el.style;
+    let x = 0, y = 0, sc = 1, tf = false;
+    for (const n in this.p) {
+      const q = this.p[n], v = q.px + (q.x - q.px) * f;
+      if (n === 'x') { x = v; tf = true; }
+      else if (n === 'y') { y = v; tf = true; }
+      else if (n === 'scale') { sc = v; tf = true; }
+      else if (n === 'width' || n === 'height') s[n] = v.toFixed(2) + 'px';
+      else s.setProperty(n, v.toFixed(4));
+    }
+    if (tf) s.transform = 'translate3d(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px,0) scale(' + sc.toFixed(4) + ')';
+  };
+  function run() { if (!ticking) { ticking = true; last = performance.now(); requestAnimationFrame(frame); } }
+  function frame(now) {
+    const due = cues.filter(function (q) { return now >= q.at; });
+    cues = cues.filter(function (q) { return now < q.at; });
+    due.forEach(function (q) { q.fn(); });
+    acc += Math.min(1 / 30, Math.max(0, now - last) / 1000); last = now;
+    const moving = new Set();
+    while (acc >= STEP) { active.forEach(function (sp) { if (sp.step()) moving.add(sp); }); acc -= STEP; }
+    active.forEach(function (sp) { sp.paint(acc / STEP); if (!moving.has(sp) && sp.atRest()) active.delete(sp); });
+    if (active.size || cues.length) requestAnimationFrame(frame);
+    else ticking = false;
+  }
+  Spring.prototype.atRest = function () {
+    for (const n in this.p) { const q = this.p[n]; if (q.x !== q.t || q.v !== 0) return false; }
+    return true;
+  };
+  function cue(t0, s, fn) { cues.push({ at: t0 + s * 1000, fn: fn }); run(); }
+  function uncue(owner) { cues = cues.filter(function (q) { return q.fn.owner !== owner; }); }
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const atc = document.querySelector('.pdp--bold .atc');   // the sticky Add to bag bar, when pinned
+
+  function Gallery(root) {
+    root.setAttribute('data-sugg-on', '');
+    const gallery = root.querySelector('[data-sugg-gallery]');
+    const track = root.querySelector('[data-sugg-track]');
+    const cards = Array.prototype.slice.call(track.querySelectorAll('[data-sugg-card]'));
+    const aap = root.querySelector('[data-sugg-aap]');
+    const n = cards.length;
+    if (!aap || n < 2) return;
+    const drop = aap.querySelector('.sugg__drop');
+    const dots = Array.prototype.slice.call(aap.querySelectorAll('[data-sugg-dot]'));
+    const prev = aap.querySelector('[data-sugg-go="-1"]'), next = aap.querySelector('[data-sugg-go="1"]');
+    const bubbles = Array.prototype.slice.call(aap.querySelectorAll('[data-sugg-bubble]')).map(function (el, i) {
+      const bg = el.querySelector('.sugg__bg');
+      return {
+        el: el,
+        elS: new Spring(el, { x: { at: 0, k: 100, c: 20 }, '--alpha': { at: 1, k: 100, c: 20 } }),
+        bgS: new Spring(bg, { width: { at: 56, k: 100, c: 10 }, height: { at: 56, k: 100, c: 10 },
+          '--scale': i === 0 ? { at: 1, dur: .3, bounce: 0 } : { at: 1, dur: .65, bounce: 0 } })
+      };
+    });
+    const dotS = dots.map(function (d) { return new Spring(d, { x: { at: 0, k: 200, c: 20 } }); });
+    const aapS = new Spring(aap, { y: { at: 0, k: 100, c: 8 } });
+    const dropS = new Spring(drop, { x: { at: -15, k: 100, c: 8 }, scale: { at: 1.3, dur: .5, bounce: 0 },
+      width: { at: 30, k: 100, c: 8 }, height: { at: 80, k: 100, c: 8 } });
+    let shown = false;
+
+    /* Folded away, ready to unfold: Apple's starting values. Both bubbles sit
+       on the middle of the screen, the dots' as a small solid blob, the
+       arrows' at nothing, and the whole row 180px down. */
+    function fold() {
+      uncue(root); shown = false;
+      aap.classList.remove('is-on');
+      drop.style.opacity = '0';
+      dropS.snap('scale', 1.3); dropS.snap('x', -15); dropS.snap('width', 30); dropS.snap('height', 80);
+      aapS.snap('y', 180);
+      const r = aap.getBoundingClientRect(), mid = r.left + r.width / 2;
+      bubbles.forEach(function (b, i) {
+        b.w = b.el.offsetWidth;
+        b.elS.snap('x', mid - (r.left + b.el.offsetLeft + b.w / 2));
+        b.elS.snap('--alpha', 0);
+        b.bgS.snap('width', i === 0 ? 40 : 80); b.bgS.snap('height', 36); b.bgS.snap('--scale', i === 0 ? 1.3 : 0);
+      });
+      dotS.forEach(function (s) { s.snap('x', 36); });
+    }
+    /* Open fully at once (reduced motion). */
+    function settle() {
+      uncue(root); shown = true;
+      drop.style.opacity = '0'; aapS.snap('y', 0);
+      bubbles.forEach(function (b) {
+        b.w = b.el.offsetWidth;
+        b.elS.snap('x', 0); b.elS.snap('--alpha', 1);
+        b.bgS.snap('width', b.w); b.bgS.snap('height', 56); b.bgS.snap('--scale', 1);
+      });
+      dotS.forEach(function (s) { s.snap('x', 0); });
+      aap.classList.add('is-on');
+    }
+    /* Apple's unfold, step for step (its playIntroAnimation for two
+       bubbles): the drop pops up and rounds into a circle as the row springs
+       up from 180px below; the dots' bubble slides left out of it and
+       stretches, the arrows' slides right and grows; then both grow to full
+       height, the dots slide in, the arrows appear, and the bubbles turn from
+       solid to frost. Times in seconds. */
+    function unfold() {
+      if (reduce.matches) { settle(); return; }
+      fold(); shown = true;
+      const t0 = performance.now(), b0 = bubbles[0], b1 = bubbles[1];
+      const at = function (s, fn) { fn.owner = root; cue(t0, s, fn); };
+      at(0, function () {
+        requestAnimationFrame(function () { aap.classList.add('is-on'); drop.style.opacity = '1'; });
+        dropS.to('scale', .8);
+      });
+      at(.03, function () { aapS.to('y', 0); });
+      at(.05, function () { dropS.to('x', -28); dropS.to('width', 56); });
+      at(.15, function () { dropS.to('height', 56); });
+      at(.3, function () { b0.bgS.to('--scale', 1); });
+      at(.5, function () { b0.elS.to('x', 0); b0.bgS.to('width', b0.w); });
+      at(.52, function () { requestAnimationFrame(function () { drop.style.opacity = '0'; }); });
+      at(.54, function () { b1.elS.to('x', 0); b1.bgS.to('--scale', 1); });
+      at(.7, function () { b0.bgS.to('height', 56); b1.bgS.to('width', b1.w); b1.bgS.to('height', 56); });
+      dotS.forEach(function (s, i) { at(.74 + .02 * i, function () { s.to('x', 0); }); });
+      at(1, function () { b0.elS.to('--alpha', 1); b1.elS.to('--alpha', 1); });
+    }
+
+    /* Which card is showing: the one whose resting place is nearest. The
+       last ones can't come to the start, so theirs is the end. */
+    function stops() {
+      const max = track.scrollWidth - track.clientWidth, pad = cards[0].offsetLeft;
+      return cards.map(function (c) { return Math.max(0, Math.min(max, c.offsetLeft - pad)); });
+    }
+    /* The small line under the heading: the subheading's is the first,
+       then one for each card. The ones before the line showing wait above
+       it and the ones after below, so it rolls the way the cards went. Two
+       the same swap without a roll. */
+    const sub = root.querySelector('[data-sugg-sub]');
+    const lines = sub ? Array.prototype.slice.call(sub.children) : [];
+    let line = 1;
+    function retext(j, instant) {
+      if (!lines[j] || j === line) return;
+      sub.classList.toggle('is-instant', !!instant || lines[j].textContent === lines[line].textContent);
+      lines.forEach(function (el, k) {
+        el.classList.toggle('is-on', k === j);
+        el.classList.toggle('is-up', k < j);
+        if (k === j) el.removeAttribute('aria-hidden'); else el.setAttribute('aria-hidden', 'true');
+      });
+      line = j;
+    }
+
+    let idx = -1, want = -1, tick = 0, idle = 0;
+    function show(i) {
+      if (i === idx) return;
+      idx = i;
+      dots.forEach(function (d, k) { d.setAttribute('aria-current', k === i ? 'true' : 'false'); });
+      prev.disabled = i <= 0; next.disabled = i >= n - 1;
+      if (!root.classList.contains('is-static')) retext(i + 1);
+    }
+    function sync() {
+      tick = 0;
+      if (want >= 0) { show(want); return; }
+      const s = stops(), x = track.scrollLeft;
+      let best = 0;
+      s.forEach(function (v, k) { if (Math.abs(v - x) < Math.abs(s[best] - x)) best = k; });
+      show(best);
+    }
+    function go(i) {
+      i = Math.max(0, Math.min(n - 1, i));
+      want = i; show(i);
+      track.scrollTo({ left: stops()[i], behavior: reduce.matches ? 'auto' : 'smooth' });
+      clearTimeout(idle); idle = setTimeout(function () { want = -1; sync(); }, 900);
+    }
+    track.addEventListener('scroll', function () {
+      if (!tick) tick = requestAnimationFrame(sync);
+      if (want >= 0) { clearTimeout(idle); idle = setTimeout(function () { want = -1; sync(); }, 140); }
+    }, { passive: true });
+    track.addEventListener('touchstart', function () { want = -1; }, { passive: true });
+    track.addEventListener('pointerdown', function () { want = -1; }, { passive: true });
+    prev.addEventListener('click', function () { go((want >= 0 ? want : idx) - 1); });
+    next.addEventListener('click', function () { go((want >= 0 ? want : idx) + 1); });
+    dots.forEach(function (d, k) { d.addEventListener('click', function () { go(k); }); });
+
+    /* Unfold once most of the cards are on screen; fold away, unseen, once
+       the whole gallery (controls included) has gone, ready for next time. */
+    const enough = function (h) { return h >= Math.min(.6 * cards[0].offsetHeight, .5 * innerHeight); };
+    const io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (root.classList.contains('is-static')) return;
+        if (e.target === track) {
+          if (!shown && e.isIntersecting && enough(e.intersectionRect.height)) unfold();
+        } else if (!e.isIntersecting && shown) fold();
+      });
+    }, { threshold: [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1] });
+
+    /* All the cards fit (wide screens): nothing to scroll, no controls. If
+       a resize makes them stop fitting while they're on screen, unfold. */
+    function fit() {
+      root.classList.toggle('is-static', track.scrollWidth <= track.clientWidth + 1);
+      retext(root.classList.contains('is-static') ? 0 : Math.max(0, idx) + 1, true);
+      if (root.classList.contains('is-static') || shown) return;
+      fold();
+      const r = track.getBoundingClientRect();
+      if (enough(Math.min(r.bottom, innerHeight) - Math.max(r.top, 0))) unfold();
+    }
+    if (window.ResizeObserver) new ResizeObserver(function () { fit(); sync(); }).observe(track);
+    else fit();
+
+    /* Above the sticky Add to bag bar while it shows: --sugg-bar is how far
+       its top is from the bottom of the screen. */
+    function bar() {
+      const on = atc.classList.contains('is-pinned') && atc.style.visibility !== 'hidden';
+      root.style.setProperty('--sugg-bar', on ? Math.max(0, Math.round(innerHeight - atc.getBoundingClientRect().top)) + 'px' : '0px');
+    }
+    if (atc) {
+      new MutationObserver(bar).observe(atc, { attributes: true, attributeFilter: ['class', 'style'] });
+      addEventListener('resize', bar); bar();
+    }
+
+    /* The controls stick lift px above the bottom of the screen (the CSS's
+       sticky bottom) until the gap above them, up to the cards, has grown
+       as big as the gap below them. From there they rise at half the
+       scroll's speed, so both gaps grow together, until both are the gap
+       they rest at under the cards (32px); from there they move with the
+       cards. The CSS does the sticking and the resting; this adds the rise
+       in between, as a translate (their transform is the springs'). */
+    const liftPx = function () { return parseFloat(getComputedStyle(aap).bottom) || 0; };
+    const restGap = function () { return parseFloat(getComputedStyle(gallery).paddingBottom) - aap.offsetHeight; };
+    function rise() {
+      if (root.classList.contains('is-static')) return;
+      const d = innerHeight - gallery.getBoundingClientRect().bottom;   // how far their resting place is above the bottom of the screen
+      const up = Math.max(0, (d + restGap()) / 2 - Math.max(liftPx(), d));
+      aap.style.translate = up ? '0 ' + (-up).toFixed(2) + 'px' : '';
+    }
+    addEventListener('scroll', rise, { passive: true });
+    addEventListener('resize', rise);
+    rise();
+
+    /* Aim assist, as in a shooter, for landing on the gallery. There's one
+       spot (on a phone only a few pixels of scroll) where the heading, the
+       cards and the controls resting under them all fit on screen.
+       - Slowdown: the nearer the page gets to the spot, the slower it
+         scrolls under the finger: 20% of the finger's speed right on it,
+         easing back to full speed 40% of a screen either side.
+       - Pull: let go mid-swipe and the page carries on, losing speed as
+         iOS's does (x0.998 per ms) and slowed the same way near the spot.
+         But if it would come to a stop near the spot (up to 140px short of
+         it, or up to 60% of a screen past it), it brakes onto the spot
+         instead, from the speed it was let go at, so it lands there. A
+         harder flick carries past, and one away from the spot is free.
+       While the spot is within a screen and a half, the page's up-and-down
+       scrolling is done here rather than by the browser: everything in
+       <main> gets touch-action:pan-x, so sideways card swipes stay the
+       browser's but up-and-down drags come here. A flick already going
+       when the spot comes within reach is the browser's and isn't touched.
+       A tap that stops a flick doesn't also click. Phones and tablets only;
+       if the browser scrolls the page itself during a drag, this stands
+       down for good. ?aimdebug=1 shows what it's doing. */
+    const small = matchMedia('(max-width: 899px)');
+    const main = document.getElementById('main');
+    const head = root.querySelector('.sugg__head');
+    const lead = head ? head.parentNode : track;   // the heading's wrapper: where it sits without its fade-in nudge
+    // the top bar: the header's own, or on a product page the copy laid over the page
+    const bars = document.querySelectorAll('#shopify-section-header .site-header, #shopify-section-header .site-header-clone');
+    const de = document.documentElement, DECEL = .998;
+    const SLOW = .2, REACH = .4, TAKE = 1.5, SHORT = 140, OVER = .6, PULL = 1 / 220;
+    /* The spot, as a scroll position: the gallery, heading to controls,
+       midway between the top bar and the bottom of the screen, but high
+       enough that the controls have come to rest under the cards (their
+       place at least the resting gap, or the stick height if that's more,
+       above the bottom of the screen) with 4px to spare; on a screen too
+       short for all of it the cards and controls win. */
+    function spot() {
+      const top = lead.getBoundingClientRect().top, size = gallery.getBoundingClientRect().bottom - top;
+      let under = 0;
+      bars.forEach(function (el) { under = Math.max(under, el.getBoundingClientRect().bottom); });
+      const free = innerHeight - under - size, room = free - Math.max(liftPx(), restGap());
+      return scrollY + top - under - (room >= 0 ? Math.min(free / 2, Math.max(room / 2, room - 4)) : room);
+    }
+    let at = 0, pos = 0, mine = false, off = !main, drag = null, fling = 0, caught = false, held = false, behavior = '';
+    // page px per finger px at scroll position y
+    function gain(y) {
+      const x = Math.min(1, Math.abs(y - at) / (REACH * innerHeight));
+      return SLOW + (1 - SLOW) * x * x * (3 - 2 * x);
+    }
+    // move the page by du finger px; false when it runs into the top or bottom
+    function move(du) {
+      const want = pos + du * gain(pos + du * gain(pos) / 2);
+      pos = Math.max(0, Math.min(de.scrollHeight - innerHeight, want));
+      window.scrollTo(0, pos);
+      rise();   // in the same frame as the page, not one behind
+      return pos === want;
+    }
+    // the theme's smooth scrolling would animate every step
+    function hold() { if (!held) { held = true; behavior = de.style.scrollBehavior; de.style.scrollBehavior = 'auto'; } }
+    function letGo() { if (held) { held = false; de.style.scrollBehavior = behavior; } }
+
+    const dbg = /[?&]aimdebug=1/.test(location.search) ? document.body.appendChild(document.createElement('div')) : null;
+    if (dbg) dbg.style.cssText = 'position:fixed;left:8px;top:56px;z-index:2147483000;background:rgba(0,0,0,.78);color:#fff;font:12px/1.4 ui-monospace,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre';
+    let why = '', last = '', count = 0;
+    function note(msg) {
+      if (msg) last = msg;
+      if (dbg) dbg.textContent = 'aim assist: ' + (off ? 'OFF, ' + why : mine ? 'on' : 'waiting (gallery far)') +
+        '\nspot ' + Math.round(spot() - scrollY) + 'px away, drags ' + count + '\n' + last;
+    }
+
+    function claim() {
+      if (drag || fling || off) return;
+      const on = small.matches && !root.classList.contains('is-static') && Math.abs(spot() - scrollY) < TAKE * innerHeight;
+      if (on !== mine) { mine = on; de.classList.toggle('sugg-aim', on); }
+      note();
+    }
+    function standDown(reason) {
+      off = true; why = reason; drag = null; mine = false; de.classList.remove('sugg-aim'); letGo(); note();
+    }
+    function done() { fling = 0; letGo(); claim(); }
+    // where a flick from p at finger speed v would stop on its own
+    function coast(p, v) {
+      while (Math.abs(v) >= .02) { v *= Math.pow(DECEL, 16); const du = v * 16; p += du * gain(p + du * gain(p) / 2); }
+      return p;
+    }
+    // a free flick: slowed near the spot, otherwise iOS's
+    function carry(v) {
+      let t = performance.now();
+      const step = function (now) {
+        const dt = Math.min(32, now - t); t = now;
+        v *= Math.pow(DECEL, dt);
+        // stop when it's spent, at the end of the page, or if something else scrolled the page
+        if (Math.abs(scrollY - pos) > 3 || !move(v * dt) || Math.abs(v) < .02) { done(); return; }
+        fling = requestAnimationFrame(step);
+      };
+      fling = requestAnimationFrame(step);
+    }
+    /* Brake onto the spot: a critically damped spring from here, starting
+       at the flick's speed (w page px per ms), stiff enough not to overshoot
+       and at least stiff enough to pull a flick that would stop short the
+       rest of the way. */
+    function brake(w) {
+      const a = pos - at, k = Math.max(w / (at - pos), PULL), c = w + k * a, t0 = performance.now();
+      const step = function (now) {
+        if (Math.abs(scrollY - pos) > 3) { done(); return; }
+        const t = now - t0, e = Math.exp(-k * t), x = (a + c * t) * e;
+        const end = Math.abs(x) < .5 && Math.abs(c - k * (a + c * t)) * e < .02;
+        pos = at + (end ? 0 : x);
+        window.scrollTo(0, pos); rise();
+        if (end) { done(); return; }
+        fling = requestAnimationFrame(step);
+      };
+      fling = requestAnimationFrame(step);
+    }
+    function flick(v) {
+      const dir = Math.sign(v), ahead = (at - pos) * dir, past = (coast(pos, v) - at) * dir;
+      if (ahead > 1 && past >= -SHORT && past <= OVER * innerHeight) {
+        note('flick ' + v.toFixed(1) + 'px/ms: braking onto the spot');
+        brake(v * gain(pos));
+      } else {
+        note('flick ' + v.toFixed(1) + 'px/ms: free (' + (ahead <= 1 ? 'away from the spot' : past > 0 ? 'too hard' : 'too soft') + ')');
+        carry(v);
+      }
+    }
+
+    addEventListener('touchstart', function (e) {
+      caught = !!fling;
+      if (fling) { cancelAnimationFrame(fling); fling = 0; }
+      drag = null; letGo();
+      if (!mine || off || e.touches.length > 1 || !main.contains(e.target)) return;
+      const t = e.touches[0];
+      drag = { x0: t.clientX, y0: t.clientY, y: t.clientY, axis: '', u: 0, s: [] };
+    }, { passive: true });
+    addEventListener('touchmove', function (e) {
+      if (!drag) return;
+      if (e.touches.length > 1) { drag = null; letGo(); return; }   // a pinch: the browser's
+      const t = e.touches[0];
+      if (!drag.axis) {
+        const dx = Math.abs(t.clientX - drag.x0), dy = Math.abs(t.clientY - drag.y0);
+        if (Math.max(dx, dy) < 6) return;
+        drag.axis = dy > dx ? 'y' : 'x';
+        if (drag.axis === 'x') { drag = null; return; }   // a card swipe
+        hold(); pos = scrollY; at = spot(); count++;
+        drag.y = t.clientY;   // the page starts moving from here, as the browser's does after its slop
+      }
+      if (Math.abs(scrollY - pos) > 3) { standDown('the browser scrolled the page itself'); return; }
+      const du = drag.y - t.clientY;
+      drag.y = t.clientY; drag.u += du;
+      move(du);
+      if (dbg) note('dragging: page at ' + Math.round(gain(pos) * 100) + '% of finger speed');
+      // the last 100ms of travel, for the speed at letting go
+      drag.s.push(e.timeStamp, drag.u);
+      while (drag.s.length > 4 && e.timeStamp - drag.s[0] > 100) drag.s.splice(0, 2);
+    }, { passive: true });
+    ['touchend', 'touchcancel'].forEach(function (type) {
+      addEventListener(type, function (e) {
+        const d = drag;
+        if (!d || e.touches.length) return;
+        drag = null;
+        const s = d.s, n = s.length;
+        let v = 0;   // finger px per ms; none if the finger had stopped before letting go
+        if (d.axis && type === 'touchend' && n >= 4 && e.timeStamp - s[n - 2] < 50) {
+          v = Math.max(-8, Math.min(8, (s[n - 1] - s[1]) / Math.max(1, s[n - 2] - s[0])));
+        }
+        if (Math.abs(v) > .05) flick(v); else { letGo(); claim(); }
+      }, { passive: true });
+    });
+    // a tap that stopped a flick
+    document.addEventListener('click', function (e) {
+      if (caught) { caught = false; e.preventDefault(); e.stopPropagation(); }
+    }, true);
+    let claimF = 0;
+    addEventListener('scroll', function () {
+      if (!claimF) claimF = requestAnimationFrame(function () { claimF = 0; claim(); });
+    }, { passive: true });
+    addEventListener('resize', claim);
+
+    fold(); sync();
+    io.observe(track); io.observe(gallery);
+
+    // theme editor: selecting a card's block brings it into view
+    root.addEventListener('shopify:block:select', function (e) {
+      const k = cards.indexOf(e.target);
+      if (k >= 0) go(k);
+    });
+  }
+
+  window.__sugg = function () {
+    document.querySelectorAll('[data-sugg]:not([data-sugg-on])').forEach(function (el) { new Gallery(el); });
+  };
+  window.__sugg();
+  document.addEventListener('shopify:section:load', window.__sugg);
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Suggested products",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Made to go with it." },
+    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "A few things that make Core even better.", "info": "A card's own small line takes its place while that card is showing." },
+    { "type": "checkbox", "id": "hide_card_text", "label": "Hide the heading and caption at the top of the cards", "default": false }
+  ],
+  "blocks": [
+    {
+      "type": "card",
+      "name": "Card",
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Heading", "default": "Pair with the USB-C Cable" },
+        { "type": "text", "id": "caption", "label": "Caption", "default": "to charge Core straight from the wall." },
+        { "type": "text", "id": "line", "label": "Small line under the heading", "info": "Takes the subheading's place while this card is showing." },
+        { "type": "header", "content": "Text at the bottom of the card" },
+        { "type": "text", "id": "label", "label": "Small label above the name", "info": "Like Apple's \"New\". Leave empty for none." },
+        { "type": "text", "id": "title", "label": "Name", "info": "Defaults to the linked product's name." },
+        { "type": "textarea", "id": "desc", "label": "Description", "info": "A short line in the frosted bar, beside Add." },
+        { "type": "header", "content": "Product and photo" },
+        { "type": "image_picker", "id": "image", "label": "Image (defaults to linked product's image)" },
+        { "type": "product", "id": "link_product", "label": "Link to product (also supplies the default image)" },
+        { "type": "url", "id": "link_url", "label": "Link (overrides product link)" },
+        { "type": "range", "id": "img_drop", "label": "Lower the photo by", "min": 0, "max": 60, "step": 1, "unit": "px", "default": 0 }
+      ]
+    }
+  ],
+  "max_blocks": 8,
+  "presets": [
+    {
+      "name": "Suggested products",
+      "blocks": [
+        { "type": "card", "settings": { "heading": "Pair with the USB-C Cable", "caption": "to charge Core straight from the wall." } },
+        { "type": "card", "settings": { "heading": "Pair with the Watch Charger", "caption": "to keep your watch topped up." } },
+        { "type": "card", "settings": { "heading": "Pair with the MagSafe Charger", "caption": "to top up your iPhone wirelessly." } }
+      ]
+    }
+  ]
+}
+{% endschema %}

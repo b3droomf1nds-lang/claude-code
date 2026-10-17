@@ -1,0 +1,59 @@
+{%- assign _ref = section.settings.product -%}
+{%- if _ref.handle -%}{%- assign hero_product = _ref -%}{%- else -%}{%- assign hero_product = all_products[_ref] -%}{%- endif -%}
+<section class="hero">
+  <div class="hero__aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="wrap wrap--wide hero__grid">
+    <div data-reveal>
+      <div class="hero__kicker">
+        <span class="charge-dot" aria-hidden="true"></span>
+        <span class="t-mono">{{ section.settings.kicker }}</span>
+      </div>
+      <h1 class="t-hero">{{ section.settings.heading }}</h1>
+      <p class="t-body-lg hero__copy">{{ section.settings.subheading }}</p>
+      <div class="hero__ctas">
+        {%- if hero_product -%}
+          <a class="btn btn--accent" href="{{ hero_product.url }}">{{ section.settings.cta_primary }}</a>
+        {%- endif -%}
+        <a class="btn btn--ghost" href="{{ section.settings.cta_secondary_link | default: routes.all_products_collection_url }}">{{ section.settings.cta_secondary }}</a>
+      </div>
+      {%- if section.settings.trust_line != blank -%}
+        <p class="hero__trustline">{{ section.settings.trust_line }}</p>
+      {%- endif -%}
+    </div>
+
+    <div class="hero__media" data-reveal>
+      {%- if section.settings.image -%}
+        <img src="{{ section.settings.image | image_url: width: 1600 }}" alt="{{ section.settings.image.alt | default: section.settings.heading | escape }}"
+             srcset="{{ section.settings.image | image_url: width: 900 }} 900w, {{ section.settings.image | image_url: width: 1600 }} 1600w, {{ section.settings.image | image_url: width: 2400 }} 2400w, {{ section.settings.image | image_url: width: 3200 }} 3200w" sizes="(min-width:900px) 46vw, 100vw">
+      {%- elsif hero_product -%}
+        <img src="{{ hero_product.featured_image | image_url: width: 1600 }}"
+             srcset="{{ hero_product.featured_image | image_url: width: 900 }} 900w, {{ hero_product.featured_image | image_url: width: 1600 }} 1600w, {{ hero_product.featured_image | image_url: width: 2400 }} 2400w, {{ hero_product.featured_image | image_url: width: 3200 }} 3200w" sizes="(min-width:900px) 46vw, 100vw"
+             alt="{{ hero_product.title | escape }}">
+      {%- endif -%}
+      {%- if hero_product -%}
+      <div class="hero__spec-chip">
+        <span class="t-mono">{{ hero_product.title }}</span>
+        <span class="t-mono" style="color:var(--accent-deep)">{{ hero_product.price_min | money }}</span>
+      </div>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Hero",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "Kicker (mono)", "default": "CORE PRO · 10,000 mAh" },
+    { "type": "textarea", "id": "heading", "label": "Heading (wrap a word in <em> for the serif italic)", "default": "Power, dressed <em>properly.</em>" },
+    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Magnetic charging hardware finished like an object you'd actually want on the table. Snap on, top up, forget about it." },
+    { "type": "product", "id": "product", "label": "Featured product" },
+    { "type": "image_picker", "id": "image", "label": "Hero image (defaults to product image)" },
+    { "type": "text", "id": "cta_primary", "label": "Primary CTA", "default": "Shop Core Pro" },
+    { "type": "text", "id": "cta_secondary", "label": "Secondary CTA", "default": "Explore the lineup" },
+    { "type": "url", "id": "cta_secondary_link", "label": "Secondary CTA link" },
+    { "type": "text", "id": "trust_line", "label": "Trust microline (keep claims true to policy)", "default": "12-month warranty · 30-day returns · Tracked shipping" }
+  ],
+  "presets": [{ "name": "Hero" }]
+}
+{% endschema %}

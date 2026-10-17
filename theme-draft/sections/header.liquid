@@ -1,0 +1,308 @@
+<style>
+  .site-nav a[aria-current="page"]{ background: var(--ink-12); color: var(--ink); }
+  /* match the mobile menu's link styling (bold, full-strength ink) —
+     desktop links were thinner (500) and muted (--ink-60) before.
+     Desktop only — .site-nav is display:none below 900px anyway, but
+     scoping explicitly here to leave mobile's own background alone. */
+  @media (min-width: 900px) {
+    .site-nav a{ font-weight: 600; color: var(--ink); }
+  }
+  .site-header__logo{ font-family: Inter, var(--font-body-family, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif) !important; letter-spacing:0 !important; text-transform:none !important; font-weight:700 !important; }
+  .site-nav__ucalc{ display:inline-flex; align-items:center; }
+  .site-header__actions{ display:flex; align-items:center; }
+  .site-header__actions > a,
+  .site-header__actions > .cart-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+    margin:0;
+    border:0;
+    background:none;
+    line-height:0;
+    height:24px;
+  }
+
+  /* ---------- phones: a frosted glass bar pinned across the top, with
+     the bag and the menu (moved over from the left) on its right. Grey
+     tinted like Apple's own bar, but see-through: whatever scrolls under
+     it shows through, blurred, its colours lifted a little. The whole
+     header section is pinned (its Shopify wrapper is the only thing tall
+     enough to stick: the <header> fills its wrapper exactly), which also
+     carries the product page's copy of the bar, laid over the gallery.
+     Desktop keeps its solid bar. ---------- */
+  @media (max-width: 899px){
+    #shopify-section-header{
+      position:sticky;
+      top:0;
+      z-index:90;
+    }
+    .site-header:not(.site-header--hidden),
+    #shopify-section-header .site-header-clone{   /* the id outranks the copy's own background:transparent below */
+      background:rgba(232,232,237,.62);
+      -webkit-backdrop-filter:blur(20px) saturate(180%);
+      backdrop-filter:blur(20px) saturate(180%);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.55),
+        0 .5px 0 rgba(19,19,22,.12);
+    }
+    .site-header__inner{ height:48px; }              /* as tall as Apple's bar (was 70px) */
+    .site-header__actions{ margin-left:auto; gap:4px; }
+    .site-header__actions .cart-btn__count{ display:none; }   /* no count beside the bag */
+    /* the menu: two lines drawn like the bag (its grey, its 1.494px line,
+       round ends, about its width), level with the middle of the bag's
+       drawing, which sits 2.8px below the middle of its box. Each line is
+       a 2px box squashed to 1.494px with a transform: a box's own height
+       gets snapped to whole device pixels (on a 3x phone a 1.7px line drew as
+       2px, thicker than the bag), a transform isn't, so the lines come out
+       exactly as thick as the bag's strokes. */
+    .site-header__actions > .menu-toggle{ gap:6px; translate:0 3px; }   /* line centres 8px apart, so the X crosses in the middle */
+    .site-header__actions > .menu-toggle span{ width:18.6px; height:2px; border-radius:1px; background:#8A8A8E; transform:scaleY(.747); }
+    .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(1){ transform:translateY(4px) rotate(45deg) scaleY(.747); }
+    .site-header__actions > .menu-toggle[aria-expanded="true"] span:nth-child(2){ opacity:1; transform:translateY(-4px) rotate(-45deg) scaleY(.747); }
+
+    /* search, alone in the left corner, drawn like the bag */
+    .search-btn{
+      display:flex; align-items:center; justify-content:center;
+      height:24px; padding:0; margin:0 0 0 -2px; border:0; background:none; line-height:0;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .search-btn,
+    .site-header__actions > .cart-btn,
+    .site-header__actions > .menu-toggle{ transition:opacity .24s ease; }
+    /* open, the magnifier becomes the search's X: the ring shrinks away, the
+       handle stretches into one stroke and the other grows from the middle
+       (the X is the menu's size: 9.3 units = 18.6px) — and folds back on close */
+    .search-btn svg *{ transition:stroke-dasharray .3s cubic-bezier(.4,0,.2,1), stroke-dashoffset .3s cubic-bezier(.4,0,.2,1), transform .3s cubic-bezier(.4,0,.2,1), opacity .2s ease; }
+    .search-btn__ring, .search-btn__b{ transform-box:fill-box; transform-origin:center; }
+    .search-btn__a{ stroke-dasharray:3.748 20; stroke-dashoffset:-7.266; }   /* only the handle's last 3.748 of the stroke */
+    .search-btn__b{ opacity:0; transform:scale(0); }
+    .search-btn[aria-expanded="true"] .search-btn__ring{ opacity:0; transform:scale(.3); }
+    .search-btn[aria-expanded="true"] .search-btn__a{ stroke-dasharray:9.3 20; stroke-dashoffset:0; }
+    .search-btn[aria-expanded="true"] .search-btn__b{ opacity:1; transform:none; }
+
+    /* ---------- the menu and search sheets, unfolding like Apple's: the
+       bar grows down over the page (which blurs out behind it), the
+       search and bag fade away, the lines turn into an X, then the rows
+       fade in one after another. Closing runs it backwards. The sheet is
+       fixed inside the header, under the bar's own icons; while it's out
+       the bar drops its own glass so the sheet carries it (a glass bar
+       would also pin the fixed sheet to its own 48px box). ---------- */
+    .site-header{ z-index:auto; }                    /* the product page's copy of the bar stays over the sheet */
+    .site-header__inner{ position:relative; z-index:2; }
+    .hdr-sheet{
+      position:fixed; top:0; left:0; right:0; z-index:1;
+      height:48px; overflow:hidden; padding:0;
+      background:rgba(232,232,237,.62);
+      -webkit-backdrop-filter:blur(20px) saturate(180%);
+      backdrop-filter:blur(20px) saturate(180%);
+      transition:height .3s cubic-bezier(.4,0,.6,1) .14s, background-color .3s ease .14s;
+    }
+    .hdr-sheet.is-open{
+      height:100vh; height:100lvh;                   /* the largest viewport: still covers it all when the keyboard is up */
+      background:rgb(245,245,247);                   /* solid: none of the page shows through */
+      transition:height .34s cubic-bezier(.4,0,.6,1), background-color .34s ease;
+    }
+    .hdr-sheet__body{ height:100%; overflow-y:auto; overscroll-behavior:contain; padding:48px 48px calc(48px + env(safe-area-inset-bottom)); }
+    .hdr-sheet__body > *{ opacity:0; transform:translateY(-6px); transition:opacity .14s ease, transform .14s ease; }
+    .hdr-sheet.is-open .hdr-sheet__body > *{
+      opacity:1; transform:none;
+      transition:opacity .3s ease, transform .3s ease;
+      transition-delay:calc(.2s + var(--i, 0) * 28ms);
+    }
+    html.hdr-open{ overflow:hidden; }
+    html.hdr-open .site-header:not(.site-header--hidden),
+    html.hdr-open #shopify-section-header .site-header-clone{
+      background:transparent; box-shadow:none;
+      -webkit-backdrop-filter:none; backdrop-filter:none;
+    }
+    html.hdr-menu .search-btn,
+    html.hdr-search .site-header__actions > .menu-toggle,
+    html.hdr-open .site-header__actions > .cart-btn{ opacity:0; pointer-events:none; }
+    html.hdr-typing{ --base:#F5F5F7; }   /* keyboard up: the page's colour (html/body are forced to it) fills the strip behind the keyboard's bar; the sheet hides the rest */
+
+    /* menu rows (and search's copy of them), Apple's size and rhythm */
+    .hdr-sheet__body > a{
+      display:block; padding:7px 0;
+      font-size:28px; line-height:32px; font-weight:600; letter-spacing:.007em;
+      color:#333336;
+    }
+    .hdr-sheet__body > a[hidden]{ display:none; }
+
+    /* search: a big field where the first row would be, then the menu's rows */
+    .mobile-search__form{ position:relative; display:flex; align-items:center; height:46px; margin:0; }   /* takes the menu's Home slot (46px row), magnifier over the rows' first letters */
+    .mobile-search__glass{ flex:none; width:24px; height:24px; margin:0 10px 0 -2px; color:#86868B; }   /* its ring's edge, not its box, over the rows' first letters */
+    /* an editable line, not an <input>: iOS hangs its AutoFill bar (passwords,
+       cards, address) over the keyboard for every text field */
+    .mobile-search__input{
+      flex:1; min-width:0; height:46px; line-height:46px; padding:0; border:0; outline:0; background:none;
+      position:relative; top:1px;                    /* baseline level with the menu's first row */
+      font:inherit; font-size:28px; font-weight:600; letter-spacing:.007em; color:#1D1D1F;   /* the menu rows' size */
+      white-space:nowrap; overflow-x:auto; overflow-y:hidden; scrollbar-width:none;
+      -webkit-user-select:text; user-select:text; cursor:text;
+    }
+    .mobile-search__input::-webkit-scrollbar{ display:none; }
+    .mobile-search__input:empty::before{ content:attr(data-placeholder); color:#86868B; pointer-events:none; }
+    .mobile-search__label{ margin:12px 0 12px; font-size:12px; line-height:16px; font-weight:400; letter-spacing:0; color:#6E6E73; }
+    .mobile-search__list{ list-style:none; margin:0; padding:0; }
+    .mobile-search__list a{
+      display:flex; align-items:center; gap:12px; padding:9px 0;
+      font-size:17px; line-height:21px; font-weight:600; letter-spacing:-.022em; color:#333336;
+    }
+    .mobile-search__list a::before{
+      content:""; flex:none; width:12px; height:12px;
+      background:#86868B;
+      -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6h8M6.6 2.6 10 6 6.6 9.4' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+              mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6h8M6.6 2.6 10 6 6.6 9.4' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+    .mobile-search__price{ margin-left:auto; padding-left:12px; font-weight:400; color:#6E6E73; font-size:14px; }
+  }
+  @media (min-width: 900px){
+    .search-btn, .hdr-sheet{ display:none; }
+  }
+
+  /* ---------- product page: hide the real bar ----------
+     Only the top row (.site-header__inner) is hidden here, NOT the
+     whole <header> — the clone below's menu button forwards its click
+     to this bar's real button, which toggles .mobile-nav (a sibling
+     of .site-header__inner, not inside it). Hiding the whole <header>
+     made that toggle a no-op on mobile: aria-expanded/hidden still
+     flipped correctly in JS, but the entire subtree — including the
+     now-"open" mobile-nav panel — stayed display:none right along
+     with the bar, so nothing ever appeared on screen. */
+  .site-header--hidden .site-header__inner{
+    display: none;
+  }
+
+  /* ---------- product page: transparent copy of the bar's contents,
+     sitting 100px below the real (solid) bar, overlaid on top of the
+     page content already there ---------- */
+  .site-header-clone{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: transparent;
+  }
+  /* pull the menu-toggle/logo/actions in from the edges, closer together
+     toward the middle, instead of spread to the full width — desktop
+     only, was leaking onto mobile before */
+  @media (min-width: 900px) {
+    .site-header-clone .site-header__inner{
+      justify-content: center;
+      gap: 60px;
+    }
+  }
+</style>
+<header class="site-header{% if template.name == 'product' %} site-header--hidden{% endif %}">
+  <div class="wrap wrap--wide site-header__inner">
+    <button class="search-btn" data-search-open aria-expanded="false" aria-label="{{ 'general.search' | t }}">
+      <svg width="40" height="40" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle class="search-btn__ring" cx="9.05" cy="10.65" r="3.7" stroke="#8A8A8E" stroke-width="0.747"/><path class="search-btn__a" d="M6.612 8.212 14.4 16" stroke="#8A8A8E" stroke-width="0.747" stroke-linecap="round"/><path class="search-btn__b" d="M13.188 8.212 6.612 14.788" stroke="#8A8A8E" stroke-width="0.747" stroke-linecap="round"/></svg>
+    </button>
+    <a href="{{ routes.root_url }}" class="site-header__logo" aria-label="{{ shop.name }}">
+      {{ shop.name | downcase | capitalize }}
+    </a>
+
+    <nav class="site-nav" aria-label="{{ 'general.menu' | t }}">
+      {%- for link in section.settings.menu.links -%}
+        <a href="{{ link.url }}" {% if link.current %}aria-current="page"{% endif %}>{{ link.title }}</a>
+        {%- if link.title == 'Catalog' -%}
+          <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator</a>
+        {%- endif -%}
+      {%- endfor -%}
+    </nav>
+
+    <div class="site-header__actions">
+      <button class="cart-btn" data-cart-open aria-label="{{ 'cart.title' | t }}">
+        {% render 'icon', icon: 'bag' %}
+        <span class="cart-btn__count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
+      </button>
+      <button class="menu-toggle" data-menu-toggle aria-expanded="false" aria-label="{{ 'general.menu' | t }}">
+        <span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <nav class="mobile-nav hdr-sheet" data-mobile-nav hidden aria-label="{{ 'general.menu' | t }}">
+    <div class="hdr-sheet__body">
+      {%- for link in section.settings.menu.links -%}
+        <a href="{{ link.url }}">{{ link.title }}</a>
+        {%- if link.title == 'Catalog' -%}
+          <a href="/collections/powerbanks">Powerbanks</a>
+          <a href="/collections/cables">Cables</a>
+          <a href="/collections/chargers">Chargers</a>
+          <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator</a>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </nav>
+
+  <div class="mobile-search hdr-sheet" data-mobile-search hidden role="dialog" aria-label="{{ 'general.search' | t }}">
+    <div class="hdr-sheet__body">
+      {%- comment -%} not a <form>: iOS offers its AutoFill bar (passwords, cards, address) above the keyboard for form fields; the search key is handled in theme-r3.js {%- endcomment -%}
+      <div class="mobile-search__form" role="search" data-search-url="{{ routes.search_url }}">
+        <svg class="mobile-search__glass" width="24" height="24" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.4" stroke="currentColor" stroke-width="1.5"/><path d="M12.6 12.6 17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <div class="mobile-search__input" data-search-input contenteditable="plaintext-only" role="searchbox" aria-label="{{ 'general.search' | t }}" data-placeholder="{{ 'general.search' | t }}" inputmode="search" enterkeyhint="search" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+      </div>
+      <p class="mobile-search__label" data-search-label hidden></p>
+      {%- comment -%} the menu's rows, minus Home and Contact {%- endcomment -%}
+      {%- for link in section.settings.menu.links -%}
+        {%- unless link.url == routes.root_url or link.title == 'Contact' or link.url contains '/pages/contact' -%}
+          <a href="{{ link.url }}" data-search-quick>{{ link.title }}</a>
+          {%- if link.title == 'Catalog' -%}
+            <a href="/collections/powerbanks" data-search-quick>Powerbanks</a>
+            <a href="/collections/cables" data-search-quick>Cables</a>
+            <a href="/collections/chargers" data-search-quick>Chargers</a>
+            <a href="/pages/calculator" data-search-quick>Usage calculator</a>
+          {%- endif -%}
+        {%- endunless -%}
+      {%- endfor -%}
+      <ul class="mobile-search__list" data-search-results hidden></ul>
+    </div>
+  </div>
+</header>
+
+{%- if template.name == 'product' -%}
+  <div style="position:relative; height:0;">
+    <div class="site-header-clone">
+      <div class="wrap wrap--wide site-header__inner">
+        <button class="search-btn" data-search-open aria-expanded="false" aria-label="{{ 'general.search' | t }}">
+          <svg width="40" height="40" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle class="search-btn__ring" cx="9.05" cy="10.65" r="3.7" stroke="#8A8A8E" stroke-width="0.747"/><path class="search-btn__a" d="M6.612 8.212 14.4 16" stroke="#8A8A8E" stroke-width="0.747" stroke-linecap="round"/><path class="search-btn__b" d="M13.188 8.212 6.612 14.788" stroke="#8A8A8E" stroke-width="0.747" stroke-linecap="round"/></svg>
+        </button>
+        <a href="{{ routes.root_url }}" class="site-header__logo" aria-label="{{ shop.name }}">
+          {{ shop.name | downcase | capitalize }}
+        </a>
+
+        <nav class="site-nav" aria-label="{{ 'general.menu' | t }}">
+          {%- for link in section.settings.menu.links -%}
+            <a href="{{ link.url }}" {% if link.current %}aria-current="page"{% endif %}>{{ link.title }}</a>
+            {%- if link.title == 'Catalog' -%}
+              <a href="/pages/calculator" class="site-nav__ucalc">Usage calculator</a>
+            {%- endif -%}
+          {%- endfor -%}
+        </nav>
+
+        <div class="site-header__actions">
+          <button class="cart-btn" data-cart-open aria-label="{{ 'cart.title' | t }}">
+            {% render 'icon', icon: 'bag' %}
+            <span class="cart-btn__count" data-cart-count {% if cart.item_count == 0 %}hidden{% endif %}>{{ cart.item_count }}</span>
+          </button>
+          <button class="menu-toggle" data-menu-toggle aria-expanded="false" aria-label="{{ 'general.menu' | t }}">
+            <span></span><span></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+    { "type": "image_picker", "id": "logo", "label": "Logo (falls back to store name)" },
+    { "type": "link_list", "id": "menu", "label": "Menu", "default": "main-menu" }
+  ]
+}
+{% endschema %}

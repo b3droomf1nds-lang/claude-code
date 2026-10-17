@@ -1,0 +1,125 @@
+{%- comment -%}
+  product-card: renders one product tile.
+  Emits data-capacity / data-color / data-connector attributes used by the
+  collection page's client-side filters. Connector inferred from title/type;
+  tag products `connector:usb-c` / `connector:magnetic` / `connector:watch`
+  in admin to override.
+{%- endcomment -%}
+
+{%- assign colors = '' -%}
+{%- assign capacities = '' -%}
+{%- for option in product.options_with_values -%}
+  {%- assign oname = option.name | downcase -%}
+  {%- if oname contains 'color' or oname contains 'colour' -%}
+    {%- assign color_values = option.values -%}
+    {%- comment -%} Core Pro: force swatch order to black, grey, blue,
+      purple regardless of the order set in Shopify admin. {%- endcomment -%}
+    {%- if product.handle == 'voltical-core-pro-5k-10k' -%}
+      {%- assign color_priority = 'black,silver,blue,purple' | split: ',' -%}
+      {%- assign color_values = '' | split: ',' -%}
+      {%- for p in color_priority -%}
+        {%- for value in option.values -%}
+          {%- assign vd = value | downcase -%}
+          {%- if vd == p -%}
+            {%- assign v_arr = value | split: '|' -%}
+            {%- assign color_values = color_values | concat: v_arr -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endfor -%}
+      {%- for value in option.values -%}
+        {%- assign vd = value | downcase -%}
+        {%- unless color_priority contains vd -%}
+          {%- assign v_arr = value | split: '|' -%}
+          {%- assign color_values = color_values | concat: v_arr -%}
+        {%- endunless -%}
+      {%- endfor -%}
+    {%- endif -%}
+    {%- assign colors = color_values | join: '|' -%}
+  {%- elsif oname contains 'capacit' or oname contains 'mah' -%}
+    {%- for v in option.values -%}
+      {%- assign num = v | remove: ',' | remove: '.' | remove: ' ' | downcase | remove: 'mah' -%}
+      {%- assign capacities = capacities | append: num | append: '|' -%}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- assign connector = '' -%}
+{%- for tag in product.tags -%}
+  {%- if tag contains 'connector:' -%}{%- assign connector = tag | remove: 'connector:' -%}{%- endif -%}
+{%- endfor -%}
+{%- if connector == '' -%}
+  {%- assign lt = product.title | downcase -%}
+  {%- if lt contains 'usb-c' -%}{%- assign connector = 'usb-c' -%}
+  {%- elsif lt contains 'watch' -%}{%- assign connector = 'watch' -%}
+  {%- else -%}{%- assign connector = 'magnetic' -%}{%- endif -%}
+{%- endif -%}
+
+{%- assign _t = product.title | remove: 'Voltical' | strip -%}
+{%- assign _w = _t | split: ' ' -%}
+{%- if _t contains 'USB-C' -%}
+  {%- assign card_word = 'usb-c' -%}
+{%- elsif _t contains 'Cable' -%}
+  {%- assign card_word = 'cable' -%}
+{%- elsif _w[1] == 'Pro' or _w[1] == 'Case' -%}
+  {%- assign card_word = _w[0] | append: ' ' | append: _w[1] | downcase -%}
+{%- else -%}
+  {%- assign card_word = _w[0] | downcase -%}
+{%- endif -%}
+
+{%- comment -%} Optional shorter title for tight listings (e.g. the homepage
+  lineup) — drops the "5K & 10K" capacity suffix since capacity is already
+  picked as a variant option on the product page itself. {%- endcomment -%}
+{%- assign display_title = product.title -%}
+{%- if short_title -%}
+  {%- assign display_title = product.title | replace: ' 5K & 10K', '' | replace: ' 5k & 10k', '' | strip -%}
+{%- endif -%}
+
+<article class="product-card" data-plp-card
+  data-capacity="{{ capacities | strip | downcase }}"
+  data-color="{{ colors | downcase }}"
+  data-connector="{{ connector | downcase }}"
+  data-price="{{ product.price_min }}"
+  data-reveal>
+  <a href="{{ product.url }}" class="product-card__word product-card__word--top">{{ card_word }}</a>
+  <a href="{{ product.url }}" class="product-card__media product-card__media--framed">
+    {%- if flag_handle and product.handle == flag_handle -%}
+      <span class="product-card__flag">{{ 'products.flagship' | t }}</span>
+    {%- endif -%}
+    {%- if product.featured_image -%}
+      <img src="{{ product.featured_image | image_url: width: 800 }}"
+           srcset="{{ product.featured_image | image_url: width: 480 }} 480w, {{ product.featured_image | image_url: width: 800 }} 800w, {{ product.featured_image | image_url: width: 1200 }} 1200w, {{ product.featured_image | image_url: width: 1800 }} 1800w"
+           sizes="(min-width:900px) 30vw, (min-width:640px) 46vw, 92vw"
+           alt="{{ product.featured_image.alt | default: product.title | escape }}" loading="lazy">
+    {%- endif -%}
+  </a>
+  <div class="product-card__body">
+    <a href="{{ product.url }}" class="product-card__title">{{ display_title }}</a>
+    <a href="{{ product.url }}" class="product-card__word product-card__word--inline">{{ card_word }}</a>
+    <span class="product-card__meta">
+      {%- if capacities != '' -%}{{ capacities | strip | split: '|' | join: ' / ' }} mAh{%- elsif connector == 'usb-c' -%}USB-C · charge + data{%- elsif connector == 'watch' -%}Apple Watch{%- endif -%}
+    </span>
+    <div class="product-card__row">
+      <span class="product-card__price">
+        {%- if product.price_varies -%}{{ 'products.from' | t }} {% endif %}{{ product.price_min | money }}
+      </span>
+      {%- if colors != '' -%}
+        <span class="swatches" aria-label="{{ colors | replace: '|', ', ' }}">
+          {%- assign cl = colors | split: '|' -%}
+          {%- for c in cl limit: 4 -%}
+            {%- assign cd = c | downcase -%}
+            <i class="swatch" style="background:
+              {%- if cd contains 'black' or cd contains 'midnight' -%}#2b2b2e
+              {%- elsif cd contains 'white' or cd contains 'starlight' -%}#efeae0
+              {%- elsif cd contains 'grey' or cd contains 'gray' -%}#8f8f94
+              {%- elsif cd contains 'gold' -%}#CBB88E
+              {%- elsif cd contains 'silver' -%}#d6d6db
+              {%- elsif cd contains 'blue' -%}#9db8d9
+              {%- elsif cd contains 'purple' -%}#b9a8e0
+              {%- elsif cd contains 'brown' -%}#8a6a52
+              {%- else -%}#c9c4bb{%- endif -%}" title="{{ c }}"></i>
+          {%- endfor -%}
+        </span>
+      {%- endif -%}
+    </div>
+  </div>
+</article>
