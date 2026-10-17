@@ -81,7 +81,9 @@
       "block_order": ["s1", "s2", "s3"],
       "settings": {
         "heading": "Made to go with it.",
-        "subheading": "A few things that make Core even better."
+        "subheading": "A few things that make Core even better.",
+        "hide_subheading": true,
+        "heading_drop": 18
       }
     },
     "ftiles": {
