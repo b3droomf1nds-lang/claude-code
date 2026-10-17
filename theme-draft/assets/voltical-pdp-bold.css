@@ -2609,3 +2609,53 @@
     color: inherit;
   }
 }
+
+/* Charge tile, mobile only: the caption at the bottom ("Charging time to
+   go ...") at 20px on screen, the same size as the copy at the bottom of
+   the "2.1 extra", "3.6 extra", MagSafe and USB-C tiles (it was 21.33px).
+   Everything else in the tile shrinks by the same factor, --cr = 20 / 21.33:
+   "As low as", the "59", "minutes", the gaps between them, the padding and
+   the tile's height, so the tile looks the same, only smaller. Its width
+   stays; the caption's box narrows with it so its lines break in the same
+   places. The baked Canva moves above shift each piece by a fixed number of
+   pixels ("As low as" -26.49px, "59" 18.86px, "minutes" 41.06px, caption
+   48.09px) that a smaller font doesn't shrink, so each translate takes the
+   same share off its shift and the spacing shrinks evenly too. */
+@media (max-width: 899px) {
+  .template-product .pdp-cmp__card--charge {
+    --cr: 0.93761;
+    height: calc((442.78px - (1 - var(--cn)) * 94.95px - (1 - var(--cz)) * 71.29px) * var(--cr));
+    padding-top: calc(19.21px * var(--cr)) !important;
+    padding-bottom: calc(46.43px * var(--cr)) !important;
+    gap: calc(3.28px * var(--cr));
+  }
+  .template-product .pdp-cmp__card--charge > .pdp-cmp__eyebrow {
+    font-size: calc(19.55px * var(--cr)) !important;
+    translate: 0 calc((1 - var(--cr)) * 26.4869px);
+  }
+  .template-product .pdp-cmp__card--charge .pdp-cmp__stat-row {
+    gap: calc(19.69px * var(--cn) * var(--cr));
+    margin-top: calc((1 - var(--cn)) * 3.5px * var(--cr));
+  }
+  .template-product .pdp-cmp__card--charge .pdp-cmp__stat {
+    font-size: calc(98.45px * var(--cn) * var(--cr)) !important;
+    translate: 0 calc((var(--cr) - 1) * 18.8624px);
+  }
+  .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
+    width: calc(101.73px * var(--cn) * var(--cr)) !important;
+  }
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--unit {
+    font-size: calc(72px * var(--cz) * var(--cr)) !important;
+    margin-top: calc((1 - var(--cz)) * -9.79px * var(--cr));
+    translate: 0 calc((var(--cr) - 1) * 41.0635px);
+  }
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range {
+    max-width: calc(280px * var(--cr));
+    margin-top: calc((8px + (1 - var(--cz)) * 6.88px) * var(--cr));
+    translate: 0 calc((var(--cr) - 1) * 48.0924px);
+  }
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range * {
+    font-size: calc(19.34px * var(--cr)) !important;
+  }
+}
