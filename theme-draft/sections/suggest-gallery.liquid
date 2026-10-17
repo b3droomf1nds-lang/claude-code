@@ -22,9 +22,9 @@
   sheet's (its tint over the page's dim, blur 6px, saturation 180%) without
   the sheet's bright edge.
 
-  Scrolling slows down near the spot where the heading, the cards and the
-  resting controls all fit on screen, like aim assist, so it's easy to stop
-  there.
+  Aim assist near the spot where the heading, the cards and the resting
+  controls all fit on screen: scrolling slows down as the page nears it,
+  and a flick that would stop near it brakes onto it.
 {%- endcomment -%}
 <style>
   .sugg{
@@ -466,30 +466,32 @@
 
     /* Aim assist, as in a shooter, for landing on the gallery. There's one
        spot (on a phone only a few pixels of scroll) where the heading, the
-       cards and the controls resting under them all fit on screen. The
-       nearer the page gets to it, the slower it scrolls under the finger:
-       30% of the finger's speed right on it, easing back to full speed 30%
-       of a screen either side, so it's easy to stop there.
-       While the spot is within about a screen, the page's up-and-down
+       cards and the controls resting under them all fit on screen.
+       - Slowdown: the nearer the page gets to the spot, the slower it
+         scrolls under the finger: 20% of the finger's speed right on it,
+         easing back to full speed 40% of a screen either side.
+       - Pull: let go mid-swipe and the page carries on, losing speed as
+         iOS's does (x0.998 per ms) and slowed the same way near the spot.
+         But if it would come to a stop near the spot (up to 140px short of
+         it, or up to 60% of a screen past it), it brakes onto the spot
+         instead, from the speed it was let go at, so it lands there. A
+         harder flick carries past, and one away from the spot is free.
+       While the spot is within a screen and a half, the page's up-and-down
        scrolling is done here rather than by the browser: everything in
        <main> gets touch-action:pan-x, so sideways card swipes stay the
-       browser's but up-and-down drags come here. A drag moves the page by
-       the finger's travel times the slowdown; let go mid-swipe and the page
-       carries on, losing speed as iOS's does (x0.998 per ms), slowed the
-       same way near the spot and losing speed faster there too (as many
-       times faster as it's slowed), so an ordinary flick runs out close to
-       the spot and only a hard one carries past. A flick already going when
-       the spot comes within reach is the browser's and isn't slowed. A tap that
-       stops a flick doesn't also click. Phones and tablets only; if the
-       browser scrolls the page itself during a drag, this stands down for
-       good. */
+       browser's but up-and-down drags come here. A flick already going
+       when the spot comes within reach is the browser's and isn't touched.
+       A tap that stops a flick doesn't also click. Phones and tablets only;
+       if the browser scrolls the page itself during a drag, this stands
+       down for good. ?aimdebug=1 shows what it's doing. */
     const small = matchMedia('(max-width: 899px)');
     const main = document.getElementById('main');
     const head = root.querySelector('.sugg__head');
     const lead = head ? head.parentNode : track;   // the heading's wrapper: where it sits without its fade-in nudge
     // the top bar: the header's own, or on a product page the copy laid over the page
     const bars = document.querySelectorAll('#shopify-section-header .site-header, #shopify-section-header .site-header-clone');
-    const de = document.documentElement, SLOW = .3, DECEL = .998;
+    const de = document.documentElement, DECEL = .998;
+    const SLOW = .2, REACH = .4, TAKE = 1.5, SHORT = 140, OVER = .6, PULL = 1 / 220;
     /* The spot, as a scroll position: the gallery, heading to controls,
        midway between the top bar and the bottom of the screen, but high
        enough that the controls have come to rest under the cards (their
@@ -506,7 +508,7 @@
     let at = 0, pos = 0, mine = false, off = !main, drag = null, fling = 0, caught = false, held = false, behavior = '';
     // page px per finger px at scroll position y
     function gain(y) {
-      const x = Math.min(1, Math.abs(y - at) / (.3 * innerHeight));
+      const x = Math.min(1, Math.abs(y - at) / (REACH * innerHeight));
       return SLOW + (1 - SLOW) * x * x * (3 - 2 * x);
     }
     // move the page by du finger px; false when it runs into the top or bottom
@@ -520,25 +522,71 @@
     // the theme's smooth scrolling would animate every step
     function hold() { if (!held) { held = true; behavior = de.style.scrollBehavior; de.style.scrollBehavior = 'auto'; } }
     function letGo() { if (held) { held = false; de.style.scrollBehavior = behavior; } }
+
+    const dbg = /[?&]aimdebug=1/.test(location.search) ? document.body.appendChild(document.createElement('div')) : null;
+    if (dbg) dbg.style.cssText = 'position:fixed;left:8px;top:56px;z-index:2147483000;background:rgba(0,0,0,.78);color:#fff;font:12px/1.4 ui-monospace,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre';
+    let why = '', last = '', count = 0;
+    function note(msg) {
+      if (msg) last = msg;
+      if (dbg) dbg.textContent = 'aim assist: ' + (off ? 'OFF, ' + why : mine ? 'on' : 'waiting (gallery far)') +
+        '\nspot ' + Math.round(spot() - scrollY) + 'px away, drags ' + count + '\n' + last;
+    }
+
     function claim() {
       if (drag || fling || off) return;
-      const on = small.matches && !root.classList.contains('is-static') && Math.abs(spot() - scrollY) < .9 * innerHeight;
+      const on = small.matches && !root.classList.contains('is-static') && Math.abs(spot() - scrollY) < TAKE * innerHeight;
       if (on !== mine) { mine = on; de.classList.toggle('sugg-aim', on); }
+      note();
     }
-    function standDown() {
-      off = true; drag = null; mine = false; de.classList.remove('sugg-aim'); letGo();
+    function standDown(reason) {
+      off = true; why = reason; drag = null; mine = false; de.classList.remove('sugg-aim'); letGo(); note();
     }
+    function done() { fling = 0; letGo(); claim(); }
+    // where a flick from p at finger speed v would stop on its own
+    function coast(p, v) {
+      while (Math.abs(v) >= .02) { v *= Math.pow(DECEL, 16); const du = v * 16; p += du * gain(p + du * gain(p) / 2); }
+      return p;
+    }
+    // a free flick: slowed near the spot, otherwise iOS's
     function carry(v) {
-      let last = performance.now();
+      let t = performance.now();
       const step = function (now) {
-        const dt = Math.min(32, now - last); last = now;
-        v *= Math.pow(DECEL, dt / gain(pos));
+        const dt = Math.min(32, now - t); t = now;
+        v *= Math.pow(DECEL, dt);
         // stop when it's spent, at the end of the page, or if something else scrolled the page
-        if (Math.abs(scrollY - pos) > 3 || !move(v * dt) || Math.abs(v) < .02) { fling = 0; letGo(); claim(); return; }
+        if (Math.abs(scrollY - pos) > 3 || !move(v * dt) || Math.abs(v) < .02) { done(); return; }
         fling = requestAnimationFrame(step);
       };
       fling = requestAnimationFrame(step);
     }
+    /* Brake onto the spot: a critically damped spring from here, starting
+       at the flick's speed (w page px per ms), stiff enough not to overshoot
+       and at least stiff enough to pull a flick that would stop short the
+       rest of the way. */
+    function brake(w) {
+      const a = pos - at, k = Math.max(w / (at - pos), PULL), c = w + k * a, t0 = performance.now();
+      const step = function (now) {
+        if (Math.abs(scrollY - pos) > 3) { done(); return; }
+        const t = now - t0, e = Math.exp(-k * t), x = (a + c * t) * e;
+        const end = Math.abs(x) < .5 && Math.abs(c - k * (a + c * t)) * e < .02;
+        pos = at + (end ? 0 : x);
+        window.scrollTo(0, pos); rise();
+        if (end) { done(); return; }
+        fling = requestAnimationFrame(step);
+      };
+      fling = requestAnimationFrame(step);
+    }
+    function flick(v) {
+      const dir = Math.sign(v), ahead = (at - pos) * dir, past = (coast(pos, v) - at) * dir;
+      if (ahead > 1 && past >= -SHORT && past <= OVER * innerHeight) {
+        note('flick ' + v.toFixed(1) + 'px/ms: braking onto the spot');
+        brake(v * gain(pos));
+      } else {
+        note('flick ' + v.toFixed(1) + 'px/ms: free (' + (ahead <= 1 ? 'away from the spot' : past > 0 ? 'too hard' : 'too soft') + ')');
+        carry(v);
+      }
+    }
+
     addEventListener('touchstart', function (e) {
       caught = !!fling;
       if (fling) { cancelAnimationFrame(fling); fling = 0; }
@@ -556,13 +604,14 @@
         if (Math.max(dx, dy) < 6) return;
         drag.axis = dy > dx ? 'y' : 'x';
         if (drag.axis === 'x') { drag = null; return; }   // a card swipe
-        hold(); pos = scrollY; at = spot();
+        hold(); pos = scrollY; at = spot(); count++;
         drag.y = t.clientY;   // the page starts moving from here, as the browser's does after its slop
       }
-      if (Math.abs(scrollY - pos) > 3) { standDown(); return; }   // the browser is scrolling the page too
+      if (Math.abs(scrollY - pos) > 3) { standDown('the browser scrolled the page itself'); return; }
       const du = drag.y - t.clientY;
       drag.y = t.clientY; drag.u += du;
       move(du);
+      if (dbg) note('dragging: page at ' + Math.round(gain(pos) * 100) + '% of finger speed');
       // the last 100ms of travel, for the speed at letting go
       drag.s.push(e.timeStamp, drag.u);
       while (drag.s.length > 4 && e.timeStamp - drag.s[0] > 100) drag.s.splice(0, 2);
@@ -577,7 +626,7 @@
         if (d.axis && type === 'touchend' && n >= 4 && e.timeStamp - s[n - 2] < 50) {
           v = Math.max(-8, Math.min(8, (s[n - 1] - s[1]) / Math.max(1, s[n - 2] - s[0])));
         }
-        if (Math.abs(v) > .05) carry(v); else { letGo(); claim(); }
+        if (Math.abs(v) > .05) flick(v); else { letGo(); claim(); }
       }, { passive: true });
     });
     // a tap that stopped a flick
