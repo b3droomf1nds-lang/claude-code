@@ -489,17 +489,10 @@
   // size and the two saved wordings once so nothing applies twice; shared
   // moves fold into the desktop-only fields (as charge-lock-v4 does) so the
   // unbaked desktop placement is unchanged.
-  var CHARGE_LOCK5_MIGRATION = 'volt-canva-charge-lock-v5';
-  var CHARGE_LOCK5_KEYS = [
-    ':nth-child(2)>:nth-child(2)>:nth-child(1)',
-    ':nth-child(2)>:nth-child(2)>:nth-child(2)',
-    ':nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1)',
-    ':nth-child(2)>:nth-child(2)>:nth-child(3)',
-    ':nth-child(2)>:nth-child(2)>:nth-child(4)'
-  ];
-  if (ls(true, CHARGE_LOCK5_MIGRATION) !== '1'){
-    var chargeLock5Changed = false;
-    CHARGE_LOCK5_KEYS.forEach(function(k){
+  function dropBakedPhoneState(flag, keys){
+    if (ls(true, flag) === '1') return;
+    var changed = false;
+    keys.forEach(function(k){
       var e = layout[k];
       if (!e) return;
       if (e.dx || e.dy){
@@ -511,15 +504,30 @@
       if (!e.axd) delete e.axd;
       if (!e.ayd) delete e.ayd;
       if (!e.axd && !e.ayd && !e.w) delete layout[k];
-      chargeLock5Changed = true;
+      changed = true;
     });
-    if (chargeLock5Changed){
+    if (changed){
       ls(false, LKEY, JSON.stringify(layout));
       savedHistory = [];
       rm(HKEY);
     }
-    ls(false, CHARGE_LOCK5_MIGRATION, '1');
+    ls(false, flag, '1');
   }
+  dropBakedPhoneState('volt-canva-charge-lock-v5', [
+    ':nth-child(2)>:nth-child(2)>:nth-child(1)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(2)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(3)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(4)'
+  ]);
+
+  // Sixth mobile lock-in of the charge tile: the "59", "minutes" and the
+  // caption moved up (CANVA-BAKED). Same clean-up as charge-lock-v5.
+  dropBakedPhoneState('volt-canva-charge-lock-v6', [
+    ':nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(3)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(4)'
+  ]);
 
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__feature-icon-wrap, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-number, .pdp-cmp__compact-partial-extra, .pdp-cmp__sub, ' +
