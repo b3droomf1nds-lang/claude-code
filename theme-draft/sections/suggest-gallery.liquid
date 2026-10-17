@@ -5,11 +5,12 @@
   next one peeking) and each looks like the "Pair with the USB-C Cable" tile:
   heading and grey caption at the top, the product photo filling the card.
   The photos are 2:3 like the cards, with empty white above the product, so
-  the text sits there. A card with a link has a bar along its bottom, as the
-  Apple Store's product cards do, in the bubbles' frost (below): Learn more
-  (the product page) and Add to bag (straight into the bag, without opening
-  it). The photo fades to the card's white above the bar, as Apple's fade
-  to black.
+  the text sits there. At the bottom, as on the Apple Store's product cards:
+  a small label (Apple's "New"), the product's name and a line or two of
+  grey, then a bar in the bubbles' frost (below) with Learn more (the
+  product page) and Add to bag (straight into the bag, without opening it),
+  pills the size of Apple's Buy. The photo fades to the card's white above
+  the text, as Apple's fade to black.
 
   The small line under the heading is the current card's own (its "small
   line", or the subheading if it has none); it rolls up to the next card's,
@@ -97,38 +98,58 @@
     letter-spacing:-0.02em; margin:0; color:var(--ink); text-wrap:balance;
   }
   .sugg__card-sub{ font-size:14px; line-height:1.35; color:var(--ink-60); margin:6px 0 0; text-wrap:balance; }
-  /* "Hide the text on the cards": just the photos (the photo's alt, and the
-     bar's buttons, still name the product) */
+  /* "Hide the heading and caption at the top": just the photos (the text
+     at the bottom, the photo's alt and the bar's buttons still name the
+     product). The photo's white above the product isn't needed then, so a
+     card with text at the bottom has its photo moved up to make room. */
   .sugg--bare .sugg__text{ visibility:hidden; }
+  .sugg--bare .sugg__card--info .sugg__img{ transform:translateY(-14%); }
 
-  /* ---- the bar along a card's bottom ---- */
-  /* in the bubbles' frost (their tint and blur once open), as tall as
-     Apple's; its corners are the card's own too, in case the card's clip
-     misses the frost's layer */
-  .sugg__card{ --buy-h:76px; }
+  /* ---- the foot of a card: Apple's product card text, then the bar ---- */
+  /* the photo fades to the card's white over the 120px above it, eased at
+     both ends (smoothstep) so the fade has no edge; its corners are the
+     card's own (the bar's too), in case the card's clip misses the frost's
+     layer */
+  .sugg__foot{
+    position:absolute; left:0; right:0; bottom:0; display:flex; flex-direction:column;
+    background:#fdfeff; border-bottom-left-radius:inherit; border-bottom-right-radius:inherit;
+  }
+  .sugg__foot::before{
+    content:""; position:absolute; left:0; right:0; bottom:100%; height:120px; pointer-events:none;
+    background:linear-gradient(rgba(253,254,255,0), rgba(253,254,255,.04) 15px, rgba(253,254,255,.16) 30px, rgba(253,254,255,.32) 45px,
+      rgba(253,254,255,.5) 60px, rgba(253,254,255,.68) 75px, rgba(253,254,255,.84) 90px, rgba(253,254,255,.96) 105px, #fdfeff 120px);
+  }
+  /* Apple's type: its small label and bold name in ink, a line or two of
+     grey under them, 24px in from the card's sides */
+  .sugg__info{ padding:0 24px 20px; }
+  .sugg__info:last-child{ padding-bottom:28px; }
+  .sugg__label{ font:600 15px/1.25 var(--sans); letter-spacing:-.01em; margin:0 0 4px; color:var(--ink); }
+  .sugg__title{
+    font-family:var(--sans); font-weight:700; font-size:26px; line-height:1.15;
+    letter-spacing:-.03em; margin:0; color:var(--ink); text-wrap:balance;
+  }
+  .sugg__desc{ font:600 16px/1.35 var(--sans); letter-spacing:-.01em; color:var(--ink-60); margin:6px 0 0; text-wrap:pretty; }
+  /* the bar: in the bubbles' frost (their tint and blur once open), as tall
+     as Apple's */
   .sugg__buy{
-    position:absolute; left:0; right:0; bottom:0; z-index:2; height:var(--buy-h);
-    display:flex; align-items:center; gap:10px; padding:0 16px;
+    position:relative; z-index:2; flex:none; height:80px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 24px;
     border-bottom-left-radius:inherit; border-bottom-right-radius:inherit;
     background:rgba(239,239,242,.77);
     -webkit-backdrop-filter:blur(6px) saturate(180%); backdrop-filter:blur(6px) saturate(180%);
   }
-  /* the photo fades to the card's white over the 160px above the bar,
-     eased at both ends (smoothstep) so the fade has no edge */
-  .sugg__card--buy::after{
-    content:""; position:absolute; left:0; right:0; bottom:0; height:calc(var(--buy-h) + 160px); pointer-events:none;
-    background:linear-gradient(rgba(253,254,255,0), rgba(253,254,255,.04) 20px, rgba(253,254,255,.16) 40px, rgba(253,254,255,.32) 60px,
-      rgba(253,254,255,.5) 80px, rgba(253,254,255,.68) 100px, rgba(253,254,255,.84) 120px, rgba(253,254,255,.96) 140px, #fdfeff 160px);
-  }
-  /* the rest of the card opens the product, as the whole card used to */
+  /* the rest of the card, text included, opens the product, as the whole
+     card used to */
   .sugg__hit{ position:absolute; inset:0; z-index:1; -webkit-tap-highlight-color:transparent; }
-  .sugg__add{ display:flex; flex:1 1 0; margin:0; }
+  .sugg__add{ display:flex; margin:0; }
+  /* Apple's Buy pill: 36px tall, 16px either side of a 17px semibold label */
   .sugg__btn{
-    flex:1 1 0; display:flex; align-items:center; justify-content:center; height:44px; padding:0;
-    border:0; border-radius:22px; font:600 15px/1 var(--sans); letter-spacing:-.01em; white-space:nowrap;
+    position:relative; flex:none; display:flex; align-items:center; justify-content:center; height:36px; padding:0 16px;
+    border:0; border-radius:18px; font:600 17px/1 var(--sans); letter-spacing:-.02em; white-space:nowrap;
     text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent;
     transition:transform .2s var(--ease), background-color .25s, opacity .25s;
   }
+  .sugg__btn::after{ content:""; position:absolute; inset:-4px -5px; }   /* 44px tall to a finger */
   .sugg__btn:active{ transform:scale(.96); }
   .sugg__btn--more{ background:#fff; color:var(--ink); }
   /* black like the page's own Add to bag, which also stays black once added */
@@ -250,7 +271,10 @@
         {%- assign card_image = block.settings.image -%}
         {%- if card_image == blank and card_product -%}{%- assign card_image = card_product.featured_image -%}{%- endif -%}
         {%- assign card_name = card_product.title | default: block.settings.heading -%}
-        <div class="sugg__card{% if card_url != blank %} sugg__card--buy{% endif %}" data-sugg-card{% if block.settings.img_drop > 0 %} style="--img-drop:{{ block.settings.img_drop }}px"{% endif %} {{ block.shopify_attributes }}>
+        {%- assign card_title = block.settings.title | default: card_product.title -%}
+        {%- assign card_info = false -%}
+        {%- if block.settings.label != blank or card_title != blank or block.settings.desc != blank -%}{%- assign card_info = true -%}{%- endif -%}
+        <div class="sugg__card{% if card_info %} sugg__card--info{% endif %}" data-sugg-card{% if block.settings.img_drop > 0 %} style="--img-drop:{{ block.settings.img_drop }}px"{% endif %} {{ block.shopify_attributes }}>
           {%- if card_image != blank -%}
             <img class="sugg__img" src="{{ card_image | image_url: width: 1000 }}"
                  srcset="{{ card_image | image_url: width: 500 }} 500w, {{ card_image | image_url: width: 750 }} 750w, {{ card_image | image_url: width: 1000 }} 1000w, {{ card_image | image_url: width: 1300 }} 1300w"
@@ -265,16 +289,29 @@
           {%- if card_url != blank -%}
             {%- comment -%} the same link as Learn more, for taps on the rest of the card {%- endcomment -%}
             <a class="sugg__hit" href="{{ card_url }}" tabindex="-1" aria-hidden="true"></a>
-            <div class="sugg__buy">
-              <a class="sugg__btn sugg__btn--more" href="{{ card_url }}">Learn more<span class="visually-hidden">: {{ card_name | escape }}</span></a>
-              {%- if card_product -%}
-                <form class="sugg__add" action="{{ routes.cart_add_url }}" method="post" data-quick-add data-error="Try again">
-                  <input type="hidden" name="id" value="{{ card_product.selected_or_first_available_variant.id }}">
-                  <button type="submit" class="sugg__btn sugg__btn--add"{% unless card_product.available %} disabled{% endunless %}>
-                    <span data-quick-add-label aria-live="polite">{% if card_product.available %}{{ 'products.add_to_cart' | t }}{% else %}{{ 'products.sold_out' | t }}{% endif %}</span>
-                    <span class="visually-hidden">: {{ card_name | escape }}</span>
-                  </button>
-                </form>
+          {%- endif -%}
+          {%- if card_info or card_url != blank -%}
+            <div class="sugg__foot">
+              {%- if card_info -%}
+                <div class="sugg__info">
+                  {%- if block.settings.label != blank -%}<p class="sugg__label">{{ block.settings.label }}</p>{%- endif -%}
+                  {%- if card_title != blank -%}<h3 class="sugg__title">{{ card_title }}</h3>{%- endif -%}
+                  {%- if block.settings.desc != blank -%}<p class="sugg__desc">{{ block.settings.desc }}</p>{%- endif -%}
+                </div>
+              {%- endif -%}
+              {%- if card_url != blank -%}
+                <div class="sugg__buy">
+                  <a class="sugg__btn sugg__btn--more" href="{{ card_url }}">Learn more<span class="visually-hidden">: {{ card_name | escape }}</span></a>
+                  {%- if card_product -%}
+                    <form class="sugg__add" action="{{ routes.cart_add_url }}" method="post" data-quick-add data-error="Try again">
+                      <input type="hidden" name="id" value="{{ card_product.selected_or_first_available_variant.id }}">
+                      <button type="submit" class="sugg__btn sugg__btn--add"{% unless card_product.available %} disabled{% endunless %}>
+                        <span data-quick-add-label aria-live="polite">{% if card_product.available %}{{ 'products.add_to_cart' | t }}{% else %}{{ 'products.sold_out' | t }}{% endif %}</span>
+                        <span class="visually-hidden">: {{ card_name | escape }}</span>
+                      </button>
+                    </form>
+                  {%- endif -%}
+                </div>
               {%- endif -%}
             </div>
           {%- endif -%}
@@ -774,7 +811,7 @@
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading", "default": "Made to go with it." },
     { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "A few things that make Core even better.", "info": "A card's own small line takes its place while that card is showing." },
-    { "type": "checkbox", "id": "hide_card_text", "label": "Hide the text on the cards", "default": false }
+    { "type": "checkbox", "id": "hide_card_text", "label": "Hide the heading and caption at the top of the cards", "default": false }
   ],
   "blocks": [
     {
@@ -784,6 +821,11 @@
         { "type": "text", "id": "heading", "label": "Heading", "default": "Pair with the USB-C Cable" },
         { "type": "text", "id": "caption", "label": "Caption", "default": "to charge Core straight from the wall." },
         { "type": "text", "id": "line", "label": "Small line under the heading", "info": "Takes the subheading's place while this card is showing." },
+        { "type": "header", "content": "Text at the bottom of the card" },
+        { "type": "text", "id": "label", "label": "Small label above the name", "info": "Like Apple's \"New\". Leave empty for none." },
+        { "type": "text", "id": "title", "label": "Name", "info": "Defaults to the linked product's name." },
+        { "type": "textarea", "id": "desc", "label": "Description", "info": "A line or two under the name." },
+        { "type": "header", "content": "Product and photo" },
         { "type": "image_picker", "id": "image", "label": "Image (defaults to linked product's image)" },
         { "type": "product", "id": "link_product", "label": "Link to product (also supplies the default image)" },
         { "type": "url", "id": "link_url", "label": "Link (overrides product link)" },
