@@ -670,6 +670,31 @@
     });
   }
 
+  /* ---------- quick add (the suggested products' cards) ---------- */
+  // One of the card's product straight into the bag, without opening it, so
+  // the next card's can follow: the bag's count bumps and the button says
+  // "Added ✓" for a moment. Without script the form posts to /cart/add.
+  const quickTimers = new WeakMap();
+  document.addEventListener('submit', (e) => {
+    const form = e.target.closest('[data-quick-add]');
+    if (!form) return;
+    e.preventDefault();
+    const btn = $('button', form);
+    const label = $('[data-quick-add-label]', form);
+    if (btn.disabled || btn.classList.contains('is-adding')) return;
+    if (!form.dataset.label) form.dataset.label = label.textContent;
+    clearTimeout(quickTimers.get(form));
+    btn.classList.remove('is-added'); btn.classList.add('is-adding');
+    const after = (text, added) => {
+      btn.classList.remove('is-adding'); btn.classList.toggle('is-added', added);
+      label.textContent = text;
+      quickTimers.set(form, setTimeout(() => { btn.classList.remove('is-added'); label.textContent = form.dataset.label; }, 1800));
+    };
+    fetchJSON('/cart/add.js', { method: 'POST', body: JSON.stringify({ id: Number(form.elements.id.value), quantity: 1 }) })
+      .then(() => { after(window.VolticalStrings.added, true); Drawer.refresh(false); })
+      .catch(() => after(form.dataset.error, false));
+  });
+
   /* ---------- spec sheet (from VolticalData.specsSheets) ---------- */
   const specsEl = $('[data-specs]');
   if (specsEl && window.VolticalData && window.VolticalData.specsSheets) {

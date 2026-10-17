@@ -58,6 +58,7 @@
           "settings": {
             "heading": "Pair with the USB-C Cable",
             "caption": "Braided USB-C and data cable.",
+            "line": "USB-C charge and data cable.",
             "link_product": "voltical-usb-c-charge-data-cable-new"
           }
         },
@@ -66,6 +67,7 @@
           "settings": {
             "heading": "Pair with the Watch Charger",
             "caption": "to keep your watch topped up.",
+            "line": "Braided charge cable for Apple Watch.",
             "link_product": "voltical-watch-charge-cable",
             "img_drop": 15
           }

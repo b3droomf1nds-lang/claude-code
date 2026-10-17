@@ -5,22 +5,31 @@
   next one peeking) and each looks like the "Pair with the USB-C Cable" tile:
   heading and grey caption at the top, the product photo filling the card.
   The photos are 2:3 like the cards, with empty white above the product, so
-  the text sits there.
+  the text sits there. A card with a link has a bar along its bottom, as the
+  Apple Store's product cards do, in the bubbles' frost (below): Learn more
+  (the product page) and Add to bag (straight into the bag, without opening
+  it). The photo fades to the card's white above the bar, as Apple's fade
+  to black.
+
+  The small line under the heading is the current card's own (its "small
+  line", or the subheading if it has none); it rolls up to the next card's,
+  or down to the one before's, as the dots change. When all the cards show
+  at once it's the subheading.
 
   Swipe the cards, or use the two frosted bubbles that rise and unfold near
   the bottom of the screen while the gallery is on screen: the dots (grey,
   the current card's a grey line, as on Apple's) and the arrows (the dots'
-  grey, no press highlight). The cards themselves have no corner arrow; the
-  whole card is the link. The bubbles stick 12px above the bottom of the
-  page's view, the same whether or not the browser's bottom toolbar is
-  showing (no extra for the home indicator), until the gap above them, up
-  to the cards, is as big as the one below them; then both gaps grow
-  together until they're the 32px the bubbles rest under the cards, and
-  from there the bubbles move with the cards. The rise and unfold are
-  Apple's own: the springs and timings of its gallery controls, read from
-  its page script. The frost is the cart
-  sheet's (its tint over the page's dim, blur 6px, saturation 180%) without
-  the sheet's bright edge.
+  grey, no press highlight). The cards themselves have no corner arrow; a
+  tap anywhere on a card, off its bar, opens the product. The bubbles stick
+  12px above the bottom of the page's view, the same whether or not the
+  browser's bottom toolbar is showing (no extra for the home indicator),
+  until the gap above them, up to the cards, is as big as the one below
+  them; then both gaps grow together until they're the 32px the bubbles
+  rest under the cards, and from there the bubbles move with the cards. The
+  rise and unfold are Apple's own: the springs and timings of its gallery
+  controls, read from its page script. The frost is the cart sheet's (its
+  tint over the page's dim, blur 6px, saturation 180%) without the sheet's
+  bright edge.
 
   Aim assist near the spot where the heading, the cards and the resting
   controls all fit on screen: scrolling slows down as the page nears it,
@@ -46,6 +55,15 @@
     font-size:clamp(1.7rem,3vw,2.4rem); line-height:1.1; margin:0 0 12px;
   }
   .sugg__sub{ color:var(--ink-60); font-size:clamp(.95rem,1.2vw,1.05rem); margin:0; }
+  /* a line per card, all in one place so the height never changes, the
+     current card's showing: the ones before it wait above and the ones
+     after below, so it rolls up to the next card's and down to the one
+     before's */
+  .sugg__sub--lines{ display:grid; overflow:hidden; }
+  .sugg__line{ grid-area:1 / 1; opacity:0; transform:translateY(100%); transition:transform .5s var(--ease), opacity .35s ease; }
+  .sugg__line.is-up{ transform:translateY(-100%); }
+  .sugg__line.is-on{ opacity:1; transform:none; }
+  .sugg__sub--lines.is-instant .sugg__line{ transition:none; }
 
   /* the controls rest 32px under the cards, in the gallery's own room */
   .sugg__gallery{ position:relative; padding-bottom:88px; }
@@ -64,7 +82,7 @@
 
   .sugg__card{
     position:relative; display:block; flex:0 0 var(--cw); height:var(--ch);
-    scroll-snap-align:start; border-radius:28px; overflow:hidden;
+    scroll-snap-align:start; border-radius:28px; overflow:hidden; isolation:isolate;
     background:#fdfeff;  /* the product photos' own white */
     box-shadow:0 1px 2px rgba(19,19,22,.04),0 18px 44px -22px rgba(19,19,22,.14);
     color:inherit; text-decoration:none; -webkit-tap-highlight-color:transparent;
@@ -79,9 +97,48 @@
     letter-spacing:-0.02em; margin:0; color:var(--ink); text-wrap:balance;
   }
   .sugg__card-sub{ font-size:14px; line-height:1.35; color:var(--ink-60); margin:6px 0 0; text-wrap:balance; }
-  /* "Hide the text on the cards": just the photos (the photo's alt, or the
-     card's heading, still names the link) */
+  /* "Hide the text on the cards": just the photos (the photo's alt, and the
+     bar's buttons, still name the product) */
   .sugg--bare .sugg__text{ visibility:hidden; }
+
+  /* ---- the bar along a card's bottom ---- */
+  /* in the bubbles' frost (their tint and blur once open), as tall as
+     Apple's; its corners are the card's own too, in case the card's clip
+     misses the frost's layer */
+  .sugg__card{ --buy-h:76px; }
+  .sugg__buy{
+    position:absolute; left:0; right:0; bottom:0; z-index:2; height:var(--buy-h);
+    display:flex; align-items:center; gap:10px; padding:0 16px;
+    border-bottom-left-radius:inherit; border-bottom-right-radius:inherit;
+    background:rgba(239,239,242,.77);
+    -webkit-backdrop-filter:blur(6px) saturate(180%); backdrop-filter:blur(6px) saturate(180%);
+  }
+  /* the photo fades to the card's white over the 160px above the bar,
+     eased at both ends (smoothstep) so the fade has no edge */
+  .sugg__card--buy::after{
+    content:""; position:absolute; left:0; right:0; bottom:0; height:calc(var(--buy-h) + 160px); pointer-events:none;
+    background:linear-gradient(rgba(253,254,255,0), rgba(253,254,255,.04) 20px, rgba(253,254,255,.16) 40px, rgba(253,254,255,.32) 60px,
+      rgba(253,254,255,.5) 80px, rgba(253,254,255,.68) 100px, rgba(253,254,255,.84) 120px, rgba(253,254,255,.96) 140px, #fdfeff 160px);
+  }
+  /* the rest of the card opens the product, as the whole card used to */
+  .sugg__hit{ position:absolute; inset:0; z-index:1; -webkit-tap-highlight-color:transparent; }
+  .sugg__add{ display:flex; flex:1 1 0; margin:0; }
+  .sugg__btn{
+    flex:1 1 0; display:flex; align-items:center; justify-content:center; height:44px; padding:0;
+    border:0; border-radius:22px; font:600 15px/1 var(--sans); letter-spacing:-.01em; white-space:nowrap;
+    text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent;
+    transition:transform .2s var(--ease), background-color .25s, opacity .25s;
+  }
+  .sugg__btn:active{ transform:scale(.96); }
+  .sugg__btn--more{ background:#fff; color:var(--ink); }
+  /* black like the page's own Add to bag, which also stays black once added */
+  .sugg__btn--add{ background:var(--ink); color:var(--base); }
+  .sugg__btn--add.is-adding{ opacity:.6; }
+  .sugg__btn--add:disabled{ opacity:.45; cursor:default; }
+  @media (hover:hover){
+    .sugg__btn--more:hover{ background:#f6f6f8; }
+    .sugg__btn--add:hover:not(:disabled){ background:#000; }
+  }
 
   /* ---- the frosted controls ---- */
   /* the controls rise out of a line 24px under their resting place (Apple
@@ -156,16 +213,29 @@
   html.sugg-aim #main,html.sugg-aim #main *{ touch-action:pan-x; touch-action:pan-x pinch-zoom; }
   @media (prefers-reduced-motion:reduce){
     .sugg__aap,.sugg__aap *,.sugg__aap *::before{ transition:none!important; }
+    .sugg__line,.sugg__line.is-up{ transform:none; }   /* the small line fades instead of rolling */
   }
 </style>
 
 {%- assign card_count = section.blocks.size -%}
+{%- assign card_lines = false -%}
+{%- for block in section.blocks -%}{%- if block.settings.line != blank -%}{%- assign card_lines = true -%}{%- endif -%}{%- endfor -%}
 <section class="sugg{% if section.settings.hide_card_text %} sugg--bare{% endif %}" style="--n:{{ card_count }}" data-sugg data-atc-stop aria-roledescription="carousel"{% if section.settings.heading != blank %} aria-label="{{ section.settings.heading | escape }}"{% endif %}>
-  {%- if section.settings.heading != blank or section.settings.subheading != blank -%}
+  {%- if section.settings.heading != blank or section.settings.subheading != blank or card_lines -%}
     <div class="wrap">
       <div class="sugg__head" data-reveal>
         {%- if section.settings.heading != blank -%}<h2 class="sugg__heading">{{ section.settings.heading }}</h2>{%- endif -%}
-        {%- if section.settings.subheading != blank -%}<p class="sugg__sub">{{ section.settings.subheading }}</p>{%- endif -%}
+        {%- if card_lines -%}
+          {%- comment -%} the subheading (when all the cards show at once), then each card's line {%- endcomment -%}
+          <p class="sugg__sub sugg__sub--lines" data-sugg-sub>
+            <span class="sugg__line is-up" aria-hidden="true">{{ section.settings.subheading }}</span>
+            {%- for block in section.blocks -%}
+              <span class="sugg__line{% if forloop.first %} is-on{% endif %}"{% unless forloop.first %} aria-hidden="true"{% endunless %}>{{ block.settings.line | default: section.settings.subheading }}</span>
+            {%- endfor -%}
+          </p>
+        {%- elsif section.settings.subheading != blank -%}
+          <p class="sugg__sub">{{ section.settings.subheading }}</p>
+        {%- endif -%}
       </div>
     </div>
   {%- endif -%}
@@ -179,20 +249,36 @@
         {%- if card_url == blank and card_product -%}{%- assign card_url = card_product.url -%}{%- endif -%}
         {%- assign card_image = block.settings.image -%}
         {%- if card_image == blank and card_product -%}{%- assign card_image = card_product.featured_image -%}{%- endif -%}
-        {%- capture card_attrs -%}class="sugg__card" data-sugg-card{% if block.settings.img_drop > 0 %} style="--img-drop:{{ block.settings.img_drop }}px"{% endif %} {{ block.shopify_attributes }}{%- endcapture -%}
-        {%- if card_url != blank -%}<a href="{{ card_url }}" {{ card_attrs }}>{%- else -%}<div {{ card_attrs }}>{%- endif -%}
+        {%- assign card_name = card_product.title | default: block.settings.heading -%}
+        <div class="sugg__card{% if card_url != blank %} sugg__card--buy{% endif %}" data-sugg-card{% if block.settings.img_drop > 0 %} style="--img-drop:{{ block.settings.img_drop }}px"{% endif %} {{ block.shopify_attributes }}>
           {%- if card_image != blank -%}
             <img class="sugg__img" src="{{ card_image | image_url: width: 1000 }}"
                  srcset="{{ card_image | image_url: width: 500 }} 500w, {{ card_image | image_url: width: 750 }} 750w, {{ card_image | image_url: width: 1000 }} 1000w, {{ card_image | image_url: width: 1300 }} 1300w"
                  sizes="(min-width:900px) 400px, calc(87.5vw - 20px)"
                  width="{{ card_image.width }}" height="{{ card_image.height }}"
-                 alt="{{ card_image.alt | default: block.settings.heading | escape }}" loading="lazy">
+                 alt="{{ card_image.alt | default: card_name | escape }}" loading="lazy">
           {%- endif -%}
           <div class="sugg__text">
             <h3 class="sugg__card-heading">{{ block.settings.heading }}</h3>
             {%- if block.settings.caption != blank -%}<p class="sugg__card-sub">{{ block.settings.caption }}</p>{%- endif -%}
           </div>
-        {%- if card_url != blank -%}</a>{%- else -%}</div>{%- endif -%}
+          {%- if card_url != blank -%}
+            {%- comment -%} the same link as Learn more, for taps on the rest of the card {%- endcomment -%}
+            <a class="sugg__hit" href="{{ card_url }}" tabindex="-1" aria-hidden="true"></a>
+            <div class="sugg__buy">
+              <a class="sugg__btn sugg__btn--more" href="{{ card_url }}">Learn more<span class="visually-hidden">: {{ card_name | escape }}</span></a>
+              {%- if card_product -%}
+                <form class="sugg__add" action="{{ routes.cart_add_url }}" method="post" data-quick-add data-error="Try again">
+                  <input type="hidden" name="id" value="{{ card_product.selected_or_first_available_variant.id }}">
+                  <button type="submit" class="sugg__btn sugg__btn--add"{% unless card_product.available %} disabled{% endunless %}>
+                    <span data-quick-add-label aria-live="polite">{% if card_product.available %}{{ 'products.add_to_cart' | t }}{% else %}{{ 'products.sold_out' | t }}{% endif %}</span>
+                    <span class="visually-hidden">: {{ card_name | escape }}</span>
+                  </button>
+                </form>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+        </div>
       {%- endfor -%}
     </div>
 
@@ -384,12 +470,31 @@
       const max = track.scrollWidth - track.clientWidth, pad = cards[0].offsetLeft;
       return cards.map(function (c) { return Math.max(0, Math.min(max, c.offsetLeft - pad)); });
     }
+    /* The small line under the heading: the subheading's is the first,
+       then one for each card. The ones before the line showing wait above
+       it and the ones after below, so it rolls the way the cards went. Two
+       the same swap without a roll. */
+    const sub = root.querySelector('[data-sugg-sub]');
+    const lines = sub ? Array.prototype.slice.call(sub.children) : [];
+    let line = 1;
+    function retext(j, instant) {
+      if (!lines[j] || j === line) return;
+      sub.classList.toggle('is-instant', !!instant || lines[j].textContent === lines[line].textContent);
+      lines.forEach(function (el, k) {
+        el.classList.toggle('is-on', k === j);
+        el.classList.toggle('is-up', k < j);
+        if (k === j) el.removeAttribute('aria-hidden'); else el.setAttribute('aria-hidden', 'true');
+      });
+      line = j;
+    }
+
     let idx = -1, want = -1, tick = 0, idle = 0;
     function show(i) {
       if (i === idx) return;
       idx = i;
       dots.forEach(function (d, k) { d.setAttribute('aria-current', k === i ? 'true' : 'false'); });
       prev.disabled = i <= 0; next.disabled = i >= n - 1;
+      if (!root.classList.contains('is-static')) retext(i + 1);
     }
     function sync() {
       tick = 0;
@@ -431,6 +536,7 @@
        a resize makes them stop fitting while they're on screen, unfold. */
     function fit() {
       root.classList.toggle('is-static', track.scrollWidth <= track.clientWidth + 1);
+      retext(root.classList.contains('is-static') ? 0 : Math.max(0, idx) + 1, true);
       if (root.classList.contains('is-static') || shown) return;
       fold();
       const r = track.getBoundingClientRect();
@@ -667,7 +773,7 @@
   "name": "Suggested products",
   "settings": [
     { "type": "text", "id": "heading", "label": "Heading", "default": "Made to go with it." },
-    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "A few things that make Core even better." },
+    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "A few things that make Core even better.", "info": "A card's own small line takes its place while that card is showing." },
     { "type": "checkbox", "id": "hide_card_text", "label": "Hide the text on the cards", "default": false }
   ],
   "blocks": [
@@ -677,6 +783,7 @@
       "settings": [
         { "type": "text", "id": "heading", "label": "Heading", "default": "Pair with the USB-C Cable" },
         { "type": "text", "id": "caption", "label": "Caption", "default": "to charge Core straight from the wall." },
+        { "type": "text", "id": "line", "label": "Small line under the heading", "info": "Takes the subheading's place while this card is showing." },
         { "type": "image_picker", "id": "image", "label": "Image (defaults to linked product's image)" },
         { "type": "product", "id": "link_product", "label": "Link to product (also supplies the default image)" },
         { "type": "url", "id": "link_url", "label": "Link (overrides product link)" },
