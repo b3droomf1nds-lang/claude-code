@@ -2600,3 +2600,12 @@
     font-weight: 495 !important;
   }
 }
+
+/* Charge tile, mobile only: "20% to 80%" in the caption's own grey, not
+   the darker lead ink (its weight and size stay as they are). */
+@media (max-width: 899px) {
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range .pdp-cmp__charge-range-lead,
+  .template-product .pdp-cmp__card--charge .pdp-cmp__sub--range .pdp-cmp__range-bold {
+    color: inherit;
+  }
+}
