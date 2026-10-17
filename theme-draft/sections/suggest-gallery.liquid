@@ -18,8 +18,9 @@
   sheet's (its tint over the page's dim, blur 6px, saturation 180%) without
   the sheet's bright edge.
 
-  A vertical scroll that stops near the gallery glides the last bit, so the
-  heading, the cards and the resting controls all fit on screen.
+  Scrolling slows down near the spot where the heading, the cards and the
+  resting controls all fit on screen, like aim assist, so it's easy to stop
+  there.
 {%- endcomment -%}
 <style>
   .sugg{
@@ -141,6 +142,9 @@
     .sugg.is-static .sugg__track{ justify-content:center; }
     .sugg.is-static .sugg__gallery{ padding-bottom:0; }
   }
+  /* aim assist (see the script): near the gallery, up-and-down drags are
+     the script's and sideways swipes stay the browser's */
+  html.sugg-aim #main,html.sugg-aim #main *{ touch-action:pan-x; touch-action:pan-x pinch-zoom; }
   @media (prefers-reduced-motion:reduce){
     .sugg__aap,.sugg__aap *,.sugg__aap *::before{ transition:none!important; }
   }
@@ -437,40 +441,129 @@
       addEventListener('resize', bar); bar();
     }
 
-    /* Landing on the gallery: on a phone only a few pixels of scroll show
-       the heading, the cards and the controls resting under them all at
-       once, so when a scroll stops near that spot the page glides the last
-       bit. The spot puts the gallery, heading to controls, midway between
-       the header and the bottom of the screen, but never so low that the
-       controls are held up off their resting place; on a screen too short
-       for all of it the cards and controls win. Stops more than a quarter
-       of the screen away, and scrolls a finger is still on, are left alone.
-       Phones and tablets only, and not with reduced motion. */
+    /* Aim assist, as in a shooter, for landing on the gallery. There's one
+       spot (on a phone only a few pixels of scroll) where the heading, the
+       cards and the controls resting under them all fit on screen. The
+       nearer the page gets to it, the slower it scrolls under the finger:
+       30% of the finger's speed right on it, easing back to full speed 30%
+       of a screen either side, so it's easy to stop there.
+       While the spot is within about a screen, the page's up-and-down
+       scrolling is done here rather than by the browser: everything in
+       <main> gets touch-action:pan-x, so sideways card swipes stay the
+       browser's but up-and-down drags come here. A drag moves the page by
+       the finger's travel times the slowdown; let go mid-swipe and the page
+       carries on, losing speed as iOS's does (x0.998 per ms), slowed the
+       same way near the spot and losing speed faster there too (as many
+       times faster as it's slowed), so an ordinary flick runs out close to
+       the spot and only a hard one carries past. A flick already going when
+       the spot comes within reach is the browser's and isn't slowed. A tap that
+       stops a flick doesn't also click. Phones and tablets only; if the
+       browser scrolls the page itself during a drag, this stands down for
+       good. */
     const small = matchMedia('(max-width: 899px)');
+    const main = document.getElementById('main');
     const head = root.querySelector('.sugg__head');
     const lead = head ? head.parentNode : track;   // the heading's wrapper: where it sits without its fade-in nudge
     // the top bar: the header's own, or on a product page the copy laid over the page
     const bars = document.querySelectorAll('#shopify-section-header .site-header, #shopify-section-header .site-header-clone');
-    let touching = false, moved = false, landT = 0;
-    function landing() {
+    const de = document.documentElement, SLOW = .3, DECEL = .998;
+    /* The spot, as a scroll position: the gallery, heading to controls,
+       midway between the top bar and the bottom of the screen, but high
+       enough that the controls rest under the cards with 4px to spare; on a
+       screen too short for all of it the cards and controls win. */
+    function spot() {
       const top = lead.getBoundingClientRect().top, size = gallery.getBoundingClientRect().bottom - top;
       let under = 0;
       bars.forEach(function (el) { under = Math.max(under, el.getBoundingClientRect().bottom); });
       const lift = parseFloat(getComputedStyle(aap).bottom) || 0;   // how high the controls stick
-      return top - Math.min(under + Math.max(0, innerHeight - under - size) / 2, innerHeight - lift - size);
+      const free = innerHeight - under - size, room = free - lift;
+      return scrollY + top - under - (room >= 0 ? Math.min(free / 2, Math.max(room / 2, room - 4)) : room);
     }
-    function land() {
-      moved = false;
-      if (touching || reduce.matches || !small.matches || root.classList.contains('is-static')) return;
-      const d = landing();
-      if (Math.abs(d) > 2 && Math.abs(d) <= innerHeight / 4) window.scrollTo({ top: scrollY + d, behavior: 'smooth' });
+    let at = 0, pos = 0, mine = false, off = !main, drag = null, fling = 0, caught = false, held = false, behavior = '';
+    // page px per finger px at scroll position y
+    function gain(y) {
+      const x = Math.min(1, Math.abs(y - at) / (.3 * innerHeight));
+      return SLOW + (1 - SLOW) * x * x * (3 - 2 * x);
     }
-    function later() { clearTimeout(landT); landT = setTimeout(land, 150); }
-    addEventListener('touchstart', function () { touching = true; clearTimeout(landT); }, { passive: true });
-    ['touchend', 'touchcancel'].forEach(function (t) {
-      addEventListener(t, function (e) { touching = e.touches.length > 0; if (!touching && moved) later(); }, { passive: true });
+    // move the page by du finger px; false when it runs into the top or bottom
+    function move(du) {
+      const want = pos + du * gain(pos + du * gain(pos) / 2);
+      pos = Math.max(0, Math.min(de.scrollHeight - innerHeight, want));
+      window.scrollTo(0, pos);
+      return pos === want;
+    }
+    // the theme's smooth scrolling would animate every step
+    function hold() { if (!held) { held = true; behavior = de.style.scrollBehavior; de.style.scrollBehavior = 'auto'; } }
+    function letGo() { if (held) { held = false; de.style.scrollBehavior = behavior; } }
+    function claim() {
+      if (drag || fling || off) return;
+      const on = small.matches && !root.classList.contains('is-static') && Math.abs(spot() - scrollY) < .9 * innerHeight;
+      if (on !== mine) { mine = on; de.classList.toggle('sugg-aim', on); }
+    }
+    function standDown() {
+      off = true; drag = null; mine = false; de.classList.remove('sugg-aim'); letGo();
+    }
+    function carry(v) {
+      let last = performance.now();
+      const step = function (now) {
+        const dt = Math.min(32, now - last); last = now;
+        v *= Math.pow(DECEL, dt / gain(pos));
+        // stop when it's spent, at the end of the page, or if something else scrolled the page
+        if (Math.abs(scrollY - pos) > 3 || !move(v * dt) || Math.abs(v) < .02) { fling = 0; letGo(); claim(); return; }
+        fling = requestAnimationFrame(step);
+      };
+      fling = requestAnimationFrame(step);
+    }
+    addEventListener('touchstart', function (e) {
+      caught = !!fling;
+      if (fling) { cancelAnimationFrame(fling); fling = 0; }
+      drag = null; letGo();
+      if (!mine || off || e.touches.length > 1 || !main.contains(e.target)) return;
+      const t = e.touches[0];
+      drag = { x0: t.clientX, y0: t.clientY, y: t.clientY, axis: '', u: 0, s: [] };
+    }, { passive: true });
+    addEventListener('touchmove', function (e) {
+      if (!drag) return;
+      if (e.touches.length > 1) { drag = null; letGo(); return; }   // a pinch: the browser's
+      const t = e.touches[0];
+      if (!drag.axis) {
+        const dx = Math.abs(t.clientX - drag.x0), dy = Math.abs(t.clientY - drag.y0);
+        if (Math.max(dx, dy) < 6) return;
+        drag.axis = dy > dx ? 'y' : 'x';
+        if (drag.axis === 'x') { drag = null; return; }   // a card swipe
+        hold(); pos = scrollY; at = spot();
+        drag.y = t.clientY;   // the page starts moving from here, as the browser's does after its slop
+      }
+      if (Math.abs(scrollY - pos) > 3) { standDown(); return; }   // the browser is scrolling the page too
+      const du = drag.y - t.clientY;
+      drag.y = t.clientY; drag.u += du;
+      move(du);
+      // the last 100ms of travel, for the speed at letting go
+      drag.s.push(e.timeStamp, drag.u);
+      while (drag.s.length > 4 && e.timeStamp - drag.s[0] > 100) drag.s.splice(0, 2);
+    }, { passive: true });
+    ['touchend', 'touchcancel'].forEach(function (type) {
+      addEventListener(type, function (e) {
+        const d = drag;
+        if (!d || e.touches.length) return;
+        drag = null;
+        const s = d.s, n = s.length;
+        let v = 0;   // finger px per ms; none if the finger had stopped before letting go
+        if (d.axis && type === 'touchend' && n >= 4 && e.timeStamp - s[n - 2] < 50) {
+          v = Math.max(-8, Math.min(8, (s[n - 1] - s[1]) / Math.max(1, s[n - 2] - s[0])));
+        }
+        if (Math.abs(v) > .05) carry(v); else { letGo(); claim(); }
+      }, { passive: true });
     });
-    addEventListener('scroll', function () { moved = true; if (!touching) later(); }, { passive: true });
+    // a tap that stopped a flick
+    document.addEventListener('click', function (e) {
+      if (caught) { caught = false; e.preventDefault(); e.stopPropagation(); }
+    }, true);
+    let claimF = 0;
+    addEventListener('scroll', function () {
+      if (!claimF) claimF = requestAnimationFrame(function () { claimF = 0; claim(); });
+    }, { passive: true });
+    addEventListener('resize', claim);
 
     fold(); sync();
     io.observe(track); io.observe(gallery);
