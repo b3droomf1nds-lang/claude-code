@@ -8,8 +8,8 @@
   the text sits there. At the bottom, as on the Apple Store's product cards:
   a small label (Apple's "New"), the product's name and a line or two of
   grey, then a bar in the bubbles' frost (below) with Learn more (the
-  product page) and Add to bag (straight into the bag, without opening it),
-  pills the size of Apple's Buy. The photo fades to the card's white above
+  product page) and Add (straight into the bag, without opening it; "Add
+  to bag" to a screen reader), pills the size of Apple's Buy. The photo fades to the card's white above
   the text, as Apple's fade to black.
 
   The small line under the heading is the current card's own (its "small
@@ -306,8 +306,8 @@
                     <form class="sugg__add" action="{{ routes.cart_add_url }}" method="post" data-quick-add data-error="Try again">
                       <input type="hidden" name="id" value="{{ card_product.selected_or_first_available_variant.id }}">
                       <button type="submit" class="sugg__btn sugg__btn--add"{% unless card_product.available %} disabled{% endunless %}>
-                        <span data-quick-add-label aria-live="polite">{% if card_product.available %}{{ 'products.add_to_cart' | t }}{% else %}{{ 'products.sold_out' | t }}{% endif %}</span>
-                        <span class="visually-hidden">: {{ card_name | escape }}</span>
+                        <span data-quick-add-label aria-live="polite">{% if card_product.available %}Add{% else %}{{ 'products.sold_out' | t }}{% endif %}</span>
+                        <span class="visually-hidden">{% if card_product.available %} to bag{% endif %}: {{ card_name | escape }}</span>
                       </button>
                     </form>
                   {%- endif -%}
