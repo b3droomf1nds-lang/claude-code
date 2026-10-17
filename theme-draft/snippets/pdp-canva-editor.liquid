@@ -482,6 +482,45 @@
     ls(false, CHARGE_BOLT_MIGRATION, '1');
   }
 
+  // Fifth mobile lock-in of the charge tile: "As low as" blanked on the phone
+  // (markup, desktop keeps it), the bigger "59" and its nudge, the row's
+  // Align, "minutes" nudged up, and the shorter caption are now in
+  // CANVA-BAKED and the markup. Drop the saved phone offsets, the "59"'s
+  // size and the two saved wordings once so nothing applies twice; shared
+  // moves fold into the desktop-only fields (as charge-lock-v4 does) so the
+  // unbaked desktop placement is unchanged.
+  var CHARGE_LOCK5_MIGRATION = 'volt-canva-charge-lock-v5';
+  var CHARGE_LOCK5_KEYS = [
+    ':nth-child(2)>:nth-child(2)>:nth-child(1)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(2)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(3)',
+    ':nth-child(2)>:nth-child(2)>:nth-child(4)'
+  ];
+  if (ls(true, CHARGE_LOCK5_MIGRATION) !== '1'){
+    var chargeLock5Changed = false;
+    CHARGE_LOCK5_KEYS.forEach(function(k){
+      var e = layout[k];
+      if (!e) return;
+      if (e.dx || e.dy){
+        e.axd = Math.round(((e.dx || 0) + (e.axd || 0)) * 100) / 100;
+        e.ayd = Math.round(((e.dy || 0) + (e.ayd || 0)) * 100) / 100;
+      }
+      e.dx = 0; e.dy = 0; e.s = 1;
+      delete e.axm; delete e.aym; delete e.text;
+      if (!e.axd) delete e.axd;
+      if (!e.ayd) delete e.ayd;
+      if (!e.axd && !e.ayd && !e.w) delete layout[k];
+      chargeLock5Changed = true;
+    });
+    if (chargeLock5Changed){
+      ls(false, LKEY, JSON.stringify(layout));
+      savedHistory = [];
+      rm(HKEY);
+    }
+    ls(false, CHARGE_LOCK5_MIGRATION, '1');
+  }
+
   var EDITABLE = '.pdp-cmp__card, .pdp-cmp__img-slot img, .pdp-cmp__feature-icon-wrap, .pdp-cmp__eyebrow, ' +
     '.pdp-cmp__stat, .pdp-cmp__stat-row, .pdp-cmp__compact-partial-number, .pdp-cmp__compact-partial-extra, .pdp-cmp__sub, ' +
     '.pdp-cmp__compact-video-main, .pdp-cmp__compact-video-hours, .pdp-cmp__compact-battery, ' +

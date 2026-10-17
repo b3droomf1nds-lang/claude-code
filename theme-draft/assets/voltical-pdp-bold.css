@@ -1349,9 +1349,10 @@
   .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1) { transform: matrix(3.3, 0, 0, 3.3, 0, 0) translate(0.24px, 6.81px) scale(0.4776) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(1)>:nth-child(3)>:nth-child(1)>:nth-child(2) { transform: matrix(3.3, 0, 0, 3.3, 0, 0) translate(0px, 17.79px) scale(0.8645) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: matrix(1.271771, 0, 0, 1.271771, -3.023113, -26.486855) translate(2.3879px, 0px) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: matrix(3.953049, 0, 0, 3.953049, -44.209025, 18.215674) translate(-1.8326px, 0.1636px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2) { transform: translate(-0.2944px, 0px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(1) { transform: matrix(3.953049, 0, 0, 3.953049, -44.209025, 18.215674) translate(-1.8326px, -3.6962px) scale(1.2224) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(2)>:nth-child(2) { transform: matrix(7.957478, 0, 0, 7.957478, 41.982514, 18.181976) translate(-0.7645px, -0.2161px) scale(1.1045) !important; }
-  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(3) { transform: matrix(0.803096, 0, 0, 0.803096, 3.014438, 39.939135) translate(-3.7617px, 1.4px) !important; }
+  .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(3) { transform: matrix(0.803096, 0, 0, 0.803096, 3.014438, 39.939135) translate(-3.7617px, -1.086px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(2)>:nth-child(4) { transform: matrix(1.10294, 0, 0, 1.10294, 6.731541, 45.952675) translate(-6.1168px, 1.94px) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(1) { transform: translate(0px, 61.05px) scale(0.7457) !important; }
   .pdp-cmp>:nth-child(2)>:nth-child(3)>:nth-child(2) { transform: translate(0px, 54.3px) scale(0.6874) !important; }
@@ -2617,10 +2618,11 @@
    "As low as", the "59", "minutes", the gaps between them, the padding and
    the tile's height, so the tile looks the same, only smaller. Its width
    stays; the caption's box narrows with it so its lines break in the same
-   places. The baked Canva moves above shift each piece by a fixed number of
-   pixels ("As low as" -26.49px, "59" 18.86px, "minutes" 41.06px, caption
+   places. The baked Canva moves above shifted each piece by a fixed number
+   of pixels ("As low as" -26.49px, "59" 18.86px, "minutes" 41.06px, caption
    48.09px) that a smaller font doesn't shrink, so each translate takes the
-   same share off its shift and the spacing shrinks evenly too. */
+   same share off its shift and the spacing shrinks evenly too. (The owner's
+   later lock-in was arranged on top of these, so they stay as they are.) */
 @media (max-width: 899px) {
   .template-product .pdp-cmp__card--charge {
     --cr: 0.93761;
