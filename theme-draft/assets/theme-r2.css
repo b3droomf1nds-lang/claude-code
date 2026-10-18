@@ -1203,9 +1203,9 @@ h1.t-hero em,
   .drawer-scroller .drawer__subtotal [data-drawer-subtotal]{font:-apple-system-title1;font-weight:700;font-variant-numeric:tabular-nums}
 }
 /* A bag of more than one product opens smaller (theme-r3.js sets its
-   height and grows it once the list is scrolled to its end). The list
-   scrolls with no scroll bar and doesn't bounce at its ends (the card's
-   growth takes over there). Wherever it has more to show, it fades into
+   height, and grows it under the finger as it's pushed up). The list has
+   no scroll bar and doesn't bounce at its ends (the card's growth and its
+   rubber-band take over there). Wherever it has more to show, it fades into
    the glass over its last 28px, below the heading or above the total, as
    lists do at the edges of iOS cards; the fade (--fade-t, --fade-b) shrinks
    to nothing as that end comes into view. The fade is a mask on the list,
