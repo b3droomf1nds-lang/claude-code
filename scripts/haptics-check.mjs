@@ -7,6 +7,7 @@
 //   node scripts/haptics-check.mjs --deployed what's on the draft theme now
 //   add --throttle 4 to run on a CPU four times slower (phone-like timing)
 //   add --js <file> to test another copy of theme-r3.js (e.g. one from an older commit)
+//   add --lines 2 for two products in the bag: it then opens small, the pencil in its scrolling list
 //
 // The cart is mocked (one Core in the bag): nothing is added to or changed in the real cart.
 import { chromium } from 'playwright';
@@ -17,6 +18,7 @@ const deployed = args.includes('--deployed');
 const throttle = Number(args[args.indexOf('--throttle') + 1]) || (args.includes('--throttle') ? 4 : 1);
 const ROOT = new URL('..', import.meta.url).pathname;
 const jsFile = args.includes('--js') ? args[args.indexOf('--js') + 1] : ROOT + 'theme-draft/assets/theme-r3.js';   // test another copy of theme-r3.js
+const lines = Number(args[args.indexOf('--lines') + 1]) || 1;   // products in the bag; the slider is tried on the first
 const URL_ = 'https://imraiy-tv.myshopify.com/products/voltical-core-5k-10k?preview_theme_id=193289027910';
 const results = [];
 const info = (name, detail) => console.log('INFO ' + name + '  (' + detail + ')');
@@ -35,22 +37,24 @@ await ctx.addInitScript(() => {
 });
 
 let product = null, cart = null;
-const line = (q) => {
-  const v = product.variants[0];
-  return { key: v.id + ':check', id: v.id, variant_id: v.id, quantity: q, product_title: product.title, variant_title: v.title, title: product.title,
+const line = (q, n = 0) => {
+  const v = product.variants[n % product.variants.length];
+  return { key: v.id + ':check' + (n || ''), id: v.id, variant_id: v.id, quantity: q, product_title: product.title, variant_title: v.title, title: product.title,
     final_line_price: v.price * q, final_price: v.price, original_line_price: v.price * q, price: v.price, line_price: v.price * q,
     image: product.featured_image, url: '/products/' + product.handle, handle: product.handle, properties: {}, product_id: product.id };
 };
+// q: the first line's quantity (the one the slider changes); any other lines keep one each
 const cartOf = (q) => {
   const items = q ? [line(q)] : [];
+  for (let n = 1; n < lines; n++) items.push(line(1, n));
   const total = items.reduce((s, i) => s + i.final_line_price, 0);
-  return { items, item_count: q, total_price: total, items_subtotal_price: total, original_total_price: total, currency: 'GBP', requires_shipping: true };
+  return { items, item_count: items.reduce((s, i) => s + i.quantity, 0), total_price: total, items_subtotal_price: total, original_total_price: total, currency: 'GBP', requires_shipping: true };
 };
 await ctx.route('**/*', async (route) => {
   const req = route.request(), u = req.url();
   if (/\/cart(\/[a-z]+)?\.js(\?|$)/.test(u) && cart) {
     if (/\/cart\/(change|update)\.js/.test(u)) {
-      let q = cart.item_count;
+      let q = (cart.items.find((i) => /:check$/.test(i.key)) || { quantity: 0 }).quantity;
       try { const b = JSON.parse(req.postData() || '{}'); q = b.quantity ?? (b.updates ? Object.values(b.updates)[0] : q); } catch (e) {}
       cart = cartOf(Number(q) || 0);
     }

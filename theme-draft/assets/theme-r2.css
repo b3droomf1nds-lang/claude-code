@@ -1202,3 +1202,24 @@ h1.t-hero em,
 @supports (font:-apple-system-title1){
   .drawer-scroller .drawer__subtotal [data-drawer-subtotal]{font:-apple-system-title1;font-weight:700;font-variant-numeric:tabular-nums}
 }
+/* A bag of more than one product opens smaller (theme-r3.js sets its
+   height and grows it once the list is scrolled to its end). The list
+   scrolls with no scroll bar and doesn't bounce at its ends (the card's
+   growth takes over there). Wherever it has more to show, it fades into
+   the glass over its last 28px, below the heading or above the total, as
+   lists do at the edges of iOS cards; the fade (--fade-t, --fade-b) shrinks
+   to nothing as that end comes into view. The fade is a mask on the list,
+   and a mask would cut the bubbles' own blur off from the page, so here
+   they go without it: the sheet's frost still shows through their white,
+   and side by side the two differ by 1-3/255. */
+@property --fade-t{syntax:'<length>';inherits:false;initial-value:0px}
+@property --fade-b{syntax:'<length>';inherits:false;initial-value:0px}
+.drawer-scroller .drawer.is-small .drawer__body{overscroll-behavior-y:none;scrollbar-width:none;
+  -webkit-mask:linear-gradient(#0000,rgba(0,0,0,.16) calc(var(--fade-t) * .25),rgba(0,0,0,.5) calc(var(--fade-t) * .5),rgba(0,0,0,.84) calc(var(--fade-t) * .75),#000 var(--fade-t),
+    #000 calc(100% - var(--fade-b)),rgba(0,0,0,.84) calc(100% - var(--fade-b) * .75),rgba(0,0,0,.5) calc(100% - var(--fade-b) * .5),rgba(0,0,0,.16) calc(100% - var(--fade-b) * .25),#0000);
+  mask:linear-gradient(#0000,rgba(0,0,0,.16) calc(var(--fade-t) * .25),rgba(0,0,0,.5) calc(var(--fade-t) * .5),rgba(0,0,0,.84) calc(var(--fade-t) * .75),#000 var(--fade-t),
+    #000 calc(100% - var(--fade-b)),rgba(0,0,0,.84) calc(100% - var(--fade-b) * .75),rgba(0,0,0,.5) calc(100% - var(--fade-b) * .5),rgba(0,0,0,.16) calc(100% - var(--fade-b) * .25),#0000)}
+.drawer-scroller .drawer.is-small .drawer__body::-webkit-scrollbar{display:none}
+.drawer-scroller .drawer.is-small .cart-line,
+.drawer-scroller .drawer.is-small .ship-bubble,
+.drawer-scroller .drawer.is-small .protect-bubble{-webkit-backdrop-filter:none;backdrop-filter:none}

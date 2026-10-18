@@ -30,7 +30,7 @@ test('drawer open and close keep document position and background styles untouch
       el: { style: { transform: '', removeProperty: () => {} },
         classList: { add: name => classes.add(name), remove: name => classes.delete(name) },
         focus: options => { assert.equal(options.preventScroll, true); focused++; } },
-      scrim, scroller, maxTop: () => 600, paint: () => {}, stopAnims: () => {},
+      scrim, scroller, maxTop: () => 600, paint: () => {}, stopAnims: () => {}, fit: () => {}, unfit: () => {},
       hapClearPrime: () => {}, hapQueueSeeds: () => { primes++; }, reduceMotion: { matches: true }
     });
     vm.runInContext('let isOpen = false; let closing = false;\n' + closeSource + openSource +

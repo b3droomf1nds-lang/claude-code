@@ -80,7 +80,9 @@ ticks depend on, then hands the physical test to the owner.
      changes, and catches up after it closes;
    - the seed returns over the bag after closing;
    - there are no script errors.
-   Also run `node scripts/haptics-check.mjs --throttle 4` for phone-like timing.
+   Also run `node scripts/haptics-check.mjs --throttle 4` for phone-like timing,
+   and `node scripts/haptics-check.mjs --lines 2`: a bag of two products opens
+   small, with the pencil inside its scrolling, fading list.
 3. **What's deployed:** after a theme push, run
    `node scripts/haptics-check.mjs --deployed`.
 4. **Code drift since the confirmed state:**

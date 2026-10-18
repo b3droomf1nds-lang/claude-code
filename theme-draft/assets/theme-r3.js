@@ -912,6 +912,7 @@
       if (shipEl) shipEl.hidden = realLines.length === 0;
       paintTotals(cart);
       if (qm && !qm.closing) previewQty(qm.key, qm.shown);   // its quantity menu is open: keep the slider's number
+      fit();                                         // the card's height, if it's open (below)
     };
 
     // the bag as it will be once the protection switch's flip has reached the cart, at the price
@@ -2135,9 +2136,143 @@
       const m = maxTop();
       scrim.style.opacity = String(m ? Math.min(1, Math.max(0, scroller.scrollTop / m)) : 0);
     };
+    /* A bag of more than one product, with the shipping and protection
+       lines under them, opens smaller: the list shows the first product and
+       the top half of the next, and scrolls inside the card, with no scroll
+       bar, fading out at whichever end has more (theme-r2.css). Once it has
+       been scrolled to its end, with no finger on it, the card grows to show
+       the whole bag at once: its top edge rises on a spring, carrying on the
+       speed the list came to a stop with, while the list stays where it is,
+       its last lines in place and the first ones coming back into view above.
+       It stays that size until it's closed; the next opening starts small. */
+    const bagList = $('.drawer__body', el);
+    const FADE = 28;                                 // how far the list fades out at an end with more to show
+    let small = false;                               // this opening started small...
+    let grown = false;                               // ...and has since grown to the whole bag
+    let growing = null;                              // the card's height changing, on its spring
+    let touching = false;
+    let listY = 0, listT = 0, listV = 0;             // the list's last scroll, and its speed (px/s)
+    let fadeT = -1, fadeB = -1;
+    const bigBag = () => $$('.cart-line', linesEl).length > 1 && [shipEl, protectBox].filter((b) => b && !b.hidden).length > 1;
+    const listLeft = () => Math.max(0, bagList.scrollHeight - bagList.clientHeight - bagList.scrollTop);
+    const fades = () => {
+      const t = small ? Math.round(Math.min(FADE, bagList.scrollTop) * 2) / 2 : 0;
+      const b = small ? Math.round(Math.min(FADE, listLeft()) * 2) / 2 : 0;
+      if (t !== fadeT) { fadeT = t; bagList.style.setProperty('--fade-t', t + 'px'); }
+      if (b !== fadeB) { fadeB = b; bagList.style.setProperty('--fade-b', b + 'px'); }
+    };
+    // the heading and the total: all of the card but its list
+    const rim = () => el.getBoundingClientRect().height - bagList.getBoundingClientRect().height;
+    // the card's height with the list showing its first product and the top half of the next
+    // (the list in whole pixels, like its scroll)
+    const smallHeight = () => {
+      const next = $$('.cart-line', linesEl)[1];
+      return rim() + Math.round(next.offsetTop + next.offsetHeight / 2);
+    };
+    const height = () => el.getBoundingClientRect().height;
+    // the card's height from one to another on a spring (v: px/s it starts with), its bottom kept
+    // on the screen's: the top edge moves, and the list under it keeps its scroll where it can
+    const glide = (from, to, v) => {
+      const d = to - from;
+      if (Math.abs(d) < 1 || !el.animate || reduceMotion.matches) {
+        el.style.height = '';                        // the bag's own height, at once
+        scroller.scrollTop = maxTop();
+        fades();
+        return;
+      }
+      const r = rim();
+      const s = spring(0.44, 0.9, Math.min(8, Math.max(0, v / Math.abs(d))));
+      const n = s.pts.length - 1;
+      // The list's height goes in whole pixels, like its scroll, so the lines it holds don't
+      // shimmer as it grows: the spring read every 4ms, each height held until the next (no
+      // blending between them). It's an animation, not script, so it's in place before the glass
+      // edge lines up its copies each frame. The margin takes back what the height adds, so the
+      // card's bottom stays put.
+      const steps = Math.ceil(s.duration / 4);
+      const frames = [];
+      for (let j = 0, was = NaN; j <= steps; j++) {
+        const k = (j / steps) * n, i = Math.min(n - 1, Math.floor(k));
+        const x = Math.min(1, s.pts[i] + (s.pts[i + 1] - s.pts[i]) * (k - i));
+        const h = j < steps ? r + Math.round(from - r + d * x) : to;
+        if (h === was && j < steps) continue;
+        was = h;
+        frames.push({ height: h + 'px', marginTop: from - h + 'px', offset: j / steps, easing: 'step-end' });
+      }
+      el.style.height = from + 'px';
+      const a = growing = el.animate(frames, { duration: s.duration, fill: 'forwards' });
+      const track = () => { if (growing === a) { fades(); requestAnimationFrame(track); } };
+      requestAnimationFrame(track);
+      // there: the bag's own height, and the card's resting place for it
+      a.onfinish = () => {
+        if (growing !== a) return;
+        growing = null;
+        el.style.height = '';
+        a.cancel();
+        scroller.scrollTop = maxTop();
+        fades();
+      };
+    };
+    const grow = (v) => {
+      if (!small || grown || !isOpen || closing || growing || qm) return;
+      grown = true;
+      const from = height();
+      const y = bagList.scrollTop;
+      el.style.height = '';
+      const to = height();                           // the whole bag, or as tall as the card goes
+      el.style.height = from + 'px';
+      bagList.scrollTop = y;                         // measuring let the list's scroll slip: put it back
+      glide(from, to, v);
+    };
+    // on opening, and when the bag changes while open
+    const fit = (opening) => {
+      if (!isOpen || closing || growing) return;
+      if (opening) {
+        small = bigBag();
+        grown = false;
+        touching = false;
+        el.classList.toggle('is-small', small);
+        el.style.height = small ? smallHeight() + 'px' : '';
+        bagList.scrollTop = 0;
+      } else if (small && !grown) {
+        if (bigBag()) el.style.height = smallHeight() + 'px';
+        else {                                       // down to one product: the card grows to fit it
+          small = false;
+          el.classList.remove('is-small');
+          const from = height();
+          el.style.height = '';
+          glide(from, height(), 0);
+        }
+      }
+      fades();
+    };
+    bagList.addEventListener('scroll', () => {
+      const y = bagList.scrollTop, t = performance.now();
+      listV = t - listT < 80 ? ((y - listY) / Math.max(8, t - listT)) * 1000 : 0;
+      listY = y; listT = t;
+      fades();
+      if (!touching && listLeft() < 1) grow(listV);
+    }, { passive: true });
+    // a finger on the list may still pull it: the card grows once it's let go, if the list is at its end
+    scroller.addEventListener('touchstart', () => { touching = true; }, { passive: true });
+    const letGo = (e) => {
+      if (e.touches.length) return;
+      touching = false;
+      if (listLeft() < 1) grow(0);
+    };
+    scroller.addEventListener('touchend', letGo);
+    scroller.addEventListener('touchcancel', letGo);
+    // closed: nothing of it is kept, and the next opening fits the bag afresh
+    const unfit = () => {
+      if (growing) growing.cancel();
+      growing = null;
+      small = grown = false;
+      el.classList.remove('is-small');
+      el.style.height = '';
+    };
     const finishClose = () => {
       isOpen = false;
       closing = false;
+      unfit();
       el.classList.remove('is-open');
       scroller.hidden = true;
       scrim.hidden = true;
@@ -2162,6 +2297,7 @@
         el.classList.add('is-open');
         scrim.hidden = false;
         scroller.hidden = false;                    // the page behind stays scrollable: only the card takes touches
+        fit(true);                                  // several products: it opens smaller
         scroller.scrollTop = maxTop();              // at rest, fully open…
         paint();
         if (el.animate) {                           // …and popped up from just below the screen
@@ -2187,6 +2323,7 @@
       if (lensHalt) lensHalt();                      // the edge's lens stops all work as the card goes
       if (!el.animate) { finishClose(); return; }
       closing = true;
+      if (growing) growing.pause();                  // it leaves at the size it has reached
       // Leave from exactly where the card is, even mid-pop or mid-swipe.
       const from = cardY();
       const to = scroller.clientHeight - el.getBoundingClientRect().top + from + 48;

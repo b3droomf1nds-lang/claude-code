@@ -229,6 +229,8 @@ How the frost got here:
 
 The bubbles (product lines, shipping, shipping protection) are panes of their own: the sheet's frost again (`rgba(249,249,252,.74)` plus `blur(6px) saturate(180%)` as a `backdrop-filter`) over what the sheet already shows, with a 1 px white line and no lens. The owner asked for each item to have "its own layer" of the frosting. Earlier they were `.5` white, then `.22`, with no blur of their own.
 
+In a bag of more than one product the card opens small and its list scrolls, fading out at its ends through a mask (`.drawer.is-small`, theme-r2.css). A mask on the list would cut the bubbles' blur off from the page (Apple's own advice for `UIVisualEffectView` is never to mask a superview), so there the bubbles keep their white and rim but drop their own `backdrop-filter`. Measured over four page positions, their pixels differ from the blurred bubbles by 1–3/255 (99th percentile).
+
 The band is clear glass with the frost over it:
 
 - **Frost in the band:** `.drawer-lens__glass` blurs and saturates the bent slices together, exactly as `::before` frosts the page, so the rim is as frosted as the middle. The slices overhang the band by P = 18 px, so the blur doesn't fade out at the band's edges. The history:
