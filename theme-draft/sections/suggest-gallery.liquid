@@ -19,23 +19,29 @@
   moves the heading down into its place.
 
   Swipe the cards, or use the two frosted bubbles that rise and unfold near
-  the bottom of the screen while the gallery is on screen: the dots (grey,
-  the current card's a grey line, as on Apple's) and the arrows (the dots'
-  grey, no press highlight). The cards themselves have no corner arrow; a
-  tap anywhere on a card, off its Add, opens the product. The bubbles stick
+  the bottom of the screen under the cards: the dots (grey, the current
+  card's a grey line, as on Apple's) and the arrows (the dots' grey, no
+  press highlight). The cards themselves have no corner arrow; a tap
+  anywhere on a card, off its Add, opens the product. The bubbles stick
   12px above the bottom of the page's view, the same whether or not the
   browser's bottom toolbar is showing (no extra for the home indicator),
   until the gap above them, up to the cards, is as big as the one below
   them; then both gaps grow together until they're the 32px the bubbles
-  rest under the cards, and from there the bubbles move with the cards. The
-  rise and unfold are Apple's own: the springs and timings of its gallery
-  controls, read from its page script. The frost is the cart sheet's (its
-  tint over the page's dim, blur 6px, saturation 180%) without the sheet's
-  bright edge.
+  rest under the cards, and from there the bubbles move with the cards.
+  They never go over a card: while the cards' bottom is still lower than
+  where they'd stick, they ride along right under it (off the bottom of the
+  screen if that's where it is), so a card's photo, name and Add are never
+  under the frost. They unfold once they're on screen there, with most of
+  the cards. The rise and unfold are Apple's own: the springs and timings
+  of its gallery controls, read from its page script. The frost is the
+  cart sheet's (its tint over the page's dim, blur 6px, saturation 180%)
+  without the sheet's bright edge.
 
-  Aim assist near the spot where the heading, the cards and the resting
-  controls all fit on screen: scrolling slows down as the page nears it,
-  and a flick that would stop near it brakes onto it.
+  The page's scrolling is the browser's own here, as everywhere else: no
+  script moves the page. (An aim assist that took the scrolling over near
+  the gallery, to slow it there, fell out of step with Safari's toolbars on
+  a phone: the page froze for a frame and then jumped each time they showed
+  or hid, which was every change of direction.)
 {%- endcomment -%}
 <style>
   .sugg{
@@ -72,7 +78,7 @@
   .sugg__sub.sugg__room{ margin:0 0 12px; }
 
   /* the controls rest 32px under the cards, in the gallery's own room */
-  .sugg__gallery{ position:relative; padding-bottom:88px; }
+  .sugg__gallery{ --room:88px; position:relative; padding-bottom:var(--room); }
   /* room above and below inside the scroller for the cards' shadows */
   .sugg__track{
     position:relative; display:flex; gap:var(--gap);
@@ -178,6 +184,14 @@
     position:absolute; inset:0 0 -24px; z-index:2; pointer-events:none; overflow:clip;
     display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
   }
+  /* their lane: the room under the cards and the 24px below it. They stick
+     inside it, so they come up as far as the cards' bottom edge and never
+     over a card; while that edge is lower than where they'd stick, they
+     ride along right under it */
+  .sugg__lane{
+    display:flex; flex-direction:column; justify-content:flex-end; align-items:center;
+    height:calc(var(--room) + 24px);
+  }
   .sugg__aap{
     position:sticky; display:flex; align-items:center; gap:16px; margin-bottom:24px; pointer-events:none;
     bottom:calc(var(--sugg-bar,0px) + 12px);
@@ -245,9 +259,6 @@
     .sugg.is-static .sugg__track{ justify-content:center; }
     .sugg.is-static .sugg__gallery{ padding-bottom:0; }
   }
-  /* aim assist (see the script): near the gallery, up-and-down drags are
-     the script's and sideways swipes stay the browser's */
-  html.sugg-aim #main,html.sugg-aim #main *{ touch-action:pan-x; touch-action:pan-x pinch-zoom; }
   @media (prefers-reduced-motion:reduce){
     .sugg__aap,.sugg__aap *,.sugg__aap *::before{ transition:none!important; }
     .sugg__line,.sugg__line.is-up{ transform:none; }   /* the small line fades instead of rolling */
@@ -342,24 +353,26 @@
 
     {%- if card_count > 1 -%}
       <div class="sugg__aapbox">
-        <div class="sugg__aap" data-sugg-aap>
-          <span class="sugg__drop" aria-hidden="true"></span>
-          <div class="sugg__bubble" data-sugg-bubble>
-            <span class="sugg__bg"></span>
-            <div class="sugg__dots">
-              {%- for block in section.blocks -%}
-                <button type="button" class="sugg__dot" data-sugg-dot aria-label="Show {{ forloop.index }} of {{ card_count }}"{% if forloop.first %} aria-current="true"{% endif %}></button>
-              {%- endfor -%}
+        <div class="sugg__lane">
+          <div class="sugg__aap" data-sugg-aap>
+            <span class="sugg__drop" aria-hidden="true"></span>
+            <div class="sugg__bubble" data-sugg-bubble>
+              <span class="sugg__bg"></span>
+              <div class="sugg__dots">
+                {%- for block in section.blocks -%}
+                  <button type="button" class="sugg__dot" data-sugg-dot aria-label="Show {{ forloop.index }} of {{ card_count }}"{% if forloop.first %} aria-current="true"{% endif %}></button>
+                {%- endfor -%}
+              </div>
             </div>
-          </div>
-          <div class="sugg__bubble" data-sugg-bubble>
-            <span class="sugg__bg"></span>
-            <button type="button" class="sugg__arrow" data-sugg-go="-1" aria-label="Previous" disabled>
-              <svg viewBox="0 0 36 36" aria-hidden="true"><path d="m13.44 16.94 5.51-5.5a1.5 1.5 0 0 1 2.12 2.12L16.62 18l4.45 4.44a1.5 1.5 0 0 1-2.12 2.12l-5.51-5.5a1.5 1.5 0 0 1 0-2.12z"/></svg>
-            </button>
-            <button type="button" class="sugg__arrow" data-sugg-go="1" aria-label="Next">
-              <svg viewBox="0 0 36 36" aria-hidden="true"><path d="m22.56 16.94-5.51-5.5a1.5 1.5 0 0 0-2.12 2.12L19.38 18l-4.45 4.44a1.5 1.5 0 0 0 2.12 2.12l5.51-5.5a1.5 1.5 0 0 0 0-2.12z"/></svg>
-            </button>
+            <div class="sugg__bubble" data-sugg-bubble>
+              <span class="sugg__bg"></span>
+              <button type="button" class="sugg__arrow" data-sugg-go="-1" aria-label="Previous" disabled>
+                <svg viewBox="0 0 36 36" aria-hidden="true"><path d="m13.44 16.94 5.51-5.5a1.5 1.5 0 0 1 2.12 2.12L16.62 18l4.45 4.44a1.5 1.5 0 0 1-2.12 2.12l-5.51-5.5a1.5 1.5 0 0 1 0-2.12z"/></svg>
+              </button>
+              <button type="button" class="sugg__arrow" data-sugg-go="1" aria-label="Next">
+                <svg viewBox="0 0 36 36" aria-hidden="true"><path d="m22.56 16.94-5.51-5.5a1.5 1.5 0 0 0-2.12 2.12L19.38 18l-4.45 4.44a1.5 1.5 0 0 0 2.12 2.12l5.51-5.5a1.5 1.5 0 0 0 0-2.12z"/></svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -578,14 +591,22 @@
     next.addEventListener('click', function () { go((want >= 0 ? want : idx) + 1); });
     dots.forEach(function (d, k) { d.addEventListener('click', function () { go(k); }); });
 
-    /* Unfold once most of the cards are on screen; fold away, unseen, once
-       the whole gallery (controls included) has gone, ready for next time. */
+    /* Unfold once most of the cards are on screen and so are the controls,
+       under them; fold away, unseen, once the whole gallery (controls
+       included) has gone, ready for next time. */
     const enough = function (h) { return h >= Math.min(.6 * cards[0].offsetHeight, .5 * innerHeight); };
+    function ready() {
+      const t = track.getBoundingClientRect(), g = gallery.getBoundingClientRect();
+      // their top is never above the cards' bottom, so they're all on screen
+      // once that's their own height above the bottom of the screen
+      return enough(Math.min(t.bottom, innerHeight) - Math.max(t.top, 0)) &&
+        g.bottom - parseFloat(getComputedStyle(gallery).paddingBottom) + aap.offsetHeight <= innerHeight;
+    }
     const io = new IntersectionObserver(function (es) {
       es.forEach(function (e) {
         if (root.classList.contains('is-static')) return;
         if (e.target === track) {
-          if (!shown && e.isIntersecting && enough(e.intersectionRect.height)) unfold();
+          if (!shown && e.isIntersecting && ready()) unfold();
         } else if (!e.isIntersecting && shown) fold();
       });
     }, { threshold: [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1] });
@@ -597,8 +618,7 @@
       retext(root.classList.contains('is-static') ? 0 : Math.max(0, idx) + 1, true);
       if (root.classList.contains('is-static') || shown) return;
       fold();
-      const r = track.getBoundingClientRect();
-      if (enough(Math.min(r.bottom, innerHeight) - Math.max(r.top, 0))) unfold();
+      if (ready()) unfold();
     }
     if (window.ResizeObserver) new ResizeObserver(function () { fit(); sync(); }).observe(track);
     else fit();
@@ -632,184 +652,11 @@
     addEventListener('scroll', rise, { passive: true });
     addEventListener('resize', rise);
     rise();
-
-    /* Aim assist, as in a shooter, for landing on the gallery. There's one
-       spot (on a phone only a few pixels of scroll) where the heading, the
-       cards and the controls resting under them all fit on screen.
-       - Slowdown: the nearer the page gets to the spot, the slower it
-         scrolls under the finger: 20% of the finger's speed right on it,
-         easing back to full speed 40% of a screen either side.
-       - Pull: let go mid-swipe and the page carries on, losing speed as
-         iOS's does (x0.998 per ms) and slowed the same way near the spot.
-         But if it would come to a stop near the spot (up to 140px short of
-         it, or up to 60% of a screen past it), it brakes onto the spot
-         instead, from the speed it was let go at, so it lands there. A
-         harder flick carries past, and one away from the spot is free.
-       While the spot is within a screen and a half, the page's up-and-down
-       scrolling is done here rather than by the browser: everything in
-       <main> gets touch-action:pan-x, so sideways card swipes stay the
-       browser's but up-and-down drags come here. A flick already going
-       when the spot comes within reach is the browser's and isn't touched.
-       A tap that stops a flick doesn't also click. Phones and tablets only;
-       if the browser scrolls the page itself during a drag, this stands
-       down for good. ?aimdebug=1 shows what it's doing. */
-    const small = matchMedia('(max-width: 899px)');
-    const main = document.getElementById('main');
-    const head = root.querySelector('.sugg__head');
-    const lead = head ? head.parentNode : track;   // the heading's wrapper: where it sits without its fade-in nudge
-    const blank = root.querySelector('.sugg__room');   // "Hide the small line": the blank line above the heading
-    // the top bar: the header's own, or on a product page the copy laid over the page
-    const bars = document.querySelectorAll('#shopify-section-header .site-header, #shopify-section-header .site-header-clone');
-    const de = document.documentElement, DECEL = .998;
-    const SLOW = .2, REACH = .4, TAKE = 1.5, SHORT = 140, OVER = .6, PULL = 1 / 220;
-    /* The spot, as a scroll position: the gallery, heading to controls,
-       midway between the top bar and the bottom of the screen, but high
-       enough that the controls have come to rest under the cards (their
-       place at least the resting gap, or the stick height if that's more,
-       above the bottom of the screen) with 4px to spare; on a screen too
-       short for all of it the cards and controls win. It's measured from
-       the heading itself, under any blank line above it. */
-    function spot() {
-      const skip = blank ? blank.offsetHeight + parseFloat(getComputedStyle(blank).marginBottom) : 0;
-      const top = lead.getBoundingClientRect().top + skip, size = gallery.getBoundingClientRect().bottom - top;
-      let under = 0;
-      bars.forEach(function (el) { under = Math.max(under, el.getBoundingClientRect().bottom); });
-      const free = innerHeight - under - size, room = free - Math.max(liftPx(), restGap());
-      return scrollY + top - under - (room >= 0 ? Math.min(free / 2, Math.max(room / 2, room - 4)) : room);
-    }
-    let at = 0, pos = 0, mine = false, off = !main, drag = null, fling = 0, caught = false, held = false, behavior = '';
-    // page px per finger px at scroll position y
-    function gain(y) {
-      const x = Math.min(1, Math.abs(y - at) / (REACH * innerHeight));
-      return SLOW + (1 - SLOW) * x * x * (3 - 2 * x);
-    }
-    // move the page by du finger px; false when it runs into the top or bottom
-    function move(du) {
-      const want = pos + du * gain(pos + du * gain(pos) / 2);
-      pos = Math.max(0, Math.min(de.scrollHeight - innerHeight, want));
-      window.scrollTo(0, pos);
-      rise();   // in the same frame as the page, not one behind
-      return pos === want;
-    }
-    // the theme's smooth scrolling would animate every step
-    function hold() { if (!held) { held = true; behavior = de.style.scrollBehavior; de.style.scrollBehavior = 'auto'; } }
-    function letGo() { if (held) { held = false; de.style.scrollBehavior = behavior; } }
-
-    const dbg = /[?&]aimdebug=1/.test(location.search) ? document.body.appendChild(document.createElement('div')) : null;
-    if (dbg) dbg.style.cssText = 'position:fixed;left:8px;top:56px;z-index:2147483000;background:rgba(0,0,0,.78);color:#fff;font:12px/1.4 ui-monospace,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre';
-    let why = '', last = '', count = 0;
-    function note(msg) {
-      if (msg) last = msg;
-      if (dbg) dbg.textContent = 'aim assist: ' + (off ? 'OFF, ' + why : mine ? 'on' : 'waiting (gallery far)') +
-        '\nspot ' + Math.round(spot() - scrollY) + 'px away, drags ' + count + '\n' + last;
-    }
-
-    function claim() {
-      if (drag || fling || off) return;
-      const on = small.matches && !root.classList.contains('is-static') && Math.abs(spot() - scrollY) < TAKE * innerHeight;
-      if (on !== mine) { mine = on; de.classList.toggle('sugg-aim', on); }
-      note();
-    }
-    function standDown(reason) {
-      off = true; why = reason; drag = null; mine = false; de.classList.remove('sugg-aim'); letGo(); note();
-    }
-    function done() { fling = 0; letGo(); claim(); }
-    // where a flick from p at finger speed v would stop on its own
-    function coast(p, v) {
-      while (Math.abs(v) >= .02) { v *= Math.pow(DECEL, 16); const du = v * 16; p += du * gain(p + du * gain(p) / 2); }
-      return p;
-    }
-    // a free flick: slowed near the spot, otherwise iOS's
-    function carry(v) {
-      let t = performance.now();
-      const step = function (now) {
-        const dt = Math.min(32, now - t); t = now;
-        v *= Math.pow(DECEL, dt);
-        // stop when it's spent, at the end of the page, or if something else scrolled the page
-        if (Math.abs(scrollY - pos) > 3 || !move(v * dt) || Math.abs(v) < .02) { done(); return; }
-        fling = requestAnimationFrame(step);
-      };
-      fling = requestAnimationFrame(step);
-    }
-    /* Brake onto the spot: a critically damped spring from here, starting
-       at the flick's speed (w page px per ms), stiff enough not to overshoot
-       and at least stiff enough to pull a flick that would stop short the
-       rest of the way. */
-    function brake(w) {
-      const a = pos - at, k = Math.max(w / (at - pos), PULL), c = w + k * a, t0 = performance.now();
-      const step = function (now) {
-        if (Math.abs(scrollY - pos) > 3) { done(); return; }
-        const t = now - t0, e = Math.exp(-k * t), x = (a + c * t) * e;
-        const end = Math.abs(x) < .5 && Math.abs(c - k * (a + c * t)) * e < .02;
-        pos = at + (end ? 0 : x);
-        window.scrollTo(0, pos); rise();
-        if (end) { done(); return; }
-        fling = requestAnimationFrame(step);
-      };
-      fling = requestAnimationFrame(step);
-    }
-    function flick(v) {
-      const dir = Math.sign(v), ahead = (at - pos) * dir, past = (coast(pos, v) - at) * dir;
-      if (ahead > 1 && past >= -SHORT && past <= OVER * innerHeight) {
-        note('flick ' + v.toFixed(1) + 'px/ms: braking onto the spot');
-        brake(v * gain(pos));
-      } else {
-        note('flick ' + v.toFixed(1) + 'px/ms: free (' + (ahead <= 1 ? 'away from the spot' : past > 0 ? 'too hard' : 'too soft') + ')');
-        carry(v);
-      }
-    }
-
-    addEventListener('touchstart', function (e) {
-      caught = !!fling;
-      if (fling) { cancelAnimationFrame(fling); fling = 0; }
-      drag = null; letGo();
-      if (!mine || off || e.touches.length > 1 || !main.contains(e.target)) return;
-      const t = e.touches[0];
-      drag = { x0: t.clientX, y0: t.clientY, y: t.clientY, axis: '', u: 0, s: [] };
-    }, { passive: true });
-    addEventListener('touchmove', function (e) {
-      if (!drag) return;
-      if (e.touches.length > 1) { drag = null; letGo(); return; }   // a pinch: the browser's
-      const t = e.touches[0];
-      if (!drag.axis) {
-        const dx = Math.abs(t.clientX - drag.x0), dy = Math.abs(t.clientY - drag.y0);
-        if (Math.max(dx, dy) < 6) return;
-        drag.axis = dy > dx ? 'y' : 'x';
-        if (drag.axis === 'x') { drag = null; return; }   // a card swipe
-        hold(); pos = scrollY; at = spot(); count++;
-        drag.y = t.clientY;   // the page starts moving from here, as the browser's does after its slop
-      }
-      if (Math.abs(scrollY - pos) > 3) { standDown('the browser scrolled the page itself'); return; }
-      const du = drag.y - t.clientY;
-      drag.y = t.clientY; drag.u += du;
-      move(du);
-      if (dbg) note('dragging: page at ' + Math.round(gain(pos) * 100) + '% of finger speed');
-      // the last 100ms of travel, for the speed at letting go
-      drag.s.push(e.timeStamp, drag.u);
-      while (drag.s.length > 4 && e.timeStamp - drag.s[0] > 100) drag.s.splice(0, 2);
-    }, { passive: true });
-    ['touchend', 'touchcancel'].forEach(function (type) {
-      addEventListener(type, function (e) {
-        const d = drag;
-        if (!d || e.touches.length) return;
-        drag = null;
-        const s = d.s, n = s.length;
-        let v = 0;   // finger px per ms; none if the finger had stopped before letting go
-        if (d.axis && type === 'touchend' && n >= 4 && e.timeStamp - s[n - 2] < 50) {
-          v = Math.max(-8, Math.min(8, (s[n - 1] - s[1]) / Math.max(1, s[n - 2] - s[0])));
-        }
-        if (Math.abs(v) > .05) flick(v); else { letGo(); claim(); }
-      }, { passive: true });
-    });
-    // a tap that stopped a flick
-    document.addEventListener('click', function (e) {
-      if (caught) { caught = false; e.preventDefault(); e.stopPropagation(); }
-    }, true);
-    let claimF = 0;
+    // coming down onto the gallery the cards are all in before the controls
+    // under them are, after the last change the observer reports
     addEventListener('scroll', function () {
-      if (!claimF) claimF = requestAnimationFrame(function () { claimF = 0; claim(); });
+      if (!shown && !root.classList.contains('is-static') && ready()) unfold();
     }, { passive: true });
-    addEventListener('resize', claim);
 
     fold(); sync();
     io.observe(track); io.observe(gallery);
