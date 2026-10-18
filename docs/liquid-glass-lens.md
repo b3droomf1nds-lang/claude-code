@@ -154,8 +154,11 @@ So the band holds live DOM copies of the page (`#main` and the footer), lined up
 ### Structure (current: clear-sheet edge, frosted as one pane)
 
 ```
-.drawer (card; paint order: ::before frost → .drawer-lens → ::after edge light, all z 0 → children z 1)
-└─ .drawer-lens            band: abs inset 0, z 0, overflow hidden, border-radius inherit,
+.drawer (card; its skin z 0 → children z 1)
+└─ .drawer__skin           the glass: abs inset 0, z 0, border-radius inherit, the card's shadow;
+   │                       paint order: ::before frost → .drawer-lens → ::after edge light
+   │                       (a small bag slides it as it grows: see below)
+└─ .drawer-lens            band (in the skin): abs inset 0, z 0, overflow hidden, border-radius inherit,
    │                       pointer-events none, inert, aria-hidden; mask fades 24.5→31.4px
    ├─ .drawer-lens__glass  abs inset 0; filter blur(6px) saturate(180%): the card's frost, one pane
    │  └─ .drawer-lens__slice  one per [d0,d1): top d0, height d1−d0+1 (1px under the next),
@@ -230,6 +233,8 @@ How the frost got here:
 The bubbles (product lines, shipping, shipping protection) are panes of their own: the sheet's frost again (`rgba(249,249,252,.74)` plus `blur(6px) saturate(180%)` as a `backdrop-filter`) over what the sheet already shows, with a 1 px white line and no lens. The owner asked for each item to have "its own layer" of the frosting. Earlier they were `.5` white, then `.22`, with no blur of their own.
 
 In a bag of more than one product the card opens small and grows under the finger, its list fading out at its ends through a mask (`.drawer.is-small`, theme-r2.css). A mask on the list would cut the bubbles' blur off from the page (Apple's own advice for `UIVisualEffectView` is never to mask a superview), so there the bubbles keep their white and rim but drop their own `backdrop-filter`. Measured over four page positions, their pixels differ from the blurred bubbles by 1–3/255 (99th percentile).
+
+While it's small (`.drawer.is-folded`) the rest of the bag is laid out above the card: the list reaches up out of it by what the whole bag adds, and the skin reaches up as far and is slid back down into place. Growing then only slides the heading, the lines and the skin (each its own layer); the lens lines its copies up in the same frame (`lensAlign`), from the finger's own touch handler or the spring's frame. Resizing the card each frame instead (the first version) redrew the frost, the band and the mask every frame and was choppy on a phone. At rest at the whole bag the card takes its own height in the same frame.
 
 The band is clear glass with the frost over it:
 

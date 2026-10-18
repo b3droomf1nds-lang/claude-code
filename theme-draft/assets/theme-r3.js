@@ -1784,6 +1784,12 @@
     scroller.appendChild(end);
     scrim.classList.add('is-sheet');
     el.tabIndex = -1;
+    // the card's glass: its frost, the lens along its edge and its bright rim, in one layer under
+    // its contents, so a growing card can slide it without redrawing it (theme-r2.css)
+    const skin = document.createElement('div');
+    skin.className = 'drawer__skin';
+    skin.setAttribute('aria-hidden', 'true');
+    el.insertBefore(skin, el.firstChild);
     // Liquid Glass edge, like the iOS Notification Centre sheet: whatever
     // passes under the card's top edge is magnified across a band along it.
     // Safari can't bend what's behind a page element, so the band holds a
@@ -1870,7 +1876,7 @@
       const haze = document.createElement('i');               // the rim's last 5px fade towards the glass
       haze.className = 'drawer-lens__haze';
       band.appendChild(haze);
-      el.insertBefore(band, el.firstChild);
+      skin.appendChild(band);
       let raf = 0, gen = 0, live = false, lastX = NaN, lastY = NaN, off = false;
       // the page's own stylesheet tags, in order (the copied sections bring their own inline ones);
       // the links load from cache, and the band shows once they have
@@ -2117,11 +2123,15 @@
         .observe(el, { attributes: true, attributeFilter: ['class'] });
       // the card is leaving: no more copies or repaints from here, so nothing can slow its exit;
       // what's already shown keeps lining up as it slides away
-      return () => {
+      const halt = () => {
         gen++; clearTimeout(due); due = 0;
         building = false; watch.disconnect(); removeEventListener('scroll', scrolled);
       };
+      // lines the copies up now, for a move made in a frame after this frame's own lining up
+      halt.align = () => { if (live) align(false); };
+      return halt;
     })();
+    const lensAlign = lensHalt ? lensHalt.align : () => {};
     let isOpen = false;
     let closing = false;
     let restTimer = 0;
@@ -2145,89 +2155,110 @@
        part way and it springs on to the whole bag, or back to small,
        whichever it was heading for; pushed on past the whole bag, the list
        scrolls if there's more of it, then the card rubber-bands. Once grown
-       it stays that size until it's closed; the next opening starts small. */
+       it stays that size until it's closed; the next opening starts small.
+       While it's small the rest of the bag is laid out above it, out of
+       sight, so growing only slides things (the heading, the lines and the
+       glass go up; nothing is laid out again or redrawn), as a swipe of the
+       card does, and the phone keeps up with the finger. Come to rest at the
+       whole bag, the card takes the bag's own height in the same frame. */
     const bagList = $('.drawer__body', el);
+    const head = $('.drawer__head', el);
     const FADE = 28;                                 // how far the list fades out at an end with more to show
-    let small = false;                               // this opening started small...
-    let grown = false;                               // ...and has since grown to the whole bag
-    let growing = null;                              // the card's height changing, on its spring
-    let pulling = false;                             // a finger is changing the card's height
+    let small = false;                               // this opening started small
+    let fold = null;                                 // small, and not grown yet: its sizes ({ lo, hi, room })
+    let lift = 0, spill = 0;                         // how far it has grown from small, and the list's scroll past the whole bag
+    let springing = 0;                               // the lift on its spring (a frame request)
+    let pulling = false;                             // a finger is growing the card
     let coast = 0;                                   // the list carrying on after a flick (a frame request)
     let fadeT = -1, fadeB = -1;
     const bigBag = () => $$('.cart-line', linesEl).length > 1 && [shipEl, protectBox].filter((b) => b && !b.hidden).length > 1;
-    const listLeft = () => Math.max(0, bagList.scrollHeight - bagList.clientHeight - bagList.scrollTop);
+    const listLeft = () => (fold
+      ? Math.max(0, fold.hi - fold.lo - lift + fold.room - spill)
+      : Math.max(0, bagList.scrollHeight - bagList.clientHeight - bagList.scrollTop));
     const fades = () => {
-      const t = small ? Math.round(Math.min(FADE, bagList.scrollTop) * 2) / 2 : 0;
+      const t = small ? Math.round(Math.min(FADE, fold ? spill : bagList.scrollTop) * 2) / 2 : 0;
       const b = small ? Math.round(Math.min(FADE, listLeft()) * 2) / 2 : 0;
       if (t !== fadeT) { fadeT = t; bagList.style.setProperty('--fade-t', t + 'px'); }
       if (b !== fadeB) { fadeB = b; bagList.style.setProperty('--fade-b', b + 'px'); }
     };
-    // the heading and the total: all of the card but its list
-    const rim = () => el.getBoundingClientRect().height - bagList.getBoundingClientRect().height;
-    // the card's height with the list showing its first product and the top half of the next
-    // (the list in whole pixels, like its scroll)
-    const smallHeight = () => {
-      const next = $$('.cart-line', linesEl)[1];
-      return rim() + Math.round(next.offsetTop + next.offsetHeight / 2);
-    };
     const height = () => el.getBoundingClientRect().height;
-    // the card at a height ('' for the bag's own) with its bottom on the screen's, at rest
-    const settleAt = (h) => {
-      el.style.height = h;
-      el.style.marginTop = '';
-      scroller.scrollTop = maxTop();
+    const settle = () => { scroller.scrollTop = maxTop(); };    // the card's bottom on the screen's, at rest
+    // everything where a lift (and a spill) puts it: the heading and the glass up by the lift, the
+    // lines by the lift and the spill; the list clips them at the total (theme-r2.css)
+    const draw = (g, s) => {
+      lift = g; spill = s || 0;
+      head.style.transform = 'translateY(' + (-g).toFixed(2) + 'px)';
+      const lines = 'translateY(' + (-g - spill).toFixed(2) + 'px)';
+      for (const c of bagList.children) c.style.transform = lines;
+      skin.style.transform = 'translateY(' + (fold.hi - fold.lo - g).toFixed(2) + 'px)';
+      fades();
+      lensAlign();                                   // the copies follow the edge in this same frame
     };
-    // the whole bag's height (or the tallest the card goes), and how far its list then scrolls
-    const whole = () => {
-      const h = el.style.height, m = el.style.marginTop, y = bagList.scrollTop;
-      el.style.height = el.style.marginTop = '';
-      const w = { full: height(), room: Math.max(0, bagList.scrollHeight - bagList.clientHeight) };
-      el.style.height = h; el.style.marginTop = m;
-      bagList.scrollTop = y;                         // measuring let the list's scroll slip: put it back
-      return w;
-    };
-    // the card's height from one to another on a spring (v: px/s it starts with), its bottom kept
-    // on the screen's: the top edge moves, and the list under it keeps its scroll where it can.
-    // keep: it stays at that height (small), rather than going back to the bag's own.
-    const glide = (from, to, v, keep) => {
-      const d = to - from;
-      const there = () => { settleAt(keep ? to + 'px' : ''); fades(); };
-      if (Math.abs(d) < 1 || !el.animate || reduceMotion.matches) { there(); return; }
-      const r = rim();
-      const s = spring(0.44, 0.9, Math.min(8, Math.max(0, v / Math.abs(d))));
-      const n = s.pts.length - 1;
-      // The list's height goes in whole pixels, like its scroll, so the lines it holds don't
-      // shimmer as it grows: the spring read every 4ms, each height held until the next (no
-      // blending between them). It's an animation, not script, so it's in place before the glass
-      // edge lines up its copies each frame. The margin takes back what the height adds, so the
-      // card's bottom stays put.
-      const steps = Math.ceil(s.duration / 4);
-      const frames = [];
-      for (let j = 0, was = NaN; j <= steps; j++) {
-        const k = (j / steps) * n, i = Math.min(n - 1, Math.floor(k));
-        const x = Math.min(1, s.pts[i] + (s.pts[i + 1] - s.pts[i]) * (k - i));
-        const h = j < steps ? r + Math.round(from - r + d * x) : to;
-        if (h === was && j < steps) continue;
-        was = h;
-        frames.push({ height: h + 'px', marginTop: from - h + 'px', offset: j / steps, easing: 'step-end' });
+    // Small, at rest. The card is its small height; the list reaches up out of it by what the whole
+    // bag adds (padding keeps its lines where they were), the glass reaches up as far and is slid
+    // back down into place. lo: the small height to keep (else the first product and half the next).
+    const shape = (lo) => {
+      // Measured from the plain card. Snapping is off meanwhile: laid out at the whole bag's
+      // height for a moment, the card would otherwise be snapped to that later on.
+      scroller.style.scrollSnapType = 'none';
+      flat();
+      bagList.scrollTop = 0;
+      const full = height(), room = Math.max(0, bagList.scrollHeight - bagList.clientHeight);
+      const pad = getComputedStyle(bagList).paddingTop;
+      if (lo === undefined) {                        // the list in whole pixels, like its scroll
+        const next = $$('.cart-line', linesEl)[1];
+        lo = height() - bagList.getBoundingClientRect().height + Math.round(next.offsetTop + next.offsetHeight / 2);
       }
-      el.style.height = from + 'px';
-      const a = growing = el.animate(frames, { duration: s.duration, fill: 'forwards' });
-      const track = () => { if (growing === a) { fades(); requestAnimationFrame(track); } };
-      requestAnimationFrame(track);
-      // there: the bag's own height, and the card's resting place for it
-      a.onfinish = () => {
-        if (growing !== a) return;
-        growing = null;
-        a.cancel();
-        there();
+      fold = { lo, hi: Math.max(lo, full), room };
+      const up = fold.hi - lo;
+      el.classList.add('is-folded');
+      el.style.height = lo + 'px';
+      bagList.style.marginTop = -up + 'px';
+      bagList.style.paddingTop = 'calc(' + pad + ' + ' + up + 'px)';
+      skin.style.top = -up + 'px';
+      settle();
+      scroller.style.scrollSnapType = '';
+      draw(0, 0);
+    };
+    // the plain card again, at whatever height its bag gives it
+    const flat = () => {
+      fold = null; lift = spill = 0;
+      el.classList.remove('is-folded');
+      head.style.transform = skin.style.transform = skin.style.top = '';
+      for (const c of bagList.children) c.style.transform = '';
+      bagList.style.marginTop = bagList.style.paddingTop = '';
+      el.style.height = '';
+    };
+    // grown to the whole bag: the card takes its height, in the same frame, so nothing moves
+    const unfold = () => {
+      const s = spill;
+      flat();
+      settle();
+      bagList.scrollTop = Math.round(s);
+      fades();
+    };
+    // The lift from where it is to g on a spring (v: px/s it starts with), then done(). Frame by
+    // frame from script, not an animation the compositor runs, so the glass edge's copies are
+    // lined up with it in every frame they're drawn in.
+    const swing = (g, v, done) => {
+      cancelAnimationFrame(springing);
+      springing = 0;
+      const from = lift, d = g - from;
+      if (Math.abs(d) < 0.5 || reduceMotion.matches) { draw(g, 0); done(); return; }
+      const s = spring(0.44, 0.9, Math.min(8, Math.max(0, v / Math.abs(d))));
+      const n = s.pts.length - 1, t0 = performance.now();
+      const step = (t) => {
+        const k = Math.min(1, Math.max(0, t - t0) / s.duration) * n, i = Math.min(n - 1, Math.floor(k));
+        if (k >= n) { springing = 0; draw(g, 0); done(); return; }
+        draw(from + d * (s.pts[i] + (s.pts[i + 1] - s.pts[i]) * (k - i)), 0);
+        springing = requestAnimationFrame(step);
       };
+      springing = requestAnimationFrame(step);
     };
     // grown at once, on its spring: for a wheel or keys, which have no finger to follow
     const grow = (v) => {
-      if (!small || grown || !isOpen || closing || growing || pulling || qm) return;
-      grown = true;
-      glide(height(), whole().full, v);
+      if (!fold || !isOpen || closing || springing || pulling || qm) return;
+      swing(fold.hi - fold.lo, v, unfold);
     };
     // the list carrying on after a flick (v: px/s), slowing as iOS scrolling does (0.998 a ms)
     const carry = (v) => {
@@ -2244,45 +2275,43 @@
     };
     // on opening, and when the bag changes while open
     const fit = (opening) => {
-      if (!isOpen || closing || growing || pulling) return;
+      if (!isOpen || closing || springing || pulling) return;
       if (opening) {
         small = bigBag();
-        grown = false;
         el.classList.toggle('is-small', small);
-        el.style.height = small ? smallHeight() + 'px' : '';
         bagList.scrollTop = 0;
-      } else if (small && !grown) {
-        if (bigBag()) el.style.height = smallHeight() + 'px';
+        if (small) shape();
+      } else if (fold) {
+        if (bigBag()) shape();
         else {                                       // down to one product: the card grows to fit it
           small = false;
           el.classList.remove('is-small');
-          const from = height();
-          el.style.height = '';
-          glide(from, height(), 0);
+          shape(fold.lo);
+          grow(0);
         }
       }
       fades();
     };
-    // the list scrolled some other way (keys, a screen reader) while small: the card grows
+    // the list scrolled some other way (keys, a screen reader) while small: the card grows instead
     bagList.addEventListener('scroll', () => {
+      if (fold && bagList.scrollTop > 0) { bagList.scrollTop = 0; grow(0); }
       fades();
-      if (small && !grown && bagList.scrollTop > 0) grow(0);
     }, { passive: true });
     // a mouse wheel or trackpad: there's no finger to follow, so it grows at the first turn down
     el.addEventListener('wheel', (e) => {
-      if (!small || grown || !isOpen || closing || e.deltaY <= 0) return;
+      if (!fold || !isOpen || closing || e.deltaY <= 0) return;
       e.preventDefault();
       grow(0);
     }, { passive: false });
     // closed: nothing of it is kept, and the next opening fits the bag afresh
     const unfit = () => {
-      if (growing) growing.cancel();
-      growing = null;
+      cancelAnimationFrame(springing);
       cancelAnimationFrame(coast);
-      coast = 0;
-      small = grown = pulling = false;
+      springing = coast = 0;
+      small = pulling = false;
+      flat();
       el.classList.remove('is-small');
-      el.style.height = el.style.marginTop = '';
+      el.style.marginTop = '';
     };
     const finishClose = () => {
       isOpen = false;
@@ -2338,7 +2367,8 @@
       if (lensHalt) lensHalt();                      // the edge's lens stops all work as the card goes
       if (!el.animate) { finishClose(); return; }
       closing = true;
-      if (growing) growing.pause();                  // it leaves at the size it has reached
+      cancelAnimationFrame(springing);               // it leaves at the size it has reached
+      springing = 0;
       // Leave from exactly where the card is, even mid-pop or mid-swipe.
       const from = cardY();
       const to = scroller.clientHeight - el.getBoundingClientRect().top + from + 48;
@@ -2435,7 +2465,7 @@
       const dy = t.clientY - drag.y;
       if (drag.mode === 0) {
         if (dy === 0 && t.clientX === drag.x) return;
-        const pull = small && !grown && !qm;
+        const pull = !!fold && !qm;
         if (!pull && drag.list && (drag.list.scrollTop > 0 || dy < 0)) { drag.mode = -1; return; }
         drag.mode = pull ? 2 : 1;
         drag.base = cardY();                         // catch it where it is, even mid-pop
@@ -2443,43 +2473,30 @@
         el.classList.add('is-dragging');
         if (pull) {
           pulling = true;
-          if (growing) {                             // caught on its way back to small: held at the height it's reached
-            const h = height(), m = getComputedStyle(el).marginTop;
-            growing.cancel();
-            growing = null;
-            el.style.height = h + 'px';
-            el.style.marginTop = m;
-          }
-          const w = whole();
-          drag.h0 = height();
-          drag.m0 = parseFloat(el.style.marginTop) || 0;
-          drag.lo = smallHeight();
-          drag.hi = Math.max(drag.lo, Math.round(w.full));
-          drag.room = w.room;
+          cancelAnimationFrame(springing);           // caught on its spring: held where it has got to
+          springing = 0;
+          drag.g0 = lift;
         }
       }
       if (e.cancelable) e.preventDefault();
       if (drag.mode === 2) {
-        // The height the finger asks for, from where the card was caught. Between small and the
-        // whole bag it's the card's; past the whole bag the list scrolls on, then the card is
-        // pulled up off its place, rubber-banded; below small it's pulled down, to go.
-        const raw = drag.h0 - drag.base - dy;
-        let h = raw, s = 0, y = 0;
-        if (raw < drag.lo) { h = drag.lo; y = drag.lo - raw; }
-        else if (raw > drag.hi) {
-          h = drag.hi;
-          s = Math.min(drag.room, raw - drag.hi);
-          const over = raw - drag.hi - s;
-          if (over > 0) y = -(1 - 1 / ((over * 0.55) / h + 1)) * h;
+        // How far the finger asks the card to grow, from where it was caught. Up to the whole bag
+        // the card grows; past it the list scrolls on, then the card is pulled up off its place,
+        // rubber-banded; below small it's pulled down, to go.
+        const most = fold.hi - fold.lo;
+        const raw = drag.g0 - drag.base - dy;
+        let g = raw, s = 0, y = 0;
+        if (raw < 0) { g = 0; y = -raw; }
+        else if (raw > most) {
+          g = most;
+          s = Math.min(fold.room, raw - most);
+          const over = raw - most - s;
+          if (over > 0) y = -(1 - 1 / ((over * 0.55) / fold.hi + 1)) * fold.hi;
         }
-        h = Math.round(h);                           // whole pixels, like the list's scroll, so nothing in it shimmers
-        el.style.height = h + 'px';
-        el.style.marginTop = drag.m0 + drag.h0 - h + 'px';   // the margin takes back what the height adds: the bottom stays put
-        if (bagList.scrollTop !== Math.round(s)) bagList.scrollTop = Math.round(s);
-        drag.h = h; drag.s = s; drag.cur = y;
+        draw(g, s);
+        drag.g = g; drag.s = s; drag.cur = y;
         if (y >= drag.low) drag.low = drag.rise = y; else drag.rise = Math.min(drag.rise, y);
         place(y);
-        fades();
         drag.pts.push({ t: e.timeStamp, y: t.clientY });
         while (drag.pts.length > 2 && e.timeStamp - drag.pts[0].t > 100) drag.pts.shift();
         return;
@@ -2505,17 +2522,18 @@
       const b = d.pts[d.pts.length - 1];
       const speed = a && b && b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;   // px/ms, down is positive
       if (d.mode === 2) {
-        settleAt(d.h + 'px');                        // the same place on the screen, now at rest
         if (d.cur <= 0) {
           // above small: on to the whole bag, or back to small, whichever it's heading for (on its
           // way up or down, or nearer, if it was let go still), carrying on the finger's speed
           // px/s; held still before letting go (no move for 60ms), it isn't heading anywhere
           const up = e && b && e.timeStamp - b.t > 60 ? 0 : -speed * 1000;
-          if (d.s > 0 || d.cur < 0 || up > 150 || (up > -150 && d.h - d.lo > (d.hi - d.lo) / 2)) {
-            grown = true;
-            glide(d.h, d.hi, Math.max(0, up));
-            if (d.s > 0 && !d.cur) carry(up);        // the list was scrolling: it carries on
-          } else glide(d.h, d.lo, Math.max(0, -up), true);
+          const most = fold.hi - fold.lo;
+          if (d.s > 0 || d.cur < 0 || up > 150 || (up > -150 && d.g > most / 2)) {
+            swing(most, Math.max(0, up), () => {
+              unfold();
+              if (d.s > 0 && !d.cur) carry(up);      // the list was scrolling: it carries on
+            });
+          } else swing(0, Math.max(0, -up), () => fit(false));   // (the bag may have changed meanwhile)
           if (!d.cur) { el.style.transform = ''; scrim.style.opacity = '1'; return; }
         }
         // pulled off its place (up past the whole bag, or down below small): as any swipe of the card

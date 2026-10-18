@@ -976,25 +976,29 @@ h1.t-hero em,
    Safari can't bend what's behind a page element, so the band
    (.drawer-lens) holds a live copy of the page, lined up with the real
    one every frame and stretched; it is masked to the rim, fading into
-   the frost. The frost is ::before and the bright edge ::after, so the
-   card's contents (z 1) sit above all three. */
-.drawer-scroller .drawer{background:transparent;box-shadow:0 10px 50px rgba(0,0,0,.12)}
+   the frost. All three are one layer, the card's skin (.drawer__skin,
+   with its shadow): the frost its ::before, the band, the bright edge its
+   ::after; the card's contents (z 1) sit above it. A small bag slides the
+   skin as it grows (theme-r3.js). */
+.drawer-scroller .drawer{background:transparent;box-shadow:none}
 .drawer-scroller .drawer>*{position:relative;z-index:1}
-.drawer-scroller .drawer::before,
-.drawer-scroller .drawer::after,
-.drawer-scroller .drawer>.drawer-lens{content:"";display:block;position:absolute;inset:0;width:auto;height:auto;transform:none;
+.drawer-scroller .drawer>.drawer__skin{position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;
+  box-shadow:0 10px 50px rgba(0,0,0,.12)}
+.drawer-scroller .drawer__skin::before,
+.drawer-scroller .drawer__skin::after,
+.drawer-scroller .drawer__skin>.drawer-lens{content:"";display:block;position:absolute;inset:0;width:auto;height:auto;transform:none;
   border-radius:inherit;pointer-events:none;z-index:0}
-.drawer-scroller .drawer::before{
+.drawer-scroller .drawer__skin::before{
   background:rgba(249,249,252,.74);
   -webkit-backdrop-filter:blur(6px) saturate(180%);backdrop-filter:blur(6px) saturate(180%);   /* FROST in theme-r3.js */
 }
 /* the band shows to 24.5px below the top and fades out by 31.4px, where
    the lens has gone flat and its copies end, the same all the way across
    (the corners' arcs clip it), so it never ends in a hard line */
-.drawer-scroller .drawer>.drawer-lens{overflow:hidden;opacity:0;transition:opacity .25s;
+.drawer-scroller .drawer__skin>.drawer-lens{overflow:hidden;opacity:0;transition:opacity .25s;
   -webkit-mask:linear-gradient(#000 24.5px,#0000 31.4px) 0 0/100% 32px no-repeat;
   mask:linear-gradient(#000 24.5px,#0000 31.4px) 0 0/100% 32px no-repeat}
-.drawer-scroller .drawer>.drawer-lens.is-live{opacity:1}
+.drawer-scroller .drawer__skin>.drawer-lens.is-live{opacity:1}
 /* the bent page, frosted exactly like the rest of the card (::before's blur
    and saturation), as one pane so the slices show no seams; the band clips
    the blur's overhang */
@@ -1024,7 +1028,7 @@ h1.t-hero em,
    white (74%), in one; so the band is the frost's brightness and passes the
    same 26% of what's under it, and it fades into the frost without a step */
 .drawer-lens::after{content:"";position:absolute;inset:0;background:rgba(239,239,242,.77)}
-.drawer-scroller .drawer::after{
+.drawer-scroller .drawer__skin::after{
   background:radial-gradient(120px 70px at 0 0,rgba(255,255,255,.35),#fff0),
     radial-gradient(120px 70px at 100% 0,rgba(255,255,255,.2),#fff0);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 0 0 .5px rgba(255,255,255,.6);
@@ -1203,7 +1207,12 @@ h1.t-hero em,
   .drawer-scroller .drawer__subtotal [data-drawer-subtotal]{font:-apple-system-title1;font-weight:700;font-variant-numeric:tabular-nums}
 }
 /* A bag of more than one product opens smaller (theme-r3.js sets its
-   height, and grows it under the finger as it's pushed up). The list has
+   height, and grows it under the finger as it's pushed up). Until it has
+   grown (.is-folded) the rest of the bag is laid out above the card, the
+   list reaching up out of it, and growing slides the heading, the lines
+   and the skin up: each is its own layer, so the phone only moves them.
+   The list clips the lines at the total; it takes no touches itself, as
+   it reaches up past the card, but its lines do. The list has
    no scroll bar and doesn't bounce at its ends (the card's growth and its
    rubber-band take over there). Wherever it has more to show, it fades into
    the glass over its last 28px, below the heading or above the total, as
@@ -1223,3 +1232,8 @@ h1.t-hero em,
 .drawer-scroller .drawer.is-small .cart-line,
 .drawer-scroller .drawer.is-small .ship-bubble,
 .drawer-scroller .drawer.is-small .protect-bubble{-webkit-backdrop-filter:none;backdrop-filter:none}
+.drawer-scroller .drawer.is-folded>.drawer__head,
+.drawer-scroller .drawer.is-folded>.drawer__skin,
+.drawer-scroller .drawer.is-folded .drawer__body>*{will-change:transform}
+.drawer-scroller .drawer.is-folded .drawer__body{pointer-events:none}
+.drawer-scroller .drawer.is-folded .drawer__body>*{pointer-events:auto}
