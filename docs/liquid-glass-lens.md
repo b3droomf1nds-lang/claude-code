@@ -386,9 +386,12 @@ Chromium can't show WebKit's compositing problems (the 37× hang never appeared 
 **Why.** On the iPhone the owner found it looked weird and loaded late. What they had wanted all along was a simple edge like the cart's bubbles.
 
 **The tiles now (phone only, `max-width: 899px`, at the end of `voltical-pdp-bold.css`):**
-- The bubbles' `inset 0 0 0 1px rgba(255,255,255,.95)`.
-- The tiles' fill set just off white, `#F8F8FA`, and the section behind them (`.pdp-cmp-wrap`) a touch greyer, `#F0F0F3`, so the tiles stay the lighter of the two, as before. A white line can't show on a white tile; the bubbles' line shows because their frost is a touch grey. The section's fades above and below are drawn by the `main-product.liquid` script from the wrap's computed colour, so they follow it. The owner objected when only the tiles were greyed, which made them darker than the page.
+- A light grey fill, `#F2F2F5`, on the section's own lighter `#F7FAFA`. There is no edge line: the owner asked for the grey-tile colours without it.
 - The photos and icons have white baked into their files. They are multiplied onto the grey, as the cart's product shots are. The blend sits on `.pdp-cmp__img-slot` and `.pdp-cmp__feature-icon-wrap`: the slot (`z-index: 1`) and the wrap (`transform`) are layers of their own, so a blend on the `img` inside them doesn't reach the tile.
 - Desktop is unchanged.
+- History:
+  - `eace6a7`: grey tiles with the cart bubbles' white 1px inset line.
+  - The next commit: lighter tiles (`#F8F8FA`) on a greyer section (`#F0F0F3`), keeping the line.
+  - Then back to grey tiles, without the line.
 
 **What the removed script did.** An SVG `feDisplacementMap` per tile size bent each tile's contents within 31.4 px of its rim with the cart's profile, plus the cart's haze. The colour split was dropped in `2536687` after it left cyan lines. `468300f` added a bright rim drawn into the filter. The code is in git history if a bend is ever wanted again.

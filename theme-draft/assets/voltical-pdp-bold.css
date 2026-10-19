@@ -2689,17 +2689,11 @@
   }
 }
 
-/* Core page, phone: each compare tile edged like the cart's bubbles, a crisp
-   1px white line on a fill just off white (white alone can't show on
-   white), over a section a touch greyer still, so the tiles stay the
-   lighter of the two (the section's fades above and below take its colour) */
+/* Core page, phone: the compare tiles a light grey on the section's own
+   lighter colour, with no edge line */
 @media (max-width: 899px) {
-  .pdp--bold.pdp--core .pdp-cmp-wrap {
-    background-color: #F0F0F3;
-  }
   .pdp--core .pdp-cmp__grid > .pdp-cmp__card {
-    background: #F8F8FA;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .95);
+    background: #F2F2F5;
   }
   /* the photos and icons have white backgrounds: let the grey show through,
      as the cart does with its product shots (on their slot or wrap, where
