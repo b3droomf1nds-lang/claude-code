@@ -2695,6 +2695,11 @@
   .pdp--core .pdp-cmp__grid > .pdp-cmp__card {
     background: #F2F2F5;
   }
+  /* the strip under the last tile 30% shorter (its fade is redrawn to fit),
+     with less room above the next section's heading (suggest-gallery.liquid) */
+  .pdp--bold.pdp--core .pdp-cmp-wrap {
+    padding-bottom: calc((var(--compact-full-card-height) / 2 + 18px) * .7);
+  }
   /* the photos and icons have white backgrounds: let the grey show through,
      as the cart does with its product shots (on their slot or wrap, where
      they sit in a layer of their own) */

@@ -232,6 +232,12 @@
 
   .sugg__dot:focus-visible,.sugg__arrow:focus-visible{ outline:2px solid var(--focus,#0071e3); outline-offset:-4px; border-radius:28px; }
 
+  /* phones: less room above the heading, so the gap from the compare tiles
+     above (the cables showcase between them is hidden on phones) is 30%
+     smaller, with voltical-pdp-bold.css's shorter strip under the tiles */
+  @media (max-width:899px){
+    .sugg{ padding-top:22px; }
+  }
   /* bigger phones and tablets: portrait cards like the photos, 400 x 600 */
   @media (min-width:600px) and (max-width:899px){
     .sugg{ --cw:min(calc(87.5vw - 20px),400px); --ch:calc(var(--cw) * 1.5); }
