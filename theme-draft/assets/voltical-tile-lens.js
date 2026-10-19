@@ -10,6 +10,8 @@
    Without the sheet's colour split (red drawn from deeper, blue from
    shallower): on a tile that sits still, a dark line about 39px in left
    a standing cyan line at the rim, which the owner saw as blue artifacts.
+   Over it all, the cart's bright rim: a 1px white line at the very edge,
+   with a faint shade just inside so it shows on a white tile.
 
    The tiles bend themselves, so no copies of the page are needed (the cart
    needs them because Safari can't bend what's behind an element): each
@@ -45,6 +47,9 @@
   var S = 0;
   for (var d = 0; d <= B; d += 0.05) S = Math.max(S, at(d) - d);
   S = Math.ceil(S * 2.1);
+  // the bright rim, as round the cart's bubbles (theme-r2.css): white over the last px; on a white
+  // tile white alone can't show, so a faint shade just inside it, fading out 3px in, sets it off
+  var LINE = 1, LIT = 0.95, SHADE = 0.07, SHADE_TO = 3;
   // the same as tables every 1/32px, read per map pixel: how far it looks in (as a share of the
   // map's span), and the haze
   var STEP = 32, N = Math.ceil(B * STEP) + 1;
@@ -70,6 +75,14 @@
     return n;
   };
 
+  // Whether the point x, y lies left of the middle, clear of a band b px wide (and of the corners'
+  // arcs, which can reach further in): if so, how far in from the right the band starts again on
+  // its row (else 0).
+  var inner = function (x, y, w, h, r, b) {
+    var to = Math.min(y, h - y) < r ? Math.max(r, b) : b;
+    return x >= to && x < w / 2 && Math.min(y, h - y) >= b ? to : 0;
+  };
+
   // The maps for a tile w × h screen px with corners of radius r, one map pixel per screen px:
   // R and G hold how far x and y look inwards (0.5 = not at all), alpha marks the band; then the
   // haze, in the tile's colour.
@@ -79,7 +92,8 @@
       var y = j + 0.5, qy = Math.min(y, h - y);
       for (var i = 0; i < w; i++) {
         var x = i + 0.5, qx = Math.min(x, w - x);
-        if (qx >= B && qy >= B) { i = Math.max(i, Math.floor(w - B) - 1); continue; }   // the middle: on to the right side's band
+        var to = inner(x, y, w, h, r, B);
+        if (to) { i = Math.max(i, Math.floor(w - to) - 1); continue; }   // the middle: on to the right side's band
         var d, nx = 0, ny = 0;
         if (qx < r && qy < r) {                      // a corner: along the arc's radius, inwards
           var cx = x < r ? r : w - r, cy = y < r ? r : h - r;
@@ -109,34 +123,94 @@
       return canvas.toDataURL('image/png');
     });
   };
+  // The rim for the same tile, q device pixels per screen px so it stays a sharp line on the
+  // phone: rings concentric with the edge (a corner of radius r - d at d in). Only its outer T px
+  // hold anything, so it's four strips, top and bottom (with the corners) and the sides between,
+  // each encoded off the main thread.
+  var strips = function (w, h, r) {
+    var T = Math.ceil(Math.max(r, SHADE_TO));
+    var all = [[0, 0, w, T], [0, h - T, w, T], [0, T, T, h - 2 * T], [w - T, T, T, h - 2 * T]];
+    return all.filter(function (s) { return s[2] > 0 && s[3] > 0; });
+  };
+  var rimFor = function (s, w, h, r, q) {
+    var c = document.createElement('canvas');
+    c.width = Math.round(s[2] * q);
+    c.height = Math.round(s[3] * q);
+    var g = c.getContext('2d');
+    g.scale(c.width / s[2], c.height / s[3]);
+    g.translate(-s[0], -s[1]);
+    var ring = function (d, width, paint) {
+      var o = d + width / 2, R = Math.max(0, r - o), x0 = o, y0 = o, x1 = w - o, y1 = h - o;
+      g.beginPath();
+      g.moveTo(x0 + R, y0);
+      g.arcTo(x1, y0, x1, y1, R);
+      g.arcTo(x1, y1, x0, y1, R);
+      g.arcTo(x0, y1, x0, y0, R);
+      g.arcTo(x0, y0, x1, y0, R);
+      g.closePath();
+      g.lineWidth = width;
+      g.strokeStyle = paint;
+      g.stroke();
+    };
+    ring(0, LINE, 'rgba(255,255,255,' + LIT + ')');
+    for (var d = LINE; d < SHADE_TO; d += 0.5) ring(d, 0.5, 'rgba(0,0,0,' + (SHADE * (1 - (d + 0.25 - LINE) / (SHADE_TO - LINE))).toFixed(4) + ')');
+    return new Promise(function (ok) {
+      c.toBlob(function (blob) {
+        if (!blob) return ok('');
+        var read = new FileReader();
+        read.onload = function () { ok(read.result); };
+        read.onerror = function () { ok(''); };
+        read.readAsDataURL(blob);
+      }, 'image/png');
+    });
+  };
 
   // One filter per tile size. Within the band: the tile looked up through the map, the haze over
   // that, cut to the band and the tile's own shape; over the tile as it is. Until its maps load
   // the band is empty, so the tile shows as it is.
   var filters = {};
-  var filterFor = function (key, W, H, k, w, h, r, bg) {
+  var filterFor = function (key, W, H, k, w, h, r, bg, q) {
     if (filters[key]) return filters[key];
     var urls = draw(w, h, r, bg);
     var id = 'vtl-' + Object.keys(filters).length;
     var f = el('filter', { id: id, x: 0, y: 0, width: W, height: H, filterUnits: 'userSpaceOnUse',
       primitiveUnits: 'userSpaceOnUse', 'color-interpolation-filters': 'sRGB' }, defs);
-    ['map', 'haze'].forEach(function (name, n) {
-      var im = el('feImage', { x: 0, y: 0, width: W, height: H, preserveAspectRatio: 'none', result: name }, f);
-      im.setAttribute('href', urls[n]);
-      im.setAttributeNS(XL, 'xlink:href', urls[n]);
-    });
+    var href = function (im, url) {
+      im.setAttribute('href', url);
+      im.setAttributeNS(XL, 'xlink:href', url);
+    };
+    var image = function (name, url, x, y, iw, ih) {
+      var im = el('feImage', { x: x || 0, y: y || 0, width: iw || W, height: ih || H, preserveAspectRatio: 'none', result: name }, f);
+      if (url) href(im, url);
+      return im;
+    };
+    image('map', urls[0]);
+    image('haze', urls[1]);
     el('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', scale: (S / k).toFixed(4),
       xChannelSelector: 'R', yChannelSelector: 'G', result: 'bent' }, f);
     el('feComposite', { in: 'haze', in2: 'bent', operator: 'over', result: 'lit' }, f);
     el('feComposite', { in: 'lit', in2: 'map', operator: 'in', result: 'band' }, f);
     el('feComposite', { in: 'band', in2: 'SourceAlpha', operator: 'in', result: 'rim' }, f);
-    el('feComposite', { in: 'rim', in2: 'SourceGraphic', operator: 'over' }, f);
-    // ready once the maps have decoded, so a tile never shows a half-loaded filter
-    var ready = Promise.all(urls.map(function (u) {
+    el('feComposite', { in: 'rim', in2: 'SourceGraphic', operator: 'over', result: 'glass' }, f);
+    // the bright rim over it all (its strips show nothing until they're drawn)
+    var parts = strips(w, h, r);
+    var rims = parts.map(function (s, n) { return image('edge' + n, '', s[0] / k, s[1] / k, s[2] / k, s[3] / k); });
+    var merge = el('feMerge', { result: 'edge' }, f);
+    rims.forEach(function (im, n) { el('feMergeNode', { in: 'edge' + n }, merge); });
+    el('feComposite', { in: 'edge', in2: 'glass', operator: 'over' }, f);
+    var decoded = function (u) {
       var img = new Image();
       img.src = u;
       return img.decode ? img.decode().catch(function () {}) : new Promise(function (ok) { img.onload = img.onerror = ok; });
-    }));
+    };
+    // ready once the maps and the rim have decoded, so a tile never shows a half-loaded filter
+    var ready = Promise.all(urls.map(decoded).concat(parts.map(function (s, n) {
+      return rimFor(s, w, h, r, q).then(function (u) {
+        if (!u) return;
+        href(rims[n], u);
+        return decoded(u);
+      });
+    })));
     filters[key] = { id: id, ready: ready };
     return filters[key];
   };
@@ -165,10 +239,11 @@
     var w = Math.round(W * k), h = Math.round(H * k);
     var r = Math.min(parseFloat(cs.borderTopLeftRadius) || 0, W / 2, H / 2) * k;
     var bg = rgb(cs.backgroundColor);
-    var key = [W, H, k.toFixed(3), r.toFixed(1), bg.join()].join('/');
+    var q = Math.min(3, window.devicePixelRatio || 1);
+    var key = [W, H, k.toFixed(3), r.toFixed(1), bg.join(), q].join('/');
     if (t.__vtl === key) return;
     t.__vtl = key;
-    var f = filterFor(key, W, H, k, w, h, r, bg);
+    var f = filterFor(key, W, H, k, w, h, r, bg, q);
     // its own layer: the phone works the filter out once and then only moves the tile as the page
     // scrolls, rather than again for every patch of the page it redraws
     f.ready.then(function () {
