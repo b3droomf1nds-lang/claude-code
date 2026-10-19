@@ -2345,7 +2345,7 @@
   .pdp--bold.pdp--core .pdp-cmp-wrap {
     padding-bottom: calc(var(--compact-full-card-height) / 2 + 18px);
     background-image: var(--cmp-tail-img, none);
-    background-position: 0 100%;
+    background-position: var(--cmp-tail-pos, 0 100%);
     background-size: var(--cmp-tail-size, auto);
     background-repeat: repeat-x;
   }

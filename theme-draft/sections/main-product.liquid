@@ -717,39 +717,82 @@
         });
       }
 
-      /* The same fade in reverse at the bottom of the compare section:
-         the lower half of the tile-colour strip under the last tile goes
+      /* The same fade in reverse at the bottom of the compare section,
          from the tile colour back to the page colour, so the section ends
          in the page colour with no edge (see --cmp-tail-img in
-         voltical-pdp-bold.css). Measured from the lowest visible tile,
-         not the grid box, which the last tile paints past. */
+         voltical-pdp-bold.css). It runs from 15% of the last tile's
+         height below that tile to 10% of the next section's heading's
+         height below the heading's top ("Made to go with it."), so it
+         carries on past the compare section: the next section gets the
+         same picture, lined up, as its background. Measured from the
+         lowest visible tile, not the grid box, which the last tile paints
+         past. Without a heading below, it fills the lower half of the
+         strip under the last tile. */
       var tailBuilt = '';
       var tailUrl = '';
+      var tailNext = null;
+      function nextSection() {
+        var el = section.closest('.shopify-section');
+        for (el = el && el.nextElementSibling; el; el = el.nextElementSibling) {
+          if (el.offsetHeight) return el;
+        }
+        return null;
+      }
+      function clearNext() {
+        if (!tailNext) return;
+        ['backgroundImage', 'backgroundSize', 'backgroundRepeat', 'backgroundPosition'].forEach(function (k) { tailNext.style[k] = ''; });
+        tailNext = null;
+      }
       function buildTail() {
-        if (!mobile.matches) return;
+        if (!mobile.matches) { clearNext(); return; }
         var grid = wrap.querySelector('.pdp-cmp__grid');
         var tile = rgb(getComputedStyle(wrap).backgroundColor);
         if (!grid || !tile) return;
-        var low = -Infinity;
+        var low = -Infinity, lowH = 0;
         for (var i = 0; i < grid.children.length; i++) {
           var r = grid.children[i].getBoundingClientRect();
-          if (r.height > 0 && r.bottom > low) low = r.bottom;
+          if (r.height > 0 && r.bottom > low) { low = r.bottom; lowH = r.height; }
         }
-        var h = (wrap.getBoundingClientRect().bottom - low) / 2;
+        var box = wrap.getBoundingClientRect();
+        var next = nextSection();
+        var heading = next && next.querySelector('h1, h2, h3');
+        var from, to;
+        if (heading && heading.offsetHeight) {
+          var hb = heading.getBoundingClientRect();
+          from = Math.min(low + 0.15 * lowH, box.bottom);
+          to = hb.top + 0.1 * hb.height;
+        } else {
+          from = (low + box.bottom) / 2;
+          to = box.bottom;
+          next = null;
+        }
+        var h = to - from;
         if (!(h > 0)) return;
+        if (next !== tailNext) clearNext();
         var page = pageColour();
         var key = [Math.round(h * (window.devicePixelRatio || 1)), tile, page].join();
-        if (key === tailBuilt) return;
+        var lineUp = function () {
+          wrap.style.setProperty('--cmp-tail-pos', '0 ' + (from - box.top) + 'px');
+          if (!next || !tailUrl) return;
+          var y = from - next.getBoundingClientRect().top;
+          next.style.backgroundImage = 'url("' + tailUrl + '")';
+          next.style.backgroundSize = wrap.style.getPropertyValue('--cmp-tail-size');
+          next.style.backgroundRepeat = 'repeat-x';
+          next.style.backgroundPosition = '0 ' + y + 'px';
+          tailNext = next;
+        };
+        if (key === tailBuilt) { lineUp(); return; }
         tailBuilt = key;
-        paint(h, tile, page, function (next, size) {
+        paint(h, tile, page, function (url, size) {
           if (tailBuilt !== key) {
-            if (next.indexOf('blob:') === 0) URL.revokeObjectURL(next);
+            if (url.indexOf('blob:') === 0) URL.revokeObjectURL(url);
             return;
           }
-          wrap.style.setProperty('--cmp-tail-img', 'url("' + next + '")');
+          wrap.style.setProperty('--cmp-tail-img', 'url("' + url + '")');
           wrap.style.setProperty('--cmp-tail-size', size);
           if (tailUrl && tailUrl.indexOf('blob:') === 0) URL.revokeObjectURL(tailUrl);
-          tailUrl = next;
+          tailUrl = url;
+          lineUp();
         });
       }
 
@@ -758,7 +801,15 @@
       window.addEventListener('resize', function () { build(); buildTail(); });
       window.addEventListener('load', function () { build(); buildTail(); });
       if (mobile.addEventListener) mobile.addEventListener('change', function () { build(); buildTail(); });
-      if (window.ResizeObserver) new ResizeObserver(function () { place(); buildTail(); }).observe(section);
+      document.addEventListener('DOMContentLoaded', buildTail);
+      // the tiles ease into place as they're revealed
+      wrap.addEventListener('transitionend', buildTail);
+      wrap.addEventListener('animationend', buildTail);
+      if (window.ResizeObserver) {
+        var watchSize = new ResizeObserver(function () { place(); buildTail(); });
+        watchSize.observe(section);
+        document.addEventListener('DOMContentLoaded', function () { var n = nextSection(); if (n) watchSize.observe(n); });
+      }
     })();
 
     /* Mobile: the charge tile's "59", battery and "minutes" show one
