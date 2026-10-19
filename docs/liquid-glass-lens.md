@@ -387,7 +387,7 @@ Chromium can't show WebKit's compositing problems (the 37× hang never appeared 
 
 **The tiles now (phone only, `max-width: 899px`, at the end of `voltical-pdp-bold.css`):**
 - The bubbles' `inset 0 0 0 1px rgba(255,255,255,.95)`.
-- The tiles' fill toned to `#F2F2F5`. A white line can't show on a white tile; the bubbles' line shows because their frost is a touch grey.
+- The tiles' fill set just off white, `#F8F8FA`, and the section behind them (`.pdp-cmp-wrap`) a touch greyer, `#F0F0F3`, so the tiles stay the lighter of the two, as before. A white line can't show on a white tile; the bubbles' line shows because their frost is a touch grey. The section's fades above and below are drawn by the `main-product.liquid` script from the wrap's computed colour, so they follow it. The owner objected when only the tiles were greyed, which made them darker than the page.
 - The photos and icons have white baked into their files. They are multiplied onto the grey, as the cart's product shots are. The blend sits on `.pdp-cmp__img-slot` and `.pdp-cmp__feature-icon-wrap`: the slot (`z-index: 1`) and the wrap (`transform`) are layers of their own, so a blend on the `img` inside them doesn't reach the tile.
 - Desktop is unchanged.
 
