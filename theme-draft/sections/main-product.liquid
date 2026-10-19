@@ -1557,6 +1557,10 @@
     window.addEventListener('resize', positionHandle);
   })();
   </script>
+  {%- comment -%} Liquid Glass edge round the compare tiles (Core only) {%- endcomment -%}
+  {%- if product.handle == 'voltical-core-5k-10k' -%}
+    <script src="{{ 'voltical-tile-lens.js' | asset_url }}" defer></script>
+  {%- endif -%}
 </section>
 
 {% schema %}
