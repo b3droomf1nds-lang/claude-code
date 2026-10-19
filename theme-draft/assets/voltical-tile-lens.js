@@ -5,10 +5,11 @@
    iOS clear-glass profile, measured off the Notification Centre sheet
    (docs/liquid-glass-lens.md, section 1). Within 31.4px of the rim the tile
    shows itself from further in: stretched more and more towards a fold
-   12.4px in, then mirrored out to the rim, with red drawn from deeper and
-   blue from shallower in the last few pixels (colour fringes wherever
-   something passes under the rim), and the rim's last 5px hazed towards
-   the tile's own colour. Round the corners it follows the arc.
+   12.4px in, then mirrored out to the rim, and the rim's last 5px hazed
+   towards the tile's own colour. Round the corners it follows the arc.
+   Without the sheet's colour split (red drawn from deeper, blue from
+   shallower): on a tile that sits still, a dark line about 39px in left
+   a standing cyan line at the rim, which the owner saw as blue artifacts.
 
    The tiles bend themselves, so no copies of the page are needed (the cart
    needs them because Safari can't bend what's behind an element): each
@@ -25,15 +26,10 @@
   if (!tiles.length || !document.createElementNS) return;
   if (window.matchMedia && matchMedia('(prefers-reduced-transparency: reduce)').matches) return;
 
-  // The clear sheet's profile (as the cart's lens, theme-r3.js): the band px d in from the rim
-  // shows the tile at depth at(d), per colour; flat (1:1) from B in.
+  // The clear sheet's profile (the cart lens's green, theme-r3.js): the band px d in from the rim
+  // shows the tile at depth at(d); flat (1:1) from B in.
   var B = 31.41;
-  var at = function (d, c) {
-    var s = d + 26.14 * Math.pow(Math.max(0, 1 - d / B), 2.251);
-    if (c === 0) s += 12.65 * Math.pow(Math.max(0, 1 - d / 6.1), 2.29);        // red, from deeper
-    else if (c === 2) s -= 11.28 * Math.pow(Math.max(0, 1 - d / 9.07), 3.98);  // blue, from shallower
-    return s;
-  };
+  var at = function (d) { return d + 26.14 * Math.pow(Math.max(0, 1 - d / B), 2.251); };
   // the rim's haze: how much of the tile's own colour covers it, d px in (as the cart's)
   var HAZE = [[0, 0.66], [0.67, 0.56], [1.5, 0.47], [2, 0.4], [3, 0.17], [4, 0.08], [5, 0]];
   var haze = function (d) {
@@ -45,20 +41,15 @@
     }
     return 0;
   };
-  // each colour's displacement map spans ±S/2 px: S a little over twice its furthest reach
-  var S = [0, 1, 2].map(function (c) {
-    var most = 0;
-    for (var d = 0; d <= B; d += 0.05) most = Math.max(most, Math.abs(at(d, c) - d));
-    return Math.ceil(most * 2.1);
-  });
-  // the same as tables every 1/32px, read per map pixel: how far each colour looks in (as a share
-  // of its map's span), and the haze
+  // the displacement map spans ±S/2 px: S a little over twice the furthest it looks in
+  var S = 0;
+  for (var d = 0; d <= B; d += 0.05) S = Math.max(S, at(d) - d);
+  S = Math.ceil(S * 2.1);
+  // the same as tables every 1/32px, read per map pixel: how far it looks in (as a share of the
+  // map's span), and the haze
   var STEP = 32, N = Math.ceil(B * STEP) + 1;
-  var REACH = [0, 1, 2].map(function (c) {
-    var t = new Float32Array(N);
-    for (var n = 0; n < N; n++) t[n] = (at(n / STEP, c) - n / STEP) / S[c];
-    return t;
-  });
+  var REACH = new Float32Array(N);
+  for (var n = 0; n < N; n++) REACH[n] = (at(n / STEP) - n / STEP) / S;
   var HZ = new Float32Array(N);
   for (var n = 0; n < N; n++) HZ[n] = haze(n / STEP);
 
@@ -80,10 +71,10 @@
   };
 
   // The maps for a tile w × h screen px with corners of radius r, one map pixel per screen px:
-  // for each colour, R and G hold how far x and y look inwards (0.5 = not at all), alpha marks
-  // the band; then the haze, in the tile's colour.
+  // R and G hold how far x and y look inwards (0.5 = not at all), alpha marks the band; then the
+  // haze, in the tile's colour.
   var draw = function (w, h, r, bg) {
-    var data = [0, 1, 2, 3].map(function () { return new Uint8ClampedArray(w * h * 4); });
+    var data = [0, 1].map(function () { return new Uint8ClampedArray(w * h * 4); });
     for (var j = 0; j < h; j++) {
       var y = j + 0.5, qy = Math.min(y, h - y);
       for (var i = 0; i < w; i++) {
@@ -100,14 +91,12 @@
         d = Math.max(0, d);
         if (d >= B) continue;
         var o = (j * w + i) * 4, n = Math.round(d * STEP);
-        for (var c = 0; c < 3; c++) {
-          var reach = REACH[c][n], m = data[c];
-          m[o] = Math.round((0.5 + nx * reach) * 255);
-          m[o + 1] = Math.round((0.5 + ny * reach) * 255);
-          m[o + 3] = 255;
-        }
+        var reach = REACH[n], m = data[0];
+        m[o] = Math.round((0.5 + nx * reach) * 255);
+        m[o + 1] = Math.round((0.5 + ny * reach) * 255);
+        m[o + 3] = 255;
         var hz = HZ[n];
-        if (hz > 0) { var z = data[3]; z[o] = bg[0]; z[o + 1] = bg[1]; z[o + 2] = bg[2]; z[o + 3] = Math.round(hz * 255); }
+        if (hz > 0) { var z = data[1]; z[o] = bg[0]; z[o + 1] = bg[1]; z[o + 2] = bg[2]; z[o + 3] = Math.round(hz * 255); }
       }
     }
     var canvas = document.createElement('canvas');
@@ -121,10 +110,9 @@
     });
   };
 
-  // One filter per tile size. Within the band: the tile looked up three times, once per colour
-  // map, each copy keeping its own channel (the others screened to white, then multiplied back
-  // together), the haze over that, all cut to the band and the tile's own shape; over the tile
-  // as it is. Until its maps load the band is empty, so the tile shows as it is.
+  // One filter per tile size. Within the band: the tile looked up through the map, the haze over
+  // that, cut to the band and the tile's own shape; over the tile as it is. Until its maps load
+  // the band is empty, so the tile shows as it is.
   var filters = {};
   var filterFor = function (key, W, H, k, w, h, r, bg) {
     if (filters[key]) return filters[key];
@@ -132,26 +120,15 @@
     var id = 'vtl-' + Object.keys(filters).length;
     var f = el('filter', { id: id, x: 0, y: 0, width: W, height: H, filterUnits: 'userSpaceOnUse',
       primitiveUnits: 'userSpaceOnUse', 'color-interpolation-filters': 'sRGB' }, defs);
-    var names = ['r', 'g', 'b', 'hz'];
-    urls.forEach(function (u, n) {
-      var im = el('feImage', { x: 0, y: 0, width: W, height: H, preserveAspectRatio: 'none', result: 'm' + names[n] }, f);
-      im.setAttribute('href', u);
-      im.setAttributeNS(XL, 'xlink:href', u);
+    ['map', 'haze'].forEach(function (name, n) {
+      var im = el('feImage', { x: 0, y: 0, width: W, height: H, preserveAspectRatio: 'none', result: name }, f);
+      im.setAttribute('href', urls[n]);
+      im.setAttributeNS(XL, 'xlink:href', urls[n]);
     });
-    var keep = [
-      '1 0 0 0 0  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0',
-      '0 0 0 0 1  0 1 0 0 0  0 0 0 0 1  0 0 0 1 0',
-      '0 0 0 0 1  0 0 0 0 1  0 0 1 0 0  0 0 0 1 0'
-    ];
-    [0, 1, 2].forEach(function (c) {
-      el('feDisplacementMap', { in: 'SourceGraphic', in2: 'm' + names[c], scale: (S[c] / k).toFixed(4),
-        xChannelSelector: 'R', yChannelSelector: 'G', result: 'd' + names[c] }, f);
-      el('feColorMatrix', { in: 'd' + names[c], type: 'matrix', values: keep[c], result: 'k' + names[c] }, f);
-    });
-    el('feBlend', { in: 'kr', in2: 'kg', mode: 'multiply', result: 'rg' }, f);
-    el('feBlend', { in: 'rg', in2: 'kb', mode: 'multiply', result: 'rgb' }, f);
-    el('feComposite', { in: 'mhz', in2: 'rgb', operator: 'over', result: 'lit' }, f);
-    el('feComposite', { in: 'lit', in2: 'mg', operator: 'in', result: 'band' }, f);
+    el('feDisplacementMap', { in: 'SourceGraphic', in2: 'map', scale: (S / k).toFixed(4),
+      xChannelSelector: 'R', yChannelSelector: 'G', result: 'bent' }, f);
+    el('feComposite', { in: 'haze', in2: 'bent', operator: 'over', result: 'lit' }, f);
+    el('feComposite', { in: 'lit', in2: 'map', operator: 'in', result: 'band' }, f);
     el('feComposite', { in: 'band', in2: 'SourceAlpha', operator: 'in', result: 'rim' }, f);
     el('feComposite', { in: 'rim', in2: 'SourceGraphic', operator: 'over' }, f);
     // ready once the maps have decoded, so a tile never shows a half-loaded filter
