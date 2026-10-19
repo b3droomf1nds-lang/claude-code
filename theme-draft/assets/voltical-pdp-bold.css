@@ -2688,3 +2688,18 @@
     }
   }
 }
+
+/* Core page, phone: each compare tile edged like the cart's bubbles, a crisp
+   1px white line on a slightly grey fill (white alone can't show on white) */
+@media (max-width: 899px) {
+  .pdp--core .pdp-cmp__grid > .pdp-cmp__card {
+    background: #F2F2F5;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .95);
+  }
+  /* the photos and icons have white backgrounds: let the grey show through,
+     as the cart does with its product shots (on their slot or wrap, where
+     they sit in a layer of their own) */
+  .pdp--core .pdp-cmp__grid > .pdp-cmp__card img,
+  .pdp--core .pdp-cmp__grid > .pdp-cmp__card .pdp-cmp__img-slot,
+  .pdp--core .pdp-cmp__grid > .pdp-cmp__card .pdp-cmp__feature-icon-wrap { mix-blend-mode: multiply; }
+}
