@@ -2147,11 +2147,11 @@
       scrim.style.opacity = String(m ? Math.min(1, Math.max(0, scroller.scrollTop / m)) : 0);
     };
     /* A bag of more than one product, with the shipping and protection
-       lines under them, opens smaller: the list shows the first product and
-       the top half of the next, fading out below with no scroll bar
-       (theme-r2.css). Pushed up, the card grows under the finger, the way
-       an iOS sheet does: its top edge and the lines under it go up with the
-       finger while its bottom stays put, until the whole bag shows. Let go
+       lines under them, opens smaller: the list shows the first two products
+       whole, with no scroll bar and nothing faded (theme-r2.css). Pushed up,
+       the card grows under the finger, the way an iOS sheet does: its top
+       edge and the lines under it go up with the finger while its bottom
+       stays put, until the whole bag shows. Let go
        part way and it springs on to the whole bag, or back to small,
        whichever it was heading for; pushed on past the whole bag, the list
        scrolls if there's more of it, then the card rubber-bands. Once grown
@@ -2163,24 +2163,16 @@
        whole bag, the card takes the bag's own height in the same frame. */
     const bagList = $('.drawer__body', el);
     const head = $('.drawer__head', el);
-    const FADE = 28;                                 // how far the list fades out at an end with more to show
     let small = false;                               // this opening started small
     let fold = null;                                 // small, and not grown yet: its sizes ({ lo, hi, room })
     let lift = 0, spill = 0;                         // how far it has grown from small, and the list's scroll past the whole bag
     let springing = 0;                               // the lift on its spring (a frame request)
     let pulling = false;                             // a finger is growing the card
     let coast = 0;                                   // the list carrying on after a flick (a frame request)
-    let fadeT = -1, fadeB = -1;
     const bigBag = () => $$('.cart-line', linesEl).length > 1 && [shipEl, protectBox].filter((b) => b && !b.hidden).length > 1;
     const listLeft = () => (fold
       ? Math.max(0, fold.hi - fold.lo - lift + fold.room - spill)
       : Math.max(0, bagList.scrollHeight - bagList.clientHeight - bagList.scrollTop));
-    const fades = () => {
-      const t = small ? Math.round(Math.min(FADE, fold ? spill : bagList.scrollTop) * 2) / 2 : 0;
-      const b = small ? Math.round(Math.min(FADE, listLeft()) * 2) / 2 : 0;
-      if (t !== fadeT) { fadeT = t; bagList.style.setProperty('--fade-t', t + 'px'); }
-      if (b !== fadeB) { fadeB = b; bagList.style.setProperty('--fade-b', b + 'px'); }
-    };
     const height = () => el.getBoundingClientRect().height;
     const settle = () => { scroller.scrollTop = maxTop(); };    // the card's bottom on the screen's, at rest
     // everything where a lift (and a spill) puts it: the heading and the glass up by the lift, the
@@ -2191,12 +2183,11 @@
       const lines = 'translateY(' + (-g - spill).toFixed(2) + 'px)';
       for (const c of bagList.children) c.style.transform = lines;
       skin.style.transform = 'translateY(' + (fold.hi - fold.lo - g).toFixed(2) + 'px)';
-      fades();
       lensAlign();                                   // the copies follow the edge in this same frame
     };
     // Small, at rest. The card is its small height; the list reaches up out of it by what the whole
     // bag adds (padding keeps its lines where they were), the glass reaches up as far and is slid
-    // back down into place. lo: the small height to keep (else the first product and half the next).
+    // back down into place. lo: the small height to keep (else the first two products, whole).
     const shape = (lo) => {
       // Measured from the plain card. Snapping is off meanwhile: laid out at the whole bag's
       // height for a moment, the card would otherwise be snapped to that later on.
@@ -2236,7 +2227,6 @@
       flat();
       settle();
       bagList.scrollTop = Math.round(s);
-      fades();
     };
     // The lift from where it is to g on a spring (v: px/s it starts with), then done(). Frame by
     // frame from script, not an animation the compositor runs, so the glass edge's copies are
@@ -2291,12 +2281,10 @@
           grow(0);
         }
       }
-      fades();
     };
     // the list scrolled some other way (keys, a screen reader) while small: the card grows instead
     bagList.addEventListener('scroll', () => {
       if (fold && bagList.scrollTop > 0) { bagList.scrollTop = 0; grow(0); }
-      fades();
     }, { passive: true });
     // a mouse wheel or trackpad: there's no finger to follow, so it grows at the first turn down
     el.addEventListener('wheel', (e) => {
