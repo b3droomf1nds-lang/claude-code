@@ -2205,9 +2205,10 @@
       bagList.scrollTop = 0;
       const full = height(), room = Math.max(0, bagList.scrollHeight - bagList.clientHeight);
       const pad = getComputedStyle(bagList).paddingTop;
-      if (lo === undefined) {                        // the list in whole pixels, like its scroll
-        const next = $$('.cart-line', linesEl)[1];
-        lo = height() - bagList.getBoundingClientRect().height + Math.round(next.offsetTop + next.offsetHeight / 2);
+      if (lo === undefined) {                        // the first two products whole, down to the next row; in whole pixels, like the list's scroll
+        const rows = [...$$('.cart-line', linesEl), shipEl, protectBox].filter((r) => r && !r.hidden);
+        const list = bagList.getBoundingClientRect();
+        lo = height() - list.height + Math.round(rows[2].getBoundingClientRect().top - list.top);
       }
       fold = { lo, hi: Math.max(lo, full), room };
       const up = fold.hi - lo;
