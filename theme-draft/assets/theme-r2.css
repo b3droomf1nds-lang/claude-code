@@ -1240,6 +1240,10 @@ h1.t-hero em,
 .drawer-scroller .drawer.is-folded .cart-line,
 .drawer-scroller .drawer.is-folded .ship-bubble,
 .drawer-scroller .drawer.is-folded .protect-bubble{will-change:transform}
+/* the rows stacked, each over the rows under it (theme-r3.js) */
+.drawer-scroller .drawer.is-folded .cart-line,
+.drawer-scroller .drawer.is-folded .ship-bubble,
+.drawer-scroller .drawer.is-folded .protect-bubble{position:relative}
 /* The small bag's strips (theme-r3.js): one product's shipping and
    protection rows, a line high. The row's own box is drawn by .drawer__box
    under it, cut to the height it has grown to; its parts move and grow

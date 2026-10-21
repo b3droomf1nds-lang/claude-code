@@ -1778,6 +1778,12 @@
     const POP = spring(0.46, 0.78);                 // pops up with a little overshoot, like the AirPods card
     const AWAY = spring(0.36, 1);                   // leaves without bouncing
     const SPAWN = spring(0.36, 0.6);                // a line coming into a growing row: in with a bounce
+    // and out: the pop run backwards, from its first reach to full size (where it settles in no
+    // time, backwards, would only hold it there)
+    const UNSPAWN = (() => {
+      const k = SPAWN.pts.findIndex((x) => x >= 1), n = SPAWN.pts.length - 1;
+      return { pts: SPAWN.pts.slice(0, k + 1).reverse(), duration: Math.round((SPAWN.duration * k) / n) };
+    })();
     const slide = (s, from, to, fill) => el.animate(
       s.pts.map((x, i) => ({ transform: 'translateY(' + (from + (to - from) * x).toFixed(2) + 'px)', offset: i / (s.pts.length - 1) })),
       { duration: s.duration, easing: 'linear', fill: fill || 'none' });
@@ -2224,9 +2230,10 @@
       extra.with = label;                            // it goes with the label, and comes in late
       return [icon, label, end, extra];
     };
-    // A missing row, or the line under a strip's label, popping in (or out, quickly) on its own
-    // spring, not with the lift: from `from` of its size, `wait` ms late. on: where it's going;
-    // when it isn't anywhere yet (just made small) it's put there. Out, it takes no taps.
+    // A missing row, or the line under a strip's label, popping in on its own spring, not with the
+    // lift, from `from` of its size, `wait` ms late; out, the pop backwards.
+    // on: where it's going; when it isn't anywhere yet (just made small) it's put there. Out, it
+    // takes no taps.
     const spawn = (p, on, from = 0.6, wait = 0) => {
       const e = p.el, first = p.on === undefined;
       p.on = on;
@@ -2234,9 +2241,9 @@
       e.style.opacity = on ? '' : '0';
       e.style.pointerEvents = on ? '' : 'none';
       if (first || reduceMotion.matches || !e.animate) return;
-      if (on) e.animate(SPAWN.pts.map((x, i) => ({ opacity: Math.min(1, x * 2), scale: String(from + (1 - from) * x), offset: i / (SPAWN.pts.length - 1) })),
-        { duration: SPAWN.duration, delay: wait, easing: 'linear', fill: 'backwards' });
-      else e.animate([{ opacity: 1, scale: '1' }, { opacity: 0, scale: String((1 + from) / 2) }], { duration: 120, easing: 'ease-in' });
+      const sp = on ? SPAWN : UNSPAWN, n = sp.pts.length - 1;
+      e.animate(sp.pts.map((x, i) => ({ opacity: Math.min(1, x * 2), scale: String(from + (1 - from) * x), offset: i / n })),
+        { duration: sp.duration, delay: wait, easing: 'linear', fill: 'backwards' });
     };
     // where each row is, and how much of it shows, at f (0 small, 1 the whole bag): whole rows as they
     // are, missing rows' room from nothing (the gap above them too), strips from a strip to the whole row.
@@ -2267,7 +2274,8 @@
       for (const r of fold.rows) {
         const y = -g - spill + r.top;
         r.el.style.transform = 'translateY(' + (y - r.y).toFixed(2) + 'px)';
-        if (r.kind === 'hide' && r.on !== f >= 0.6) spawn(r, f >= 0.6, 0.85, 45 * r.nth);
+        // in from the top down, out from the bottom up
+        if (r.kind === 'hide' && r.on !== f >= 0.6) spawn(r, f >= 0.6, 0.85, 45 * (f >= 0.6 ? r.nth : fold.hidden - 1 - r.nth));
         if (r.kind !== 'mini') continue;
         // a strip growing into its row: its box to the row's height so far, each part from its
         // place in the strip to its own, growing as it goes
@@ -2298,7 +2306,9 @@
       const rows = [...lines, shipEl, protectBox].filter((r) => r && !r.hidden).map((r) => ({ el: r, kind: 'full' }));
       // two products or more: the first two whole, the rest folded away; one: the rest as strips
       if (lo === undefined) rows.forEach((r, i) => { if (i >= Math.min(2, lines.length)) r.kind = lines.length > 1 ? 'hide' : 'mini'; });
-      rows.filter((r) => r.kind === 'hide').forEach((r, i) => { r.nth = i; });
+      const hidden = rows.filter((r) => r.kind === 'hide');
+      hidden.forEach((r, i) => { r.nth = i; });
+      rows.forEach((r, i) => { r.el.style.zIndex = String(rows.length - i); });   // each row over the ones under it
       const top0 = rows.length ? rows[0].el.getBoundingClientRect().top : 0;
       rows.forEach((r, i) => {
         const b = r.el.getBoundingClientRect();
@@ -2318,7 +2328,7 @@
         lo = Math.round(height() - list.height + (top0 - list.top) + lay(rows, 0)
           + parseFloat(getComputedStyle(last).marginBottom) + parseFloat(cs.paddingBottom));
       }
-      fold = { lo, hi: Math.max(lo, full), room, rows };
+      fold = { lo, hi: Math.max(lo, full), room, rows, hidden: hidden.length };
       const up = fold.hi - lo;
       el.classList.add('is-folded');
       el.style.height = lo + 'px';
@@ -2333,6 +2343,7 @@
     // the plain card again, at whatever height its bag gives it
     const flat = () => {
       for (const r of fold ? fold.rows : []) {
+        r.el.style.zIndex = '';
         if (r.kind === 'hide') r.el.style.opacity = r.el.style.pointerEvents = '';
         if (r.kind !== 'mini') continue;
         r.el.classList.remove('is-mini');
