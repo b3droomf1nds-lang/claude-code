@@ -2146,19 +2146,23 @@
       const m = maxTop();
       scrim.style.opacity = String(m ? Math.min(1, Math.max(0, scroller.scrollTop / m)) : 0);
     };
-    /* A bag of more than one product, with the shipping and protection
-       lines under them, opens smaller: the list shows the first two products
-       whole, with no scroll bar and nothing faded (theme-r2.css). Pushed up,
+    /* A bag with the shipping and protection lines under its products
+       opens smaller, with no scroll bar and nothing faded (theme-r2.css):
+       with two products or more, the list shows the first two whole and the
+       rows under them are folded away; with one, the product shows whole and
+       the shipping and protection rows wait as one-line strips. Pushed up,
        the card grows under the finger, the way an iOS sheet does: its top
        edge and the lines under it go up with the finger while its bottom
-       stays put, until the whole bag shows. Let go
-       part way and it springs on to the whole bag, or back to small,
-       whichever it was heading for; pushed on past the whole bag, the list
+       stays put, and the folded rows fold out (the strips flip over into
+       their rows) in the room it makes, above the total, until the whole bag
+       shows. Let go part way and it carries on at the finger's speed to the
+       whole bag, or back to small, whichever the flick would have reached; pushed on past the whole bag, the list
        scrolls if there's more of it, then the card rubber-bands. Once grown
        it stays that size until it's closed; the next opening starts small.
        While it's small the rest of the bag is laid out above it, out of
-       sight, so growing only slides things (the heading, the lines and the
-       glass go up; nothing is laid out again or redrawn), as a swipe of the
+       sight, so growing only moves things (the heading, the lines and the
+       glass go up, the folded rows turn; nothing is laid out again or
+       redrawn), as a swipe of the
        card does, and the phone keeps up with the finger. Come to rest at the
        whole bag, the card takes the bag's own height in the same frame. */
     const bagList = $('.drawer__body', el);
@@ -2169,25 +2173,86 @@
     let springing = 0;                               // the lift on its spring (a frame request)
     let pulling = false;                             // a finger is growing the card
     let coast = 0;                                   // the list carrying on after a flick (a frame request)
-    const bigBag = () => $$('.cart-line', linesEl).length > 1 && [shipEl, protectBox].filter((b) => b && !b.hidden).length > 1;
+    const bigBag = () => $$('.cart-line', linesEl).length > 0 && [shipEl, protectBox].filter((b) => b && !b.hidden).length > 1;
+    const STRIP = 44;                                // a strip's height
+    const DEPTH = 500;                               // the perspective the rows fold out in (px)
+    // the strips, under the list's last row: placed over their rows by draw()
+    const strips = document.createElement('div');
+    strips.className = 'drawer__strips';
+    strips.hidden = true;
+    bagList.append(strips);
+    strips.addEventListener('click', () => grow(0));
+    // a one-line copy of the shipping or protection row: its icon, its grey label and, for shipping,
+    // the method and price, for protection, the switch as it's set
+    const stripOf = (row) => {
+      const s = document.createElement('div');
+      s.className = 'cart-strip';
+      s.setAttribute('aria-hidden', 'true');
+      const icon = $('svg', row).cloneNode(true);
+      icon.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));   // its mask is found by the row's own
+      const label = document.createElement('span');
+      label.className = 'cart-strip__label';
+      s.append(icon, label);
+      if (row === shipEl) {
+        label.textContent = $('.ship-bubble__label', row).textContent;
+        const method = document.createElement('span'), price = document.createElement('span');
+        method.className = 'cart-strip__value';
+        method.textContent = shipMethod.textContent;
+        price.className = 'cart-strip__value cart-strip__end';
+        price.textContent = shipPrice.textContent;
+        s.append(method, price);
+      } else {
+        label.textContent = $('.protect-bubble__label', row).textContent;
+        const sw = document.createElement('span');
+        sw.className = 'cart-strip__switch cart-strip__end' + (protectToggle && protectToggle.checked ? ' is-on' : '');
+        sw.append(document.createElement('i'));
+        s.append(sw);
+      }
+      return s;
+    };
+    // How far back a row h tall, hinged at its top, leans (radians) to show s of its height, seen
+    // in the rows' perspective: h·cos(a)·D / (D + h·sin(a)) = s.
+    const lean = (h, s) => (s >= h ? 0 : s <= 0 ? Math.PI / 2
+      : Math.max(0, Math.acos((s * DEPTH) / (h * Math.hypot(DEPTH, s))) - Math.atan2(s, DEPTH)));
+    // where each row is, and how much of it shows, at f (0 small, 1 the whole bag): whole rows as they
+    // are, folded rows from nothing (the gap above them too), strips from a strip to the whole row.
+    // Returns the last row's bottom, from the first row's top.
+    const lay = (rows, f) => {
+      let y = 0;
+      for (const r of rows) {
+        r.top = y + (r.kind === 'hide' ? r.gap * f : r.gap);
+        r.vis = r.kind === 'full' ? r.h : r.kind === 'hide' ? r.h * f : STRIP + (r.h - STRIP) * f;
+        y = r.top + r.vis;
+      }
+      return y;
+    };
     const listLeft = () => (fold
       ? Math.max(0, fold.hi - fold.lo - lift + fold.room - spill)
       : Math.max(0, bagList.scrollHeight - bagList.clientHeight - bagList.scrollTop));
     const height = () => el.getBoundingClientRect().height;
     const settle = () => { scroller.scrollTop = maxTop(); };    // the card's bottom on the screen's, at rest
     // everything where a lift (and a spill) puts it: the heading and the glass up by the lift, the
-    // lines by the lift and the spill; the list clips them at the total (theme-r2.css)
+    // rows by the lift and the spill, the folded ones folded out as far as the lift has gone, each
+    // leaning back from its top; the list clips them at the total (theme-r2.css)
     const draw = (g, s) => {
       lift = g; spill = s || 0;
       head.style.transform = 'translateY(' + (-g).toFixed(2) + 'px)';
-      const lines = 'translateY(' + (-g - spill).toFixed(2) + 'px)';
-      for (const c of bagList.children) c.style.transform = lines;
+      const most = fold.hi - fold.lo;
+      const f = most > 0 ? Math.min(1, Math.max(0, g / most)) : 1;
+      lay(fold.rows, f);
+      for (const r of fold.rows) {
+        const y = -g - spill + r.top;
+        r.el.style.transform = 'translateY(' + (y - r.y).toFixed(2) + 'px)'
+          + (r.kind === 'full' ? '' : ' perspective(' + DEPTH + 'px) rotateX(' + (-lean(r.h, r.vis)).toFixed(4) + 'rad)');
+        // the strip over it leans away as its row comes over, gone (edge on) when the row is whole
+        if (r.strip) r.strip.style.transform = 'translateY(' + (y - fold.sy).toFixed(2) + 'px) perspective(' + DEPTH + 'px) rotateX(' + (-f * Math.PI / 2).toFixed(4) + 'rad)';
+      }
       skin.style.transform = 'translateY(' + (fold.hi - fold.lo - g).toFixed(2) + 'px)';
       lensAlign();                                   // the copies follow the edge in this same frame
     };
     // Small, at rest. The card is its small height; the list reaches up out of it by what the whole
     // bag adds (padding keeps its lines where they were), the glass reaches up as far and is slid
-    // back down into place. lo: the small height to keep (else the first two products, whole).
+    // back down into place. lo: the small height to keep, every row whole (else the small bag's).
     const shape = (lo) => {
       // Measured from the plain card. Snapping is off meanwhile: laid out at the whole bag's
       // height for a moment, the card would otherwise be snapped to that later on.
@@ -2195,13 +2260,25 @@
       flat();
       bagList.scrollTop = 0;
       const full = height(), room = Math.max(0, bagList.scrollHeight - bagList.clientHeight);
-      const pad = getComputedStyle(bagList).paddingTop;
-      if (lo === undefined) {                        // the first two products whole, down to the next row; in whole pixels, like the list's scroll
-        const rows = [...$$('.cart-line', linesEl), shipEl, protectBox].filter((r) => r && !r.hidden);
-        const list = bagList.getBoundingClientRect();
-        lo = height() - list.height + Math.round(rows[2].getBoundingClientRect().top - list.top);
+      const cs = getComputedStyle(bagList), pad = cs.paddingTop;
+      const lines = $$('.cart-line', linesEl);
+      const rows = [...lines, shipEl, protectBox].filter((r) => r && !r.hidden).map((r) => ({ el: r, kind: 'full' }));
+      // two products or more: the first two whole, the rest folded away; one: the rest as strips
+      if (lo === undefined) rows.forEach((r, i) => { if (i >= Math.min(2, lines.length)) r.kind = lines.length > 1 ? 'hide' : 'mini'; });
+      const top0 = rows.length ? rows[0].el.getBoundingClientRect().top : 0;
+      rows.forEach((r, i) => {
+        const b = r.el.getBoundingClientRect();
+        r.y = b.top - top0; r.h = b.height;
+        r.gap = i ? r.y - rows[i - 1].y - rows[i - 1].h : 0;
+      });
+      for (const r of rows) if (r.kind === 'mini') strips.append(r.strip = stripOf(r.el));
+      strips.hidden = !strips.firstChild;
+      if (lo === undefined) {                        // down to the last row, in whole pixels, like the list's scroll
+        const list = bagList.getBoundingClientRect(), last = rows[rows.length - 1].el;
+        lo = Math.round(height() - list.height + (top0 - list.top) + lay(rows, 0)
+          + parseFloat(getComputedStyle(last).marginBottom) + parseFloat(cs.paddingBottom));
       }
-      fold = { lo, hi: Math.max(lo, full), room };
+      fold = { lo, hi: Math.max(lo, full), room, rows, sy: strips.getBoundingClientRect().top - top0 };
       const up = fold.hi - lo;
       el.classList.add('is-folded');
       el.style.height = lo + 'px';
@@ -2217,7 +2294,9 @@
       fold = null; lift = spill = 0;
       el.classList.remove('is-folded');
       head.style.transform = skin.style.transform = skin.style.top = '';
-      for (const c of bagList.children) c.style.transform = '';
+      for (const r of [...$$('.cart-line', linesEl), shipEl, protectBox]) if (r) r.style.transform = '';
+      strips.hidden = true;
+      strips.textContent = '';
       bagList.style.marginTop = bagList.style.paddingTop = '';
       el.style.height = '';
     };
@@ -2274,7 +2353,7 @@
         if (small) shape();
       } else if (fold) {
         if (bigBag()) shape();
-        else {                                       // down to one product: the card grows to fit it
+        else {                                       // no shipping or protection rows: the card grows to fit
           small = false;
           el.classList.remove('is-small');
           shape(fold.lo);
@@ -2512,12 +2591,13 @@
       const speed = a && b && b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;   // px/ms, down is positive
       if (d.mode === 2) {
         if (d.cur <= 0) {
-          // above small: on to the whole bag, or back to small, whichever it's heading for (on its
-          // way up or down, or nearer, if it was let go still), carrying on the finger's speed
-          // px/s; held still before letting go (no move for 60ms), it isn't heading anywhere
+          // above small: on to the whole bag, or back to small, whichever is nearer where the flick
+          // would have carried it, slowing as iOS scrolling does (0.998 a ms), and carrying on the
+          // finger's speed px/s; held still before letting go (no move for 60ms), it isn't heading
+          // anywhere
           const up = e && b && e.timeStamp - b.t > 60 ? 0 : -speed * 1000;
           const most = fold.hi - fold.lo;
-          if (d.s > 0 || d.cur < 0 || up > 150 || (up > -150 && d.g > most / 2)) {
+          if (d.s > 0 || d.cur < 0 || d.g + (up / 1000) * (0.998 / 0.002) > most / 2) {
             swing(most, Math.max(0, up), () => {
               unfold();
               if (d.s > 0 && !d.cur) carry(up);      // the list was scrolling: it carries on
