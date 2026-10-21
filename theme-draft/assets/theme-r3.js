@@ -2190,7 +2190,7 @@
       more.textContent = fold ? more.dataset.more : more.dataset.less;
     };
     // a one-line copy of the shipping or protection row: its icon, its grey label and, for shipping,
-    // the method and price, for protection, the switch as it's set
+    // the price, for protection, the switch as it's set
     const stripOf = (row) => {
       const s = document.createElement('div');
       s.className = 'cart-strip';
@@ -2202,12 +2202,10 @@
       s.append(icon, label);
       if (row === shipEl) {
         label.textContent = $('.ship-bubble__label', row).textContent;
-        const method = document.createElement('span'), price = document.createElement('span');
-        method.className = 'cart-strip__value';
-        method.textContent = shipMethod.textContent;
+        const price = document.createElement('span');
         price.className = 'cart-strip__value cart-strip__end';
         price.textContent = shipPrice.textContent;
-        s.append(method, price);
+        s.append(price);
       } else {
         label.textContent = $('.protect-bubble__label', row).textContent;
         const sw = document.createElement('span');
