@@ -2203,7 +2203,9 @@
     // says where the bag is going: from the tap that starts it growing or shrinking, or, under a
     // finger, from halfway.
     const more = $('[data-drawer-more]', el);
+    let aimBig = false;                              // where the button says the bag is going
     const moreLabel = (less = !fold) => {
+      aimBig = less;
       if (!more) return;
       more.hidden = !small;
       const t = less ? more.dataset.less : more.dataset.more;
@@ -2440,7 +2442,23 @@
       refold();
       swing(0, 0, () => {}, 0.5, 1);
     };
-    if (more) more.addEventListener('click', () => (fold ? grow(0) : shrink()));
+    // The button acts the moment it's touched (not on the tap's click, which comes only once the
+    // finger lifts, and not at all if it moved a little), and a touch while the bag is on its way
+    // turns it round from where it is.
+    const press = () => {
+      if (!small || !isOpen || closing || pulling || qm) return;
+      if (fold && springing) swing(aimBig ? 0 : fold.hi - fold.lo, 0, aimBig ? () => {} : unfold, 0.5, 1);
+      else if (fold) grow(0);
+      else shrink();
+    };
+    if (more) {
+      more.addEventListener('touchstart', (e) => {
+        e.stopPropagation();                         // not the start of a swipe of the card
+        if (e.cancelable) e.preventDefault();        // and no click after it
+        press();
+      }, { passive: false });
+      more.addEventListener('click', press);         // a mouse, or keys
+    }
     // the list scrolled some other way (keys, a screen reader) while small: the card grows instead
     bagList.addEventListener('scroll', () => {
       if (fold && bagList.scrollTop > 0) { bagList.scrollTop = 0; grow(0); }

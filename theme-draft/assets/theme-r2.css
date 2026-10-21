@@ -1194,7 +1194,7 @@ h1.t-hero em,
 /* a small bag's "Show more" / "Show less" (theme-r3.js), in the same spot on
    the right, level with "Total" and in its type */
 .drawer-scroller .drawer__subtotal{position:relative}
-.drawer-scroller .drawer__more{position:absolute;top:0;right:0;margin:0;padding:0;border:0;background:none;
+.drawer-scroller .drawer__more{position:absolute;top:0;right:0;margin:0;padding:0;border:0;background:none;touch-action:none;
   font-size:13px;font-weight:400;line-height:1.38;color:var(--sys-label-2);cursor:pointer;-webkit-tap-highlight-color:transparent}
 .drawer-scroller .drawer__more::after{content:"";position:absolute;inset:-12px -16px}
 .drawer-scroller .drawer__more[hidden]{display:none}
