@@ -818,6 +818,9 @@
     const P = window.Voltical.protection || {};
     let protectionProduct = null;
     let protectWant = null;                          // the protection switch's flip, until the cart has caught up with it
+    let protectTried = false;                        // protection has been put in this bag by default
+    // switched off by the shopper (kept in this browser), so it isn't put back by default
+    const protectOff = () => { try { return localStorage.getItem('volt-protect-off') === '1'; } catch (e) { return false; } };
     let cart = null;
     let busy = false;
     let qtyOpenKey = null;                           // the line whose quantity menu is open (its pencil is hidden)
@@ -876,6 +879,13 @@
       });
       // protection alone protects nothing: it leaves with the last product, and the bag reads empty
       if (!realLines.length && cart.items.some(isProtection) && protectWant == null) { protectWant = false; protectSync(); }
+      // it's on by default: added with the first product, unless it has been switched off here
+      if (!realLines.length) protectTried = false;
+      else if (!protectTried && protectionProduct && protectWant == null && !cart.items.some(isProtection) && !protectOff()) {
+        protectTried = true;
+        protectWant = true;
+        protectSync();
+      }
       emptyEl.hidden = realLines.length !== 0;
       footEl.hidden = realLines.length === 0;
       if (protectBox) protectBox.hidden = realLines.length === 0 || !protectionProduct;
@@ -915,20 +925,21 @@
       fit();                                         // the card's height, if it's open (below)
     };
 
-    // the bag as it will be once the protection switch's flip has reached the cart, at the price
-    // the cart will charge (its tier), so the total moves the moment the switch does
+    // the bag as it will be once the protection switch's flip, and its tier for the rest of the bag,
+    // have reached the cart: at the price the cart will charge, so the total moves the moment the
+    // switch or a quantity does, and doesn't step back while the cart catches up
     const withProtectWant = (c) => {
-      if (protectWant == null || !protectionProduct) return c;
+      if (!protectionProduct) return c;
       const line = c.items.find(isProtection);
-      if (protectWant === !!line) return c;
-      if (!protectWant) {
-        return Object.assign({}, c, { items: c.items.filter((i) => i !== line), item_count: c.item_count - line.quantity,
-          items_subtotal_price: c.items_subtotal_price - line.final_line_price, total_price: c.total_price - line.final_line_price });
-      }
-      const v = tierVariant(c.items_subtotal_price);
-      if (!v) return c;
-      return Object.assign({}, c, { items: c.items.concat([{ key: '', product_id: protectionProduct.id, quantity: 1, final_line_price: v.price }]),
-        item_count: c.item_count + 1, items_subtotal_price: c.items_subtotal_price + v.price, total_price: c.total_price + v.price });
+      const want = protectWant == null ? !!line : protectWant;
+      const was = line ? line.final_line_price : 0;
+      const v = want && tierVariant(c.items_subtotal_price - was);
+      if (want && !v && !line) return c;
+      const price = want ? (v ? v.price : was) : 0;
+      const items = c.items.filter((i) => i !== line);
+      if (want) items.push(Object.assign({}, line || { key: '', product_id: protectionProduct.id, quantity: 1 }, { final_line_price: price }));
+      return Object.assign({}, c, { items, item_count: c.item_count + (want ? 1 : 0) - (line ? line.quantity : 0),
+        items_subtotal_price: c.items_subtotal_price + price - was, total_price: c.total_price + price - was });
     };
 
     // the bag's sums (protection, shipping, total), for the cart or for the
@@ -963,15 +974,18 @@
         .finally(() => { busy = false; });
     };
 
-    /* keep protection tier in sync with subtotal */
+    /* keep protection tier in sync with subtotal: the old tier out and the new one in, with the
+       bag left as it was meanwhile (busy), so the switch stays on and the total where it is */
     const syncProtectionTier = () => {
       const protLine = cart.items.find(isProtection);
-      if (!protLine) return Promise.resolve();
+      if (!protLine || busy) return Promise.resolve();
       const subtotalExcl = cart.items_subtotal_price - protLine.final_line_price;
       const should = tierVariant(subtotalExcl);
       if (should && should.id !== protLine.variant_id) {
-        return mutate({ id: protLine.key, quantity: 0 })
-          .then(() => fetchJSON('/cart/add.js', { method: 'POST', body: JSON.stringify({ id: should.id, quantity: 1 }) }))
+        busy = true;
+        return fetchJSON('/cart/change.js', { method: 'POST', body: JSON.stringify({ id: protLine.key, quantity: 0 }) })
+          .then(() => fetchJSON('/cart/add.js', { method: 'POST', body: JSON.stringify({ id: should.id, quantity: 1, properties: { _protection: 'true' } }) }))
+          .finally(() => { busy = false; })
           .then(() => refresh());
       }
       return Promise.resolve();
@@ -1152,16 +1166,9 @@
       const line = qmLine(key);
       if (!item || !line) return;
       const linePrice = item.final_price * q;
-      let d = linePrice - item.final_line_price;
+      const d = linePrice - item.final_line_price;
       const items = cart.items.map((i) => (i === item ? Object.assign({}, i, { quantity: q, final_line_price: linePrice }) : i));
-      const prot = items.find(isProtection);
-      if (prot) {                                    // protection is priced on the rest of the bag (syncProtectionTier)
-        const tier = tierVariant(cart.items_subtotal_price + d - prot.final_line_price);
-        if (tier) {
-          d += tier.price - prot.final_line_price;
-          items[items.indexOf(prot)] = Object.assign({}, prot, { final_line_price: tier.price });
-        }
-      }
+      // (protection is priced on the rest of the bag by paintTotals)
       $('.cart-line__qty-num', line).textContent = q;
       $('.cart-line__qty', line).setAttribute('aria-label', 'Quantity ' + q + ', edit');
       $('.cart-line__price', line).textContent = money(linePrice);
@@ -1723,6 +1730,9 @@
       let failed = false;
       req.catch(() => { failed = true; })
         .then(() => fetchJSON('/cart.js')).then((c) => { cart = c; }).catch(() => { failed = true; })
+        // the cart answered but didn't take it (no protection line came, or it stayed): as a refusal,
+        // so it isn't asked again and again
+        .then(() => { if (!failed && asked !== !!cart.items.find(isProtection)) failed = true; })
         .finally(() => {
           protectBusy = false;
           if (failed && protectWant === asked) protectWant = null;   // the cart said no: show what it has
@@ -1732,6 +1742,7 @@
     }
     if (protectToggle) protectToggle.addEventListener('change', () => {
       protectWant = protectToggle.checked;
+      try { if (protectWant) localStorage.removeItem('volt-protect-off'); else localStorage.setItem('volt-protect-off', '1'); } catch (e) {}
       if (cart) paintTotals(cart);                   // the total moves with the switch, before the cart answers
       protectSync();
     });
@@ -2150,22 +2161,22 @@
     /* A bag with the shipping and protection lines under its products
        opens smaller, with no scroll bar and nothing faded (theme-r2.css):
        with two products or more, the list shows the first two whole and the
-       rows under them are folded away; with one, the product shows whole and
+       rows under them aren't there yet; with one, the product shows whole and
        the shipping and protection rows wait as one-line strips. Pushed up,
        the card grows under the finger, the way an iOS sheet does: its top
        edge and the lines under it go up with the finger while its bottom
-       stays put, and the folded rows fold out (the strips grow into their
-       rows: everything in them moves and grows into place, and what the
-       whole row adds comes in) in the room it makes, above the total, until the whole bag
-       shows. Let go part way and it carries on at the finger's speed to the
-       whole bag, or back to small, whichever the flick would have reached; pushed on past the whole bag, the list
-       scrolls if there's more of it, then the card rubber-bands. Once grown
+       stays put, and room opens above the total for the rows under them:
+       the missing rows pop in once there's room for them, and the strips
+       grow into their rows (everything in them moves and grows into place,
+       and the line the whole row adds pops in). Let go part way and it
+       carries on at the finger's speed to the whole bag, or back to small,
+       whichever the flick would have reached; pushed on past the whole bag,
+       the list scrolls if there's more of it, then the card rubber-bands. Once grown
        it stays that size until it's closed; the next opening starts small.
        While it's small the rest of the bag is laid out above it, out of
        sight, so growing only moves things (the heading, the lines and the
-       glass go up, the folded rows turn; nothing is laid out again or
-       redrawn), as a swipe of the
-       card does, and the phone keeps up with the finger. Come to rest at the
+       glass go up, the rows pop in; nothing is laid out again or redrawn),
+       as a swipe of the card does, and the phone keeps up with the finger. Come to rest at the
        whole bag, the card takes the bag's own height in the same frame. */
     const bagList = $('.drawer__body', el);
     const head = $('.drawer__head', el);
@@ -2177,18 +2188,20 @@
     let coast = 0;                                   // the list carrying on after a flick (a frame request)
     const bigBag = () => $$('.cart-line', linesEl).length > 0 && [shipEl, protectBox].filter((b) => b && !b.hidden).length > 1;
     const STRIP = 44;                                // a strip's height
-    const DEPTH = 500;                               // the perspective the rows fold out in (px)
     // a tap on a strip, anywhere but its switch, grows the bag
     bagList.addEventListener('click', (e) => {
       const row = fold && e.target.closest('.ship-bubble, .protect-bubble');
       if (row && row.classList.contains('is-mini') && !e.target.closest('.cart-switch')) grow(0);
     });
-    // "Show more" while it's small, "Show less" once a small bag has grown, in the same spot
+    // "Show more" while it's small, "Show less" once a small bag has grown, in the same spot. It
+    // says where the bag is going: from the tap that starts it growing or shrinking, or, under a
+    // finger, from halfway.
     const more = $('[data-drawer-more]', el);
-    const moreLabel = () => {
+    const moreLabel = (less = !fold) => {
       if (!more) return;
       more.hidden = !small;
-      more.textContent = fold ? more.dataset.more : more.dataset.less;
+      const t = less ? more.dataset.less : more.dataset.more;
+      if (more.textContent !== t) more.textContent = t;
     };
     // A shipping or protection row as a strip: the row itself, a strip high (its box, drawn under
     // it, is cut to that height), its tile shrunk to the strip's height at its left, its label beside
@@ -2211,24 +2224,22 @@
       extra.with = label;                            // it goes with the label, and comes in late
       return [icon, label, end, extra];
     };
-    // The line under a strip's label, popping in (or out, quickly) on its own spring, not with the
-    // lift. on: where it's going; when it isn't anywhere yet (just made a strip) it's put there.
-    const spawn = (p, on) => {
+    // A missing row, or the line under a strip's label, popping in (or out, quickly) on its own
+    // spring, not with the lift: from `from` of its size, `wait` ms late. on: where it's going;
+    // when it isn't anywhere yet (just made small) it's put there. Out, it takes no taps.
+    const spawn = (p, on, from = 0.6, wait = 0) => {
       const e = p.el, first = p.on === undefined;
       p.on = on;
       for (const a of e.getAnimations()) a.cancel();
       e.style.opacity = on ? '' : '0';
+      e.style.pointerEvents = on ? '' : 'none';
       if (first || reduceMotion.matches || !e.animate) return;
-      if (on) e.animate(SPAWN.pts.map((x, i) => ({ opacity: Math.min(1, x * 2), scale: String(0.6 + 0.4 * x), offset: i / (SPAWN.pts.length - 1) })),
-        { duration: SPAWN.duration, easing: 'linear' });
-      else e.animate([{ opacity: 1, scale: '1' }, { opacity: 0, scale: '0.85' }], { duration: 120, easing: 'ease-in' });
+      if (on) e.animate(SPAWN.pts.map((x, i) => ({ opacity: Math.min(1, x * 2), scale: String(from + (1 - from) * x), offset: i / (SPAWN.pts.length - 1) })),
+        { duration: SPAWN.duration, delay: wait, easing: 'linear', fill: 'backwards' });
+      else e.animate([{ opacity: 1, scale: '1' }, { opacity: 0, scale: String((1 + from) / 2) }], { duration: 120, easing: 'ease-in' });
     };
-    // How far back a row h tall, hinged at its top, leans (radians) to show s of its height, seen
-    // in the rows' perspective: h·cos(a)·D / (D + h·sin(a)) = s.
-    const lean = (h, s) => (s >= h ? 0 : s <= 0 ? Math.PI / 2
-      : Math.max(0, Math.acos((s * DEPTH) / (h * Math.hypot(DEPTH, s))) - Math.atan2(s, DEPTH)));
     // where each row is, and how much of it shows, at f (0 small, 1 the whole bag): whole rows as they
-    // are, folded rows from nothing (the gap above them too), strips from a strip to the whole row.
+    // are, missing rows' room from nothing (the gap above them too), strips from a strip to the whole row.
     // Returns the last row's bottom, from the first row's top.
     const lay = (rows, f) => {
       let y = 0;
@@ -2245,8 +2256,8 @@
     const height = () => el.getBoundingClientRect().height;
     const settle = () => { scroller.scrollTop = maxTop(); };    // the card's bottom on the screen's, at rest
     // everything where a lift (and a spill) puts it: the heading and the glass up by the lift, the
-    // rows by the lift and the spill, the folded ones folded out as far as the lift has gone, each
-    // leaning back from its top; the list clips them at the total (theme-r2.css)
+    // rows by the lift and the spill, in the room the lift has made, the missing ones popping in
+    // (one after another) once most of theirs is there; the list clips them at the total (theme-r2.css)
     const draw = (g, s) => {
       lift = g; spill = s || 0;
       head.style.transform = 'translateY(' + (-g).toFixed(2) + 'px)';
@@ -2255,8 +2266,8 @@
       lay(fold.rows, f);
       for (const r of fold.rows) {
         const y = -g - spill + r.top;
-        r.el.style.transform = 'translateY(' + (y - r.y).toFixed(2) + 'px)'
-          + (r.kind === 'hide' ? ' perspective(' + DEPTH + 'px) rotateX(' + (-lean(r.h, r.vis)).toFixed(4) + 'rad)' : '');
+        r.el.style.transform = 'translateY(' + (y - r.y).toFixed(2) + 'px)';
+        if (r.kind === 'hide' && r.on !== f >= 0.6) spawn(r, f >= 0.6, 0.85, 45 * r.nth);
         if (r.kind !== 'mini') continue;
         // a strip growing into its row: its box to the row's height so far, each part from its
         // place in the strip to its own, growing as it goes
@@ -2269,6 +2280,7 @@
         }
       }
       skin.style.transform = 'translateY(' + (fold.hi - fold.lo - g).toFixed(2) + 'px)';
+      if (pulling) moreLabel(f > 0.5);
       lensAlign();                                   // the copies follow the edge in this same frame
     };
     // Small, at rest. The card is its small height; the list reaches up out of it by what the whole
@@ -2286,6 +2298,7 @@
       const rows = [...lines, shipEl, protectBox].filter((r) => r && !r.hidden).map((r) => ({ el: r, kind: 'full' }));
       // two products or more: the first two whole, the rest folded away; one: the rest as strips
       if (lo === undefined) rows.forEach((r, i) => { if (i >= Math.min(2, lines.length)) r.kind = lines.length > 1 ? 'hide' : 'mini'; });
+      rows.filter((r) => r.kind === 'hide').forEach((r, i) => { r.nth = i; });
       const top0 = rows.length ? rows[0].el.getBoundingClientRect().top : 0;
       rows.forEach((r, i) => {
         const b = r.el.getBoundingClientRect();
@@ -2320,9 +2333,10 @@
     // the plain card again, at whatever height its bag gives it
     const flat = () => {
       for (const r of fold ? fold.rows : []) {
+        if (r.kind === 'hide') r.el.style.opacity = r.el.style.pointerEvents = '';
         if (r.kind !== 'mini') continue;
         r.el.classList.remove('is-mini');
-        for (const p of r.parts) p.el.style.transform = p.el.style.opacity = p.el.style.transformOrigin = '';
+        for (const p of r.parts) p.el.style.transform = p.el.style.opacity = p.el.style.pointerEvents = p.el.style.transformOrigin = '';
         r.box.style.height = '';
       }
       fold = null; lift = spill = 0;
@@ -2347,6 +2361,7 @@
       cancelAnimationFrame(springing);
       springing = 0;
       const from = lift, d = g - from;
+      moreLabel(g > 0);                              // where it's going, from now
       if (Math.abs(d) < 0.5 || reduceMotion.matches) { draw(g, 0); done(); return; }
       const s = spring(response, damping, Math.min(8, Math.max(0, v / Math.abs(d))));
       const n = s.pts.length - 1, t0 = performance.now();
@@ -2401,7 +2416,12 @@
       cancelAnimationFrame(coast);
       coast = 0;
       shape();
+      for (const r of fold.rows) {                   // the rows and lines that pop in are there already
+        r.on = undefined;
+        if (r.parts) r.parts[3].on = undefined;
+      }
       draw(fold.hi - fold.lo, 0);
+      moreLabel(true);
     };
     // back to small from the whole bag, on the same spring as growing
     const shrink = () => {
