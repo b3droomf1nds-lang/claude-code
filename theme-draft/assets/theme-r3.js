@@ -2172,7 +2172,8 @@
        the card grows under the finger, the way an iOS sheet does: its top
        edge and the lines under it go up with the finger while its bottom
        stays put, and room opens above the total for the rows under them:
-       the missing rows pop in once there's room for them, and the strips
+       the missing rows' room one row at a time, each sliding out from under
+       the row above it and popping in once most of its room is there, and the strips
        grow into their rows (everything in them moves and grows into place,
        and the line the whole row adds pops in). Let go part way and it
        carries on at the finger's speed to the whole bag, or back to small,
@@ -2252,9 +2253,20 @@
     // Returns the last row's bottom, from the first row's top.
     const lay = (rows, f) => {
       let y = 0;
+      // the room the missing rows have so far, given to them in turn, each its whole room (the gap
+      // above it too) before the next has any; each comes out from under the row above it, its
+      // bottom at the bottom of its room so far (r.f: how much of its room it has)
+      let room = f * rows.reduce((t, r) => t + (r.kind === 'hide' ? r.gap + r.h : 0), 0);
       for (const r of rows) {
-        r.top = y + (r.kind === 'hide' ? r.gap * f : r.gap);
-        r.vis = r.kind === 'full' ? r.h : r.kind === 'hide' ? r.h * f : STRIP + (r.h - STRIP) * f;
+        if (r.kind === 'hide') {
+          r.f = Math.min(1, room / (r.gap + r.h));
+          room -= r.f * (r.gap + r.h);
+          y += r.f * (r.gap + r.h);
+          r.top = y - r.h;
+          continue;
+        }
+        r.top = y + r.gap;
+        r.vis = r.kind === 'full' ? r.h : STRIP + (r.h - STRIP) * f;
         y = r.top + r.vis;
       }
       return y;
@@ -2276,8 +2288,7 @@
       for (const r of fold.rows) {
         const y = -g - spill + r.top;
         r.el.style.transform = 'translateY(' + (y - r.y).toFixed(2) + 'px)';
-        // in from the top down, out from the bottom up
-        if (r.kind === 'hide' && r.on !== f >= 0.6) spawn(r, f >= 0.6, 0.85, 45 * (f >= 0.6 ? r.nth : fold.hidden - 1 - r.nth));
+        if (r.kind === 'hide' && r.on !== r.f >= 0.6) spawn(r, r.f >= 0.6, 0.85);
         if (r.kind !== 'mini') continue;
         // a strip growing into its row: its box to the row's height so far, each part from its
         // place in the strip to its own, growing as it goes
@@ -2308,8 +2319,6 @@
       const rows = [...lines, shipEl, protectBox].filter((r) => r && !r.hidden).map((r) => ({ el: r, kind: 'full' }));
       // two products or more: the first two whole, the rest folded away; one: the rest as strips
       if (lo === undefined) rows.forEach((r, i) => { if (i >= Math.min(2, lines.length)) r.kind = lines.length > 1 ? 'hide' : 'mini'; });
-      const hidden = rows.filter((r) => r.kind === 'hide');
-      hidden.forEach((r, i) => { r.nth = i; });
       rows.forEach((r, i) => { r.el.style.zIndex = String(rows.length - i); });   // each row over the ones under it
       const top0 = rows.length ? rows[0].el.getBoundingClientRect().top : 0;
       rows.forEach((r, i) => {
@@ -2330,7 +2339,7 @@
         lo = Math.round(height() - list.height + (top0 - list.top) + lay(rows, 0)
           + parseFloat(getComputedStyle(last).marginBottom) + parseFloat(cs.paddingBottom));
       }
-      fold = { lo, hi: Math.max(lo, full), room, rows, hidden: hidden.length };
+      fold = { lo, hi: Math.max(lo, full), room, rows };
       const up = fold.hi - lo;
       el.classList.add('is-folded');
       el.style.height = lo + 'px';
