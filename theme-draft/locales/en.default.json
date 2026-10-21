@@ -98,7 +98,9 @@
     "quantity": "Quantity",
     "remove": "Remove",
     "protect_label": "Shipping Protection",
-    "protect_title": "Loss, Damage & Theft"
+    "protect_title": "Loss, Damage & Theft",
+    "show_more": "Show more",
+    "show_less": "Show less"
   },
   "footer": {
     "shop": "Shop",

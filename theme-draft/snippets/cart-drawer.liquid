@@ -43,6 +43,7 @@
     <div class="drawer__subtotal">
       <span data-total-label>{{ 'cart.subtotal' | t }}</span>
       <span data-drawer-subtotal></span>
+      <button type="button" class="drawer__more" data-drawer-more data-more="{{ 'cart.show_more' | t | escape }}" data-less="{{ 'cart.show_less' | t | escape }}" hidden>{{ 'cart.show_more' | t }}</button>
     </div>
     <p class="drawer__hint" data-total-hint>{{ 'cart.taxes_note' | t }}</p>
     <a class="btn btn--accent drawer__checkout" href="{{ routes.cart_url }}/checkout">{{ 'cart.checkout' | t }}</a>

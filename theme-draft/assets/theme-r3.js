@@ -2182,6 +2182,13 @@
     strips.hidden = true;
     bagList.append(strips);
     strips.addEventListener('click', () => grow(0));
+    // "Show more" while it's small, "Show less" once a small bag has grown, in the same spot
+    const more = $('[data-drawer-more]', el);
+    const moreLabel = () => {
+      if (!more) return;
+      more.hidden = !small;
+      more.textContent = fold ? more.dataset.more : more.dataset.less;
+    };
     // a one-line copy of the shipping or protection row: its icon, its grey label and, for shipping,
     // the method and price, for protection, the switch as it's set
     const stripOf = (row) => {
@@ -2288,6 +2295,7 @@
       settle();
       scroller.style.scrollSnapType = '';
       draw(0, 0);
+      moreLabel();
     };
     // the plain card again, at whatever height its bag gives it
     const flat = () => {
@@ -2306,6 +2314,7 @@
       flat();
       settle();
       bagList.scrollTop = Math.round(s);
+      moreLabel();
     };
     // The lift from where it is to g on a spring (v: px/s it starts with), then done(). Frame by
     // frame from script, not an animation the compositor runs, so the glass edge's copies are
@@ -2351,6 +2360,7 @@
         el.classList.toggle('is-small', small);
         bagList.scrollTop = 0;
         if (small) shape();
+        else moreLabel();
       } else if (fold) {
         if (bigBag()) shape();
         else {                                       // no shipping or protection rows: the card grows to fit
@@ -2361,6 +2371,17 @@
         }
       }
     };
+    // back to small from the whole bag: folded again where the whole bag shows (nothing moves), then
+    // shrunk on the spring
+    const shrink = () => {
+      if (fold || !small || !isOpen || closing || springing || pulling || qm) return;
+      cancelAnimationFrame(coast);
+      coast = 0;
+      shape();
+      draw(fold.hi - fold.lo, 0);
+      swing(0, 0, () => {});
+    };
+    if (more) more.addEventListener('click', () => (fold ? grow(0) : shrink()));
     // the list scrolled some other way (keys, a screen reader) while small: the card grows instead
     bagList.addEventListener('scroll', () => {
       if (fold && bagList.scrollTop > 0) { bagList.scrollTop = 0; grow(0); }
@@ -2379,6 +2400,7 @@
       small = pulling = false;
       flat();
       el.classList.remove('is-small');
+      moreLabel();
       el.style.marginTop = '';
     };
     const finishClose = () => {
