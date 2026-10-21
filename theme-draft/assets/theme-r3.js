@@ -2192,6 +2192,7 @@
     let lift = 0, spill = 0;                         // how far it has grown from small, and the list's scroll past the whole bag
     let springing = 0;                               // the lift on its spring (a frame request)
     let pulling = false;                             // a finger is growing the card
+    let follow = false;                              // the lift is a finger's (or carries on from one): rows come in with it, not on springs of their own
     let coast = 0;                                   // the list carrying on after a flick (a frame request)
     const bigBag = () => $$('.cart-line', linesEl).length > 0 && [shipEl, protectBox].filter((b) => b && !b.hidden).length > 1;
     const STRIP = 44;                                // a strip's height
@@ -2243,10 +2244,22 @@
       for (const a of e.getAnimations()) a.cancel();
       e.style.opacity = on ? '' : '0';
       e.style.pointerEvents = on ? '' : 'none';
+      e.style.scale = '';
       if (first || reduceMotion.matches || !e.animate) return;
       const sp = on ? SPAWN : UNSPAWN, n = sp.pts.length - 1;
       e.animate(sp.pts.map((x, i) => ({ opacity: Math.min(1, x * 2), scale: String(from + (1 - from) * x), offset: i / n })),
         { duration: sp.duration, delay: wait, easing: 'linear', fill: 'backwards' });
+    };
+    // Under a finger, a row (or line) comes in with the lift itself, not on a spring of its own,
+    // so nothing pops while the finger moves: k, from 0 (not there) to 1 (there), its size from
+    // `from`. It's left as it is, so a tap later pops it from there.
+    const scrub = (p, k, from) => {
+      const x = Math.min(1, Math.max(0, k));
+      for (const a of p.el.getAnimations()) a.cancel();
+      p.el.style.opacity = x >= 1 ? '' : x.toFixed(3);
+      p.el.style.scale = x >= 1 ? '' : (from + (1 - from) * x).toFixed(4);
+      p.el.style.pointerEvents = x > 0.5 ? '' : 'none';
+      p.on = x > 0.5;
     };
     // where each row is, and how much of it shows, at f (0 small, 1 the whole bag): whole rows as they
     // are, missing rows' room from nothing (the gap above them too), strips from a strip to the whole row.
@@ -2284,11 +2297,15 @@
       head.style.transform = 'translateY(' + (-g).toFixed(2) + 'px)';
       const most = fold.hi - fold.lo;
       const f = most > 0 ? Math.min(1, Math.max(0, g / most)) : 1;
+      const live = pulling || follow;
       lay(fold.rows, f);
       for (const r of fold.rows) {
         const y = -g - spill + r.top;
         r.el.style.transform = 'translateY(' + (y - r.y).toFixed(2) + 'px)';
-        if (r.kind === 'hide' && r.on !== r.f >= 0.6) spawn(r, r.f >= 0.6, 0.85);
+        if (r.kind === 'hide') {
+          if (live) scrub(r, (r.f - 0.35) / 0.5, 0.85);
+          else if (r.on !== r.f >= 0.6) spawn(r, r.f >= 0.6, 0.85);
+        }
         if (r.kind !== 'mini') continue;
         // a strip growing into its row: its box to the row's height so far, each part from its
         // place in the strip to its own, growing as it goes
@@ -2297,7 +2314,8 @@
           const q = p.with || p, sc = q.s + (1 - q.s) * f;
           const dx = (q.to.x - q.x) * (1 - f), dy = (q.to.y - q.y) * (1 - f);
           p.el.style.transform = 'translate(' + dx.toFixed(2) + 'px,' + dy.toFixed(2) + 'px)' + (sc === 1 ? '' : ' scale(' + sc.toFixed(4) + ')');
-          if (p.with && p.on !== f >= 0.6) spawn(p, f >= 0.6);   // in once there's room for it
+          if (p.with && live) scrub(p, (f - 0.55) / 0.4, 0.6);
+          else if (p.with && p.on !== f >= 0.6) spawn(p, f >= 0.6);   // in once there's room for it
         }
       }
       skin.style.transform = 'translateY(' + (fold.hi - fold.lo - g).toFixed(2) + 'px)';
@@ -2355,10 +2373,10 @@
     const flat = () => {
       for (const r of fold ? fold.rows : []) {
         r.el.style.zIndex = '';
-        if (r.kind === 'hide') r.el.style.opacity = r.el.style.pointerEvents = '';
+        if (r.kind === 'hide') r.el.style.opacity = r.el.style.pointerEvents = r.el.style.scale = '';
         if (r.kind !== 'mini') continue;
         r.el.classList.remove('is-mini');
-        for (const p of r.parts) p.el.style.transform = p.el.style.opacity = p.el.style.pointerEvents = p.el.style.transformOrigin = '';
+        for (const p of r.parts) p.el.style.transform = p.el.style.opacity = p.el.style.pointerEvents = p.el.style.scale = p.el.style.transformOrigin = '';
         r.box.style.height = '';
       }
       fold = null; lift = spill = 0;
@@ -2399,6 +2417,7 @@
     // settles without bouncing (SwiftUI's default)
     const grow = (v) => {
       if (!fold || !isOpen || closing || springing || pulling || qm) return;
+      follow = false;                                // no finger: the rows pop in
       swing(fold.hi - fold.lo, v, unfold, 0.5, 1);
     };
     // the list carrying on after a flick (v: px/s), slowing as iOS scrolling does (0.998 a ms)
@@ -2449,6 +2468,7 @@
     const shrink = () => {
       if (fold || !small || !isOpen || closing || springing || pulling || qm) return;
       refold();
+      follow = false;
       swing(0, 0, () => {}, 0.5, 1);
     };
     // The button acts the moment it's touched (not on the tap's click, which comes only once the
@@ -2456,6 +2476,7 @@
     // turns it round from where it is.
     const press = () => {
       if (!small || !isOpen || closing || pulling || qm) return;
+      follow = false;
       if (fold && springing) swing(aimBig ? 0 : fold.hi - fold.lo, 0, aimBig ? () => {} : unfold, 0.5, 1);
       else if (fold) grow(0);
       else shrink();
@@ -2652,6 +2673,7 @@
         el.classList.add('is-dragging');
         if (pull) {
           pulling = true;
+          follow = true;
           cancelAnimationFrame(springing);           // caught on its spring: held where it has got to
           springing = 0;
           drag.g0 = lift;
@@ -2709,11 +2731,12 @@
           const up = e && b && e.timeStamp - b.t > 60 ? 0 : -speed * 1000;
           const most = fold.hi - fold.lo;
           if (d.s > 0 || d.cur < 0 || d.g + (up / 1000) * (0.998 / 0.002) > most / 2) {
+            follow = true;                           // the rows carry on as they were under the finger
             swing(most, Math.max(0, up), () => {
               unfold();
               if (d.s > 0 && !d.cur) carry(up);      // the list was scrolling: it carries on
             });
-          } else swing(0, Math.max(0, -up), () => fit(false));   // (the bag may have changed meanwhile)
+          } else { follow = true; swing(0, Math.max(0, -up), () => fit(false)); }   // (the bag may have changed meanwhile)
           if (!d.cur) { el.style.transform = ''; scrim.style.opacity = '1'; return; }
         }
         // pulled off its place (up past the whole bag, or down below small): as any swipe of the card
