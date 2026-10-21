@@ -1766,6 +1766,7 @@
     };
     const POP = spring(0.46, 0.78);                 // pops up with a little overshoot, like the AirPods card
     const AWAY = spring(0.36, 1);                   // leaves without bouncing
+    const SPAWN = spring(0.36, 0.6);                // a line coming into a growing row: in with a bounce
     const slide = (s, from, to, fill) => el.animate(
       s.pts.map((x, i) => ({ transform: 'translateY(' + (from + (to - from) * x).toFixed(2) + 'px)', offset: i / (s.pts.length - 1) })),
       { duration: s.duration, easing: 'linear', fill: fill || 'none' });
@@ -2210,6 +2211,18 @@
       extra.with = label;                            // it goes with the label, and comes in late
       return [icon, label, end, extra];
     };
+    // The line under a strip's label, popping in (or out, quickly) on its own spring, not with the
+    // lift. on: where it's going; when it isn't anywhere yet (just made a strip) it's put there.
+    const spawn = (p, on) => {
+      const e = p.el, first = p.on === undefined;
+      p.on = on;
+      for (const a of e.getAnimations()) a.cancel();
+      e.style.opacity = on ? '' : '0';
+      if (first || reduceMotion.matches || !e.animate) return;
+      if (on) e.animate(SPAWN.pts.map((x, i) => ({ opacity: Math.min(1, x * 2), scale: String(0.6 + 0.4 * x), offset: i / (SPAWN.pts.length - 1) })),
+        { duration: SPAWN.duration, easing: 'linear' });
+      else e.animate([{ opacity: 1, scale: '1' }, { opacity: 0, scale: '0.85' }], { duration: 120, easing: 'ease-in' });
+    };
     // How far back a row h tall, hinged at its top, leans (radians) to show s of its height, seen
     // in the rows' perspective: h·cos(a)·D / (D + h·sin(a)) = s.
     const lean = (h, s) => (s >= h ? 0 : s <= 0 ? Math.PI / 2
@@ -2252,7 +2265,7 @@
           const q = p.with || p, sc = q.s + (1 - q.s) * f;
           const dx = (q.to.x - q.x) * (1 - f), dy = (q.to.y - q.y) * (1 - f);
           p.el.style.transform = 'translate(' + dx.toFixed(2) + 'px,' + dy.toFixed(2) + 'px)' + (sc === 1 ? '' : ' scale(' + sc.toFixed(4) + ')');
-          if (p.with) p.el.style.opacity = Math.max(0, (f - 0.6) / 0.4).toFixed(3);   // in once there's room for it
+          if (p.with && p.on !== f >= 0.6) spawn(p, f >= 0.6);   // in once there's room for it
         }
       }
       skin.style.transform = 'translateY(' + (fold.hi - fold.lo - g).toFixed(2) + 'px)';
@@ -2282,6 +2295,7 @@
       for (const r of rows) {
         if (r.kind !== 'mini') continue;
         r.parts = stripParts(r.el);
+        r.parts[3].el.style.transformOrigin = '0 50%';
         r.box = $(':scope > .drawer__box', r.el) || r.el.insertBefore(document.createElement('i'), r.el.firstChild);
         r.box.className = 'drawer__box';
         r.el.classList.add('is-mini');
@@ -2308,7 +2322,7 @@
       for (const r of fold ? fold.rows : []) {
         if (r.kind !== 'mini') continue;
         r.el.classList.remove('is-mini');
-        for (const p of r.parts) p.el.style.transform = p.el.style.opacity = '';
+        for (const p of r.parts) p.el.style.transform = p.el.style.opacity = p.el.style.transformOrigin = '';
         r.box.style.height = '';
       }
       fold = null; lift = spill = 0;
@@ -2329,12 +2343,12 @@
     // The lift from where it is to g on a spring (v: px/s it starts with), then done(). Frame by
     // frame from script, not an animation the compositor runs, so the glass edge's copies are
     // lined up with it in every frame they're drawn in.
-    const swing = (g, v, done) => {
+    const swing = (g, v, done, response = 0.44, damping = 0.9) => {
       cancelAnimationFrame(springing);
       springing = 0;
       const from = lift, d = g - from;
       if (Math.abs(d) < 0.5 || reduceMotion.matches) { draw(g, 0); done(); return; }
-      const s = spring(0.44, 0.9, Math.min(8, Math.max(0, v / Math.abs(d))));
+      const s = spring(response, damping, Math.min(8, Math.max(0, v / Math.abs(d))));
       const n = s.pts.length - 1, t0 = performance.now();
       const step = (t) => {
         const k = Math.min(1, Math.max(0, t - t0) / s.duration) * n, i = Math.min(n - 1, Math.floor(k));
@@ -2344,10 +2358,11 @@
       };
       springing = requestAnimationFrame(step);
     };
-    // grown at once, on its spring: for a wheel or keys, which have no finger to follow
+    // grown at once: for a tap, a wheel or keys, which have no finger to follow, on a spring that
+    // settles without bouncing (SwiftUI's default)
     const grow = (v) => {
       if (!fold || !isOpen || closing || springing || pulling || qm) return;
-      swing(fold.hi - fold.lo, v, unfold);
+      swing(fold.hi - fold.lo, v, unfold, 0.5, 1);
     };
     // the list carrying on after a flick (v: px/s), slowing as iOS scrolling does (0.998 a ms)
     const carry = (v) => {
@@ -2381,15 +2396,18 @@
         }
       }
     };
-    // back to small from the whole bag: folded again where the whole bag shows (nothing moves), then
-    // shrunk on the spring
-    const shrink = () => {
-      if (fold || !small || !isOpen || closing || springing || pulling || qm) return;
+    // a grown small bag folded again where the whole bag shows, so nothing moves: ready to shrink
+    const refold = () => {
       cancelAnimationFrame(coast);
       coast = 0;
       shape();
       draw(fold.hi - fold.lo, 0);
-      swing(0, 0, () => {});
+    };
+    // back to small from the whole bag, on the same spring as growing
+    const shrink = () => {
+      if (fold || !small || !isOpen || closing || springing || pulling || qm) return;
+      refold();
+      swing(0, 0, () => {}, 0.5, 1);
     };
     if (more) more.addEventListener('click', () => (fold ? grow(0) : shrink()));
     // the list scrolled some other way (keys, a screen reader) while small: the card grows instead
@@ -2565,6 +2583,9 @@
       const dy = t.clientY - drag.y;
       if (drag.mode === 0) {
         if (dy === 0 && t.clientX === drag.x) return;
+        // a small bag that has grown, swiped down with its list at the top: it shrinks under the
+        // finger, back to small (then on down, to go), as it grew
+        if (!fold && small && !qm && !springing && dy > 0 && !(drag.list && drag.list.scrollTop > 0)) refold();
         const pull = !!fold && !qm;
         if (!pull && drag.list && (drag.list.scrollTop > 0 || dy < 0)) { drag.mode = -1; return; }
         drag.mode = pull ? 2 : 1;
