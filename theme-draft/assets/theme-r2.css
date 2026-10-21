@@ -1235,26 +1235,16 @@ h1.t-hero em,
 .drawer-scroller .drawer.is-folded>.drawer__skin,
 .drawer-scroller .drawer.is-folded .cart-line,
 .drawer-scroller .drawer.is-folded .ship-bubble,
-.drawer-scroller .drawer.is-folded .protect-bubble,
-.drawer-scroller .drawer.is-folded .cart-strip{will-change:transform;transform-origin:50% 0}
+.drawer-scroller .drawer.is-folded .protect-bubble{will-change:transform;transform-origin:50% 0}
 /* The small bag's strips (theme-r3.js): one product's shipping and
-   protection rows, each a line high, laid over its row until it folds out.
-   Solid, in the colour the rows show on the sheet, so the row under it
-   doesn't show through; a tap grows the bag. */
-.drawer-scroller .drawer__strips{position:relative;height:0}
-.drawer-scroller .drawer__strips[hidden]{display:none}
-.drawer-scroller .cart-strip{position:absolute;left:0;right:0;top:0;height:44px;display:flex;align-items:center;gap:10px;
-  padding:0 16px 0 14px;border-radius:16px;background:#F8F8FB;box-shadow:inset 0 0 0 1px rgba(255,255,255,.95);
-  -webkit-backface-visibility:hidden;backface-visibility:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.drawer-scroller .cart-strip svg{width:22px;height:22px;flex:0 0 auto;color:#8A8A8E}
-.drawer-scroller .cart-strip__label{font-size:13px;line-height:1.38;color:var(--sys-label-2);white-space:nowrap}
-.drawer-scroller .cart-strip__value{font-size:15px;font-weight:600;line-height:1.33;color:var(--sys-label);white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis;min-width:0;font-variant-numeric:tabular-nums}
-.drawer-scroller .cart-strip__end{margin-left:auto;flex:0 0 auto}
-.drawer-scroller .cart-strip__switch{position:relative;display:block;width:40px;height:18px;border-radius:9px;background:rgba(120,120,128,.2)}
-.drawer-scroller .cart-strip__switch i{position:absolute;left:1.5px;top:1.5px;width:23px;height:15px;border-radius:7.5px;background:#fff;
-  box-shadow:0 2px 5px rgba(0,0,0,.15),0 0 0 .5px rgba(0,0,0,.04)}
-.drawer-scroller .cart-strip__switch.is-on{background:#0071E3}
-.drawer-scroller .cart-strip__switch.is-on i{left:15.5px}
+   protection rows, a line high. The row's own box is drawn by .drawer__box
+   under it, cut to the height it has grown to; its parts move and grow
+   from their own top left corners. */
+.drawer-scroller .drawer__box{display:none}
+.drawer-scroller .drawer.is-folded .is-mini{position:relative;background:none;box-shadow:none;cursor:pointer}
+.drawer-scroller .drawer.is-folded .is-mini>.drawer__box{display:block;position:absolute;left:0;right:0;top:0;z-index:-1;border-radius:inherit;
+  background:rgba(249,249,252,.74);box-shadow:inset 0 0 0 1px rgba(255,255,255,.95)}
+.drawer-scroller .drawer.is-folded .is-mini :is(.ship-bubble__icon,.ship-bubble__label,.ship-bubble__method,.ship-bubble__price,
+  .protect-bubble__icon,.protect-bubble__label,.protect-bubble__title,.protect-bubble__side){transform-origin:0 0;will-change:transform}
 .drawer-scroller .drawer.is-folded .drawer__body{pointer-events:none}
 .drawer-scroller .drawer.is-folded .drawer__body>*{pointer-events:auto}

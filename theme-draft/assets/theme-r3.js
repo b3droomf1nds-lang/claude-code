@@ -2153,8 +2153,9 @@
        the shipping and protection rows wait as one-line strips. Pushed up,
        the card grows under the finger, the way an iOS sheet does: its top
        edge and the lines under it go up with the finger while its bottom
-       stays put, and the folded rows fold out (the strips flip over into
-       their rows) in the room it makes, above the total, until the whole bag
+       stays put, and the folded rows fold out (the strips grow into their
+       rows: everything in them moves and grows into place, and what the
+       whole row adds comes in) in the room it makes, above the total, until the whole bag
        shows. Let go part way and it carries on at the finger's speed to the
        whole bag, or back to small, whichever the flick would have reached; pushed on past the whole bag, the list
        scrolls if there's more of it, then the card rubber-bands. Once grown
@@ -2176,12 +2177,11 @@
     const bigBag = () => $$('.cart-line', linesEl).length > 0 && [shipEl, protectBox].filter((b) => b && !b.hidden).length > 1;
     const STRIP = 44;                                // a strip's height
     const DEPTH = 500;                               // the perspective the rows fold out in (px)
-    // the strips, under the list's last row: placed over their rows by draw()
-    const strips = document.createElement('div');
-    strips.className = 'drawer__strips';
-    strips.hidden = true;
-    bagList.append(strips);
-    strips.addEventListener('click', () => grow(0));
+    // a tap on a strip, anywhere but its switch, grows the bag
+    bagList.addEventListener('click', (e) => {
+      const row = fold && e.target.closest('.ship-bubble, .protect-bubble');
+      if (row && row.classList.contains('is-mini') && !e.target.closest('.cart-switch')) grow(0);
+    });
     // "Show more" while it's small, "Show less" once a small bag has grown, in the same spot
     const more = $('[data-drawer-more]', el);
     const moreLabel = () => {
@@ -2189,31 +2189,26 @@
       more.hidden = !small;
       more.textContent = fold ? more.dataset.more : more.dataset.less;
     };
-    // a one-line copy of the shipping or protection row: its icon, its grey label and, for shipping,
-    // the price, for protection, the switch as it's set
-    const stripOf = (row) => {
-      const s = document.createElement('div');
-      s.className = 'cart-strip';
-      s.setAttribute('aria-hidden', 'true');
-      const icon = $('svg', row).cloneNode(true);
-      icon.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));   // its mask is found by the row's own
-      const label = document.createElement('span');
-      label.className = 'cart-strip__label';
-      s.append(icon, label);
-      if (row === shipEl) {
-        label.textContent = $('.ship-bubble__label', row).textContent;
-        const price = document.createElement('span');
-        price.className = 'cart-strip__value cart-strip__end';
-        price.textContent = shipPrice.textContent;
-        s.append(price);
-      } else {
-        label.textContent = $('.protect-bubble__label', row).textContent;
-        const sw = document.createElement('span');
-        sw.className = 'cart-strip__switch cart-strip__end' + (protectToggle && protectToggle.checked ? ' is-on' : '');
-        sw.append(document.createElement('i'));
-        s.append(sw);
-      }
-      return s;
+    // A shipping or protection row as a strip: the row itself, a strip high (its box, drawn under
+    // it, is cut to that height), its tile shrunk to the strip's height at its left, its label beside
+    // that, the price or the switch (smaller) where they are on the right, each in the middle of
+    // the strip, and the line under the label not there yet. Each part, from where it is in the
+    // row: where it goes in the strip (x, y) and its size there (s).
+    const stripParts = (row) => {
+      const t = row.getBoundingClientRect();
+      const at = (sel) => { const e = $(sel, row), b = e.getBoundingClientRect(); return { el: e, x: b.left - t.left, y: b.top - t.top, w: b.width, h: b.height }; };
+      const ship = row === shipEl, k = ship ? 'ship-bubble' : 'protect-bubble';
+      const icon = at('.' + k + '__icon'), label = at('.' + k + '__label');
+      const extra = at(ship ? '.ship-bubble__method' : '.protect-bubble__title');
+      const end = at(ship ? '.ship-bubble__price' : '.protect-bubble__side');
+      icon.s = (STRIP - 12) / icon.h;
+      icon.to = { x: 10, y: 6 };
+      label.s = 1;
+      label.to = { x: 10 + icon.w * icon.s + 12, y: (STRIP - label.h) / 2 };
+      end.s = ship ? 1 : 0.65;
+      end.to = { x: end.x + end.w * (1 - end.s), y: (STRIP - end.h * end.s) / 2 };
+      extra.with = label;                            // it goes with the label, and comes in late
+      return [icon, label, end, extra];
     };
     // How far back a row h tall, hinged at its top, leans (radians) to show s of its height, seen
     // in the rows' perspective: h·cos(a)·D / (D + h·sin(a)) = s.
@@ -2248,9 +2243,17 @@
       for (const r of fold.rows) {
         const y = -g - spill + r.top;
         r.el.style.transform = 'translateY(' + (y - r.y).toFixed(2) + 'px)'
-          + (r.kind === 'full' ? '' : ' perspective(' + DEPTH + 'px) rotateX(' + (-lean(r.h, r.vis)).toFixed(4) + 'rad)');
-        // the strip over it leans away as its row comes over, gone (edge on) when the row is whole
-        if (r.strip) r.strip.style.transform = 'translateY(' + (y - fold.sy).toFixed(2) + 'px) perspective(' + DEPTH + 'px) rotateX(' + (-f * Math.PI / 2).toFixed(4) + 'rad)';
+          + (r.kind === 'hide' ? ' perspective(' + DEPTH + 'px) rotateX(' + (-lean(r.h, r.vis)).toFixed(4) + 'rad)' : '');
+        if (r.kind !== 'mini') continue;
+        // a strip growing into its row: its box to the row's height so far, each part from its
+        // place in the strip to its own, growing as it goes
+        r.box.style.height = r.vis.toFixed(2) + 'px';
+        for (const p of r.parts) {
+          const q = p.with || p, sc = q.s + (1 - q.s) * f;
+          const dx = (q.to.x - q.x) * (1 - f), dy = (q.to.y - q.y) * (1 - f);
+          p.el.style.transform = 'translate(' + dx.toFixed(2) + 'px,' + dy.toFixed(2) + 'px)' + (sc === 1 ? '' : ' scale(' + sc.toFixed(4) + ')');
+          if (p.with) p.el.style.opacity = Math.max(0, (f - 0.6) / 0.4).toFixed(3);   // in once there's room for it
+        }
       }
       skin.style.transform = 'translateY(' + (fold.hi - fold.lo - g).toFixed(2) + 'px)';
       lensAlign();                                   // the copies follow the edge in this same frame
@@ -2276,14 +2279,19 @@
         r.y = b.top - top0; r.h = b.height;
         r.gap = i ? r.y - rows[i - 1].y - rows[i - 1].h : 0;
       });
-      for (const r of rows) if (r.kind === 'mini') strips.append(r.strip = stripOf(r.el));
-      strips.hidden = !strips.firstChild;
+      for (const r of rows) {
+        if (r.kind !== 'mini') continue;
+        r.parts = stripParts(r.el);
+        r.box = $(':scope > .drawer__box', r.el) || r.el.insertBefore(document.createElement('i'), r.el.firstChild);
+        r.box.className = 'drawer__box';
+        r.el.classList.add('is-mini');
+      }
       if (lo === undefined) {                        // down to the last row, in whole pixels, like the list's scroll
         const list = bagList.getBoundingClientRect(), last = rows[rows.length - 1].el;
         lo = Math.round(height() - list.height + (top0 - list.top) + lay(rows, 0)
           + parseFloat(getComputedStyle(last).marginBottom) + parseFloat(cs.paddingBottom));
       }
-      fold = { lo, hi: Math.max(lo, full), room, rows, sy: strips.getBoundingClientRect().top - top0 };
+      fold = { lo, hi: Math.max(lo, full), room, rows };
       const up = fold.hi - lo;
       el.classList.add('is-folded');
       el.style.height = lo + 'px';
@@ -2297,12 +2305,16 @@
     };
     // the plain card again, at whatever height its bag gives it
     const flat = () => {
+      for (const r of fold ? fold.rows : []) {
+        if (r.kind !== 'mini') continue;
+        r.el.classList.remove('is-mini');
+        for (const p of r.parts) p.el.style.transform = p.el.style.opacity = '';
+        r.box.style.height = '';
+      }
       fold = null; lift = spill = 0;
       el.classList.remove('is-folded');
       head.style.transform = skin.style.transform = skin.style.top = '';
       for (const r of [...$$('.cart-line', linesEl), shipEl, protectBox]) if (r) r.style.transform = '';
-      strips.hidden = true;
-      strips.textContent = '';
       bagList.style.marginTop = bagList.style.paddingTop = '';
       el.style.height = '';
     };
