@@ -1,0 +1,51 @@
+<aside class="drawer" data-drawer role="dialog" aria-modal="true" aria-label="{{ 'cart.title' | t }}">
+  <div class="drawer__head">
+    <h2>{{ 'cart.title' | t }}</h2>
+    <button class="drawer__close" data-drawer-close aria-label="{{ 'general.close' | t }}"><svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2.2 2.2l7.6 7.6M9.8 2.2l-7.6 7.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+  </div>
+
+  <div class="drawer__body">
+    <div class="drawer__empty" data-drawer-empty hidden>
+      <p class="t-md" style="margin-bottom:8px">{{ 'cart.empty' | t }}</p>
+      <p class="t-muted" style="font-size:.9rem;margin:0 0 24px">{{ 'cart.empty_sub' | t }}</p>
+    </div>
+
+    <div data-drawer-lines></div>
+
+    <div class="ship-bubble" data-ship hidden>
+      <span class="ship-bubble__icon"><svg width="24" height="24" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M8.02 2.10 Q9.00 1.60 9.98 2.10 L13.99 4.17 Q14.97 4.68 13.99 5.18 L9.98 7.25 Q9.00 7.75 8.02 7.25 L4.01 5.18 Q3.03 4.68 4.01 4.17 Z M2.40 6.75 Q2.40 5.65 3.38 6.15 L7.45 8.25 Q8.43 8.75 8.43 9.85 L8.43 15.00 Q8.43 16.10 7.45 15.60 L3.38 13.50 Q2.40 13.00 2.40 11.90 Z M14.62 6.15 Q15.60 5.65 15.60 6.75 L15.60 11.90 Q15.60 13.00 14.62 13.50 L10.55 15.60 Q9.57 16.10 9.57 15.00 L9.57 9.85 Q9.57 8.75 10.55 8.25 Z" fill="currentColor"/></svg></span>
+      <div class="ship-bubble__body">
+        <span class="ship-bubble__label">{{ 'cart.shipping' | t }}</span>
+        <span class="ship-bubble__method" data-ship-method></span>
+      </div>
+      <span class="ship-bubble__price" data-ship-price></span>
+    </div>
+
+    {%- comment -%} Shipping protection, laid out like a product line: a tile, a grey label over the cover, then the switch
+      where the shipping price is. The switch is drawn (theme-r2.css, after iOS 26's) over a
+      real one, which iPhones tick for. {%- endcomment -%}
+    <div class="protect-bubble" data-protect hidden>
+      <span class="protect-bubble__icon"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><defs><mask id="protect-cut"><rect width="30" height="30" fill="#fff"/><path d="M10.5 15.3l3.1 3.1 5.9-6.2" fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></mask></defs><path mask="url(#protect-cut)" fill="currentColor" d="M13.7 2.85A3.4 3.4 0 0 1 16.3 2.85L24.1 5.95C25.1 6.35 25.8 7.35 25.8 8.45V13.6C25.8 19.9 21.9 24.8 16.1 26.85A3.4 3.4 0 0 1 13.9 26.85C8.1 24.8 4.2 19.9 4.2 13.6V8.45C4.2 7.35 4.9 6.35 5.9 5.95Z"/></svg></span>
+      <div class="protect-bubble__body">
+        <span class="protect-bubble__label">{{ 'cart.protect_label' | t }}</span>
+        <span class="protect-bubble__title">{{ 'cart.protect_title' | t }}</span>
+      </div>
+      <div class="protect-bubble__side">
+        <label class="cart-switch">
+          <input type="checkbox" switch aria-label="{{ 'cart.protect_label' | t }}">
+          <span class="cart-switch__track" aria-hidden="true"><span class="cart-switch__knob"></span></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawer__foot" data-drawer-foot hidden>
+    <div class="drawer__subtotal">
+      <span data-total-label>{{ 'cart.subtotal' | t }}</span>
+      <span data-drawer-subtotal></span>
+      <button type="button" class="drawer__more" data-drawer-more data-more="{{ 'cart.show_more' | t | escape }}" data-less="{{ 'cart.show_less' | t | escape }}" hidden>{{ 'cart.show_more' | t }}</button>
+    </div>
+    <p class="drawer__hint" data-total-hint>{{ 'cart.taxes_note' | t }}</p>
+    <a class="btn btn--accent drawer__checkout" href="{{ routes.cart_url }}/checkout">{{ 'cart.checkout' | t }}</a>
+  </div>
+</aside>
