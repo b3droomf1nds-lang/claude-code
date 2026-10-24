@@ -2738,9 +2738,6 @@
     padding-top: 26px;
     border-top: 1px solid rgba(19, 19, 22, .16);
   }
-  /* no thin line between rows 1-2 and rows 3-4 (spacing kept) */
-  .pdp-cmp__stats-row:nth-child(2),
-  .pdp-cmp__stats-row:nth-child(4) { border-top: 0; }
   .pdp-cmp__stats-lead { margin-bottom: 6px; }
   .pdp-cmp__stats-note { margin-top: 8px; }
   /* Spacing round each number, tuned row by row (top to bottom):
