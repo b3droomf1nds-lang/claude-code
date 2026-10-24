@@ -1256,3 +1256,9 @@ h1.t-hero em,
   .protect-bubble__icon,.protect-bubble__label,.protect-bubble__title,.protect-bubble__side){transform-origin:0 0;will-change:transform}
 .drawer-scroller .drawer.is-folded .drawer__body{pointer-events:none}
 .drawer-scroller .drawer.is-folded .drawer__body>*{pointer-events:auto}
+
+/* squircle corners (voltical-squircle.js): a box cut to the shape drops its
+   own radius, or the circle would trim the corner's middle; in Canva edit
+   mode it keeps its radius uncut, as the editor's outlines sit outside it */
+html:not(.cv-editing) .is-sq{border-radius:0 !important}
+html.cv-editing .is-sq{clip-path:none !important}

@@ -88,10 +88,15 @@
 
   .sugg__card{
     position:relative; display:block; flex:0 0 var(--cw); height:var(--ch);
-    scroll-snap-align:start; border-radius:28px; overflow:hidden; isolation:isolate;
-    background:#fdfeff;  /* the product photos' own white */
+    scroll-snap-align:start; border-radius:28px;
     box-shadow:0 1px 2px rgba(19,19,22,.04),0 18px 44px -22px rgba(19,19,22,.14);
     color:inherit; text-decoration:none; -webkit-tap-highlight-color:transparent;
+  }
+  /* the card itself, inside its shadow: cut to a squircle (voltical-squircle.js),
+     which would cut the shadow off if it were the card's own */
+  .sugg__face{
+    position:absolute; inset:0; border-radius:inherit; overflow:hidden; isolation:isolate;
+    background:#fdfeff;  /* the product photos' own white */
   }
   .sugg__img{
     position:absolute; left:0; top:calc(var(--img-y) + 15px + var(--img-drop,0px)); width:100%; height:auto;
@@ -305,6 +310,7 @@
         {%- assign card_bar = false -%}
         {%- if card_product or block.settings.desc != blank -%}{%- assign card_bar = true -%}{%- endif -%}
         <div class="sugg__card{% if card_info %} sugg__card--info{% endif %}" data-sugg-card{% if block.settings.img_drop > 0 %} style="--img-drop:{{ block.settings.img_drop }}px"{% endif %} {{ block.shopify_attributes }}>
+          <div class="sugg__face">
           {%- if card_image != blank -%}
             <img class="sugg__img" src="{{ card_image | image_url: width: 1000 }}"
                  srcset="{{ card_image | image_url: width: 500 }} 500w, {{ card_image | image_url: width: 750 }} 750w, {{ card_image | image_url: width: 1000 }} 1000w, {{ card_image | image_url: width: 1300 }} 1300w"
@@ -343,6 +349,7 @@
               {%- endif -%}
             </div>
           {%- endif -%}
+          </div>
         </div>
       {%- endfor -%}
     </div>
