@@ -4,10 +4,10 @@
    the arc starts at its full bend at once, a jump the eye picks up as a
    faint kink where the corner begins. This corner starts bending gently
    further along the side and tightens towards its middle, with no jump.
-   Measured off the frame of a macOS window (the owner's Discord
-   screenshot), it's a superellipse, |x|^3.8 + |y|^3.8 = 1, reaching 1.66×
-   the radius along each side. At that size it reads as round as the box's
-   own border-radius, only smoother, so each box keeps its radius in the
+   Measured off Apple's own cards (the iPhone Air page on an iPhone, 28px
+   corners), it's a gentle superellipse, |x|^3 + |y|^3 = 1, reaching just
+   the box's border-radius along each side: close to a round corner, with
+   only the start of the bend softened. So each box keeps its radius in the
    CSS and this works out the rest.
 
    Safari has no corner-shape, so each box is cut to the shape with a
@@ -16,7 +16,7 @@
    corner's middle. Off in Canva edit mode, whose outlines sit outside. */
 (function () {
   'use strict';
-  var N = 3.8, REACH = 1.66, STEPS = 24;
+  var N = 3, REACH = 1, STEPS = 24;
   var BOXES = '.pdp-cmp__grid > .pdp-cmp__card, .gallery__main, .sugg__face';
   var boxes = [].slice.call(document.querySelectorAll(BOXES));
   if (!boxes.length || !window.ResizeObserver || !(window.CSS && CSS.supports && CSS.supports('clip-path', 'path("M0 0")'))) return;
