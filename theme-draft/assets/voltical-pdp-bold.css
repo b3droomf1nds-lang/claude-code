@@ -2775,4 +2775,10 @@
     color: transparent;
     -webkit-text-fill-color: transparent;
   }
+  /* the last stat (video playback) is plain black, no gradient */
+  .pdp-cmp__stats-row:last-child .pdp-cmp__stats-num {
+    background: none;
+    color: #131316;
+    -webkit-text-fill-color: #131316;
+  }
 }
