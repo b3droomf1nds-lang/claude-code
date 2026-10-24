@@ -2775,8 +2775,9 @@
     color: transparent;
     -webkit-text-fill-color: transparent;
   }
-  /* the last stat (video playback) is plain black, no gradient */
-  .pdp-cmp__stats-row:last-child .pdp-cmp__stats-num {
+  /* the 2nd and 3rd from the bottom (full charges, top-ups) are plain black, no gradient */
+  .pdp-cmp__stats-row:nth-child(3) .pdp-cmp__stats-num,
+  .pdp-cmp__stats-row:nth-child(4) .pdp-cmp__stats-num {
     background: none;
     color: #131316;
     -webkit-text-fill-color: #131316;
