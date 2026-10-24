@@ -145,6 +145,38 @@
       <div class="pdp-cmp__compact-video-main"><span data-calc-charge5>&mdash;</span><br><span class="pdp-cmp__compact-charge5-unit">minutes</span></div>
       <div class="pdp-cmp__sub">from 0% to 50% charge</div>
     </div>
+    {%- comment -%} Mobile-only long stats tile, Apple "compare" style: the five live
+      numbers one under another with a hairline between. Appended LAST so no
+      :nth-child path moves; CSS order puts it at the end of the mobile stack.
+      Same calculator hooks as the tiles above (data-calc-minutes is the 20→80%
+      time, which data-calc-time can't serve twice). aria-hidden: a visual copy. {%- endcomment -%}
+    <div class="pdp-cmp__card pdp-cmp__card--compact-stat pdp-cmp__card--stats" aria-hidden="true">
+      <div class="pdp-cmp__stats-row">
+        <div class="pdp-cmp__stats-lead">As little as</div>
+        <div class="pdp-cmp__stats-num"><span data-calc-charge5>&mdash;</span> minutes</div>
+        <div class="pdp-cmp__stats-note">from 0% to 50% charge</div>
+      </div>
+      <div class="pdp-cmp__stats-row">
+        <div class="pdp-cmp__stats-lead">As low as</div>
+        <div class="pdp-cmp__stats-num"><span data-calc-minutes>&mdash;</span> minutes</div>
+        <div class="pdp-cmp__stats-note">to charge from 20% to 80%</div>
+      </div>
+      <div class="pdp-cmp__stats-row">
+        <div class="pdp-cmp__stats-lead">Up to</div>
+        <div class="pdp-cmp__stats-num"><span data-calc-full-num>&mdash;</span> full charges</div>
+        <div class="pdp-cmp__stats-note">for your iPhone from one Core</div>
+      </div>
+      <div class="pdp-cmp__stats-row">
+        <div class="pdp-cmp__stats-lead">Up to</div>
+        <div class="pdp-cmp__stats-num"><span data-calc-partial-num>&mdash;</span> top-ups</div>
+        <div class="pdp-cmp__stats-note">of 20% to 80%, on a single charge</div>
+      </div>
+      <div class="pdp-cmp__stats-row">
+        <div class="pdp-cmp__stats-lead">Up to</div>
+        <div class="pdp-cmp__stats-num"><span data-calc-video-num>&mdash;</span> more hours</div>
+        <div class="pdp-cmp__stats-note">video playback</div>
+      </div>
+    </div>
   </div>
 </div>
 </div>
@@ -198,6 +230,7 @@
   var videoEls = document.querySelectorAll('[data-calc-video]');
   var videoNumEls = document.querySelectorAll('[data-calc-video-num]');
   var charge5Els = document.querySelectorAll('[data-calc-charge5]');
+  var minutesEls = document.querySelectorAll('[data-calc-minutes]');
   if (!select || !timeEl || !fullNumEls.length || !partialNumEls.length || !videoEls.length || !videoNumEls.length) return;
 
   function writeAll(els, value) {
@@ -236,6 +269,7 @@
     writeAll(videoEls, Math.round(videoHours) + 'h');
     writeAll(videoNumEls, Math.round(videoHours));
     timeEl.textContent = Math.round(minutes);
+    writeAll(minutesEls, Math.round(minutes));
 
     // 0%→50% charge time. The low state-of-charge range charges faster than the
     // 20→80% average (less voltage/thermal taper), so it uses a higher effective

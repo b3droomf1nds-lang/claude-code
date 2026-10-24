@@ -2708,3 +2708,58 @@
   .pdp--core .pdp-cmp__grid > .pdp-cmp__card .pdp-cmp__img-slot,
   .pdp--core .pdp-cmp__grid > .pdp-cmp__card .pdp-cmp__feature-icon-wrap { mix-blend-mode: multiply; }
 }
+
+/* ==== MOBILE long stats tile ================================================
+   One tall white tile at the end of the mobile stack, in the style of Apple's
+   "Compare with" card: per stat a grey lead-in, the number big and black, a
+   grey line saying what it is, and a hairline between stats. The first
+   stat's number takes the fast-charge gradient, as Apple tints its headline
+   stat. Text sits left, not centred like the small tiles. It repeats the
+   live numbers (same calculator hooks), is hidden on desktop by the
+   compact-stat rule, and has its own class names so no tile rule reaches it. */
+@media (max-width: 899px) {
+  .template-product .pdp-cmp__card--compact-stat.pdp-cmp__card--stats {
+    grid-column: 1 / -1;
+    order: 12;
+    width: min(100%, 413px);
+    height: auto;
+    aspect-ratio: auto;
+    justify-self: center;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 0;
+    padding: 30px 28px 34px !important;
+    text-align: left !important;
+    border-radius: 24px;
+    font-family: var(--sans);
+  }
+  .pdp-cmp__stats-row + .pdp-cmp__stats-row {
+    margin-top: 26px;
+    padding-top: 26px;
+    border-top: 1px solid rgba(19, 19, 22, .16);
+  }
+  .pdp-cmp__stats-lead,
+  .pdp-cmp__stats-note {
+    color: #737d8b;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .pdp-cmp__stats-num {
+    margin: 6px 0 8px;
+    color: #131316;
+    font-size: 46px;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 1.02;
+  }
+  .pdp-cmp__stats-row:first-child .pdp-cmp__stats-num {
+    background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+}
