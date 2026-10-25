@@ -2740,7 +2740,7 @@
   }
   /* image room (as tall as the black-phone tile, 513px) after row 2 and before the last row */
   .pdp-cmp__stats-row:nth-child(3),
-  .pdp-cmp__stats-row:nth-child(5) { margin-top: 539px; }
+  .pdp-cmp__stats-row:nth-child(5) { margin-top: 539px; border-top: 0; }
   .pdp-cmp__stats-lead { margin-bottom: 6px; }
   .pdp-cmp__stats-note { margin-top: 8px; }
   /* Spacing round each number, tuned row by row (top to bottom):
