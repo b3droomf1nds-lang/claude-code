@@ -1927,12 +1927,11 @@
 
   /* Same size, weight, and inline "number extra" layout as the compact-full
      card's hero line below it. One continuous fade spans the complete live
-     value (owner, 2026-10-28; "2 extra" below has it too): its first third
-     is the charge tile's "62" from the 6 to the end of the 2 (pink, mauve,
-     lilac), and from there it carries on along Apple's M5 Ultra spec line
-     "1.2TB/s memory bandwidth" (apple.com Mac Studio) from the "m" of
-     "memory", where that lilac is, to its end: periwinkle, blue, sky blue.
-     Both measured off the owner's screenshots. */
+     value: the second half of the site's fade (the one on the charge and
+     stats tiles), mauve to lilac to periwinkle. "2 extra", the card above,
+     shows the first half, so the two read as one fade split across them
+     (owner, 2026-10-28). The fade is drawn twice the text's width and this
+     card shows its right half. */
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main {
     display: flex;
     align-items: baseline;
@@ -1945,7 +1944,11 @@
     line-height: .95;
     white-space: nowrap;
     margin-bottom: 7px;
-    background: linear-gradient(90deg, #E9B7BE 0%, #E7AAC1 5.7%, #DFA5C2 11.5%, #DAA5C4 14.4%, #CA9DD4 20.1%, #BF98E3 25.9%, #B094E9 33.3%, #A68FF8 38.5%, #9294FD 48.7%, #809DFD 59%, #6BA5FC 69.2%, #77B6FC 79.5%, #90C8FC 89.7%, #A6DAFC 100%);
+    background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background-size: 200% 100%;
+    background-position: 100% 0;
+    background-repeat: no-repeat;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -2046,8 +2049,9 @@
     margin-bottom: 7px;
   }
 
-  /* The "62" colours for a third, then on along Apple's "memory bandwidth"
-     (owner, 2026-10-28; see "3.4 extra" above, which has it too). */
+  /* The first half of the site's fade, peach to pink; "3.4 extra", the card
+     below, shows the second half (owner, 2026-10-28). Drawn twice the text's
+     width, this card shows its left half. */
   .template-product .pdp-cmp__card--compact-full > .pdp-cmp__compact-full-main {
     display: flex;
     align-items: baseline;
@@ -2061,7 +2065,11 @@
     line-height: .95;
     white-space: nowrap;
     margin-bottom: 7px;
-    background: linear-gradient(90deg, #E9B7BE 0%, #E7AAC1 5.7%, #DFA5C2 11.5%, #DAA5C4 14.4%, #CA9DD4 20.1%, #BF98E3 25.9%, #B094E9 33.3%, #A68FF8 38.5%, #9294FD 48.7%, #809DFD 59%, #6BA5FC 69.2%, #77B6FC 79.5%, #90C8FC 89.7%, #A6DAFC 100%);
+    background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background-size: 200% 100%;
+    background-position: 0 0;
+    background-repeat: no-repeat;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
