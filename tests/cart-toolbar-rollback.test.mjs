@@ -20,8 +20,8 @@ test('drawer open and close keep document position and background styles untouch
     const bodyStyle = { overflow: '', paddingTop: '24px', transition: 'padding-top 2s' };
     const rootStyle = { scrollBehavior: 'smooth', overflowAnchor: 'auto' };
     const classes = new Set();
-    const scrim = { hidden: true, style: { opacity: '' } };
-    const scroller = { hidden: true, scrollTop: 0, scrollTo: ({ top }) => { scroller.scrollTop = top; } };
+    const scrim = { hidden: true, style: { opacity: '', bottom: '' } };
+    const scroller = { hidden: true, scrollTop: 0, style: { bottom: '' }, scrollTo: ({ top }) => { scroller.scrollTop = top; } };
     let focused = 0;
     let primes = 0;
     const context = vm.createContext({
@@ -30,7 +30,7 @@ test('drawer open and close keep document position and background styles untouch
       el: { style: { transform: '', removeProperty: () => {} },
         classList: { add: name => classes.add(name), remove: name => classes.delete(name) },
         focus: options => { assert.equal(options.preventScroll, true); focused++; } },
-      scrim, scroller, maxTop: () => 600, paint: () => {}, stopAnims: () => {}, fit: () => {}, unfit: () => {},
+      scrim, scroller, maxTop: () => 600, paint: () => {}, stopAnims: () => {}, stretch: () => {}, fit: () => {}, unfit: () => {},
       hapClearPrime: () => {}, hapQueueSeeds: () => { primes++; }, reduceMotion: { matches: true }
     });
     vm.runInContext('let isOpen = false; let closing = false;\n' + closeSource + openSource +

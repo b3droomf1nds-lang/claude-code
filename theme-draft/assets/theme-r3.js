@@ -2437,16 +2437,32 @@
       coast = requestAnimationFrame(step);
     };
     // on opening, and when the bag changes while open
+    // A screen too short for the small bag (a keyboard up, an in-app browser's own panel over the
+    // page, a phone on its side) squeezes it under its max-height (theme-r2.css), cutting its rows
+    // off at the total: it's the whole bag instead, its list scrolling, until the screen has room.
+    let cramped = false;
+    const smallFits = () => {
+      if (height() >= fold.lo - 0.5) return true;
+      small = false;
+      cramped = true;
+      flat();
+      el.classList.remove('is-small');
+      bagList.scrollTop = 0;
+      settle();
+      moreLabel();
+      return false;
+    };
     const fit = (opening) => {
       if (!isOpen || closing || springing || pulling) return;
       if (opening) {
+        cramped = false;
         small = bigBag();
         el.classList.toggle('is-small', small);
         bagList.scrollTop = 0;
-        if (small) shape();
+        if (small) { shape(); smallFits(); }
         else moreLabel();
       } else if (fold) {
-        if (bigBag()) shape();
+        if (bigBag()) { shape(); smallFits(); }
         else {                                       // no shipping or protection rows: the card grows to fit
           small = false;
           el.classList.remove('is-small');
@@ -2502,12 +2518,38 @@
       e.preventDefault();
       grow(0);
     }, { passive: false });
+    // Some in-app browsers on iPhone can leave the screen's full-screen layers shorter than the page
+    // they show (after their own panel, or a keyboard, goes away): the card would rest high up, page
+    // showing under it. The card's layer and its dim reach down to what is shown, never less.
+    const stretch = () => {
+      scroller.style.bottom = scrim.style.bottom = '';
+      const vv = window.visualViewport;
+      const gap = Math.max(innerHeight, vv ? vv.offsetTop + vv.height : 0) - scroller.getBoundingClientRect().bottom;
+      if (gap > 1) scroller.style.bottom = scrim.style.bottom = (parseFloat(getComputedStyle(scroller).bottom) || 0) - gap + 'px';
+    };
+    // the screen changed height while the card is up: its layer is fitted to it again and the card
+    // set back at the bottom; a small bag it now squeezes goes whole, and a bag made whole for want of
+    // room goes small once there's room
+    const resized = () => {
+      if (!isOpen || closing || springing || pulling || qm || drag) return;
+      stretch();
+      settle();
+      if (fold) { if (height() < fold.lo - 0.5) smallFits(); return; }
+      if (!cramped || !bigBag()) return;
+      small = true;
+      el.classList.add('is-small');
+      bagList.scrollTop = 0;
+      shape();
+      if (smallFits()) cramped = false;
+    };
+    addEventListener('resize', resized);
+    if (window.visualViewport) visualViewport.addEventListener('resize', resized);
     // closed: nothing of it is kept, and the next opening fits the bag afresh
     const unfit = () => {
       cancelAnimationFrame(springing);
       cancelAnimationFrame(coast);
       springing = coast = 0;
-      small = pulling = false;
+      small = pulling = cramped = false;
       flat();
       el.classList.remove('is-small');
       moreLabel();
@@ -2521,6 +2563,7 @@
       scroller.hidden = true;
       scrim.hidden = true;
       scrim.style.opacity = '';
+      scroller.style.bottom = scrim.style.bottom = '';
       el.style.transform = '';
       el.style.removeProperty('--rb');
       el.classList.remove('is-dragging');
@@ -2541,6 +2584,7 @@
         el.classList.add('is-open');
         scrim.hidden = false;
         scroller.hidden = false;                    // the page behind stays scrollable: only the card takes touches
+        stretch();
         fit(true);                                  // several products: it opens smaller
         scroller.scrollTop = maxTop();              // at rest, fully open…
         paint();
