@@ -1928,13 +1928,12 @@
   /* Same size, weight, and inline "number extra" layout as the compact-full
      card's hero line below it. One continuous fade spans the complete live
      value: the middle third of the site's fade (the one on the charge and
-     stats tiles), pink to mauve, running downwards from the tops of the
-     digits (0.093em) to just under the baseline (0.861em, measured from
-     Inter's metrics in this 72px/.95 line). "2 extra", the card above, runs
-     the first third the same way, so the two cards split the first two
-     thirds of the fade between them (owner, 2026-10-28).
-     The stops are placed in em, so the fade holds its end colours past them
-     and no part of a glyph is left uncoloured. */
+     stats tiles), pink to mauve, running left to right across the text.
+     "2 extra", the card above, runs the first third the same way, so the
+     two cards split the first two thirds of the fade between them (owner,
+     2026-10-28). This box shrink-wraps the text, so the % stops follow the
+     live value's width; the site's stops are stretched three times over so
+     0-100% is exactly the middle third. */
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main {
     display: flex;
     align-items: baseline;
@@ -1947,8 +1946,8 @@
     line-height: .95;
     white-space: nowrap;
     margin-bottom: 7px;
-    background: linear-gradient(180deg, #EFCEB2 -0.675em, #E9BDBD -0.306em, #E7ABC1 0.016em, #DDA5C2 0.316em, #CD9FCF 0.615em, #BF99E2 0.915em, #AC93EA 1.214em, #998CEF 1.629em);
-    background: linear-gradient(180deg in oklab, #EFCEB2 -0.675em, #E9BDBD -0.306em, #E7ABC1 0.016em, #DDA5C2 0.316em, #CD9FCF 0.615em, #BF99E2 0.915em, #AC93EA 1.214em, #998CEF 1.629em);
+    background: linear-gradient(90deg, #EFCEB2 -100%, #E9BDBD -52%, #E7ABC1 -10%, #DDA5C2 29%, #CD9FCF 68%, #BF99E2 107%, #AC93EA 146%, #998CEF 200%);
+    background: linear-gradient(90deg in oklab, #EFCEB2 -100%, #E9BDBD -52%, #E7ABC1 -10%, #DDA5C2 29%, #CD9FCF 68%, #BF99E2 107%, #AC93EA 146%, #998CEF 200%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -2049,9 +2048,9 @@
     margin-bottom: 7px;
   }
 
-  /* The first third of the site's fade, peach to pink, running downwards
-     from the tops of the digits to just under the baseline; "3.4 extra", the
-     card below, carries on with the middle third (owner, 2026-10-28). */
+  /* The first third of the site's fade, peach to pink, running left to
+     right across the text; "3.4 extra", the card below, carries on with the
+     middle third (owner, 2026-10-28). */
   .template-product .pdp-cmp__card--compact-full > .pdp-cmp__compact-full-main {
     display: flex;
     align-items: baseline;
@@ -2065,8 +2064,8 @@
     line-height: .95;
     white-space: nowrap;
     margin-bottom: 7px;
-    background: linear-gradient(180deg, #EFCEB2 0.093em, #E9BDBD 0.462em, #E7ABC1 0.784em, #DDA5C2 1.084em, #CD9FCF 1.383em, #BF99E2 1.683em, #AC93EA 1.982em, #998CEF 2.397em);
-    background: linear-gradient(180deg in oklab, #EFCEB2 0.093em, #E9BDBD 0.462em, #E7ABC1 0.784em, #DDA5C2 1.084em, #CD9FCF 1.383em, #BF99E2 1.683em, #AC93EA 1.982em, #998CEF 2.397em);
+    background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 48%, #E7ABC1 90%, #DDA5C2 129%, #CD9FCF 168%, #BF99E2 207%, #AC93EA 246%, #998CEF 300%);
+    background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 48%, #E7ABC1 90%, #DDA5C2 129%, #CD9FCF 168%, #BF99E2 207%, #AC93EA 246%, #998CEF 300%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
