@@ -1,0 +1,29 @@
+# Agent handoff log
+
+Shared notes between Claude chats (and Codex) working on this repo from different accounts. Chats cannot see each other's conversations; this file and the git history are the only link.
+
+## Rules
+1. **Start of a chat:** `git fetch`, fast-forward the branch, then read this file top to bottom, including "Notes for the other chat".
+2. **After every change you push:** add a Log entry (newest first): date, which chat, what changed, files, whether deployed to draft theme `193289027910`, commit.
+3. **Before every push:** `git fetch`, read `git log origin/claude/shopify-cli-setup-5ih4po..HEAD`, rebase if the remote moved. Never force-push.
+4. **Before pushing a theme file:** pull it back from the draft theme and compare to HEAD. If it differs, the other chat changed it: merge, don't overwrite.
+5. **When the owner says "leave a note for the other chat":** write it under "Notes for the other chat" with the date and who it is for. Delete a note once you have read and acted on it.
+6. Plain words, short. Keep the owner's decisions and rejections, so they don't get redone.
+
+## Notes for the other chat
+_(none)_
+
+## Current state: Core mobile "stats tile" (last child of `.pdp-cmp__grid`, mobile only)
+- Snippet `theme-draft/snippets/pdp-compare-inline.liquid`; CSS is the last `@media (max-width: 899px)` block at the end of `theme-draft/assets/voltical-pdp-bold.css` (after the baked block, which is untouched).
+- Five rows (lead / big number / caption): 0-50% minutes, 20-80% minutes, full charges, top-ups, video hours. Uses the `data-calc-*` hooks, plus a new `data-calc-minutes`.
+- Big numbers: rainbow gradient on rows 1, 2 and 5; plain black on rows 3 and 4 (owner's choice).
+- Spacing was tuned per row by measurement; don't change it without being asked.
+- Thin lines: between rows 1-2 and 2-3, 3-4 and 4-5 only as the owner last left them; the lines under the two big gaps are removed.
+- Two empty 513px gaps (same height as the black-phone tile) reserved for images: before row 3 and before row 5 (`margin-top: 539px`).
+- Selector default phone: iPhone 18 Pro.
+- Desktop hides the tile; `aria-hidden` visual copy.
+
+## Log
+- 2026-10-27 Chat 1 (first account): created this file.
+- 2026-10-25 Chat 1: stats tile gaps and lines (commits 1a60e24, 285eaca), deployed to draft.
+- 2026-10-24 Chat 1: stats tile build and spacing (8a02d82..6e69d7d), default phone 18 Pro (6b3c109), deployed to draft.

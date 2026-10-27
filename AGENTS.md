@@ -15,6 +15,10 @@ These rules apply to every task in this repository, whether or not a design skil
 - Commit the completed, verified change to the required branch and push that branch to GitHub. Never commit credentials or Theme Access passwords.
 - Before pushing, run `git fetch` and `git log origin/claude/shopify-cli-setup-5ih4po..HEAD`, confirm every commit listed belongs to this task, and rebase onto the remote branch if it has moved. Other agents push to this branch too. Never force-push.
 
+## Handoff between chats
+
+- Read `docs/agent-handoff.md` before starting, and add a Log entry to it before every push. Other chats, possibly from other accounts, work on this branch and only see each other through that file and git.
+
 ## Core comparison-section invariants
 
 - Treat `theme-draft/snippets/pdp-compare-inline.liquid`, `theme-draft/assets/voltical-pdp-bold.css`, and `theme-draft/snippets/pdp-canva-editor.liquid` as a coupled system.
