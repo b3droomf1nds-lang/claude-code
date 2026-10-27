@@ -1690,10 +1690,9 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
-    background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
-    /* These glyphs are narrow (24px / 50px), so the full peach-to-violet
-       run looked harsh. Show only the middle two-thirds of the fade: the
+    background: linear-gradient(90deg, #E9B7BE 0%, #E7AAC1 5.7%, #DFA5C2 11.5%, #DAA5C4 14.4%, #CA9DD4 20.1%, #BF98E3 25.9%, #B094E9 33.3%, #A68FF8 38.5%, #9294FD 48.7%, #809DFD 59%, #6BA5FC 69.2%, #77B6FC 79.5%, #90C8FC 89.7%, #A6DAFC 100%);
+    /* These glyphs are narrow (24px / 50px), so the full run of the fade
+       looked harsh. Show only the middle two-thirds of the fade: the
        gradient is drawn 1.5x the icon's width and centred on it. */
     background-size: 150% 100%;
     background-position: 50% 0;
@@ -2157,8 +2156,7 @@
   }
 
   .template-product .pdp-cmp__card--compact-charge5 > .pdp-cmp__compact-video-main {
-    background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
-    background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background: linear-gradient(90deg, #E9B7BE 0%, #E7AAC1 5.7%, #DFA5C2 11.5%, #DAA5C4 14.4%, #CA9DD4 20.1%, #BF98E3 25.9%, #B094E9 33.3%, #A68FF8 38.5%, #9294FD 48.7%, #809DFD 59%, #6BA5FC 69.2%, #77B6FC 79.5%, #90C8FC 89.7%, #A6DAFC 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -2466,7 +2464,7 @@
 }
 
 /* Charge tile, mobile only: the "59", the battery and "minutes" share one
-   gradient, the same peach-to-lilac as the MagSafe/USB-C icons in the two
+   gradient, the same fade as the MagSafe/USB-C icons in the two
    tiles below, running left to right across all three as one continuous
    fade rather than restarting in each. Each piece shows its own slice of
    that one gradient: the main-product.liquid script measures the group and
@@ -2478,8 +2476,7 @@
   .template-product .pdp-cmp__card--charge .pdp-cmp__stat,
   .template-product .pdp-cmp__card--charge .pdp-cmp__sub--unit,
   .template-product .pdp-cmp__card--charge .pdp-cmp__battery-icon {
-    background-image: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
-    background-image: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background-image: linear-gradient(90deg, #E9B7BE 0%, #E7AAC1 5.7%, #DFA5C2 11.5%, #DAA5C4 14.4%, #CA9DD4 20.1%, #BF98E3 25.9%, #B094E9 33.3%, #A68FF8 38.5%, #9294FD 48.7%, #809DFD 59%, #6BA5FC 69.2%, #77B6FC 79.5%, #90C8FC 89.7%, #A6DAFC 100%);
     background-repeat: no-repeat;
     background-size: var(--cg-w, 100%) 100%;
     background-position: var(--cg-x, 0px) 0;
@@ -2781,8 +2778,7 @@
     line-height: 1.02;
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
-    background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
-    background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background: linear-gradient(90deg, #E9B7BE 0%, #E7AAC1 5.7%, #DFA5C2 11.5%, #DAA5C4 14.4%, #CA9DD4 20.1%, #BF98E3 25.9%, #B094E9 33.3%, #A68FF8 38.5%, #9294FD 48.7%, #809DFD 59%, #6BA5FC 69.2%, #77B6FC 79.5%, #90C8FC 89.7%, #A6DAFC 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
