@@ -2168,8 +2168,8 @@
        opens smaller, with no scroll bar and nothing faded (theme-r2.css):
        with two products or more, the list shows the first two whole and the
        rows under them aren't there yet; with one, the product shows whole and
-       the shipping and protection rows wait as one-line strips. Pushed up,
-       the card grows under the finger, the way an iOS sheet does: its top
+       the shipping and protection rows wait as one-line strips. Pushed up on
+       its bubbles, the card grows under the finger, the way an iOS sheet does: its top
        edge and the lines under it go up with the finger while its bottom
        stays put, and room opens above the total for the rows under them:
        the missing rows' room one row at a time, each sliding out from under
@@ -2178,8 +2178,10 @@
        and the line the whole row adds pops in). Let go part way and it
        carries on at the finger's speed to the whole bag, or back to small,
        whichever the flick would have reached; pushed on past the whole bag,
-       the list scrolls if there's more of it, then the card rubber-bands. Once grown
-       it stays that size until it's closed; the next opening starts small.
+       the list scrolls if there's more of it, then it holds. Once grown it stays
+       that size until it's shrunk (Show less, or swiped down on its bubbles) or
+       closed; the next opening starts small. A swipe that starts off the bubbles
+       moves the card instead (below, where the card's swipes are tracked).
        While it's small the rest of the bag is laid out above it, out of
        sight, so growing only moves things (the heading, the lines and the
        glass go up, the rows pop in; nothing is laid out again or redrawn),
@@ -2682,8 +2684,14 @@
        halfway, and it comes back. (Taking over the phone's own scrolling
        part way through a swipe makes Safari jump, so the swipe is never
        handed to it.) Lists inside the card that scroll still scroll
-       natively, except in a small bag (above), where a swipe either way
-       changes the card: up grows it, down sends it away. */
+       natively.
+       In a small bag (above), where the finger comes down decides the
+       whole swipe, until it lifts (the owner's rule). On a bubble (a
+       product, shipping or protection row) it grows or shrinks the bag, or
+       scrolls its list, and never moves the card, except a swipe down that
+       starts with the bag small, which has nothing to shrink and moves the
+       card. Anywhere else on the card it moves the card and never grows or
+       shrinks the bag. */
     const SNAP = spring(0.38, 0.86);                 // springs back when it isn't closing
     let drag = null;
     // h: the card's height, read once a swipe (it keeps it while swiped), not on every move
@@ -2698,9 +2706,18 @@
       if (!isOpen || closing || e.touches.length > 1) return;
       const t = e.touches[0];
       const list = e.target.closest && e.target.closest('.drawer__body');
+      // on a bubble? A strip only counts where its box is drawn: the row behind it is taller
+      const row = small && e.target.closest && e.target.closest('.cart-line, .ship-bubble, .protect-bubble');
+      let onRow = !!row;
+      if (row && row.classList.contains('is-mini')) {
+        const b = $(':scope > .drawer__box', row).getBoundingClientRect();
+        onRow = t.clientX >= b.left && t.clientX <= b.right && t.clientY >= b.top && t.clientY <= b.bottom;
+      }
       drag = {
         x: t.clientX, y: t.clientY, mode: 0, base: 0, cur: 0, low: 0, rise: 0, pts: [],
-        list: list && list.scrollHeight > list.clientHeight + 1 ? list : null
+        rows: onRow, atSmall: !!fold && !springing && lift < 0.5,   // where it came down, and the bag small and still then
+        // off the bubbles of a small bag the swipe moves the card, so its list doesn't scroll
+        list: list && list.scrollHeight > list.clientHeight + 1 && (!small || onRow) ? list : null
       };
     }, { passive: true });
     scroller.addEventListener('touchmove', (e) => {
@@ -2710,43 +2727,42 @@
       const dy = t.clientY - drag.y;
       if (drag.mode === 0) {
         if (dy === 0 && t.clientX === drag.x) return;
-        // a small bag that has grown, swiped down with its list at the top: it shrinks under the
-        // finger, back to small (then on down, to go), as it grew
-        if (!fold && small && !qm && !springing && dy > 0 && !(drag.list && drag.list.scrollTop > 0)) refold();
-        const pull = !!fold && !qm;
-        if (!pull && drag.list && (drag.list.scrollTop > 0 || dy < 0)) { drag.mode = -1; return; }
-        drag.mode = pull ? 2 : 1;
-        drag.base = cardY();                         // catch it where it is, even mid-pop
-        drag.h = el.offsetHeight;
-        stopAnims();
+        // a swipe on a small bag's bubbles: what it does is settled here, by its first move
+        const rows = small && drag.rows && !qm;
+        // a grown bag swiped down on its bubbles with its list at the top: it shrinks under the
+        // finger, back to small, as it grew
+        if (rows && !fold && !springing && dy > 0 && !(drag.list && drag.list.scrollTop > 0)) refold();
+        // the bag grows or shrinks, unless it was small and still when the swipe began and it
+        // goes down: then the card moves, as from anywhere else on it
+        const pull = rows && !!fold && !(drag.atSmall && dy > 0);
+        if ((!small || rows) && !pull && drag.list && (drag.list.scrollTop > 0 || dy < 0)) { drag.mode = -1; return; }
+        // nothing to grow, shrink or scroll (a grown bag pushed up): it holds still
+        drag.mode = pull ? 2 : rows && !fold ? 3 : 1;
+        if (drag.mode === 3) { if (e.cancelable) e.preventDefault(); return; }
         el.classList.add('is-dragging');
-        if (pull) {
+        if (pull) {                                  // the card stays as it is (even mid-pop)
           pulling = true;
           follow = true;
           cancelAnimationFrame(springing);           // caught on its spring: held where it has got to
           springing = 0;
           drag.g0 = lift;
+        } else {
+          drag.base = cardY();                       // catch it where it is, even mid-pop
+          drag.h = el.offsetHeight;
+          stopAnims();
         }
       }
       if (e.cancelable) e.preventDefault();
+      if (drag.mode === 3) return;
       if (drag.mode === 2) {
-        // How far the finger asks the card to grow, from where it was caught. Up to the whole bag
-        // the card grows; past it the list scrolls on, then the card is pulled up off its place,
-        // rubber-banded; below small it's pulled down, to go.
+        // How far the finger asks the bag to grow, from where it was caught: up to the whole bag it
+        // grows, past it the list scrolls on if there's more of it; beyond either end it holds
+        // (the card itself never moves on this swipe)
         const most = fold.hi - fold.lo;
-        const raw = drag.g0 - drag.base - dy;
-        let g = raw, s = 0, y = 0;
-        if (raw < 0) { g = 0; y = -raw; }
-        else if (raw > most) {
-          g = most;
-          s = Math.min(fold.room, raw - most);
-          const over = raw - most - s;
-          if (over > 0) y = -(1 - 1 / ((over * 0.55) / fold.hi + 1)) * fold.hi;
-        }
+        const raw = drag.g0 - dy;
+        const g = Math.min(most, Math.max(0, raw)), s = raw > most ? Math.min(fold.room, raw - most) : 0;
         draw(g, s);
-        drag.g = g; drag.s = s; drag.cur = y;
-        if (y >= drag.low) drag.low = drag.rise = y; else drag.rise = Math.min(drag.rise, y);
-        place(y, drag.h);
+        drag.g = g; drag.s = s;
         drag.pts.push({ t: e.timeStamp, y: t.clientY });
         while (drag.pts.length > 2 && e.timeStamp - drag.pts[0].t > 100) drag.pts.shift();
         return;
@@ -2772,23 +2788,19 @@
       const b = d.pts[d.pts.length - 1];
       const speed = a && b && b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;   // px/ms, down is positive
       if (d.mode === 2) {
-        if (d.cur <= 0) {
-          // above small: on to the whole bag, or back to small, whichever is nearer where the flick
-          // would have carried it, slowing as iOS scrolling does (0.998 a ms), and carrying on the
-          // finger's speed px/s; held still before letting go (no move for 60ms), it isn't heading
-          // anywhere
-          const up = e && b && e.timeStamp - b.t > 60 ? 0 : -speed * 1000;
-          const most = fold.hi - fold.lo;
-          if (d.s > 0 || d.cur < 0 || d.g + (up / 1000) * (0.998 / 0.002) > most / 2) {
-            follow = true;                           // the rows carry on as they were under the finger
-            swing(most, Math.max(0, up), () => {
-              unfold();
-              if (d.s > 0 && !d.cur) carry(up);      // the list was scrolling: it carries on
-            });
-          } else { follow = true; swing(0, Math.max(0, -up), () => fit(false)); }   // (the bag may have changed meanwhile)
-          if (!d.cur) { el.style.transform = ''; scrim.style.opacity = '1'; return; }
-        }
-        // pulled off its place (up past the whole bag, or down below small): as any swipe of the card
+        // on to the whole bag, or back to small, whichever is nearer where the flick would have
+        // carried it, slowing as iOS scrolling does (0.998 a ms), and carrying on the finger's
+        // speed px/s; held still before letting go (no move for 60ms), it isn't heading anywhere
+        const up = e && b && e.timeStamp - b.t > 60 ? 0 : -speed * 1000;
+        const most = fold.hi - fold.lo;
+        follow = true;                               // the rows carry on as they were under the finger
+        if (d.s > 0 || d.g + (up / 1000) * (0.998 / 0.002) > most / 2) {
+          swing(most, Math.max(0, up), () => {
+            unfold();
+            if (d.s > 0) carry(up);                  // the list was scrolling: it carries on
+          });
+        } else swing(0, Math.max(0, -up), () => fit(false));   // (the bag may have changed meanwhile)
+        return;
       }
       // pulled back up from the lowest it went (40px, more than a finger's jitter) and not heading
       // down again (20px from there, or 6px in its last moves), or let go on the way up: it comes
