@@ -1926,8 +1926,10 @@
   }
 
   /* Same size, weight, and inline "number extra" layout as the compact-full
-     card's hero line below it. One continuous warm fade spans the complete
-     live value, restored from the last approved colour version. */
+     card's hero line below it. One continuous fade spans the complete live
+     value: the second half of the site's own fade (mauve, lilac, periwinkle,
+     as on the charge and stats tiles), turning into coral (owner, 2026-10-28;
+     "2 extra" below turns into blue instead, so the two don't repeat). */
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main {
     display: flex;
     align-items: baseline;
@@ -1940,8 +1942,8 @@
     line-height: .95;
     white-space: nowrap;
     margin-bottom: 7px;
-    background: linear-gradient(90deg, #FAE7AA 0%, #F21D4D 50%, #EB2777 100%);
-    background: linear-gradient(90deg in oklab, #FAE7AA 0%, #F21D4D 50%, #EB2777 100%);
+    background: linear-gradient(90deg, #CD9FCF 0%, #BF99E2 17%, #AC93EA 33%, #998CEF 48%, #C977D6 70%, #F2647E 100%);
+    background: linear-gradient(90deg in oklab, #CD9FCF 0%, #BF99E2 17%, #AC93EA 33%, #998CEF 48%, #C977D6 70%, #F2647E 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -2042,6 +2044,8 @@
     margin-bottom: 7px;
   }
 
+  /* The second half of the site's fade turning into blue (owner, 2026-10-28;
+     "3.4 extra" above turns into coral). */
   .template-product .pdp-cmp__card--compact-full > .pdp-cmp__compact-full-main {
     display: flex;
     align-items: baseline;
@@ -2055,7 +2059,8 @@
     line-height: .95;
     white-space: nowrap;
     margin-bottom: 7px;
-    background: linear-gradient(90deg, #EFB3F9 0%, #B043FE 52%, #7559D4 100%);
+    background: linear-gradient(90deg, #CD9FCF 0%, #BF99E2 17%, #AC93EA 33%, #998CEF 48%, #6C8CF4 70%, #3F7EF3 100%);
+    background: linear-gradient(90deg in oklab, #CD9FCF 0%, #BF99E2 17%, #AC93EA 33%, #998CEF 48%, #6C8CF4 70%, #3F7EF3 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
