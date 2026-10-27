@@ -1927,10 +1927,10 @@
 
   /* Same size, weight, and inline "number extra" layout as the compact-full
      card's hero line below it. One continuous fade spans the complete live
-     value: the stats tile's fade (peach, pink, lilac, periwinkle), made
-     more saturated so it stands apart from the paler tiles (each stop's
-     OKLCH chroma x2.2 and lightness -0.05, kept inside sRGB; owner,
-     2026-10-28; "2 extra" below has it too). */
+     value: the stretch of Apple's spec-text fade (apple.com Mac Studio, M5
+     Ultra) from the "T" of "1.2TB/s" to the "e" of "memory": pink, lilac,
+     periwinkle (measured off the owner's screenshot, 2026-10-28; "2 extra"
+     below has it too). */
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main {
     display: flex;
     align-items: baseline;
@@ -1943,8 +1943,7 @@
     line-height: .95;
     white-space: nowrap;
     margin-bottom: 7px;
-    background: linear-gradient(90deg, #FBB473 0%, #F99C9E 16%, #FE7DB4 30%, #F178BD 43%, #DA73E0 56%, #C070FF 69%, #A374FF 82%, #8B70FE 100%);
-    background: linear-gradient(90deg in oklab, #FBB473 0%, #F99C9E 16%, #FE7DB4 30%, #F178BD 43%, #DA73E0 56%, #C070FF 69%, #A374FF 82%, #8B70FE 100%);
+    background: linear-gradient(90deg, #EDAABD 0%, #DDA0CB 25%, #C89ADD 50%, #B293EF 75%, #9F8FFB 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -2045,8 +2044,8 @@
     margin-bottom: 7px;
   }
 
-  /* The stats tile's fade made more saturated (owner, 2026-10-28; see
-     "3.4 extra" above, which has it too). */
+  /* Apple's M5 Ultra spec fade from the "T" of "1.2TB/s" to the "e" of
+     "memory" (owner, 2026-10-28; "3.4 extra" above has it too). */
   .template-product .pdp-cmp__card--compact-full > .pdp-cmp__compact-full-main {
     display: flex;
     align-items: baseline;
@@ -2060,8 +2059,7 @@
     line-height: .95;
     white-space: nowrap;
     margin-bottom: 7px;
-    background: linear-gradient(90deg, #FBB473 0%, #F99C9E 16%, #FE7DB4 30%, #F178BD 43%, #DA73E0 56%, #C070FF 69%, #A374FF 82%, #8B70FE 100%);
-    background: linear-gradient(90deg in oklab, #FBB473 0%, #F99C9E 16%, #FE7DB4 30%, #F178BD 43%, #DA73E0 56%, #C070FF 69%, #A374FF 82%, #8B70FE 100%);
+    background: linear-gradient(90deg, #EDAABD 0%, #DDA0CB 25%, #C89ADD 50%, #B293EF 75%, #9F8FFB 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
