@@ -1927,8 +1927,9 @@
 
   /* Same size, weight, and inline "number extra" layout as the compact-full
      card's hero line below it. One continuous fade spans the complete live
-     value: the stats tile's fade, exactly (owner, 2026-10-28; "2 extra" below
-     has it too). */
+     value: Apple's purple spec-text fade from apple.com's Mac Studio page,
+     from its start to the "n" of "unified" (measured off the owner's
+     screenshot, 2026-10-28; "2 extra" below has it too). */
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main {
     display: flex;
     align-items: baseline;
@@ -1941,8 +1942,7 @@
     line-height: .95;
     white-space: nowrap;
     margin-bottom: 7px;
-    background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
-    background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background: linear-gradient(90deg, #E1ABF9 0%, #D69AF9 17%, #CA87F7 33%, #BD75F4 50%, #B262F3 67%, #A551F1 83%, #9B50F1 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -2043,8 +2043,8 @@
     margin-bottom: 7px;
   }
 
-  /* The stats tile's fade, exactly (owner, 2026-10-28; "3.4 extra" above has
-     it too). */
+  /* Apple's purple spec-text fade, to the "n" of "unified" (owner,
+     2026-10-28; "3.4 extra" above has it too). */
   .template-product .pdp-cmp__card--compact-full > .pdp-cmp__compact-full-main {
     display: flex;
     align-items: baseline;
@@ -2058,8 +2058,7 @@
     line-height: .95;
     white-space: nowrap;
     margin-bottom: 7px;
-    background: linear-gradient(90deg, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
-    background: linear-gradient(90deg in oklab, #EFCEB2 0%, #E9BDBD 16%, #E7ABC1 30%, #DDA5C2 43%, #CD9FCF 56%, #BF99E2 69%, #AC93EA 82%, #998CEF 100%);
+    background: linear-gradient(90deg, #E1ABF9 0%, #D69AF9 17%, #CA87F7 33%, #BD75F4 50%, #B262F3 67%, #A551F1 83%, #9B50F1 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
