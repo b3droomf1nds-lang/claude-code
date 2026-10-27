@@ -472,14 +472,18 @@
   box-shadow: 0 0 0 1px var(--lilac-m, #DFD8F8);
 }
 
+/* Apple's own Add to Bag (apple.com buy page on an iPhone, measured from the
+   owner's screenshot): Apple blue, 44px high, 8px corners, white 14px text in
+   regular weight. The sticky bar measures the button, so it follows. */
 .pdp--bold .atc__btn {
-  background: var(--ink, #131316);
-  color: var(--base, #FAFAF8);
+  background: #0071E3;
+  color: #fff;
   border: none;
-  border-radius: 18px;
-  padding: 19px 26px;
-  font-weight: 700;
-  font-size: 1.05rem;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
   letter-spacing: -0.01em;
   cursor: pointer;
   transition: transform 0.25s var(--ease, ease);
