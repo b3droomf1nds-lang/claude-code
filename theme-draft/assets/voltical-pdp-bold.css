@@ -1929,10 +1929,13 @@
      card's hero line below it. One continuous fade spans the complete live
      value: the first two thirds of the site's fade (the one on the charge
      and stats tiles), reversed: mauve on the left to peach on the right
-     (270deg). "2 extra", the card above, has the same fade (owner,
-     2026-10-28). This box shrink-wraps the text, so the % stops follow the
-     live value's width; the site's stops are stretched one and a half times
-     so 0-100% is exactly the first two thirds. */
+     (270deg). "2 extra", the card above, shares the very same fade on
+     screen, so each colour sits directly above the same colour here (owner,
+     2026-10-28). Both boxes are centred in cards of equal width, so the
+     stops are pinned to the box centre (50%) and run between the average of
+     the two lines' left ends and the average of their right ends, measured
+     with the default values (2 and 3.4: 216.3px and 280.1px wide, so
+     248.2px between the averaged ends). */
   .template-product .pdp-cmp__card--compact-partial > .pdp-cmp__compact-partial-main {
     display: flex;
     align-items: baseline;
@@ -1945,8 +1948,8 @@
     line-height: .95;
     white-space: nowrap;
     margin-bottom: 7px;
-    background: linear-gradient(270deg, #EFCEB2 0%, #E9BDBD 24%, #E7ABC1 45%, #DDA5C2 64.5%, #CD9FCF 84%, #BF99E2 103.5%, #AC93EA 123%, #998CEF 150%);
-    background: linear-gradient(270deg in oklab, #EFCEB2 0%, #E9BDBD 24%, #E7ABC1 45%, #DDA5C2 64.5%, #CD9FCF 84%, #BF99E2 103.5%, #AC93EA 123%, #998CEF 150%);
+    background: linear-gradient(270deg, #EFCEB2 calc(50% - 1.723em), #E9BDBD calc(50% - 0.896em), #E7ABC1 calc(50% - 0.172em), #DDA5C2 calc(50% + 0.500em), #CD9FCF calc(50% + 1.172em), #BF99E2 calc(50% + 1.844em), #AC93EA calc(50% + 2.516em), #998CEF calc(50% + 3.447em));
+    background: linear-gradient(270deg in oklab, #EFCEB2 calc(50% - 1.723em), #E9BDBD calc(50% - 0.896em), #E7ABC1 calc(50% - 0.172em), #DDA5C2 calc(50% + 0.500em), #CD9FCF calc(50% + 1.172em), #BF99E2 calc(50% + 1.844em), #AC93EA calc(50% + 2.516em), #998CEF calc(50% + 3.447em));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -2048,8 +2051,9 @@
   }
 
   /* The first two thirds of the site's fade, reversed: mauve on the left to
-     peach on the right; "3.4 extra", the card below, has the same fade
-     (owner, 2026-10-28). */
+     peach on the right, laid out on screen exactly as on "3.4 extra", the
+     card below (see there for how the stops are placed; owner,
+     2026-10-28). */
   .template-product .pdp-cmp__card--compact-full > .pdp-cmp__compact-full-main {
     display: flex;
     align-items: baseline;
@@ -2063,8 +2067,8 @@
     line-height: .95;
     white-space: nowrap;
     margin-bottom: 7px;
-    background: linear-gradient(270deg, #EFCEB2 0%, #E9BDBD 24%, #E7ABC1 45%, #DDA5C2 64.5%, #CD9FCF 84%, #BF99E2 103.5%, #AC93EA 123%, #998CEF 150%);
-    background: linear-gradient(270deg in oklab, #EFCEB2 0%, #E9BDBD 24%, #E7ABC1 45%, #DDA5C2 64.5%, #CD9FCF 84%, #BF99E2 103.5%, #AC93EA 123%, #998CEF 150%);
+    background: linear-gradient(270deg, #EFCEB2 calc(50% - 1.723em), #E9BDBD calc(50% - 0.896em), #E7ABC1 calc(50% - 0.172em), #DDA5C2 calc(50% + 0.500em), #CD9FCF calc(50% + 1.172em), #BF99E2 calc(50% + 1.844em), #AC93EA calc(50% + 2.516em), #998CEF calc(50% + 3.447em));
+    background: linear-gradient(270deg in oklab, #EFCEB2 calc(50% - 1.723em), #E9BDBD calc(50% - 0.896em), #E7ABC1 calc(50% - 0.172em), #DDA5C2 calc(50% + 0.500em), #CD9FCF calc(50% + 1.172em), #BF99E2 calc(50% + 1.844em), #AC93EA calc(50% + 2.516em), #998CEF calc(50% + 3.447em));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
