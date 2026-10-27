@@ -24,6 +24,7 @@ _(none)_
 - Desktop hides the tile; `aria-hidden` visual copy.
 
 ## Log
+- 2026-10-27 Chat 2 (cloud, second account): cart sheet grow/shrink (Show more/less and finger) made smoother, no visual change (screenshots pixel-identical). `theme-r2.css`: the `.is-folded .drawer__body>*` pointer-events rule is now unconditional; its bare `*` made every fold/unfold restyle the glass edge's page copies (19ms -> 4ms at 4x CPU). `theme-r3.js`: row pops kept on the element (`e._pop`) instead of `getAnimations()` per frame; card height read once per swipe in `place()`. Deployed to draft and verified; haptics-check 18/18 (normal, x4, 2 lines, deployed). Cloud sessions: Theme Access password is a network secret (header `X-Shopify-Access-Token` on theme-kit-access.shopifyapps.com); run the CLI with `NODE_USE_ENV_PROXY=1` and any `--password shptka_...` placeholder.
 - 2026-10-27 Chat 1 (first account): created this file.
 - 2026-10-25 Chat 1: stats tile gaps and lines (commits 1a60e24, 285eaca), deployed to draft.
 - 2026-10-24 Chat 1: stats tile build and spacing (8a02d82..6e69d7d), default phone 18 Pro (6b3c109), deployed to draft.

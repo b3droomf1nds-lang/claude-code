@@ -2238,16 +2238,19 @@
     // lift, from `from` of its size, `wait` ms late; out, the pop backwards.
     // on: where it's going; when it isn't anywhere yet (just made small) it's put there. Out, it
     // takes no taps.
+    // A row's or line's pop is kept on it (e._pop), the only animation they run, so stopping it
+    // never asks the browser for its animations (that would work out the page's styles mid-frame).
+    const unpop = (e) => { if (e._pop) { e._pop.cancel(); e._pop = null; } };
     const spawn = (p, on, from = 0.6, wait = 0) => {
       const e = p.el, first = p.on === undefined;
       p.on = on;
-      for (const a of e.getAnimations()) a.cancel();
+      unpop(e);
       e.style.opacity = on ? '' : '0';
       e.style.pointerEvents = on ? '' : 'none';
       e.style.scale = '';
       if (first || reduceMotion.matches || !e.animate) return;
       const sp = on ? SPAWN : UNSPAWN, n = sp.pts.length - 1;
-      e.animate(sp.pts.map((x, i) => ({ opacity: Math.min(1, x * 2), scale: String(from + (1 - from) * x), offset: i / n })),
+      e._pop = e.animate(sp.pts.map((x, i) => ({ opacity: Math.min(1, x * 2), scale: String(from + (1 - from) * x), offset: i / n })),
         { duration: sp.duration, delay: wait, easing: 'linear', fill: 'backwards' });
     };
     // Under a finger, a row (or line) comes in with the lift itself, not on a spring of its own,
@@ -2255,7 +2258,7 @@
     // `from`. It's left as it is, so a tap later pops it from there.
     const scrub = (p, k, from) => {
       const x = Math.min(1, Math.max(0, k));
-      for (const a of p.el.getAnimations()) a.cancel();
+      unpop(p.el);
       p.el.style.opacity = x >= 1 ? '' : x.toFixed(3);
       p.el.style.scale = x >= 1 ? '' : (from + (1 - from) * x).toFixed(4);
       p.el.style.pointerEvents = x > 0.5 ? '' : 'none';
@@ -2639,10 +2642,11 @@
        changes the card: up grows it, down sends it away. */
     const SNAP = spring(0.38, 0.86);                 // springs back when it isn't closing
     let drag = null;
-    const place = (y) => {
+    // h: the card's height, read once a swipe (it keeps it while swiped), not on every move
+    const place = (y, h) => {
       el.style.transform = 'translateY(' + y.toFixed(2) + 'px)';
       el.style.setProperty('--rb', Math.min(40, Math.max(0, -y * 2)).toFixed(1) + 'px');   // lifted: round at the bottom too
-      scrim.style.opacity = String(Math.min(1, Math.max(0, 1 - y / el.offsetHeight)));
+      scrim.style.opacity = String(Math.min(1, Math.max(0, 1 - y / h)));
     };
     scroller.addEventListener('touchstart', (e) => {
       drag = null;
@@ -2669,6 +2673,7 @@
         if (!pull && drag.list && (drag.list.scrollTop > 0 || dy < 0)) { drag.mode = -1; return; }
         drag.mode = pull ? 2 : 1;
         drag.base = cardY();                         // catch it where it is, even mid-pop
+        drag.h = el.offsetHeight;
         stopAnims();
         el.classList.add('is-dragging');
         if (pull) {
@@ -2697,18 +2702,18 @@
         draw(g, s);
         drag.g = g; drag.s = s; drag.cur = y;
         if (y >= drag.low) drag.low = drag.rise = y; else drag.rise = Math.min(drag.rise, y);
-        place(y);
+        place(y, drag.h);
         drag.pts.push({ t: e.timeStamp, y: t.clientY });
         while (drag.pts.length > 2 && e.timeStamp - drag.pts[0].t > 100) drag.pts.shift();
         return;
       }
-      const h = el.offsetHeight;
+      const h = drag.h;
       let y = drag.base + dy;
       if (y < 0) y = -(1 - 1 / ((-y * 0.55) / h + 1)) * h;   // rubber-band above the resting place, like iOS
       drag.cur = y;
       // the lowest it has been on this swipe, and the highest it has been pulled back up to since
       if (y >= drag.low) drag.low = drag.rise = y; else drag.rise = Math.min(drag.rise, y);
-      place(y);
+      place(y, h);
       drag.pts.push({ t: e.timeStamp, y: t.clientY });
       while (drag.pts.length > 2 && e.timeStamp - drag.pts[0].t > 100) drag.pts.shift();
     }, { passive: false });

@@ -1255,7 +1255,9 @@ h1.t-hero em,
 .drawer-scroller .drawer.is-folded .is-mini :is(.ship-bubble__icon,.ship-bubble__label,.ship-bubble__method,.ship-bubble__price,
   .protect-bubble__icon,.protect-bubble__label,.protect-bubble__title,.protect-bubble__side){transform-origin:0 0;will-change:transform}
 .drawer-scroller .drawer.is-folded .drawer__body{pointer-events:none}
-.drawer-scroller .drawer.is-folded .drawer__body>*{pointer-events:auto}
+/* always, not only while folded (it changes nothing otherwise): keyed on .is-folded, its bare *
+   made every fold and unfold restyle all the card holds, the glass edge's page copies too */
+.drawer-scroller .drawer__body>*{pointer-events:auto}
 
 /* squircle corners (voltical-squircle.js): a box cut to the shape drops its
    own radius, or the circle would trim the corner's middle; in Canva edit
