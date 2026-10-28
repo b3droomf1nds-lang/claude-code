@@ -2690,6 +2690,7 @@
        the bag is, and never shrinks it. Coming back down in the same swipe
        undoes the growing, then takes the card down. */
     const SNAP = spring(0.38, 0.86);                 // springs back when it isn't closing
+    const FLICK = 0.4;                               // px/ms up: quicker than this is a flick, not a drag
     let drag = null;
     // h: the card's height, read once a swipe (it keeps it while swiped), not on every move
     const place = (y, h) => {
@@ -2704,7 +2705,7 @@
       const t = e.touches[0];
       const list = e.target.closest && e.target.closest('.drawer__body');
       drag = {
-        x: t.clientX, y: t.clientY, mode: 0, base: 0, cur: 0, low: 0, rise: 0, pts: [],
+        x: t.clientX, y: t.clientY, t0: e.timeStamp, mode: 0, base: 0, cur: 0, low: 0, rise: 0, pts: [],
         list: list && list.scrollHeight > list.clientHeight + 1 ? list : null
       };
     }, { passive: true });
@@ -2734,12 +2735,24 @@
         }
       }
       if (e.cancelable) e.preventDefault();
+      if (drag.mode === 2 && drag.sprung) return;     // handed to the spring below: the finger has nothing more to do
       if (drag.mode === 2) {
         // How far the finger asks the card to grow, from where it was caught. Up to the whole bag
         // the card grows; past it the list scrolls on, then the card is pulled up off its place,
         // rubber-banded; below small it's pulled down, to go.
         const most = fold.hi - fold.lo;
         const raw = drag.g0 - drag.base - dy;
+        // A quick flick up would take the card, which follows the finger, to the whole bag within a
+        // frame or two: it opens on the Show more spring instead, the same speed and the same
+        // rows popping in as that tap. A slower swipe still follows the finger.
+        const prev = drag.pts[drag.pts.length - 1] || { t: drag.t0, y: drag.y };
+        if (raw > 0 && lift < most - 0.5 && e.timeStamp > prev.t && (prev.y - t.clientY) / (e.timeStamp - prev.t) > FLICK) {
+          drag.sprung = true;
+          pulling = false;
+          follow = false;                            // no finger to follow: the rows pop in
+          swing(most, 0, unfold, 0.5, 1);
+          return;
+        }
         let g = raw, s = 0, y = 0;
         if (raw < 0) { g = 0; y = -raw; }
         else if (raw > most) {
@@ -2777,6 +2790,11 @@
       const b = d.pts[d.pts.length - 1];
       const speed = a && b && b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;   // px/ms, down is positive
       if (d.mode === 2) {
+        if (d.sprung) {                              // it is already opening on its spring
+          el.style.transform = '';
+          scrim.style.opacity = '1';
+          return;
+        }
         if (d.cur <= 0) {
           // above small: on to the whole bag, or back to small, whichever is nearer where the flick
           // would have carried it, slowing as iOS scrolling does (0.998 a ms), and carrying on the
@@ -2786,10 +2804,12 @@
           const most = fold.hi - fold.lo;
           if (d.s > 0 || d.cur < 0 || d.g + (up / 1000) * (0.998 / 0.002) > most / 2) {
             follow = true;                           // the rows carry on as they were under the finger
-            swing(most, Math.max(0, up), () => {
+            // the same spring as the Show more tap, from the finger's speed at most 1.5 whole
+            // distances a second, so a flick isn't over in a frame
+            swing(most, Math.min(Math.max(0, up), 1.5 * Math.abs(most - lift)), () => {
               unfold();
               if (d.s > 0 && !d.cur) carry(up);      // the list was scrolling: it carries on
-            });
+            }, 0.5, 1);
           } else { follow = true; swing(0, Math.max(0, -up), () => fit(false)); }   // (the bag may have changed meanwhile)
           if (!d.cur) { el.style.transform = ''; scrim.style.opacity = '1'; return; }
         }
