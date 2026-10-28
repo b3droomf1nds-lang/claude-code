@@ -2729,7 +2729,8 @@
 /* ==== MOBILE long stats tile ================================================
    One tall white tile at the end of the mobile stack, in the style of Apple's
    "Compare with" card: per stat a grey lead-in, the number big and black, a
-   grey line saying what it is, and a hairline between stats. Every number
+   grey line saying what it is, and no hairline between stats (owner,
+   2026-10-28; the border is kept transparent so the spacing is unchanged). Every number
    takes the fast-charge gradient, as Apple tints its headline stat, spread
    across each line of the number. Text sits left, not centred like the small tiles. It repeats the
    live numbers (same calculator hooks), is hidden on desktop by the
@@ -2753,7 +2754,7 @@
   .pdp-cmp__stats-row + .pdp-cmp__stats-row {
     margin-top: 26px;
     padding-top: 26px;
-    border-top: 1px solid rgba(19, 19, 22, .16);
+    border-top: 1px solid transparent;
   }
   /* image room (as tall as the black-phone tile, 513px) after row 2 and before the last row */
   .pdp-cmp__stats-row:nth-child(3),
