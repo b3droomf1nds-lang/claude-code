@@ -2691,6 +2691,44 @@
        undoes the growing, then takes the card down. */
     const SNAP = spring(0.38, 0.86);                 // springs back when it isn't closing
     const FLICK = 0.4;                               // px/ms up: quicker than this is a flick, not a drag
+    // The lift under a swipe runs after where the finger (or a flick, or a let-go) aims it, on a quick
+    // critically damped spring (CHASE: its response, in seconds), carrying whatever speed it has, so it
+    // is smooth whatever the finger does and can be turned round at any moment.
+    const CHASE = 0.28;
+    let chaseTo = 0, chaseV = 0, chaseSpill = 0, chaseT = 0, chaseDone = null;
+    const chaseStep = (t) => {
+      const dt = Math.min(0.032, Math.max(0.001, (t - chaseT) / 1000)), w = (2 * Math.PI) / CHASE;
+      chaseT = t;
+      const most = fold.hi - fold.lo;
+      let x = lift;
+      for (let i = 0; i < 2; i++) {                  // two half steps a frame
+        chaseV += (w * w * (chaseTo - x) - 2 * w * chaseV) * (dt / 2);
+        x += chaseV * (dt / 2);
+      }
+      x = Math.min(most, Math.max(0, x));
+      if (Math.abs(chaseTo - x) < 0.4 && Math.abs(chaseV) < 8) {
+        springing = 0;
+        chaseV = 0;
+        draw(chaseTo, chaseSpill);
+        const done = chaseDone;
+        chaseDone = null;
+        if (done) done();
+        return;
+      }
+      draw(x, chaseSpill);
+      springing = requestAnimationFrame(chaseStep);
+    };
+    // aim the lift (and the list's spill) at g, from where it is and at the speed it has
+    const chaseAim = (g, s) => {
+      chaseTo = g;
+      chaseSpill = s || 0;
+      if (!springing) { chaseT = performance.now(); springing = requestAnimationFrame(chaseStep); }
+    };
+    // aim it at g and run done() when it gets there (a let-go)
+    const chaseGo = (g, done) => {
+      chaseDone = done;
+      chaseAim(g, 0);
+    };
     let drag = null;
     // h: the card's height, read once a swipe (it keeps it while swiped), not on every move
     const place = (y, h) => {
@@ -2731,28 +2769,26 @@
           follow = true;
           cancelAnimationFrame(springing);           // caught on its spring: held where it has got to
           springing = 0;
-          drag.g0 = lift;
+          chaseV = 0;
+          chaseDone = null;
+          chaseTo = drag.g0 = lift;
+          chaseSpill = spill;
         }
       }
       if (e.cancelable) e.preventDefault();
-      if (drag.mode === 2 && drag.sprung) return;     // handed to the spring below: the finger has nothing more to do
       if (drag.mode === 2) {
         // How far the finger asks the card to grow, from where it was caught. Up to the whole bag
         // the card grows; past it the list scrolls on, then the card is pulled up off its place,
         // rubber-banded; below small it's pulled down, to go.
         const most = fold.hi - fold.lo;
         const raw = drag.g0 - drag.base - dy;
-        // A quick flick up would take the card, which follows the finger, to the whole bag within a
-        // frame or two: it opens on the Show more spring instead, the same speed and the same
-        // rows popping in as that tap. A slower swipe still follows the finger.
+        // The card never jumps to the finger: it runs after it on a quick spring (chaseStep), so a
+        // flick opens smoothly instead of in a frame, and a slow drag is followed closely. A quick
+        // flick up carries the card on to the whole bag by itself (drag.latch); the finger coming
+        // back down, even a little, takes it back (the card follows the finger again).
         const prev = drag.pts[drag.pts.length - 1] || { t: drag.t0, y: drag.y };
-        if (raw > 0 && lift < most - 0.5 && e.timeStamp > prev.t && (prev.y - t.clientY) / (e.timeStamp - prev.t) > FLICK) {
-          drag.sprung = true;
-          pulling = false;
-          follow = false;                            // no finger to follow: the rows pop in
-          swing(most, 0, unfold, 0.5, 1);
-          return;
-        }
+        if (raw > 0 && e.timeStamp > prev.t && (prev.y - t.clientY) / (e.timeStamp - prev.t) > FLICK) drag.latch = true;
+        else if (t.clientY - prev.y > 3) drag.latch = false;
         let g = raw, s = 0, y = 0;
         if (raw < 0) { g = 0; y = -raw; }
         else if (raw > most) {
@@ -2761,7 +2797,7 @@
           const over = raw - most - s;
           if (over > 0) y = -(1 - 1 / ((over * 0.55) / fold.hi + 1)) * fold.hi;
         }
-        draw(g, s);
+        chaseAim(drag.latch && y === 0 && g < most ? most : g, s);
         drag.g = g; drag.s = s; drag.cur = y;
         if (y >= drag.low) drag.low = drag.rise = y; else drag.rise = Math.min(drag.rise, y);
         place(y, drag.h);
@@ -2790,11 +2826,6 @@
       const b = d.pts[d.pts.length - 1];
       const speed = a && b && b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;   // px/ms, down is positive
       if (d.mode === 2) {
-        if (d.sprung) {                              // it is already opening on its spring
-          el.style.transform = '';
-          scrim.style.opacity = '1';
-          return;
-        }
         if (d.cur <= 0) {
           // above small: on to the whole bag, or back to small, whichever is nearer where the flick
           // would have carried it, slowing as iOS scrolling does (0.998 a ms), and carrying on the
@@ -2802,15 +2833,14 @@
           // anywhere
           const up = e && b && e.timeStamp - b.t > 60 ? 0 : -speed * 1000;
           const most = fold.hi - fold.lo;
-          if (d.s > 0 || d.cur < 0 || d.g + (up / 1000) * (0.998 / 0.002) > most / 2) {
-            follow = true;                           // the rows carry on as they were under the finger
-            // the same spring as the Show more tap, from the finger's speed at most 1.5 whole
-            // distances a second, so a flick isn't over in a frame
-            swing(most, Math.min(Math.max(0, up), 1.5 * Math.abs(most - lift)), () => {
+          follow = true;                             // the rows carry on as they were under the finger
+          if (d.latch || d.s > 0 || d.cur < 0 || d.g + (up / 1000) * (0.998 / 0.002) > most / 2) {
+            moreLabel(true);
+            chaseGo(most, () => {
               unfold();
               if (d.s > 0 && !d.cur) carry(up);      // the list was scrolling: it carries on
-            }, 0.5, 1);
-          } else { follow = true; swing(0, Math.max(0, -up), () => fit(false)); }   // (the bag may have changed meanwhile)
+            });
+          } else { moreLabel(false); chaseGo(0, () => fit(false)); }   // (the bag may have changed meanwhile)
           if (!d.cur) { el.style.transform = ''; scrim.style.opacity = '1'; return; }
         }
         // pulled off its place (up past the whole bag, or down below small): as any swipe of the card
