@@ -1029,9 +1029,12 @@ h1.t-hero em,
     linear-gradient(rgba(255,255,255,.66),rgba(255,255,255,.56) .67px,rgba(255,255,255,.47) 1.5px,rgba(255,255,255,.4) 2px,rgba(255,255,255,.17) 3px,rgba(255,255,255,.08) 4px,#fff0 5px) 40px 0/calc(100% - 80px) 5px no-repeat}
 .drawer-lens__view{position:absolute;left:0;top:0;width:100%;transform-origin:0 0}
 /* the glass's tint: the page's light dim (12% black), then the frost's own
-   white (74%), in one; so the band is the frost's brightness and passes the
-   same 26% of what's under it, and it fades into the frost without a step */
-.drawer-lens::after{content:"";position:absolute;inset:0;background:rgba(239,239,242,.77)}
+   layers (74% white over the sheet tint's 60%), folded into one colour; so the
+   band is the frost's brightness and passes exactly what the frost passes
+   (.26 x .4 x .88 = 9.15% of the page), and it fades into the frost without a
+   step. If the frost's white or --sheet-tint change, change this with them:
+   alpha = 1 - (1 - .74) x (1 - tint alpha) x .88 ... see docs/liquid-glass-lens.md */
+.drawer-lens::after{content:"";position:absolute;inset:0;background:rgba(244,244,247,.9085)}
 .drawer-scroller .drawer__skin::after{
   background:radial-gradient(120px 70px at 0 0,rgba(255,255,255,.35),#fff0),
     radial-gradient(120px 70px at 100% 0,rgba(255,255,255,.2),#fff0);
