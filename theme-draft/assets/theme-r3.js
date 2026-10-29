@@ -2691,13 +2691,15 @@
        undoes the growing, then takes the card down. */
     const SNAP = spring(0.38, 0.86);                 // springs back when it isn't closing
     const FLICK = 0.4;                               // px/ms up: quicker than this is a flick, not a drag
-    // The lift under a swipe runs after where the finger (or a flick, or a let-go) aims it, on a quick
-    // critically damped spring (CHASE: its response, in seconds), carrying whatever speed it has, so it
-    // is smooth whatever the finger does and can be turned round at any moment.
+    // The lift under a swipe runs after where the finger (or a flick, or a let-go) aims it, on a
+    // critically damped spring (its response, in seconds), carrying whatever speed it has, so it is
+    // smooth whatever the finger does and can be turned round at any moment. Under the finger it is
+    // quick (HOLD), so the card's edge stays with it; carried on by a flick or a let-go it is softer (CHASE).
+    const HOLD = 0.09;
     const CHASE = 0.28;
-    let chaseTo = 0, chaseV = 0, chaseSpill = 0, chaseT = 0, chaseDone = null;
+    let chaseTo = 0, chaseV = 0, chaseSpill = 0, chaseT = 0, chaseDone = null, chaseResp = CHASE;
     const chaseStep = (t) => {
-      const dt = Math.min(0.032, Math.max(0.001, (t - chaseT) / 1000)), w = (2 * Math.PI) / CHASE;
+      const dt = Math.min(0.032, Math.max(0.001, (t - chaseT) / 1000)), w = (2 * Math.PI) / chaseResp;
       chaseT = t;
       const most = fold.hi - fold.lo;
       let x = lift;
@@ -2719,9 +2721,10 @@
       springing = requestAnimationFrame(chaseStep);
     };
     // aim the lift (and the list's spill) at g, from where it is and at the speed it has
-    const chaseAim = (g, s) => {
+    const chaseAim = (g, s, resp = CHASE) => {
       chaseTo = g;
       chaseSpill = s || 0;
+      chaseResp = resp;
       if (!springing) { chaseT = performance.now(); springing = requestAnimationFrame(chaseStep); }
     };
     // aim it at g and run done() when it gets there (a let-go)
@@ -2786,8 +2789,10 @@
         // flick opens smoothly instead of in a frame, and a slow drag is followed closely. A quick
         // flick up carries the card on to the whole bag by itself (drag.latch); the finger coming
         // back down, even a little, takes it back (the card follows the finger again).
+        // A flick is judged over the last 100ms and 12px, not one jittery step.
         const prev = drag.pts[drag.pts.length - 1] || { t: drag.t0, y: drag.y };
-        if (raw > 0 && e.timeStamp > prev.t && (prev.y - t.clientY) / (e.timeStamp - prev.t) > FLICK) drag.latch = true;
+        const from = drag.pts[0] || prev, span = e.timeStamp - from.t;
+        if (raw > 12 && span >= 8 && (from.y - t.clientY) / span > FLICK) drag.latch = true;
         else if (t.clientY - prev.y > 3) drag.latch = false;
         // A swipe that starts by growing the bag only grows (or shrinks) it: the card itself stays put,
         // however far up it goes and however it comes back down, without the finger lifting.
@@ -2800,7 +2805,7 @@
           const over = raw - most - s;
           if (over > 0 && !drag.grew) y = -(1 - 1 / ((over * 0.55) / fold.hi + 1)) * fold.hi;
         }
-        chaseAim(drag.latch && y === 0 && g < most ? most : g, s);
+        if (drag.latch && y === 0 && g < most) chaseAim(most, s); else chaseAim(g, s, HOLD);
         drag.g = g; drag.s = s; drag.cur = y;
         if (y >= drag.low) drag.low = drag.rise = y; else drag.rise = Math.min(drag.rise, y);
         place(y, drag.h);
@@ -2825,8 +2830,8 @@
       el.style.removeProperty('--rb');               // back to square, eased (theme-r2.css), as it settles
       if (d && d.mode === 2) pulling = false;
       if (!d || (d.mode !== 1 && d.mode !== 2) || !isOpen || closing) return;
-      const a = d.pts[0];
       const b = d.pts[d.pts.length - 1];
+      const a = d.pts.length > 1 || !b ? d.pts[0] : { t: d.t0, y: d.y };   // one move only: from where the finger came down
       const speed = a && b && b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;   // px/ms, down is positive
       if (d.mode === 2) {
         if (d.cur <= 0) {
@@ -2837,7 +2842,7 @@
           const up = e && b && e.timeStamp - b.t > 60 ? 0 : -speed * 1000;
           const most = fold.hi - fold.lo;
           follow = true;                             // the rows carry on as they were under the finger
-          if (d.latch || d.s > 0 || d.cur < 0 || d.g + (up / 1000) * (0.998 / 0.002) > most / 2) {
+          if (d.latch || d.s > 0 || d.cur < 0 || d.g + (up / 1000) * (0.998 / 0.002) > most * 0.4) {
             moreLabel(true);
             chaseGo(most, () => {
               unfold();
