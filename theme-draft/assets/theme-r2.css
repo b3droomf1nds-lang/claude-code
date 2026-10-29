@@ -989,7 +989,7 @@ h1.t-hero em,
 .drawer-scroller .drawer__skin>.drawer-lens{content:"";display:block;position:absolute;inset:0;width:auto;height:auto;transform:none;
   border-radius:inherit;pointer-events:none;z-index:0}
 .drawer-scroller .drawer__skin::before{
-  background:linear-gradient(rgba(249,249,252,.74),rgba(249,249,252,.74)),var(--sheet-tint);
+  background:linear-gradient(rgba(249,249,252,.9324),rgba(249,249,252,.9324)),var(--sheet-tint);   /* the white the bubbles' second frost used to add: 1 - .26 x .26 */
   -webkit-backdrop-filter:blur(6px) saturate(180%);backdrop-filter:blur(6px) saturate(180%);   /* FROST in theme-r3.js */
 }
 /* The sheet and its bubbles take a tint, as if the page under them were
@@ -1029,12 +1029,12 @@ h1.t-hero em,
     linear-gradient(rgba(255,255,255,.66),rgba(255,255,255,.56) .67px,rgba(255,255,255,.47) 1.5px,rgba(255,255,255,.4) 2px,rgba(255,255,255,.17) 3px,rgba(255,255,255,.08) 4px,#fff0 5px) 40px 0/calc(100% - 80px) 5px no-repeat}
 .drawer-lens__view{position:absolute;left:0;top:0;width:100%;transform-origin:0 0}
 /* the glass's tint: the page's light dim (12% black), then the frost's own
-   layers (74% white over the sheet tint's 60%), folded into one colour; so the
-   band is the frost's brightness and passes exactly what the frost passes
-   (.26 x .4 x .88 = 9.15% of the page), and it fades into the frost without a
+   layers (93.24% white over the sheet tint's 60%), folded into one colour; so
+   the band is the frost's brightness and passes exactly what the frost passes
+   (.0676 x .4 x .88 = 2.4% of the page), and it fades into the frost without a
    step. If the frost's white or --sheet-tint change, change this with them:
-   alpha = 1 - (1 - .74) x (1 - tint alpha) x .88 ... see docs/liquid-glass-lens.md */
-.drawer-lens::after{content:"";position:absolute;inset:0;background:rgba(244,244,247,.9085)}
+   see docs/liquid-glass-lens.md */
+.drawer-lens::after{content:"";position:absolute;inset:0;background:rgba(248,248,251,.9762)}
 .drawer-scroller .drawer__skin::after{
   background:radial-gradient(120px 70px at 0 0,rgba(255,255,255,.35),#fff0),
     radial-gradient(120px 70px at 100% 0,rgba(255,255,255,.2),#fff0);
