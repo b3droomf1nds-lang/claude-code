@@ -1044,12 +1044,11 @@ h1.t-hero em,
 .drawer-scroller .cart-line,
 .drawer-scroller .ship-bubble,
 .drawer-scroller .protect-bubble{border-radius:20px;margin:0 0 8px;
-  /* each a pane of glass of its own on the sheet: the sheet's frost again
-     (::before's blur, saturation and white), laid over what the sheet
-     already shows, so the page reads fainter and softer inside the bubbles;
-     no lens at their edges, just the sheet's crisp 1px white line; no shadow */
-  background:linear-gradient(rgba(249,249,252,.74),rgba(249,249,252,.74)),var(--sheet-tint);
-  -webkit-backdrop-filter:blur(6px) saturate(180%);backdrop-filter:blur(6px) saturate(180%);
+  /* no frost of their own: the sheet's frost is one even layer over all of it (a second
+     frost inside the bubbles hid the page behind them while the gaps between them still
+     showed it, a visible change at every bubble). Just the sheet's crisp 1px white line;
+     no lens at their edges, no shadow */
+  background:none;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.95)}
 .drawer-scroller .cart-line{align-items:center;gap:14px;padding:14px 16px 14px 14px}
 .drawer-scroller .cart-line+.cart-line{border-top:0}
@@ -1254,7 +1253,7 @@ h1.t-hero em,
 .drawer-scroller .drawer__box{display:none}
 .drawer-scroller .drawer.is-folded .is-mini{position:relative;background:none;box-shadow:none;cursor:pointer}
 .drawer-scroller .drawer.is-folded .is-mini>.drawer__box{display:block;position:absolute;left:0;right:0;top:0;z-index:-1;border-radius:inherit;
-  background:linear-gradient(rgba(249,249,252,.74),rgba(249,249,252,.74)),var(--sheet-tint);box-shadow:inset 0 0 0 1px rgba(255,255,255,.95)}
+  background:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.95)}
 .drawer-scroller .drawer.is-folded .is-mini :is(.ship-bubble__icon,.ship-bubble__label,.ship-bubble__method,.ship-bubble__price,
   .protect-bubble__icon,.protect-bubble__label,.protect-bubble__title,.protect-bubble__side){transform-origin:0 0;will-change:transform}
 .drawer-scroller .drawer.is-folded .drawer__body{pointer-events:none}
