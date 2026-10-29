@@ -2789,13 +2789,16 @@
         const prev = drag.pts[drag.pts.length - 1] || { t: drag.t0, y: drag.y };
         if (raw > 0 && e.timeStamp > prev.t && (prev.y - t.clientY) / (e.timeStamp - prev.t) > FLICK) drag.latch = true;
         else if (t.clientY - prev.y > 3) drag.latch = false;
+        // A swipe that starts by growing the bag only grows (or shrinks) it: the card itself stays put,
+        // however far up it goes and however it comes back down, without the finger lifting.
+        if (raw > 0 && drag.low === 0) drag.grew = true;
         let g = raw, s = 0, y = 0;
-        if (raw < 0) { g = 0; y = -raw; }
+        if (raw < 0) { g = 0; y = drag.grew ? 0 : -raw; }
         else if (raw > most) {
           g = most;
           s = Math.min(fold.room, raw - most);
           const over = raw - most - s;
-          if (over > 0) y = -(1 - 1 / ((over * 0.55) / fold.hi + 1)) * fold.hi;
+          if (over > 0 && !drag.grew) y = -(1 - 1 / ((over * 0.55) / fold.hi + 1)) * fold.hi;
         }
         chaseAim(drag.latch && y === 0 && g < most ? most : g, s);
         drag.g = g; drag.s = s; drag.cur = y;
