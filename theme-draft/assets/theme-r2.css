@@ -1029,12 +1029,14 @@ h1.t-hero em,
     linear-gradient(rgba(255,255,255,.66),rgba(255,255,255,.56) .67px,rgba(255,255,255,.47) 1.5px,rgba(255,255,255,.4) 2px,rgba(255,255,255,.17) 3px,rgba(255,255,255,.08) 4px,#fff0 5px) 40px 0/calc(100% - 80px) 5px no-repeat}
 .drawer-lens__view{position:absolute;left:0;top:0;width:100%;transform-origin:0 0}
 /* the glass's tint: the page's light dim (12% black), then the frost's own
-   layers (74% white over the sheet tint's 60%), folded into one colour; so the
-   band is the frost's brightness and passes exactly what the frost passes
-   (.26 x .4 x .88 = 9.15% of the page), and it fades into the frost without a
-   step. If the frost's white or --sheet-tint change, change this with them:
-   see docs/liquid-glass-lens.md */
-.drawer-lens::after{content:"";position:absolute;inset:0;background:rgba(244,244,247,.9085)}
+   layers (74% white over the sheet tint's 60%), folded into one colour. At the
+   rim, where the lens bends the page, it is lighter (rgba(239,239,242,.77): 23%
+   of the page passes, so the bend shows); it eases (smoothstep, 6px to 24px) to
+   the frost's own colour, which passes exactly what the frost passes (.26 x .4 x
+   .88 = 9.15% of the page), so that where the band's mask ends it is the frost
+   and nothing steps. If the frost's white or --sheet-tint change, change the
+   end colour with them: see docs/liquid-glass-lens.md */
+.drawer-lens::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(239,239,242,.77) 0,rgba(239,239,242,0.7700) 6.0px,rgba(240,240,243,0.7844) 9.6px,rgba(241,241,244,0.8188) 13.2px,rgba(242,242,245,0.8597) 16.8px,rgba(243,243,246,0.8941) 20.4px,rgba(244,244,247,0.9085) 24.0px)}
 .drawer-scroller .drawer__skin::after{
   background:radial-gradient(120px 70px at 0 0,rgba(255,255,255,.35),#fff0),
     radial-gradient(120px 70px at 100% 0,rgba(255,255,255,.2),#fff0);
