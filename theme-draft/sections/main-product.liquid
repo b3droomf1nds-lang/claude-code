@@ -347,9 +347,12 @@
             </button>
           </div>
 
+          {%- comment -%} "In stock — dispatched within 24 hours" under Add to bag: off; tick "Show the dispatch note" in the section settings to bring it back. {%- endcomment -%}
+          {%- if section.settings.show_ship_note -%}
           <p class="ship-note" data-ship-note {% unless current_variant.available %}hidden{% endunless %}>
             <i class="charge-dot" aria-hidden="true"></i>{{ 'products.ship_note' | t }}
           </p>
+          {%- endif -%}
         </form>
 
         <div class="pinfo__below">
@@ -1621,6 +1624,8 @@
     { "type": "text", "id": "trust_2_label", "label": "Item 2 label", "default": "Returns" },
     { "type": "text", "id": "trust_3_value", "label": "Item 3 value", "default": "24 h" },
     { "type": "text", "id": "trust_3_label", "label": "Item 3 label", "default": "Dispatch" },
+    { "type": "header", "content": "Under Add to bag" },
+    { "type": "checkbox", "id": "show_ship_note", "label": "Show the dispatch note under Add to bag", "default": false },
     { "type": "header", "content": "Complete-the-setup add-on" },
     { "type": "product", "id": "xsell_usbc", "label": "Add-on for power banks (USB-C cable)" },
     { "type": "product", "id": "xsell_watch", "label": "Add-on for the Watch case (Watch cable)" }
