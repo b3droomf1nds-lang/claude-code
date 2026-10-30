@@ -473,14 +473,17 @@
 }
 
 /* Apple's own Add to Bag (apple.com buy page on an iPhone, measured from the
-   owner's screenshot): Apple blue, 44px high, 8px corners, white 14px text in
-   regular weight. The sticky bar measures the button, so it follows. */
+   owner's screenshot): Apple blue, white 14px text in regular weight. Made 20%
+   taller than Apple's 44px (52.8px) and given the calculator tiles' corner:
+   their 28px radius, cut to the same squircle (voltical-squircle.js), which
+   a button this high caps at half its height. The sticky bar measures the
+   button, so it follows. */
 .pdp--bold .atc__btn {
   background: #0071E3;
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 12px 20px;
+  border-radius: 28px;
+  padding: 16.4px 20px;
   font-weight: 400;
   font-size: 14px;
   line-height: 20px;
