@@ -1,0 +1,32 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "Voltical",
+    "theme_version": "1.0.0",
+    "theme_author": "Voltical",
+    "theme_documentation_url": "https://voltical.store",
+    "theme_support_url": "https://voltical.store"
+  },
+  {
+    "name": "Brand",
+    "settings": [
+      { "type": "image_picker", "id": "favicon", "label": "Favicon" }
+    ]
+  },
+  {
+    "name": "Shipping protection",
+    "settings": [
+      { "type": "paragraph", "content": "Create a hidden product (e.g. handle 'shipping-protection') whose variants are the price tiers in ascending order ($1.99, $2.99, $4.99, $5.99…). The drawer picks the tier from the cart subtotal." },
+      { "type": "checkbox", "id": "protection_enabled", "label": "Enable shipping protection toggle", "default": true },
+      { "type": "text", "id": "protection_handle", "label": "Protection product handle", "default": "shipping-protection" },
+      { "type": "text", "id": "protection_thresholds", "label": "Subtotal thresholds (currency units, comma-separated — tier N applies below threshold N)", "default": "50,100,150" }
+    ]
+  },
+  {
+    "name": "Dispatch note",
+    "settings": [
+      { "type": "paragraph", "content": "The 'in stock — ships within 24h' note only shows for in-stock variants. Keep the copy honest to your real fulfilment times (edit in locales)." },
+      { "type": "range", "id": "dispatch_cutoff", "label": "Same-day dispatch cutoff hour (24h, store timezone — informational)", "min": 0, "max": 23, "step": 1, "default": 14 }
+    ]
+  }
+]

@@ -1,0 +1,227 @@
+{%- comment -%}
+  "You might also like", above Add to bag, laid out as an Apple product
+  shelf: a big bold heading on the left (Apple's section headline), then
+  the products as small white bubbles in a row that swipes sideways, the
+  next one peeking in from the edge of the screen. Each bubble is cut to
+  the calculator tiles' squircle corner (28px, voltical-squircle.js):
+  the photo fading into the bubble's white, the price and the switch; the
+  product's name and a few words about it sit under each bubble, in the
+  small caption type of Apple's galleries. Under them on the right, two small round arrows in the frost of
+  the "Made to go with it." gallery's arrows (its tint over the page,
+  blur 6px, saturation 180%) and their grey chevrons, the same grey
+  whether or not there's anywhere to go. They hide when every bubble
+  fits (wide screens, or only one product).
+
+  The switches work as before: when one is on, theme-r3.js adds that
+  product together with the main one in a single /cart/add.js call when
+  Add to bag is pressed ([data-addon]: its data-addon-variant and its
+  checkbox). The switch is the Add to bag button's blue when on. Pairing: Watch Case → Watch charge cable; power banks /
+  Puck → USB-C cable and the Watch charge cable too; cables themselves
+  get none. Products set in section settings.
+  Note: with JS disabled the form still adds the main product; the
+  add-on switch is JS-enhanced only.
+  Images: forced to progressive JPEG. Left to itself Shopify's CDN sends
+  small images to iPhone Safari as JPEG XL / AVIF, which some iPhones
+  fail to decode (a "?" box). The photos have no transparency, so JPEG
+  looks the same. They load eagerly: they sit right by Add to bag.
+{%- endcomment -%}
+{%- assign lt = product.title | downcase -%}
+{%- assign _ref = nil -%}
+{%- assign _ref2 = nil -%}
+{%- if lt contains 'watch case' -%}
+  {%- assign _ref = section.settings.xsell_watch -%}
+{%- elsif lt contains 'cable' -%}
+  {%- assign _ref = nil -%}
+{%- else -%}
+  {%- assign _ref = section.settings.xsell_usbc -%}
+  {%- assign _ref2 = section.settings.xsell_watch -%}
+{%- endif -%}
+{%- if _ref.handle -%}{%- assign pair = _ref -%}{%- elsif _ref -%}{%- assign pair = all_products[_ref] -%}{%- else -%}{%- assign pair = nil -%}{%- endif -%}
+{%- if _ref2.handle -%}{%- assign pair2 = _ref2 -%}{%- elsif _ref2 -%}{%- assign pair2 = all_products[_ref2] -%}{%- else -%}{%- assign pair2 = nil -%}{%- endif -%}
+
+{%- assign show1 = false -%}
+{%- assign show2 = false -%}
+{%- if pair and pair.available and pair.handle != product.handle -%}{%- assign show1 = true -%}{%- endif -%}
+{%- if pair2 and pair2.available and pair2.handle != product.handle and pair2.handle != pair.handle -%}{%- assign show2 = true -%}{%- endif -%}
+
+{%- if show1 or show2 -%}
+<style>
+  .xsell{
+    --edge:clamp(20px,4vw,44px);   /* the page's side margin (.wrap) */
+    --gap:12px;
+    --cw:min(250px,64vw);
+    margin:48px 0 0;
+  }
+  /* Apple's section headline: big, bold, tight, on the left */
+  .xsell__heading{
+    font-family:var(--sans); font-weight:700; font-size:32px; line-height:1.1;
+    letter-spacing:-.035em; color:var(--ink); margin:0 0 20px; text-wrap:balance;
+  }
+  /* the row runs to the screen's edges and starts at the page's margin;
+     room above and below inside it for the bubbles' shadows */
+  .xsell__track{
+    position:relative; display:flex; gap:var(--gap);
+    overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory; scroll-padding-inline:var(--edge);
+    scrollbar-width:none; -webkit-overflow-scrolling:touch;
+    margin:-16px calc(-1 * var(--edge)) -28px; padding:16px 0 28px;
+  }
+  .xsell__track::-webkit-scrollbar{ display:none; }
+  /* the margins before the first bubble and after the last (padding at
+     the end of a scroller isn't kept everywhere) */
+  .xsell__track::before,.xsell__track::after{ content:""; flex:0 0 max(0px,calc(var(--edge) - var(--gap))); }
+
+  .xsell__item{ flex:0 0 var(--cw); scroll-snap-align:start; }
+  .xsell__card{
+    position:relative; display:flex;
+    border-radius:28px;
+    box-shadow:0 1px 2px rgba(19,19,22,.04),0 12px 32px -16px rgba(19,19,22,.18);
+  }
+  /* the bubble itself, inside its shadow: cut to the squircle
+     (voltical-squircle.js), which would cut the shadow off if it were the
+     card's own */
+  .xsell__face{
+    flex:1 1 auto; min-width:0; display:flex; flex-direction:column;
+    border-radius:inherit; overflow:hidden; background:#fdfeff;   /* the product photos' own white */
+  }
+  /* the photo, from the plugs down, its cables fading into the white */
+  .xsell__media{ position:relative; display:block; aspect-ratio:3 / 2; -webkit-tap-highlight-color:transparent; }
+  .xsell__media::after{
+    content:""; position:absolute; left:0; right:0; bottom:0; height:40%; pointer-events:none;
+    background:linear-gradient(rgba(253,254,255,0), rgba(253,254,255,.16) 25%, rgba(253,254,255,.5) 50%, rgba(253,254,255,.84) 75%, #fdfeff);
+  }
+  .xsell__img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 18%; }
+  .xsell__body{ flex:1 1 auto; display:flex; flex-direction:column; padding:0 20px 18px; }
+  .xsell__row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  /* Apple's gallery caption: the name in the ink, what it does in grey,
+     one run of small type under the bubble */
+  .xsell__cap{ font-family:var(--sans); font-size:14px; line-height:1.35; letter-spacing:-.01em; color:rgba(19,19,22,.62); margin:14px 6px 0; }
+  .xsell__cap a{ color:var(--ink); font-weight:600; text-decoration:none; -webkit-tap-highlight-color:transparent; }
+  /* the switch: the Add to bag button's blue when on */
+  .xsell .switch input:checked + i{ background:#0071E3; }
+  .xsell__price{ font-family:var(--sans); font-size:15px; line-height:1.2; letter-spacing:-.01em; color:rgba(19,19,22,.66); white-space:nowrap; }
+
+  /* the arrows: small rounds in the gallery's frost */
+  .xsell__nav{ display:flex; justify-content:flex-end; gap:16px; margin-top:16px; }
+  .xsell.is-static .xsell__nav{ display:none; }
+  .xsell__arrow{
+    position:relative; display:flex; align-items:center; justify-content:center;
+    width:36px; height:36px; padding:0; border:0; border-radius:50%;
+    color:rgba(0,0,0,.42); background:rgba(239,239,242,.77);
+    -webkit-backdrop-filter:blur(6px) saturate(180%); backdrop-filter:blur(6px) saturate(180%);
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
+  .xsell__arrow::after{ content:""; position:absolute; inset:-4px; }   /* 44px to a finger */
+  .xsell__arrow svg{ width:36px; height:36px; fill:currentColor; }
+  .xsell__arrow:disabled{ cursor:default; }
+  .xsell__arrow:focus-visible{ outline:2px solid var(--focus,#0071e3); outline-offset:2px; }
+  /* in the cart sheet's copies of the page (its glass edge) the arrows
+     keep their tint but not a blur of their own, as the gallery's do */
+  :host .xsell__arrow{ -webkit-backdrop-filter:none; backdrop-filter:none; }
+
+  /* desktop: in the buy column, as low as the add-ons sat (the options
+     above are moved down there), and no running out to the screen's edges */
+  @media (min-width:900px){
+    .xsell{ --edge:0px; }
+    .pdp--bold .xsell{ margin-top:475px; }
+  }
+</style>
+
+<div class="xsell" data-xsell>
+  <h2 class="xsell__heading">{{ 'products.xsell_heading' | t }}</h2>
+  <div class="xsell__track" data-xsell-track>
+    {%- for n in (1..2) -%}
+      {%- if n == 1 -%}{%- assign p = pair -%}{%- assign ok = show1 -%}{%- else -%}{%- assign p = pair2 -%}{%- assign ok = show2 -%}{%- endif -%}
+      {%- if ok -%}
+        {%- assign v = p.selected_or_first_available_variant -%}
+        <div class="xsell__item">
+        <div class="xsell__card" data-addon data-addon-variant="{{ v.id }}">
+          <div class="xsell__face">
+            <a class="xsell__media" href="{{ p.url }}" tabindex="-1" aria-hidden="true">
+              {%- if p.featured_image -%}
+                <img class="xsell__img" src="{{ p.featured_image | image_url: width: 500, format: 'pjpg' }}"
+                     srcset="{{ p.featured_image | image_url: width: 500, format: 'pjpg' }} 500w, {{ p.featured_image | image_url: width: 750, format: 'pjpg' }} 750w"
+                     sizes="250px"
+                     width="{{ p.featured_image.width }}" height="{{ p.featured_image.height }}"
+                     alt="" loading="eager" decoding="async">
+              {%- endif -%}
+            </a>
+            <div class="xsell__body">
+              <div class="xsell__row">
+                <span class="xsell__price" data-xsell-price="{{ v.price }}">{{ v.price | money }}</span>
+                <label class="switch">
+                  <input type="checkbox" aria-label="{{ 'products.xsell_eyebrow' | t }}: {{ p.title | escape }}">
+                  <i></i>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="xsell__cap"><a href="{{ p.url }}">{{ p.title }}</a> {% if n == 2 or lt contains 'watch case' %}{{ 'products.xsell_cap_watch' | t }}{% else %}{{ 'products.xsell_cap_usbc' | t }}{% endif %}</p>
+        </div>
+      {%- endif -%}
+    {%- endfor -%}
+  </div>
+  {%- if show1 and show2 -%}
+    <div class="xsell__nav">
+      <button type="button" class="xsell__arrow" data-xsell-go="-1" aria-label="Previous" disabled>
+        <svg viewBox="0 0 36 36" aria-hidden="true"><path d="m13.44 16.94 5.51-5.5a1.5 1.5 0 0 1 2.12 2.12L16.62 18l4.45 4.44a1.5 1.5 0 0 1-2.12 2.12l-5.51-5.5a1.5 1.5 0 0 1 0-2.12z"/></svg>
+      </button>
+      <button type="button" class="xsell__arrow" data-xsell-go="1" aria-label="Next">
+        <svg viewBox="0 0 36 36" aria-hidden="true"><path d="m22.56 16.94-5.51-5.5a1.5 1.5 0 0 0-2.12 2.12L19.38 18l-4.45 4.44a1.5 1.5 0 0 0 2.12 2.12l5.51-5.5a1.5 1.5 0 0 0 0-2.12z"/></svg>
+      </button>
+    </div>
+  {%- endif -%}
+</div>
+
+<script>
+(function () {
+  function init(root) {
+    root.setAttribute('data-xsell-on', '');
+    const track = root.querySelector('[data-xsell-track]');
+    const cards = Array.prototype.slice.call(track.querySelectorAll('.xsell__item'));
+    const prev = root.querySelector('[data-xsell-go="-1"]'), next = root.querySelector('[data-xsell-go="1"]');
+
+    /* The prices as the rest of the page writes them (theme-r3.js's money:
+       €17.99, as on Add to bag and in the bag), not Liquid's €17,99. */
+    const fmt = window.Voltical && window.Voltical.moneyFormat;
+    if (fmt) root.querySelectorAll('[data-xsell-price]').forEach(function (el) {
+      const amount = (Number(el.getAttribute('data-xsell-price')) / 100).toFixed(2);
+      el.textContent = fmt.replace(/\{\{\s*amount[^}]*\}\}/, amount).replace(/<[^>]+>/g, '');
+    });
+    if (!prev || !next) return;
+
+    /* Where each bubble rests: its start at the page's margin, the last
+       ones (which can't get there) at the end. */
+    function stops() {
+      const max = track.scrollWidth - track.clientWidth, pad = cards[0].offsetLeft;
+      return cards.map(function (c) { return Math.max(0, Math.min(max, c.offsetLeft - pad)); });
+    }
+    /* Arrows: to the next resting place each way, from wherever the row
+       is (so a second tap mid-slide doesn't skip one). */
+    function go(d) {
+      const x = track.scrollLeft;
+      const s = stops().filter(function (v) { return d > 0 ? v > x + 1 : v < x - 1; });
+      if (!s.length) return;
+      track.scrollTo({ left: d > 0 ? s[0] : s[s.length - 1], behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    }
+    prev.addEventListener('click', function () { go(-1); });
+    next.addEventListener('click', function () { go(1); });
+
+    /* No arrows when every bubble fits; each one off at its end. */
+    let tick = 0;
+    function update() {
+      tick = 0;
+      const max = track.scrollWidth - track.clientWidth;
+      root.classList.toggle('is-static', max <= 1);
+      prev.disabled = track.scrollLeft <= 1;
+      next.disabled = track.scrollLeft >= max - 1;
+    }
+    track.addEventListener('scroll', function () { if (!tick) tick = requestAnimationFrame(update); }, { passive: true });
+    if (window.ResizeObserver) new ResizeObserver(update).observe(track);
+    update();
+  }
+  document.querySelectorAll('[data-xsell]:not([data-xsell-on])').forEach(init);
+})();
+</script>
+{%- endif -%}

@@ -1,0 +1,2884 @@
+/* ============================================================
+   VOLTICAL — theme.js
+   No dependencies. Modules: util, reveal, header, gallery,
+   variants, add-to-cart, calculator, collection filters,
+   cart drawer (+ shipping protection).
+   rev: scroll-reveal cascade + design-mode fix
+   ============================================================ */
+(function () {
+  'use strict';
+
+  /* ---------- util ---------- */
+  const $ = (s, c) => (c || document).querySelector(s);
+  const $$ = (s, c) => Array.from((c || document).querySelectorAll(s));
+  const money = (cents) => {
+    const fmt = (window.Voltical && window.Voltical.moneyFormat) || '${{amount}}';
+    const amount = (cents / 100).toFixed(2);
+    return fmt.replace(/\{\{\s*amount[^}]*\}\}/, amount).replace(/<[^>]+>/g, '');
+  };
+  const fetchJSON = (url, opts) =>
+    fetch(url, Object.assign({ headers: { 'Content-Type': 'application/json' } }, opts))
+      .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
+
+  /* ---------- reveal on scroll + charge lines ---------- */
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      e.target.classList.add('is-in');
+      io.unobserve(e.target);
+    });
+  }, { threshold: 0.12 });
+  $$('[data-reveal]').forEach((el) => io.observe(el));
+
+  /* ---------- header / mobile nav ---------- */
+  // The menu and the search are sheets that unfold from the bar (header.liquid
+  // has the motion). One is out at a time; the menu button is its X. Both
+  // bars (the product page's copy too) carry the buttons, so all of them
+  // stay in step.
+  const mobileNav = $('[data-mobile-nav]');
+  const mobileSearch = $('[data-mobile-search]');
+  if (mobileNav) {
+    const root = document.documentElement;
+    const toggles = $$('[data-menu-toggle]');
+    let sheet = null;
+    $$('.hdr-sheet__body').forEach((body) => {
+      Array.from(body.children).forEach((row, i) => row.style.setProperty('--i', i));
+    });
+    const searchBtns = $$('[data-search-open]');
+    const isSearch = (el) => el === mobileSearch;
+    // the page's white theme-color would show in the strip above the keyboard
+    const themeColor = $('meta[name="theme-color"]');
+    const pageTint = themeColor && themeColor.content;
+    const tint = (c) => { if (themeColor) themeColor.content = c; };
+    // the menu's lines turn into its X; search's magnifier turns into its own
+    const setX = (el, on) => (isSearch(el) ? searchBtns : toggles).forEach((t) => t.setAttribute('aria-expanded', String(on)));
+    const openSheet = (el) => {
+      if (sheet) return;
+      sheet = el;
+      clearTimeout(el._hdrT);
+      root.classList.add('hdr-open', isSearch(el) ? 'hdr-search' : 'hdr-menu');
+      el.hidden = false;
+      setX(el, true);
+      void el.offsetHeight;                            // start the unfold from the bar's height
+      el.classList.add('is-open');
+    };
+    const closeSheet = () => {
+      const el = sheet;
+      if (!el) return;
+      sheet = null;
+      setX(el, false);
+      el.classList.remove('is-open');
+      if (isSearch(el)) {                              // the lines come back as the X folds
+        root.classList.remove('hdr-search');
+        if (el.contains(document.activeElement)) document.activeElement.blur();
+      }
+      clearTimeout(el._hdrT);
+      el._hdrT = setTimeout(() => {                   // once folded back into the bar
+        if (sheet) return;
+        el.hidden = true;
+        root.classList.remove('hdr-open', 'hdr-menu');
+      }, 480);
+    };
+    toggles.forEach((t) => t.addEventListener('click', () => (sheet ? closeSheet() : openSheet(mobileNav))));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+    // the page behind an open sheet doesn't scroll (iOS ignores overflow:hidden
+    // once the keyboard is up); only a sheet with more rows than fit scrolls
+    document.addEventListener('touchmove', (e) => {
+      if (!sheet) return;
+      const body = e.target.closest && e.target.closest('.hdr-sheet__body');
+      if (body && body.scrollHeight > body.clientHeight) return;
+      e.preventDefault();
+    }, { passive: false });
+    matchMedia('(min-width: 900px)').addEventListener('change', (e) => {
+      if (!e.matches || !sheet) return;
+      const el = sheet; closeSheet(); clearTimeout(el._hdrT); el.hidden = true; root.classList.remove('hdr-open', 'hdr-menu', 'hdr-search');
+    });
+
+    if (mobileSearch) {
+      const input = $('[data-search-input]', mobileSearch);
+      const quick = $$('[data-search-quick]', mobileSearch);
+      const results = $('[data-search-results]', mobileSearch);
+      const label = $('[data-search-label]', mobileSearch);
+      searchBtns.forEach((b) => b.addEventListener('click', () => {
+        if (sheet) { if (isSearch(sheet)) closeSheet(); return; }
+        openSheet(mobileSearch);                       // no keyboard yet: it comes up when the field is tapped
+      }));
+      const field = input.closest('[data-search-url]');
+      const searchUrl = field.dataset.searchUrl;
+      // keyboard up: the strip above it takes the sheet's grey, not the page's white
+      input.addEventListener('focus', () => { root.classList.add('hdr-typing'); tint('#F5F5F7'); });
+      input.addEventListener('blur', () => { root.classList.remove('hdr-typing'); tint(pageTint); });
+      field.addEventListener('click', (e) => {         // the whole row (magnifier too) raises the keyboard
+        if (e.target !== input) input.focus({ preventScroll: true });
+      });
+      const typed = () => input.textContent.replace(/\s+/g, ' ').trim();   // an editable line, not an <input>
+      const go = (e) => {                              // the keyboard's search key, as the form used to submit
+        e.preventDefault();                            // never a new line in the field
+        const q = typed();
+        if (q) location.href = `${searchUrl}?q=${encodeURIComponent(q)}&type=product`;
+      };
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) go(e); });
+      input.addEventListener('beforeinput', (e) => { if (e.inputType === 'insertParagraph' || e.inputType === 'insertLineBreak') go(e); });
+      const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      let seq = 0;
+      let timer = 0;
+      const show = (q, items) => {
+        const has = !!(q && items && items.length);
+        quick.forEach((a) => { a.hidden = has; });  // the menu's rows until something matches
+        results.hidden = !has;
+        label.hidden = !(q && items);
+        label.textContent = has ? 'Products' : 'No matching products';
+        if (has) results.innerHTML = items.map((p) => `<li><a href="${esc(p.url)}">${esc(p.title)}</a></li>`).join('');
+      };
+      input.addEventListener('input', () => {
+        if (!input.textContent) input.textContent = '';  // drop a stray <br> so the placeholder comes back
+        const q = typed();
+        clearTimeout(timer);
+        if (!q) { seq++; show('', null); return; }
+        timer = setTimeout(async () => {
+          const mine = ++seq;
+          try {
+            const r = await fetch(`/search/suggest.json?q=${encodeURIComponent(q)}&resources[type]=product&resources[limit]=8`);
+            const data = await r.json();
+            if (mine !== seq) return;
+            show(q, (data.resources && data.resources.results && data.resources.results.products) || []);
+          } catch (err) { /* keep the menu's rows */ }
+        }, 120);
+      });
+    }
+  }
+
+  /* ---------- product gallery ---------- */
+  const gallery = $('[data-gallery]');
+  if (gallery) {
+    const mainImg = $('[data-gallery-main] img', gallery);
+    const mainWrap = $('[data-gallery-main]', gallery);
+    const gridWrap = gallery.closest('.product__grid');
+    const thumbs = $$('[data-gallery-thumb]', gallery);
+
+    // Approximates the photo's backdrop colour by averaging a tiny
+    // corner sample of its ALREADY-LOADED thumbnail — a one-off canvas
+    // read, not a live CSS filter. An earlier version used a
+    // filter:blur() layer that had to be repainted every touchmove
+    // frame during the swipe drag, which is what caused the swipe to
+    // stutter; this runs once per photo change and just sets a plain
+    // background-color, so it costs nothing during the drag itself.
+    const sampleCornerColor = (thumbImgEl, apply) => {
+      const run = () => {
+        try {
+          const c = document.createElement('canvas');
+          c.width = 6; c.height = 6;
+          const ctx = c.getContext('2d');
+          const sw = thumbImgEl.naturalWidth * 0.12 || 1;
+          const sh = thumbImgEl.naturalHeight * 0.12 || 1;
+          ctx.drawImage(thumbImgEl, 0, 0, sw, sh, 0, 0, 6, 6);
+          const d = ctx.getImageData(0, 0, 6, 6).data;
+          let r = 0, g = 0, b = 0, n = 0;
+          for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; n++; }
+          apply('rgb(' + Math.round(r / n) + ',' + Math.round(g / n) + ',' + Math.round(b / n) + ')');
+        } catch (e) { /* tainted canvas (CORS) or similar — just keep the CSS fallback colour */ }
+      };
+      if (thumbImgEl.complete) run();
+      else thumbImgEl.addEventListener('load', run, { once: true });
+    };
+    const applyBgColor = (t) => {
+      sampleCornerColor($('img', t), (rgb) => {
+        if (mainWrap) mainWrap.style.setProperty('--gallery-bg-color', rgb);
+        if (gridWrap) gridWrap.style.setProperty('--gallery-bg-color', rgb);
+      });
+    };
+    if (thumbs.length) applyBgColor($('.gallery__thumb.is-active', gallery) || thumbs[0]);
+
+    // dir: -1 (came from the right, i.e. "previous"), 1 ("next"), or 0/
+    // omitted for an instant swap (e.g. switching color filters) with no
+    // slide. Old image fades+slides out one direction, the new one
+    // fades+slides in from the opposite side — same single <img>, just
+    // animated across the swap so it reads as continuous motion instead
+    // of an instant cut.
+    const setMain = (t, dir) => {
+      thumbs.forEach((x) => x.classList.remove('is-active'));
+      t.classList.add('is-active');
+      const apply = () => {
+        // The main image starts with a srcset/sizes pair (for responsive
+        // loading of the FIRST image). Browsers prefer srcset over src
+        // when both are present, so just reassigning .src here would be
+        // silently ignored — the old image would keep showing. Clearing
+        // srcset/sizes first makes the plain .src actually take effect.
+        mainImg.removeAttribute('srcset');
+        mainImg.removeAttribute('sizes');
+        mainImg.src = t.dataset.full;
+        mainImg.alt = $('img', t).alt;
+        applyBgColor(t);
+      };
+      if (!dir) { apply(); return; }
+      mainImg.style.transition = 'opacity .16s ease, transform .16s ease';
+      mainImg.style.opacity = '0';
+      mainImg.style.transform = 'translateX(' + (dir * -16) + 'px)';
+      setTimeout(() => {
+        apply();
+        mainImg.style.transition = 'none';
+        mainImg.style.transform = 'translateX(' + (dir * 16) + 'px)';
+        void mainImg.offsetWidth; // force reflow so the next transition actually animates
+        mainImg.style.transition = 'opacity .22s ease, transform .22s ease';
+        mainImg.style.opacity = '1';
+        mainImg.style.transform = 'translateX(0)';
+      }, 160);
+    };
+    const visibleThumbs = () => thumbs.filter((t) => !t.hasAttribute('data-color-hidden'));
+    thumbs.forEach((t) => t.addEventListener('click', () => {
+      const visible = visibleThumbs();
+      const activeIdx = visible.indexOf($('.gallery__thumb.is-active', gallery));
+      const newIdx = visible.indexOf(t);
+      const dir = newIdx === activeIdx ? 0 : (newIdx > activeIdx ? 1 : -1);
+      setMain(t, dir);
+    }));
+
+    // Desktop click-through arrows (hidden on mobile via CSS — swipe
+    // covers that there). Step to the next/previous VISIBLE thumb,
+    // wrapping around — full-width slide (the outgoing photo exits one
+    // side, the incoming one slides in from the other), same look as
+    // the touch swipe's "commit" animation below, not the smaller
+    // fade+16px used by thumbnail clicks.
+    // A second arrow click landing mid-slide used to either stack a new
+    // `incoming` image on top of the still-animating one, or (an
+    // earlier fix) just get ignored until the current slide finished —
+    // both feel wrong for fast clicking. Instead: a click mid-slide
+    // instantly SNAPS the current slide to its finished state (no
+    // waiting for its animation), then immediately starts the next one
+    // from that clean state — every click is responsive, nothing ever
+    // stacks.
+    let gallerySlideTimeout = null;
+    let finishCurrentSlide = null;
+    let pendingIncoming = null; // set the instant `incoming` is created, cleared once its rAFs assign finishCurrentSlide — covers an interrupt landing in that brief window too
+    const slideGallery = (dir) => {
+      const visible = visibleThumbs();
+      if (visible.length < 2) return;
+      clearTimeout(gallerySlideTimeout);
+      if (finishCurrentSlide) {
+        finishCurrentSlide();
+        finishCurrentSlide = null;
+      } else if (pendingIncoming) {
+        pendingIncoming.remove();
+        pendingIncoming = null;
+        mainImg.style.transition = 'none';
+        mainImg.style.transform = '';
+        mainImg.style.opacity = '';
+      }
+      const activeIdx = visible.indexOf($('.gallery__thumb.is-active', gallery));
+      const target = visible[(activeIdx + dir + visible.length) % visible.length];
+      const containerW = mainWrap.clientWidth || 1;
+      // Longer + a proper iOS-style decelerate curve (heavy deceleration,
+      // near-zero overshoot) instead of the sharper 220ms used by the
+      // touch-swipe commit — a deliberate, unhurried glide reads as more
+      // "considered"/premium than a snappy flick. A soft opacity
+      // cross-fade rides along with the slide for polish; no scale
+      // change, since that's what read as "zooming" before.
+      const settleMs = 550;
+      const curve = 'cubic-bezier(.32,.72,0,1)';
+      const ease = 'transform ' + settleMs + 'ms ' + curve + ', opacity ' + settleMs + 'ms ' + curve;
+
+      // Match mainImg's own box exactly (desktop insets it with padding
+      // and uses object-fit:contain, not cover/edge-to-edge) — using
+      // top:0/left:0/100%/100% here ignored that padding and filled the
+      // whole box instead, which is what read as a brief "zoom" before
+      // the swap. Copying mainImg's own computed box + object-fit keeps
+      // the incoming photo pixel-identical in size/position to it.
+      const mainImgStyle = getComputedStyle(mainImg);
+      const incoming = document.createElement('img');
+      incoming.src = target.dataset.full;
+      incoming.alt = '';
+      incoming.setAttribute('aria-hidden', 'true');
+      incoming.style.cssText = 'position:absolute;top:' + mainImg.offsetTop + 'px;left:' + mainImg.offsetLeft + 'px;' +
+        'width:' + mainImg.offsetWidth + 'px;height:' + mainImg.offsetHeight + 'px;' +
+        'object-fit:' + mainImgStyle.objectFit + ';pointer-events:none;z-index:1;opacity:.6;' +
+        'transform:translateX(' + (dir * containerW) + 'px)';
+      mainWrap.appendChild(incoming);
+      pendingIncoming = incoming;
+      mainImg.style.transition = 'none';
+
+      // incoming is a BRAND NEW element — its initial (offscreen)
+      // transform hasn't been committed to a rendered frame yet, so a
+      // single forced reflow (offsetWidth) isn't reliably enough to
+      // make the browser animate FROM it; the initial and final values
+      // can get coalesced into one frame with no visible motion, which
+      // is what "still not seeing a slide" was. Two nested rAFs
+      // guarantee a real painted frame happens in between, so the
+      // transition below always has a committed starting point to
+      // animate from.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          pendingIncoming = null; // now tracked via finishCurrentSlide below instead
+          mainImg.style.transition = ease;
+          incoming.style.transition = ease;
+          mainImg.style.transform = 'translateX(' + (dir * -containerW) + 'px)';
+          mainImg.style.opacity = '.6';
+          incoming.style.transform = 'translateX(0)';
+          incoming.style.opacity = '1';
+
+          // Same finish logic either fires normally after settleMs, OR
+          // gets called immediately (synchronously, skipping the wait)
+          // if another arrow click interrupts this slide first — see
+          // finishCurrentSlide above.
+          finishCurrentSlide = () => {
+            thumbs.forEach((x) => x.classList.remove('is-active'));
+            target.classList.add('is-active');
+            mainImg.style.transition = 'none';
+            mainImg.removeAttribute('srcset');
+            mainImg.removeAttribute('sizes');
+            mainImg.src = target.dataset.full;
+            mainImg.alt = $('img', target).alt;
+            mainImg.style.transform = '';
+            mainImg.style.opacity = '';
+            incoming.remove();
+            finishCurrentSlide = null;
+            setTimeout(() => applyBgColor(target), 0);
+          };
+          // Counting settleMs from HERE (once the transition actually
+          // starts, after the two rAFs above), not from slideGallery's
+          // own call time — otherwise this could fire before the
+          // animation visually finishes and cut it short.
+          gallerySlideTimeout = setTimeout(() => { if (finishCurrentSlide) finishCurrentSlide(); }, settleMs);
+        });
+      });
+    };
+    const prevBtn = $('[data-gallery-prev]', gallery);
+    const nextBtn = $('[data-gallery-next]', gallery);
+    // stopPropagation: .gallery__main itself has its own click handler
+    // (opens the lightbox, wired up below) — without this, clicking an
+    // arrow would also open the lightbox.
+    if (prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); slideGallery(-1); });
+    if (nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); slideGallery(1); });
+
+    // Swipe left/right on the main image to step through photos — iPhone
+    // Photos style: the photo tracks your finger 1:1 as you drag (with
+    // the next/previous photo sliding in from off-screen live, not just
+    // appearing after you let go), then either continues off-screen into
+    // that photo or springs back to center depending on how far you'd
+    // dragged when you lifted your finger.
+    let gallerySwipeMoved = false;
+    (function () {
+      let startX = 0, startY = 0, dragging = false, axisLocked = null, containerW = 0;
+      let peek = null; // { img, dir, target }
+      const commitFraction = 0.28;
+      const settleMs = 220;
+
+      const removePeek = () => { if (peek) { peek.img.remove(); peek = null; } };
+
+      // Peek is styled inline here (not via a CSS class) to be byte-for-
+      // byte the same box as mainImg — width:100%/height:100%/cover, no
+      // padding or inset — since that exact match is what makes the
+      // swipe/commit transition seamless. Every offscreen position is a
+      // PIXEL offset off one shared containerW measurement (not '%',
+      // which resolves against each element's own box width).
+      const addPeek = (dir) => {
+        const visible = visibleThumbs();
+        const activeIdx = visible.indexOf($('.gallery__thumb.is-active', gallery));
+        if (activeIdx === -1 || visible.length < 2) return null;
+        const target = visible[(activeIdx + dir + visible.length) % visible.length];
+        const img = document.createElement('img');
+        img.src = target.dataset.full;
+        img.alt = '';
+        img.setAttribute('aria-hidden', 'true');
+        img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;' +
+          'object-fit:cover;pointer-events:none;z-index:1;' +
+          'transform:translateX(' + (dir * containerW) + 'px)';
+        mainWrap.appendChild(img);
+        return { img, dir, target };
+      };
+
+      mainWrap.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        dragging = true;
+        axisLocked = null;
+        gallerySwipeMoved = false;
+        containerW = mainWrap.clientWidth || 1;
+        mainImg.style.transition = 'none';
+      }, { passive: true });
+
+      mainWrap.addEventListener('touchmove', (e) => {
+        if (!dragging) return;
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+        if (axisLocked === null) axisLocked = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+        if (axisLocked !== 'x') return;
+        e.preventDefault();
+        if (Math.abs(dx) > 10) gallerySwipeMoved = true;
+        const dir = dx < 0 ? 1 : -1;
+        if (!peek || peek.dir !== dir) { removePeek(); peek = addPeek(dir); }
+        mainImg.style.transform = 'translateX(' + dx + 'px)';
+        if (peek) peek.img.style.transform = 'translateX(' + (dir * containerW + dx) + 'px)';
+      }, { passive: false });
+
+      mainWrap.addEventListener('touchend', (e) => {
+        if (!dragging) return;
+        dragging = false;
+        if (axisLocked !== 'x') { removePeek(); mainImg.style.transition = ''; mainImg.style.transform = ''; return; }
+        const dx = e.changedTouches[0].clientX - startX;
+        const dir = dx < 0 ? 1 : -1;
+        const commit = peek && Math.abs(dx) > containerW * commitFraction;
+        const ease = 'transform ' + settleMs + 'ms cubic-bezier(.22,.61,.36,1)';
+
+        mainImg.style.transition = ease;
+        if (peek) peek.img.style.transition = ease;
+
+        if (commit) {
+          mainImg.style.transform = 'translateX(' + (dir * -containerW) + 'px)';
+          peek.img.style.transform = 'translateX(0)';
+          const target = peek.target;
+          setTimeout(() => {
+            thumbs.forEach((x) => x.classList.remove('is-active'));
+            target.classList.add('is-active');
+            mainImg.style.transition = 'none';
+            mainImg.removeAttribute('srcset');
+            mainImg.removeAttribute('sizes');
+            mainImg.src = target.dataset.full;
+            mainImg.alt = $('img', target).alt;
+            mainImg.style.transform = '';
+            removePeek();
+            // deferred: canvas colour sampling is synchronous work, kept
+            // off the swap frame itself so it can't contribute any jank
+            // right when the peek/mainImg switch happens.
+            setTimeout(() => applyBgColor(target), 0);
+          }, settleMs);
+        } else {
+          mainImg.style.transform = 'translateX(0)';
+          if (peek) peek.img.style.transform = 'translateX(' + (dir * containerW) + 'px)';
+          setTimeout(removePeek, settleMs);
+        }
+      }, { passive: true });
+    })();
+
+    // Preload every full-size gallery image in the background right after
+    // load, so by the time someone clicks a thumbnail the browser already
+    // has it cached and the swap is instant instead of waiting on a
+    // network fetch (which is what made switching photos feel laggy).
+    const preloadFullImages = () => {
+      thumbs.forEach((t) => {
+        const img = new Image();
+        img.src = t.dataset.full;
+      });
+    };
+    if ('requestIdleCallback' in window) requestIdleCallback(preloadFullImages);
+    else setTimeout(preloadFullImages, 300);
+
+    /* Apple-style lightbox */
+    const lb = $('[data-lightbox]');
+    if (lb) {
+      const lbImg = $('[data-lb-img]', lb);
+      const lbDots = $('[data-lb-dots]', lb);
+      let lbList = [], lbIdx = 0;
+
+      const lbRender = () => {
+        lbImg.src = lbList[lbIdx].dataset.full;
+        lbDots.innerHTML = lbList.map((_, i) =>
+          '<i class="' + (i === lbIdx ? 'is-on' : '') + '" data-i="' + i + '"></i>').join('');
+      };
+      const lbOpen = (idx) => {
+        lbList = visibleThumbs();
+        if (!lbList.length) return;
+        lbIdx = Math.max(0, idx);
+        lb.hidden = false; document.body.style.overflow = 'hidden';
+        lbRender(); $('[data-lb-close]', lb).focus();
+      };
+      const lbClose = () => { lb.hidden = true; document.body.style.overflow = ''; };
+      const lbStep = (d) => { lbIdx = (lbIdx + d + lbList.length) % lbList.length; lbRender(); };
+
+      // Swipe left/right inside the lightbox too, same iPhone-Photos
+      // live-drag feel as the main gallery — the prev/next arrows are
+      // hidden on mobile (see theme-r2.css), so swipe is the only way
+      // to move between photos there.
+      (function () {
+        let startX = 0, startY = 0, dragging = false, axisLocked = null, containerW = 0;
+        let peek = null; // { img }
+        const commitFraction = 0.28;
+        const settleMs = 220;
+
+        const removePeek = () => { if (peek) { peek.remove(); peek = null; } };
+
+        const addPeek = (dir) => {
+          const nextIdx = (lbIdx + dir + lbList.length) % lbList.length;
+          const img = document.createElement('img');
+          img.src = lbList[nextIdx].dataset.full;
+          img.alt = '';
+          img.setAttribute('aria-hidden', 'true');
+          img.style.cssText = 'position:absolute;top:50%;left:50%;max-width:min(88vw,1200px);' +
+            'max-height:84vh;object-fit:contain;pointer-events:none;' +
+            'transform:translate(-50%,-50%) translateX(' + (dir * containerW) + 'px)';
+          lb.appendChild(img);
+          return img;
+        };
+
+        lbImg.addEventListener('touchstart', (e) => {
+          if (e.touches.length !== 1) return;
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+          dragging = true;
+          axisLocked = null;
+          containerW = lb.clientWidth || window.innerWidth;
+          lbImg.style.transition = 'none';
+        }, { passive: true });
+
+        lbImg.addEventListener('touchmove', (e) => {
+          if (!dragging) return;
+          const dx = e.touches[0].clientX - startX;
+          const dy = e.touches[0].clientY - startY;
+          if (axisLocked === null) axisLocked = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+          if (axisLocked !== 'x') return;
+          e.preventDefault();
+          const dir = dx < 0 ? 1 : -1;
+          if (!peek) peek = addPeek(dir);
+          lbImg.style.transform = 'translateX(' + dx + 'px)';
+          peek.style.transform = 'translate(-50%,-50%) translateX(' + (dir * containerW + dx) + 'px)';
+        }, { passive: false });
+
+        lbImg.addEventListener('touchend', (e) => {
+          if (!dragging) return;
+          dragging = false;
+          if (axisLocked !== 'x') { removePeek(); lbImg.style.transition = ''; lbImg.style.transform = ''; return; }
+          const dx = e.changedTouches[0].clientX - startX;
+          const dir = dx < 0 ? 1 : -1;
+          const commit = peek && Math.abs(dx) > containerW * commitFraction;
+          const ease = 'transform ' + settleMs + 'ms cubic-bezier(.22,.61,.36,1)';
+
+          lbImg.style.transition = ease;
+          if (peek) peek.style.transition = ease;
+
+          if (commit) {
+            lbImg.style.transform = 'translateX(' + (dir * -containerW) + 'px)';
+            peek.style.transform = 'translate(-50%,-50%) translateX(0)';
+            setTimeout(() => {
+              lbIdx = (lbIdx + dir + lbList.length) % lbList.length;
+              lbImg.style.transition = 'none';
+              lbRender();
+              lbImg.style.transform = '';
+              removePeek();
+            }, settleMs);
+          } else {
+            lbImg.style.transform = 'translateX(0)';
+            if (peek) peek.style.transform = 'translate(-50%,-50%) translateX(' + (dir * containerW) + 'px)';
+            setTimeout(removePeek, settleMs);
+          }
+        }, { passive: true });
+      })();
+
+      mainWrap.addEventListener('click', () => {
+        if (gallerySwipeMoved) { gallerySwipeMoved = false; return; }
+        const active = $('.gallery__thumb.is-active', gallery);
+        lbOpen(Math.max(0, visibleThumbs().indexOf(active)));
+      });
+      $('[data-lb-close]', lb).addEventListener('click', lbClose);
+      $('[data-lb-prev]', lb).addEventListener('click', () => lbStep(-1));
+      $('[data-lb-next]', lb).addEventListener('click', () => lbStep(1));
+      lbDots.addEventListener('click', (e) => { if (e.target.dataset.i) { lbIdx = Number(e.target.dataset.i); lbRender(); } });
+      document.addEventListener('keydown', (e) => {
+        if (lb.hidden) return;
+        if (e.key === 'Escape') lbClose();
+        if (e.key === 'ArrowLeft') lbStep(-1);
+        if (e.key === 'ArrowRight') lbStep(1);
+      });
+    }
+
+    // Filter thumbs by selected color (media alt uses "vcolor:<Color>").
+    // A photo only stays visible if it's tagged for this exact color, or
+    // it has no vcolor: tag at all (a genuinely color-neutral shot, e.g.
+    // packaging or a spec close-up). Photos tagged "vcolor:lifestyle" used
+    // to always show regardless of the tag — that let a photo of one
+    // color (e.g. Starlight) linger after switching to a different color
+    // (e.g. Midnight Blue). Real lifestyle photos should be tagged with
+    // whichever actual color they depict instead of the placeholder
+    // "lifestyle" value, so they filter the same as any other photo.
+    window.VolticalGalleryFilter = (color) => {
+      if (!color) return;
+      let firstVisible = null;
+      thumbs.forEach((t) => {
+        const alt = ($('img', t).alt || '').toLowerCase();
+        const match = alt.indexOf('vcolor:' + color.toLowerCase()) !== -1 || alt.indexOf('vcolor:') === -1;
+        t.toggleAttribute('data-color-hidden', !match);
+        if (match && !firstVisible) firstVisible = t;
+      });
+      if (firstVisible && firstVisible !== $('.gallery__thumb.is-active:not([data-color-hidden])', gallery)) setMain(firstVisible);
+    };
+  }
+
+  /* ---------- variant picker ---------- */
+  const pform = $('[data-product-form]');
+  if (pform) {
+    const productJSON = JSON.parse($('[data-product-json]').textContent);
+    const priceEl = $('[data-price]', pform.closest('.pinfo'));
+    const idInput = $('input[name="id"]', pform);
+    const btn = $('[data-atc]', pform);
+    const btnLabel = $('[data-atc-label]', btn);
+    const shipNote = $('[data-ship-note]');
+
+    const selectedOptions = () =>
+      $$('.opt', pform).map((o) => $('input:checked', o) && $('input:checked', o).value);
+
+    const findVariant = () => {
+      const sel = selectedOptions();
+      return productJSON.variants.find((v) => v.options.every((o, i) => o === sel[i]));
+    };
+
+    const update = () => {
+      const v = findVariant();
+      $$('.opt', pform).forEach((o) => {
+        const out = $('output', o);
+        const checked = $('input:checked', o);
+        if (out && checked) out.textContent = checked.value;
+      });
+      if (!v) { btn.disabled = true; btnLabel.textContent = window.VolticalStrings.unavailable; return; }
+      idInput.value = v.id;
+      priceEl.textContent = money(v.price);
+      btn.disabled = !v.available;
+      btnLabel.textContent = v.available ? window.VolicalATCDefault : window.VolticalStrings.soldOut;
+      if (shipNote) shipNote.hidden = !v.available;
+
+      const colorIdx = productJSON.options.findIndex((o) => /colou?r/i.test(o));
+      if (colorIdx > -1 && window.VolticalGalleryFilter) window.VolticalGalleryFilter(v.options[colorIdx]);
+
+      const capIdx = productJSON.options.findIndex((o) => /capacit|mah/i.test(o));
+      if (capIdx > -1 && window.VolticalCalcSetCapacity) window.VolticalCalcSetCapacity(v.options[capIdx]);
+
+      const url = new URL(location); url.searchParams.set('variant', v.id);
+      history.replaceState(null, '', url);
+    };
+
+    window.VolicalATCDefault = btnLabel.textContent.trim();
+    $$('.opt input', pform).forEach((i) => i.addEventListener('change', update));
+    update();
+
+    /* add to cart (AJAX, morphing button) */
+    pform.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (btn.disabled) return;
+      btn.classList.add('is-adding');
+      const items = [{ id: Number(idInput.value), quantity: 1 }];
+      $$('[data-addon]', pform).forEach((addonEl) => {
+        if ($('input', addonEl).checked) {
+          items.push({ id: Number(addonEl.dataset.addonVariant), quantity: 1 });
+        }
+      });
+      fetchJSON('/cart/add.js', { method: 'POST', body: JSON.stringify({ items: items }) })
+        .then(() => {
+          btn.classList.remove('is-adding'); btn.classList.add('is-added');
+          btnLabel.textContent = window.VolticalStrings.added;
+          setTimeout(() => { btn.classList.remove('is-added'); btnLabel.textContent = window.VolicalATCDefault; }, 1800);
+          Drawer.refresh(true);
+        })
+        .catch(() => { btn.classList.remove('is-adding'); btnLabel.textContent = window.VolticalStrings.error; });
+    });
+  }
+
+  /* ---------- quick add (the suggested products' cards) ---------- */
+  // One of the card's product straight into the bag, without opening it, so
+  // the next card's can follow: the bag's count bumps and the button says
+  // "Added ✓" for a moment. Without script the form posts to /cart/add.
+  const quickTimers = new WeakMap();
+  document.addEventListener('submit', (e) => {
+    const form = e.target.closest('[data-quick-add]');
+    if (!form) return;
+    e.preventDefault();
+    const btn = $('button', form);
+    const label = $('[data-quick-add-label]', form);
+    if (btn.disabled || btn.classList.contains('is-adding')) return;
+    if (!form.dataset.label) form.dataset.label = label.textContent;
+    clearTimeout(quickTimers.get(form));
+    btn.classList.remove('is-added'); btn.classList.add('is-adding');
+    const after = (text, added) => {
+      btn.classList.remove('is-adding'); btn.classList.toggle('is-added', added);
+      label.textContent = text;
+      quickTimers.set(form, setTimeout(() => { btn.classList.remove('is-added'); label.textContent = form.dataset.label; }, 1800));
+    };
+    fetchJSON('/cart/add.js', { method: 'POST', body: JSON.stringify({ id: Number(form.elements.id.value), quantity: 1 }) })
+      .then(() => { after(window.VolticalStrings.added, true); Drawer.refresh(false); })
+      .catch(() => after(form.dataset.error, false));
+  });
+
+  /* ---------- spec sheet (from VolticalData.specsSheets) ---------- */
+  const specsEl = $('[data-specs]');
+  if (specsEl && window.VolticalData && window.VolticalData.specsSheets) {
+    const rows = window.VolticalData.specsSheets[specsEl.dataset.handle];
+    if (rows && rows.length) {
+      let hasEst = false;
+      $('[data-specs-grid]', specsEl).innerHTML = rows.map(([k, v]) => {
+        if (/\*$/.test(v)) hasEst = true;
+        return '<div class="specs__row"><dt>' + k + '</dt><dd>' + v.replace(/\*$/, '') + (/\*$/.test(v) ? '<sup>*</sup>' : '') + '</dd></div>';
+      }).join('');
+      const note = $('[data-specs-note]', specsEl);
+      if (note) note.hidden = !hasEst;
+      specsEl.hidden = false;
+    }
+  }
+
+  /* ---------- capacity calculator ---------- */
+  const calc = $('[data-calc]');
+  if (calc && window.VolticalData) {
+    const D = window.VolticalData;
+    const spec = D.products[calc.dataset.handle];
+    if (spec) {
+      const deviceSel = $('[data-calc-device]', calc);
+      const out = $('[data-calc-out]', calc);
+      const meter = $('[data-calc-meter] i', calc);
+      const figCharges = $('[data-calc-charges]', calc);
+      const figSpeed = $('[data-calc-speed]', calc);
+      const figThird = $('[data-calc-third]', calc);
+      const list = spec.type === 'watchcase' ? D.watches : D.iphones;
+
+      list.forEach((d) => {
+        const o = document.createElement('option');
+        o.value = d.mah; o.textContent = d.name; o.dataset.hours = d.hours || '';
+        deviceSel.appendChild(o);
+      });
+
+      let currentCapacity = Object.values(spec.capacities)[Object.values(spec.capacities).length - 1];
+      window.VolticalCalcSetCapacity = (optText) => {
+        const key = Object.keys(spec.capacities).find((k) => String(optText).replace(/[^0-9]/g, '').indexOf(k) === 0 || String(optText).replace(/[^0-9]/g, '') === k);
+        if (key) { currentCapacity = spec.capacities[key]; run(); }
+      };
+
+      const run = () => {
+        const mah = Number(deviceSel.value);
+        if (!mah) return;
+        out.classList.add('is-live');
+        const usable = currentCapacity * D.efficiency[spec.type === 'watchcase' ? 'wireless' : 'wireless'];
+        const usableWired = currentCapacity * D.efficiency.wired;
+
+        if (spec.type === 'watchcase') {
+          const charges = usable / mah;
+          const hours = (deviceSel.selectedOptions[0].dataset.hours || 18) * charges;
+          figCharges.innerHTML = '≈ <b>' + charges.toFixed(1) + '×</b>';
+          figSpeed.innerHTML = '≈ <b>+' + Math.round(hours) + ' h</b>';
+          figThird.innerHTML = '<b>' + spec.wirelessW + ' W</b>';
+          meter.style.transform = 'scaleX(' + Math.min(charges / 3, 1) + ')';
+        } else {
+          const charges = usable / mah;
+          const chargesWired = usableWired / mah;
+          // time to ~full on wireless: device Wh / (rated W × ~70% avg delivered) with taper allowance
+          const mins = Math.round(((mah * 3.85) / 1000 / (spec.wirelessW * 0.7)) * 60 * 1.15);
+          figCharges.innerHTML = '≈ <b>' + charges.toFixed(1) + '×</b>';
+          figSpeed.innerHTML = '≈ <b>' + (mins >= 60 ? Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm' : mins + ' min') + '</b>';
+          figThird.innerHTML = '≈ <b>' + chargesWired.toFixed(1) + '×</b>';
+          meter.style.transform = 'scaleX(' + Math.min(charges / 3, 1) + ')';
+        }
+      };
+      deviceSel.addEventListener('change', run);
+    }
+  }
+
+  /* ---------- collection filters (client-side) ---------- */
+  const plp = $('[data-plp]');
+  if (plp) {
+    const cards = $$('[data-plp-card]', plp);
+    const chips = $$('.filter-chip', plp);
+    const countEl = $('[data-plp-count]', plp);
+    const emptyEl = $('[data-plp-empty]', plp);
+    const active = { capacity: new Set(), color: new Set(), connector: new Set() };
+
+    const apply = () => {
+      let shown = 0;
+      cards.forEach((c) => {
+        const ok = Object.keys(active).every((k) => {
+          if (!active[k].size) return true;
+          const vals = (c.dataset[k] || '').toLowerCase().split('|');
+          return [...active[k]].some((v) => vals.includes(v));
+        });
+        c.classList.toggle('is-filtered', !ok);
+        if (ok) shown++;
+      });
+      if (countEl) countEl.textContent = shown;
+      if (emptyEl) emptyEl.hidden = shown !== 0;
+    };
+
+    chips.forEach((chip) => chip.addEventListener('click', () => {
+      const k = chip.dataset.filterKey, v = chip.dataset.filterValue.toLowerCase();
+      chip.classList.toggle('is-on');
+      active[k].has(v) ? active[k].delete(v) : active[k].add(v);
+      apply();
+    }));
+
+    const sortSel = $('[data-plp-sort]');
+    if (sortSel) sortSel.addEventListener('change', () => {
+      const url = new URL(location); url.searchParams.set('sort_by', sortSel.value); location.href = url;
+    });
+  }
+
+  /* ---------- cart drawer + shipping protection ---------- */
+  const Drawer = (() => {
+    const el = $('[data-drawer]');
+    if (!el) return { refresh: () => {} };
+    const scrim = $('[data-scrim]');
+    const linesEl = $('[data-drawer-lines]', el);
+    const emptyEl = $('[data-drawer-empty]', el);
+    const footEl = $('[data-drawer-foot]', el);
+    const subtotalEl = $('[data-drawer-subtotal]', el);
+    const countBadges = $$('[data-cart-count]');
+    const protectBox = $('[data-protect]', el);
+    const protectToggle = protectBox && $('input', protectBox);
+    const P = window.Voltical.protection || {};
+    let protectionProduct = null;
+    let protectWant = null;                          // the protection switch's flip, until the cart has caught up with it
+    let protectTried = false;                        // protection has been put in this bag by default
+    // switched off by the shopper (kept in this browser), so it isn't put back by default
+    const protectOff = () => { try { return localStorage.getItem('volt-protect-off') === '1'; } catch (e) { return false; } };
+    let cart = null;
+    let busy = false;
+    let qtyOpenKey = null;                           // the line whose quantity menu is open (its pencil is hidden)
+    /* The pencil, its box cropped to its ink (stroke included) so it can be sized to the name's
+       capitals: 9.2px here (13px SF's cap height), 1cap beside the name (theme-r2.css). Its lines,
+       1.55 of the box's 13.34, come to ~1.07px: the stems of "Core" next to it. */
+    const PENCIL = '<svg width="9.2" height="9.2" viewBox="1.625 1.035 13.34 13.34" fill="none" aria-hidden="true"><path d="M11.2 2.3a1.6 1.6 0 0 1 2.3 0l.2.2a1.6 1.6 0 0 1 0 2.3L5.6 12.9 2.4 13.6l.7-3.2 8.1-8.1Z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><path d="m9.9 3.7 2.4 2.4" stroke="currentColor" stroke-width="1.55"/></svg>';
+
+    if (P.enabled && P.handle) {
+      fetchJSON('/products/' + P.handle + '.js')
+        .then((p) => { protectionProduct = p; if (cart) render(); })   // the bag may already be drawn: show the switch, and its line as protection
+        .catch(() => { if (protectBox) protectBox.hidden = true; });
+    } else if (protectBox) protectBox.hidden = true;
+
+    const tierVariant = (subtotalCents) => {
+      if (!protectionProduct) return null;
+      const thresholds = String(P.thresholds || '50,100,150').split(',').map((n) => Number(n.trim()) * 100);
+      const variants = protectionProduct.variants;
+      let idx = thresholds.findIndex((t) => subtotalCents < t);
+      if (idx === -1) idx = thresholds.length;
+      return variants[Math.min(idx, variants.length - 1)];
+    };
+
+    const isProtection = (item) => protectionProduct && item.product_id === protectionProduct.id;
+
+    /* Shipping, as set in Shopify's delivery profiles: Standard is 6.99 in
+       the customer's currency until the order total reaches that currency's
+       free-shipping amount, then shipping is free. Currencies with no rate
+       here (no delivery zone uses them) show "Calculated at checkout". */
+    const SHIP_RATE = 699;
+    const SHIP_FREE_FROM = {
+      GBP: 45, EUR: 55, AUD: 90, CAD: 90, NZD: 110, DKK: 395, NOK: 590,
+      SEK: 580, CZK: 1270, MXN: 1050, INR: 5720, IDR: 1080000
+    };
+    const shipEl = $('[data-ship]', el);
+    const shipMethod = shipEl && $('[data-ship-method]', shipEl);
+    const shipPrice = shipEl && $('[data-ship-price]', shipEl);
+    const totalLabel = $('[data-total-label]', el);
+    const totalHint = $('[data-total-hint]', el);
+    const shippingFor = (c) => {
+      const from = SHIP_FREE_FROM[c.currency];
+      if (from == null) return null;
+      // shipping protection isn't shipped (the product doesn't need shipping), so like at checkout it
+      // doesn't count towards free shipping
+      const prot = c.items.reduce((sum, i) => sum + (isProtection(i) ? i.final_line_price : 0), 0);
+      return c.total_price - prot >= from * 100 ? 0 : SHIP_RATE;
+    };
+
+    const render = () => {
+      const realLines = cart.items.filter((i) => !isProtection(i));
+      countBadges.forEach((b) => {
+        const n = realLines.reduce((n, i) => n + i.quantity, 0);
+        b.textContent = n;
+        b.hidden = n === 0;
+        b.classList.add('bump'); setTimeout(() => b.classList.remove('bump'), 350);
+      });
+      // protection alone protects nothing: it leaves with the last product, and the bag reads empty
+      if (!realLines.length && cart.items.some(isProtection) && protectWant == null) { protectWant = false; protectSync(); }
+      // it's on by default: added with the first product, unless it has been switched off here
+      if (!realLines.length) protectTried = false;
+      else if (!protectTried && protectionProduct && protectWant == null && !cart.items.some(isProtection) && !protectOff()) {
+        protectTried = true;
+        protectWant = true;
+        protectSync();
+      }
+      emptyEl.hidden = realLines.length !== 0;
+      footEl.hidden = realLines.length === 0;
+      if (protectBox) protectBox.hidden = realLines.length === 0 || !protectionProduct;
+
+      /* Each product is a bubble like the shipping one: the short name
+         ("Core", not "Voltical Core 5K & 10K") as the small grey label with
+         the pencil beside it, the options under it, one per line ("Titanium
+         Gold", then "10,000mAh"), and the price on the right, centred on the
+         options (theme-r2.css). The quantity itself isn't shown (its number
+         stays in the button, hidden, for the slider and screen readers).
+         Tapping the pencil (data-qty-edit) opens the quantity menu below. */
+      const shortName = (t) => t.replace(/^Voltical\s+/i, '').replace(/\s+\d+K\s*(&|and|\/)\s*\d+K$/i, '');
+      const options = (v) => v.split(' / ').map((o) => `<span>${o.replace(/\s*mah\b/i, 'mAh')}</span>`).join(' ');
+      linesEl.innerHTML = realLines.map((i) => `
+        <div class="cart-line${i.key === qtyOpenKey ? ' is-qty-open' : ''}" data-line-key="${i.key}">
+          <div class="cart-line__img">${i.image ? `<img src="${i.image.replace(/(\.[a-z]+)(\?|$)/, '_160x$1$2')}" alt="" decoding="sync">` : ''}</div>
+          <div class="cart-line__info">
+            <div class="cart-line__head">
+              <span class="cart-line__title">${shortName(i.product_title)}</span>
+              <span class="cart-line__edit">
+                <button type="button" class="cart-line__qty" data-qty-edit aria-label="Quantity ${i.quantity}, edit">
+                  <span class="cart-line__qty-label">Qty</span>
+                  <span class="cart-line__qty-num">${i.quantity}</span>
+                  <span class="cart-line__pencil">${PENCIL}</span>
+                </button>
+                <label class="cart-line__qty-tap" data-qty-edit aria-hidden="true"><input type="checkbox" switch tabindex="-1"></label>
+              </span>
+            </div>
+            ${i.variant_title && i.variant_title !== 'Default Title' ? `<div class="cart-line__variant">${options(i.variant_title)}</div>` : ''}
+            <span class="cart-line__price">${money(i.final_line_price)}</span>
+          </div>
+        </div>`).join('');
+
+      if (shipEl) shipEl.hidden = realLines.length === 0;
+      paintTotals(cart);
+      if (qm && !qm.closing) previewQty(qm.key, qm.shown);   // its quantity menu is open: keep the slider's number
+      fit();                                         // the card's height, if it's open (below)
+    };
+
+    // the bag as it will be once the protection switch's flip, and its tier for the rest of the bag,
+    // have reached the cart: at the price the cart will charge, so the total moves the moment the
+    // switch or a quantity does, and doesn't step back while the cart catches up
+    const withProtectWant = (c) => {
+      if (!protectionProduct) return c;
+      const line = c.items.find(isProtection);
+      const want = protectWant == null ? !!line : protectWant;
+      const was = line ? line.final_line_price : 0;
+      const v = want && tierVariant(c.items_subtotal_price - was);
+      if (want && !v && !line) return c;
+      const price = want ? (v ? v.price : was) : 0;
+      const items = c.items.filter((i) => i !== line);
+      if (want) items.push(Object.assign({}, line || { key: '', product_id: protectionProduct.id, quantity: 1 }, { final_line_price: price }));
+      return Object.assign({}, c, { items, item_count: c.item_count + (want ? 1 : 0) - (line ? line.quantity : 0),
+        items_subtotal_price: c.items_subtotal_price + price - was, total_price: c.total_price + price - was });
+    };
+
+    // the bag's sums (protection, shipping, total), for the cart or for the
+    // cart as it would be while the quantity slider moves (previewQty)
+    const paintTotals = (base) => {
+      const c = withProtectWant(base);
+      const protLine = c.items.find(isProtection);
+      if (protectToggle) protectToggle.checked = protectWant == null ? !!protLine : protectWant;   // a flip on its way to the cart stays shown
+      const S = window.VolticalStrings;
+      let ship = shippingFor(c);
+      if (ship && !c.items.some((i) => i.quantity && !isProtection(i))) ship = 0;   // nothing left to ship
+      if (shipEl) {
+        shipMethod.textContent = ship == null ? S.shipAtCheckout : ship === 0 ? S.shipFree : S.shipStandard;
+        shipPrice.textContent = ship == null ? '' : ship === 0 ? S.shipFreePrice : money(ship);
+      }
+      if (ship == null) {
+        totalLabel.textContent = S.subtotal;
+        totalHint.textContent = S.taxesNote;
+        subtotalEl.textContent = money(c.total_price);
+      } else {
+        totalLabel.textContent = S.total;
+        totalHint.textContent = S.totalNote;
+        subtotalEl.textContent = money(c.total_price + ship);
+      }
+    };
+
+    const mutate = (body) => {
+      if (busy) return Promise.resolve();
+      busy = true;
+      return fetchJSON('/cart/change.js', { method: 'POST', body: JSON.stringify(body) })
+        .then((c) => { cart = c; render(); })
+        .finally(() => { busy = false; });
+    };
+
+    /* keep protection tier in sync with subtotal: the old tier out and the new one in, with the
+       bag left as it was meanwhile (busy), so the switch stays on and the total where it is */
+    const syncProtectionTier = () => {
+      const protLine = cart.items.find(isProtection);
+      if (!protLine || busy) return Promise.resolve();
+      const subtotalExcl = cart.items_subtotal_price - protLine.final_line_price;
+      const should = tierVariant(subtotalExcl);
+      if (should && should.id !== protLine.variant_id) {
+        busy = true;
+        return fetchJSON('/cart/change.js', { method: 'POST', body: JSON.stringify({ id: protLine.key, quantity: 0 }) })
+          .then(() => fetchJSON('/cart/add.js', { method: 'POST', body: JSON.stringify({ id: should.id, quantity: 1, properties: { _protection: 'true' } }) }))
+          .finally(() => { busy = false; })
+          .then(() => refresh());
+      }
+      return Promise.resolve();
+    };
+
+    linesEl.addEventListener('click', (e) => {
+      const line = e.target.closest('[data-line-key]');
+      if (!line) return;
+      const key = line.dataset.lineKey;
+      const item = cart.items.find((i) => i.key === key);
+      if (!item) return;
+      if (e.target.closest('[data-qty-edit]') && !qm && !busy) { tick(); openQtyMenu(item, line); }
+    });
+
+    /* Quantity menu, copied from the iPhone's stepped slider pop-up in the
+       owner's screen recording (measured frame by frame at 60fps):
+       - It grows out of the pencil. A 27px circle on the pencil morphs into
+         a 334 x 72 pill centred on the card, on the first option's row, on a
+         spring fitted to the recording (response 0.338s, damping 0.822,
+         fast start): about a third of a second, ~1% overshoot. The pencil
+         becomes the knob and fades as it grows; "Qty 2" fades in and rises
+         to 70px above the pill's centre. Closing runs it back into the
+         pencil.
+       - The page around it frosts: strongest at the pill, fading out about
+         250px above and below it.
+       - In the pill: a 48px track, a blue fill (#0071E3, Checkout's blue) from the left to
+         4px past a 40px white knob, and 12px dots at the stops (grey, or
+         20% white on the blue). A soft blue glow sits at its right end.
+       - Touching it puffs it up 2%. The first drag takes the knob to the
+         finger; later drags, from anywhere on it, move the knob as far as
+         the finger moves (qmDragAt). Either way there's a little give past
+         either end, and the label and a haptic tick change at each stop.
+         Letting go springs the knob onto the nearest stop and the pill
+         settles back with a small bounce. Tapping a stop jumps there.
+       - It stays open after letting go. Tapping anywhere else (or Escape,
+         Enter) closes it and saves the quantity. Stop 0 removes the item
+         (the label just reads "Quantity 0", like every other stop). */
+    const QM = { W: 334, H: 72, P: 12, T: 48, K: 40, D: 12, FROM: 27 };
+    const qmReduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const qmEl = (() => {
+      const root = document.createElement('div');
+      root.className = 'qty-menu';
+      root.hidden = true;
+      root.innerHTML = `
+        <div class="qty-menu__frost" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="qty-menu__glow" aria-hidden="true"></div>
+        <div class="qty-menu__label" aria-hidden="true"><b>Quantity</b> <span></span></div>
+        <div class="qty-menu__pill" role="slider" tabindex="-1" aria-label="Quantity" aria-valuemin="0">
+          <div class="qty-menu__track">
+            <div class="qty-menu__dots"></div>
+            <div class="qty-menu__fill"><div class="qty-menu__dots"></div></div>
+            <div class="qty-menu__knob">${PENCIL}</div>
+          </div>
+        </div>
+        <input type="checkbox" switch class="qty-menu__hap" tabindex="-1" aria-hidden="true">`;
+      document.body.appendChild(root);
+      const dots = $$('.qty-menu__dots', root);
+      return {
+        root,
+        frost: $$('.qty-menu__frost i', root),
+        glow: $('.qty-menu__glow', root),
+        label: $('.qty-menu__label', root),
+        value: $('.qty-menu__label span', root),
+        pill: $('.qty-menu__pill', root),
+        track: $('.qty-menu__track', root),
+        fill: $('.qty-menu__fill', root),
+        dotsOff: dots[0],
+        dotsOn: dots[1],
+        knob: $('.qty-menu__knob', root),
+        knobPencil: $('.qty-menu__knob svg', root),
+        hap: $('.qty-menu__hap', root)
+      };
+    })();
+
+    /* Haptic ticks. Android: navigator.vibrate. iPhone Safari has no
+       vibration API, and since iOS 26.5 a switch flipped from script is
+       silent, so iPhone ticks come from real switches under the finger: a
+       hidden one in the label over "Qty 1" (tapping it ticks) and the
+       slider's invisible one (.qty-menu__hap, below). */
+    const canVibrate = typeof navigator.vibrate === 'function';
+    const useSwitchHaptics = !canVibrate && 'switch' in qmEl.hap;
+    let hapFrame = null;
+    let hapPrime = null;
+    const hapSeeds = [];
+    const hapControl = () => hapFrame ? hapFrame.input : qmEl.hap;
+    const hapOrigin = (target) => hapFrame && target === hapFrame.input
+      ? hapFrame.frame.getBoundingClientRect() : { left: 0, top: 0 };
+    const hapClientX = (e) => e.clientX + hapOrigin(e.currentTarget).left;
+    let ticksPending = 0;
+    let tickTimer = 0;
+    const playTick = () => {
+      tickTimer = 0;
+      if (!ticksPending) return;
+      ticksPending--;
+      try { navigator.vibrate(8); } catch (e) { ticksPending = 0; }
+      tickTimer = setTimeout(playTick, 16);
+    };
+    const tick = (count = 1) => {
+      if (!canVibrate) return;
+      ticksPending += count;
+      if (!tickTimer) playTick();
+    };
+    const stopTicks = () => {
+      clearTimeout(tickTimer);
+      tickTimer = 0;
+      ticksPending = 0;
+    };
+
+    // A spring that can be re-aimed mid-flight, stepped each frame.
+    // response in seconds and damping ratio, as SwiftUI describes springs.
+    const qmSpring = (x) => ({
+      x, v: 0, to: x, w: 20, z: 1,
+      aim(to, response, damping, v) {
+        this.to = to; this.w = (2 * Math.PI) / response; this.z = damping;
+        if (v != null) this.v = v;
+      },
+      set(x) { this.x = this.to = x; this.v = 0; },
+      step(dt) {
+        const n = Math.ceil(dt / 0.004);
+        const h = dt / n;
+        for (let i = 0; i < n; i++) {
+          this.v += (-this.w * this.w * (this.x - this.to) - 2 * this.z * this.w * this.v) * h;
+          this.x += this.v * h;
+        }
+        if (Math.abs(this.x - this.to) < 1e-4 && Math.abs(this.v) < 1e-3) { this.x = this.to; this.v = 0; return false; }
+        return true;
+      }
+    });
+
+    let qm = null;
+    let qmFrame = 0;
+    let qmLast = 0;
+    const clamp01 = (x) => Math.max(0, Math.min(1, x));
+    const qmStop = (x) => Math.max(0, Math.min(qm.n - 1, Math.round(x)));
+    const qmLine = (key) => Array.from(linesEl.children).find((n) => n.dataset.lineKey === key);
+    // the stop under a finger, as a fraction, before any give past the ends
+    const qmRawAt = (clientX) => {
+      const left = qm.to.x - qm.W / 2 + QM.P;
+      return ((clientX - left - QM.T / 2) / (qm.W - 2 * QM.P - QM.T)) * (qm.n - 1);
+    };
+    // the stop under a finger, as a fraction, with a little give past the ends
+    const qmStopAt = (clientX) => {
+      let raw = qmRawAt(clientX);
+      const give = (o) => (1 - 1 / (o * 0.6 + 1)) * 0.12;
+      if (raw < 0) raw = -give(-raw);
+      else if (raw > qm.n - 1) raw = qm.n - 1 + give(raw - (qm.n - 1));
+      return raw;
+    };
+    /* The first drag after opening takes the knob to the finger, as the
+       thumb arrives from the pencil at the pill's far end with no room to
+       push (and ticks from its first move). After that, a drag moves the
+       knob as far as the finger moves, from wherever on the pill it starts,
+       so lifting the thumb and pushing again from the middle carries the
+       knob the last stop to an end. The pointer and the native touch share
+       one grip so their stops always agree. Past an end the knob stretches
+       a little; pushing further slides the grip along instead, so coming
+       back moves it again straight away. */
+    const QM_SLACK = 0.3;                             // stops of push held past an end
+    const qmGrip = (x, other) => {                   // other: the other route's gesture
+      if (!other || !qm.grip) qm.grip = { x0: x, k0: qm.grip ? qm.shown : qmRawAt(x) };
+    };
+    const qmDragAt = (x) => {
+      const g = qm.grip;
+      const step = (qm.W - 2 * QM.P - QM.T) / (qm.n - 1);
+      const end = qm.n - 1;
+      let raw = g.k0 + (x - g.x0) / step;
+      if (raw > end + QM_SLACK) { raw = end + QM_SLACK; g.x0 = x - (raw - g.k0) * step; }
+      else if (raw < -QM_SLACK) { raw = -QM_SLACK; g.x0 = x - (raw - g.k0) * step; }
+      const give = (o) => 0.12 * o / (o + QM_SLACK);
+      return raw > end ? end + give(raw - end) : raw < 0 ? -give(-raw) : raw;
+    };
+    /* The bag as it would be with this line at quantity q, worked out here
+       so the line's price, the shipping and the total change with each stop
+       of the slider. Closing the menu saves it, and the store's own numbers
+       then replace these. */
+    const previewQty = (key, q) => {
+      const item = cart.items.find((i) => i.key === key);
+      const line = qmLine(key);
+      if (!item || !line) return;
+      const linePrice = item.final_price * q;
+      const d = linePrice - item.final_line_price;
+      const items = cart.items.map((i) => (i === item ? Object.assign({}, i, { quantity: q, final_line_price: linePrice }) : i));
+      // (protection is priced on the rest of the bag by paintTotals)
+      $('.cart-line__qty-num', line).textContent = q;
+      $('.cart-line__qty', line).setAttribute('aria-label', 'Quantity ' + q + ', edit');
+      $('.cart-line__price', line).textContent = money(linePrice);
+      paintTotals(Object.assign({}, cart, {
+        items,
+        items_subtotal_price: cart.items_subtotal_price + d,
+        total_price: cart.total_price + d,
+        item_count: cart.item_count + q - item.quantity
+      }));
+    };
+    const qmShow = (v, haptic, crossed = false) => {
+      if (v === qm.shown) return;
+      const count = crossed ? Math.abs(v - qm.shown) : 1;
+      qm.shown = v;
+      const text = String(v);                        // 0 too: "Quantity 0", not a red "Remove"
+      qmEl.value.textContent = text;
+      qmEl.pill.setAttribute('aria-valuenow', String(v));
+      qmEl.pill.setAttribute('aria-valuetext', text);
+      previewQty(qm.key, v);
+      if (haptic) {
+        tick(count);
+      }
+    };
+
+    const qmPaint = () => {
+      const p = qm.p.x;
+      const pc = Math.max(0, p);
+      const w = QM.FROM + (qm.W - QM.FROM) * pc;
+      const h = QM.FROM + (QM.H - QM.FROM) * pc;
+      const cx = qm.from.x + (qm.to.x - qm.from.x) * p;
+      const cy = qm.from.y + (qm.to.y - qm.from.y) * p;
+      const sc = h / QM.H;
+      const pad = QM.P * sc;
+      const t = QM.T * sc;
+      const tw = w - 2 * pad;
+      const span = Math.max(0, tw - t);
+      const d = QM.D * sc;
+      const kd = QM.K * sc;
+      const kx = t / 2 + (span * qm.k.x) / (qm.n - 1);
+      const E = qmEl;
+      // faded layer by layer: fading their parent would switch the blurs off
+      const fo = String(clamp01(p * 1.15));
+      E.frost.forEach((f) => { f.style.opacity = fo; });
+      E.pill.style.width = w + 'px';
+      E.pill.style.height = h + 'px';
+      E.pill.style.borderRadius = h / 2 + 'px';
+      E.pill.style.opacity = String(clamp01(p / 0.12));
+      E.pill.style.transform = 'translate(' + (cx - w / 2) + 'px,' + (cy - h / 2) + 'px) scale(' + qm.s.x + ')';
+      E.track.style.cssText = 'left:' + pad + 'px;top:' + pad + 'px;width:' + tw + 'px;height:' + t + 'px;border-radius:' + t / 2 + 'px';
+      E.fill.style.width = kx + t / 2 + 'px';
+      E.fill.style.borderRadius = t / 2 + 'px';
+      E.dotsOn.style.width = tw + 'px';
+      for (const layer of [E.dotsOff, E.dotsOn]) {
+        Array.from(layer.children).forEach((dot, i) => {
+          dot.style.cssText = 'width:' + d + 'px;height:' + d + 'px;transform:translate(' +
+            (t / 2 + (span * i) / (qm.n - 1) - d / 2) + 'px,' + (t / 2 - d / 2) + 'px)';
+        });
+      }
+      E.knob.style.cssText = 'width:' + kd + 'px;height:' + kd + 'px;transform:translate(' + (kx - kd / 2) + 'px,' + (t / 2 - kd / 2) + 'px)';
+      E.knobPencil.style.opacity = String(clamp01(1 - p / 0.3));
+      E.label.style.opacity = String(clamp01((p - 0.25) / 0.45));
+      E.label.style.transform = 'translate(' + cx + 'px,' + (cy - h / 2 - 34 * Math.min(1, pc)) + 'px) translate(-50%,-50%)';
+      E.glow.style.transform = 'translate(' + (cx + w / 2 - 6) + 'px,' + cy + 'px)';
+      if (!qm.hapT) {                                // the invisible switch lies over the pill
+        E.hap.style.cssText = 'width:' + w + 'px;height:' + h + 'px;transform:' + E.pill.style.transform +
+          (qm.closing ? ';pointer-events:none' : '');
+      }
+      if (hapFrame) {
+        E.hap.style.pointerEvents = 'none';
+        const fw = w * qm.s.x, fh = h * qm.s.x;
+        hapFrame.frame.style.cssText = 'position:fixed;border:0;opacity:0;z-index:121;left:' +
+          (cx - fw / 2) + 'px;top:' + (cy - fh / 2) + 'px;width:' + fw + 'px;height:' + fh + 'px';
+        if (!qm.hapT) hapFrame.input.style.cssText = hapFrame.base + 'width:' + fw + 'px;height:' + fh + 'px';
+      }
+    };
+
+    const qmFinish = () => {
+      const { key, commitQty } = qm;
+      const line = qmLine(qm.key);
+      if (line) line.classList.remove('is-qty-open');
+      qtyOpenKey = null;
+      hapReset();
+      qm = null;
+      qmEl.root.hidden = true;
+      qmEl.root.classList.remove('is-settled');
+      el.focus({ preventScroll: true });             // back to the bag card, as when it opened
+      if (commitQty != null) applyQty(key, commitQty);
+    };
+    const qmLoop = (now) => {
+      qmFrame = 0;
+      if (!qm) return;
+      const dt = Math.min(1 / 30, Math.max(0, (now - qmLast) / 1000));
+      qmLast = now;
+      let moving = qm.p.step(dt);
+      moving = qm.k.step(dt) || moving;
+      moving = qm.s.step(dt) || moving;
+      if (!qm.closing && !qm.settled && qm.p.x > 0.98) { qm.settled = true; qmEl.root.classList.add('is-settled'); }
+      if (qm.closing && qm.p.x <= 0.01) { qmFinish(); return; }
+      qmPaint();
+      if (moving || qm.drag) qmFrame = requestAnimationFrame(qmLoop);
+    };
+    const qmRun = () => {                            // start the frame loop if it's idle
+      if (!qmFrame) { qmLast = performance.now() - 16; qmFrame = requestAnimationFrame(qmLoop); }
+    };
+
+    const applyQty = (key, q) => {                   // wait out a change already on its way
+      if (busy) { setTimeout(() => applyQty(key, q), 120); return; }
+      mutate({ id: key, quantity: q }).then(syncProtectionTier)
+        .catch(() => render());                      // refused: back to the bag's real numbers
+    };
+    const closeQtyMenu = () => {
+      if (!qm || qm.closing) return;
+      stopTicks();
+      qm.closing = true;
+      qm.drag = null;
+      hapReset(true);
+      const v = qmStop(qm.k.to);
+      qm.commitQty = v !== qm.start ? v : null;
+      const line = qmLine(qm.key);
+      const pen = line && $('.cart-line__pencil', line).getBoundingClientRect();
+      if (pen && pen.width) qm.from = { x: pen.left + pen.width / 2, y: pen.top + pen.height / 2 };
+      qmEl.root.classList.remove('is-settled');
+      qm.s.aim(1, 0.2, 1);
+      if (qmReduce.matches) qm.p.set(0);
+      else qm.p.aim(0, 0.2, 1, -8 * Math.max(0, qm.p.x));
+      qmRun();
+    };
+    const openQtyMenu = (item, line) => {
+      if (qm || busy) return;
+      const pen = $('.cart-line__pencil', line).getBoundingClientRect();
+      const card = el.getBoundingClientRect();
+      const vw = document.documentElement.clientWidth;
+      const vh = window.innerHeight;
+      const W = Math.min(QM.W, vw - 56);
+      const from = { x: pen.left + pen.width / 2, y: pen.top + pen.height / 2 };
+      // the pill opens on the first option's line ("Titanium Gold"), where the pencil was before it
+      // moved up beside the name; a product with no options opens on the pencil's own row
+      const row = ($('.cart-line__variant span', line) || $('.cart-line__pencil', line)).getBoundingClientRect();
+      const to = { x: card.left + card.width / 2, y: Math.min(vh - QM.H / 2 - 16, Math.max(row.top + row.height / 2, 130)) };
+      const n = Math.max(5, item.quantity) + 1;
+      qm = {
+        key: item.key, start: item.quantity, n, W, from, to,
+        p: qmSpring(0), k: qmSpring(item.quantity), s: qmSpring(1),
+        shown: -1, drag: null, closing: false, settled: false
+      };
+      hapReset();
+      if (useSwitchHaptics) qmEl.hap.switch = true;
+      if (hapPrime && hapPrime.seed.input.isConnected && !hapPrime.seed.input.disabled && hapPrime.seed.input.switch) {
+        hapFrame = hapPrime.seed;
+        qm.hapWarm = hapPrime.warm || performance.now() >= hapPrime.readyAt && hapPrime.readyAt > 0;
+        qm.hapSide = hapPrime.side;
+        qm.hapResetAt = hapPrime.resetAt;
+        qm.hapReadyAt = hapPrime.readyAt;
+        hapSync(performance.now());
+      }
+      const dots = Array.from({ length: n }, () => '<i></i>').join('');
+      qmEl.dotsOff.innerHTML = dots;
+      qmEl.dotsOn.innerHTML = dots;
+      qmEl.pill.setAttribute('aria-valuemax', String(n - 1));
+      qmEl.root.style.setProperty('--qm-y', to.y + 'px');
+      qmEl.root.classList.remove('is-settled');
+      qmEl.root.hidden = false;
+      qtyOpenKey = item.key;
+      line.classList.add('is-qty-open');
+      qmShow(item.quantity, false);
+      if (qmReduce.matches) qm.p.set(1);
+      else qm.p.aim(1, 0.338, 0.822, 8.72);
+      qmPaint();
+      qmRun();
+      // after the tapped label has clicked its switch (which may take focus)
+      setTimeout(() => { if (qm && !qm.closing) qmEl.pill.focus({ preventScroll: true }); }, 0);
+    };
+
+    const qmPointerDown = (e) => {
+      if (!qm || qm.closing || e.currentTarget !== hapControl()) return;
+      if (e.pointerType === 'mouse') e.preventDefault();
+      e.currentTarget.setPointerCapture(e.pointerId);
+      qm.drag = { id: e.pointerId, x0: hapClientX(e), moved: false };
+      qmGrip(qm.drag.x0, qm.hapT);
+      qm.s.aim(1.02, 0.2, 1);                        // puffs up under the finger
+      qmRun();
+    };
+    const qmMoveTo = (x) => {
+      const d = qm.drag;
+      if (!d.moved && Math.abs(x - d.x0) < 4) return;
+      d.moved = true;
+      qm.k.aim(qmDragAt(x), 0.09, 1);               // the knob moves with the finger
+      qmShow(qmStop(qm.k.to), true, true);
+    };
+    const qmPointerMove = (e) => {
+      const d = qm && qm.drag;
+      if (!d || e.pointerId !== d.id || e.currentTarget !== hapControl()) return;
+      const origin = hapOrigin(e.currentTarget);
+      const samples = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+      for (const sample of samples) qmMoveTo(sample.clientX + origin.left);
+      qmMoveTo(e.clientX + origin.left);
+      qmRun();
+    };
+    const qmRelease = (e) => {
+      const d = qm && qm.drag;
+      if (!d || e.pointerId !== d.id || e.currentTarget !== hapControl()) return;
+      const x = hapClientX(e);
+      if (d.moved && e.type === 'pointerup') qmMoveTo(x);
+      qm.drag = null;
+      const v = qmStop(d.moved ? qm.k.to : qmStopAt(x));   // a tap jumps to that stop
+      qm.k.aim(v, 0.26, 0.86);
+      qmShow(v, true);
+      if (d.moved || e.type === 'pointercancel') stopTicks();
+      qm.s.aim(1, 0.32, 0.55);                       // settles back with a small bounce
+      qmRun();
+    };
+
+    const HAP = { W: 4000, H: 40, D: 100, RESET: 200, FOLLOW: 205 };
+    const hapPark = (seed) => {
+      seed.frame.style.cssText = 'position:fixed;border:0;opacity:0;pointer-events:none;left:-5000px;top:0;width:334px;height:72px';
+    };
+    const hapClearPrime = () => {
+      hapPrime = null;
+      for (const seed of hapSeeds) {
+        seed.touch = null;
+        seed.candidate = null;
+        seed.priming = false;
+        seed.input.disabled = true;
+        seed.input.switch = false;
+        seed.input.checked = false;
+        seed.input.disabled = false;
+        hapPark(seed);
+      }
+    };
+    const hapReset = (preserve = false) => {
+      if (!useSwitchHaptics) return;
+      if (hapFrame) {
+        if (preserve && qm && !qm.hapT) {
+          hapPrime = { seed: hapFrame, warm: qm.hapWarm, side: qm.hapSide,
+            resetAt: qm.hapResetAt, readyAt: qm.hapReadyAt };
+          hapPark(hapFrame);
+        } else {
+          if (qm) qm.drag = null;
+          hapClearPrime();
+        }
+        hapFrame = null;
+      }
+      qmEl.hap.disabled = true;
+      qmEl.hap.switch = false;
+      qmEl.hap.checked = false;
+      if (!qm) return;
+      qm.hapT = null;
+      qm.hapWarm = false;
+      qm.hapSide = -1;
+      qm.hapResetAt = 0;
+      qm.hapReadyAt = 0;
+      qmEl.hap.disabled = qm.closing;
+    };
+    const hapSync = (now) => {
+      if (qm.hapResetAt && now >= qm.hapResetAt) {
+        qm.hapSide = -1;
+        if (qm.hapT) qm.hapT.side = -1;
+        qm.hapResetAt = 0;
+      }
+      if (qm.hapReadyAt && now >= qm.hapReadyAt) {
+        qm.hapWarm = true;
+        qm.hapReadyAt = 0;
+      }
+    };
+    const hapPlace = (x, y) => {
+      const input = hapControl();
+      const origin = hapOrigin(input);
+      input.style.cssText = (hapFrame ? hapFrame.base : '') + 'width:' + HAP.W + 'px;height:' + HAP.H + 'px;transform:translate(' +
+        (x - origin.left - HAP.W / 2 - qm.hapT.side * HAP.D) + 'px,' + (y - origin.top - HAP.H / 2) + 'px)';
+      input.getBoundingClientRect();              // lay it out now: WebKit reads it right after this listener
+    };
+    const hapTouch = (e) => Array.from(e.changedTouches).find((t) => qm && qm.hapT && t.identifier === qm.hapT.id);
+    const hapTouchStart = (e) => {
+      if (!useSwitchHaptics || !qm || qm.closing || !e.isTrusted || e.currentTarget !== hapControl()) return;
+      if (e.touches.length !== 1) { hapReset(); return; }
+      const t = e.changedTouches[0];
+      const origin = hapOrigin(e.currentTarget);
+      const x = t.clientX + origin.left, y = t.clientY + origin.top;
+      const now = performance.now();
+      hapSync(now);
+      if (!qm.hapWarm) {
+        hapControl().checked = false;
+        hapControl().switch = true;
+        qm.hapSide = -1;
+      }
+      qm.hapT = { id: t.identifier, x0: x, moved: false, side: qm.hapSide, shown: qm.shown, flips: 0 };
+      qmGrip(x, qm.drag);
+      qm.hapResetAt = now + HAP.RESET;
+      qm.hapReadyAt = now + HAP.FOLLOW;
+      hapPlace(x, y);
+    };
+    const hapTouchMove = (e) => {
+      const t = hapTouch(e);
+      if (!t || !e.isTrusted) return;
+      const origin = hapOrigin(e.currentTarget);
+      const x = t.clientX + origin.left, y = t.clientY + origin.top;
+      const h = qm.hapT;
+      const now = performance.now();
+      hapSync(now);
+      if (Math.abs(x - h.x0) >= 4) h.moved = true;
+      const v = h.moved ? qmStop(qmDragAt(x)) : h.shown;
+      const crossed = v !== h.shown;
+      h.shown = v;
+      const ready = qm.hapWarm && (!qm.hapReadyAt || qm.hapResetAt > now);
+      if (crossed && ready) {
+        h.side = -h.side;
+        h.flips++;
+      }
+      qm.hapSide = h.side;
+      hapPlace(x, y);
+    };
+    const hapEnd = (e) => {
+      const h = hapTouch(e) && qm.hapT;
+      if (!h) return;
+      if (e.type === 'touchcancel' || !e.isTrusted) {
+        if (e.cancelable) e.preventDefault();
+        hapReset();
+      } else if (h.moved && e.cancelable) {
+        e.preventDefault();
+        hapSync(performance.now());
+      } else {
+        qm.hapWarm = false;
+        qm.hapSide = -1;
+        qm.hapResetAt = 0;
+        qm.hapReadyAt = 0;
+      }
+      qm.hapT = null;
+      qmRun();
+    };
+    const hapClick = () => {
+      if (!useSwitchHaptics || !qm) return;
+      qm.hapWarm = false;
+      qm.hapSide = -1;
+      qm.hapResetAt = 0;
+      qm.hapReadyAt = 0;
+    };
+    const hapBind = (input) => {
+      input.addEventListener('pointerdown', qmPointerDown);
+      input.addEventListener('pointermove', qmPointerMove);
+      input.addEventListener('pointerup', qmRelease);
+      input.addEventListener('pointercancel', qmRelease);
+      input.addEventListener('touchstart', hapTouchStart, { passive: true });
+      input.addEventListener('touchmove', hapTouchMove, { passive: true });
+      input.addEventListener('touchend', hapEnd, { passive: false });
+      input.addEventListener('touchcancel', hapEnd, { passive: false });
+      input.addEventListener('click', hapClick);
+    };
+    hapBind(qmEl.hap);
+    const hapSuspend = () => {
+      hapClearPrime();
+      if (!qm) return;
+      stopTicks();
+      qm.drag = null;
+      hapReset();
+    };
+    document.addEventListener('visibilitychange', () => { if (document.hidden) hapSuspend(); });
+    window.addEventListener('pagehide', hapSuspend);
+    // The box iOS flashes over a tapped seed. It stays at iOS's own strength (black at 40%):
+    // fainter (transparent, then 1%) changed how the tap reached the switch and silenced the
+    // pencil tick and then the first swipe. Only its colour changes, to what's behind the
+    // button (its see-through backgrounds, like the frosted header's, laid over the first solid
+    // one), and its corners follow the button's, so the box blends in.
+    const hapTint = (seed) => {
+      const layers = [];
+      for (let n = seed.button; n && n.nodeType === 1; n = n.parentElement) {
+        const m = /^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/.exec(getComputedStyle(n).backgroundColor);
+        const a = m ? (m[4] === undefined ? 1 : +m[4]) : 0;
+        if (!a) continue;
+        layers.push([+m[1], +m[2], +m[3], a]);
+        if (a >= 1) break;
+      }
+      let c = [255, 255, 255];
+      for (let i = layers.length - 1; i >= 0; i--) {
+        const [r, g, b, a] = layers[i];
+        c = [r * a + c[0] * (1 - a), g * a + c[1] * (1 - a), b * a + c[2] * (1 - a)];
+      }
+      const tint = 'rgba(' + c.map(Math.round).join(',') + ',0.4)';
+      if (seed.tint !== tint) {
+        seed.tint = tint;
+        seed.doc.documentElement.style.setProperty('-webkit-tap-highlight-color', tint);
+      }
+      seed.radius = 'border-radius:' + getComputedStyle(seed.button).borderRadius + ';';
+    };
+    let hapSeedFrame = 0;
+    const hapUpdateSeeds = () => {
+      hapSeedFrame = 0;
+      for (const seed of hapSeeds) {
+        if (seed === hapFrame || seed.touch || seed.candidate) continue;
+        if (document.hidden || isOpen || closing || hapPrime || seed.button.disabled) { hapPark(seed); continue; }
+        const r = seed.button.getBoundingClientRect();
+        if (!r.width || !r.height || r.bottom <= 0 || r.top >= window.innerHeight) { hapPark(seed); continue; }
+        seed.frame.style.pointerEvents = 'none';
+        const under = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        if (!under || !seed.button.contains(under)) { hapPark(seed); continue; }
+        seed.frame.style.cssText = 'position:fixed;border:0;opacity:0;z-index:119;left:' + r.left +
+          'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
+        hapTint(seed);
+        seed.input.style.cssText = seed.base + seed.radius + 'touch-action:auto;width:' + r.width + 'px;height:' + r.height + 'px';
+      }
+    };
+    const hapQueueSeeds = () => {
+      if (hapSeeds.length && !hapSeedFrame) hapSeedFrame = requestAnimationFrame(hapUpdateSeeds);
+    };
+    const hapMountSeeds = () => {
+      if (!useSwitchHaptics || !window.matchMedia('(pointer: coarse)').matches) return;
+      for (const button of $$('[data-cart-open], [data-atc]')) {
+        const frame = document.createElement('iframe');
+        frame.className = 'qty-haptic-prime';
+        frame.tabIndex = -1;
+        frame.setAttribute('aria-hidden', 'true');
+        frame.title = button.getAttribute('aria-label') || button.textContent.trim();
+        frame.src = 'about:blank';
+        frame.style.cssText = 'position:fixed;border:0;opacity:0;pointer-events:none;left:-5000px;top:0;width:334px;height:72px';
+        frame.addEventListener('load', () => {
+        if (hapSeeds.some((seed) => seed.frame === frame)) return;
+        const doc = frame.contentDocument;
+        if (!doc || !doc.body) { frame.remove(); return; }
+        // iOS flashes a box over the tapped seed: hapTint keeps it at its own
+        // strength and gives it the colour behind the button, so it can't be seen
+        doc.documentElement.style.cssText = 'overflow:hidden;background:transparent';
+        doc.body.style.cssText = 'margin:0;overflow:hidden;background:transparent';
+        const input = doc.createElement('input');
+        input.type = 'checkbox';
+        input.tabIndex = -1;
+        input.setAttribute('aria-hidden', 'true');
+        const base = 'position:absolute;left:0;top:0;margin:0;padding:0;opacity:0;touch-action:none;';
+        const seed = { frame, doc, input, button, base, touch: null, candidate: null, priming: false, activatedAt: -1000, tint: '', radius: '' };
+        hapPark(seed);
+        doc.body.appendChild(input);
+        hapSeeds.push(seed);
+        input.addEventListener('touchstart', (e) => {
+          if (qm || isOpen || closing || !e.isTrusted) return;
+          if (e.touches.length !== 1 || button.disabled) { hapClearPrime(); hapQueueSeeds(); return; }
+          const r = frame.getBoundingClientRect();
+          hapClearPrime();
+          frame.style.cssText = 'position:fixed;border:0;opacity:0;z-index:119;left:' + r.left +
+            'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
+          const t = e.changedTouches[0];
+          input.style.cssText = base + seed.radius + 'touch-action:auto;width:' + r.width + 'px;height:' + r.height + 'px';
+          seed.touch = { id: t.identifier, x: t.clientX, y: t.clientY, moved: false,
+            at: performance.now() };
+        }, { passive: true });
+        input.addEventListener('touchmove', (e) => {
+          const t = Array.from(e.changedTouches).find((t) => seed.touch && t.identifier === seed.touch.id);
+          if (!t || qm || !e.isTrusted) return;
+          if (Math.hypot(t.clientX - seed.touch.x, t.clientY - seed.touch.y) > 8) {
+            seed.touch.moved = true;
+          }
+        }, { passive: true });
+        const finishSeed = (e) => {
+          if (!seed.touch || qm) return;
+          const t = Array.from(e.changedTouches).find((t) => t.identifier === seed.touch.id);
+          if (!t) return;
+          const touch = seed.touch;
+          seed.touch = null;
+          const origin = frame.getBoundingClientRect();
+          const r = button.getBoundingClientRect();
+          const x = t.clientX + origin.left, y = t.clientY + origin.top;
+          const accepted = e.isTrusted && e.type === 'touchend' && e.touches.length === 0 && !touch.moved &&
+            Math.hypot(t.clientX - touch.x, t.clientY - touch.y) <= 8 && !button.disabled &&
+            x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+          if (!accepted) { hapClearPrime(); hapQueueSeeds(); return; }
+          seed.candidate = { at: performance.now() };
+          setTimeout(() => {
+            if (seed.candidate && !seed.priming) { seed.candidate = null; hapQueueSeeds(); }
+          }, 1500);
+        };
+        input.addEventListener('touchend', finishSeed, { passive: true });
+        input.addEventListener('touchcancel', finishSeed, { passive: true });
+        input.addEventListener('mousedown', (e) => {
+          if (!e.isTrusted || e.button !== 0 || qm || isOpen || closing || !seed.candidate ||
+            performance.now() - seed.candidate.at > 1500 || button.disabled) return;
+          input.switch = true;
+          input.style.cssText = base + 'width:' + HAP.W + 'px;height:' + HAP.H + 'px;transform:translate(' +
+            (e.clientX - HAP.W / 2 + HAP.D) + 'px,' + (e.clientY - HAP.H / 2) + 'px)';
+          input.getBoundingClientRect();
+          seed.priming = true;
+        });
+        input.addEventListener('mouseup', (e) => {
+          if (!e.isTrusted || e.button !== 0 || !seed.priming || qm || isOpen || closing || button.disabled) return;
+          seed.priming = false;
+          seed.candidate = null;
+          input.remove();
+          doc.body.appendChild(input);
+          input.getBoundingClientRect();
+          hapPrime = { seed, warm: true, side: -1, resetAt: 0, readyAt: 0 };
+          seed.activatedAt = performance.now();
+          hapPark(seed);
+          button.click();
+          setTimeout(() => { if (!isOpen && hapPrime && hapPrime.seed === seed) { hapClearPrime(); hapQueueSeeds(); } }, 1500);
+        });
+        input.addEventListener('click', (e) => {
+          if (hapPrime && hapPrime.seed === seed) {
+            hapPrime.warm = false;
+            hapPrime.readyAt = 0;
+          }
+          if (qm || isOpen || closing) return;
+          e.preventDefault();
+          if (performance.now() - seed.activatedAt < 600 || button.disabled) return;
+          hapClearPrime();
+          button.click();
+        });
+        hapBind(input);
+        if (typeof ResizeObserver === 'function') new ResizeObserver(hapQueueSeeds).observe(button);
+        if (typeof MutationObserver === 'function') {
+          const observer = new MutationObserver(hapQueueSeeds);
+          observer.observe(button, { attributes: true, attributeFilter: ['class', 'style', 'disabled'] });
+          if (button.parentElement) observer.observe(button.parentElement, { attributes: true, attributeFilter: ['class', 'style'] });
+        }
+        hapQueueSeeds();
+        });
+        document.body.appendChild(frame);
+      }
+      window.addEventListener('scroll', hapQueueSeeds, { passive: true, capture: true });
+      window.addEventListener('resize', hapQueueSeeds, { passive: true });
+      document.addEventListener('visibilitychange', hapQueueSeeds);
+      hapQueueSeeds();
+    };
+    qmEl.pill.addEventListener('keydown', (e) => {
+      if (!qm || qm.closing) return;
+      const step = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key];
+      if (step) {
+        e.preventDefault();
+        const v = qmStop(qm.k.to + step);
+        qm.k.aim(v, 0.26, 0.86);
+        qmShow(v, true);
+        qmRun();
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        closeQtyMenu();
+      }
+    });
+    // anywhere but the pill closes it (and saves)
+    qmEl.root.addEventListener('pointerdown', (e) => {
+      if (e.target === qmEl.hap || qmEl.pill.contains(e.target)) return;
+      e.preventDefault();
+      closeQtyMenu();
+    });
+    // no page scrolling under it; touches on the switch are left to WebKit (cancelling them would stop its ticks)
+    qmEl.root.addEventListener('touchmove', (e) => { if (e.target !== qmEl.hap && e.cancelable) e.preventDefault(); }, { passive: false });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && qm) { e.stopImmediatePropagation(); closeQtyMenu(); } }, true);
+
+    /* The protection switch flips at once (it's the phone's own switch, drawn
+       over in theme-r2.css); the cart follows. Flips made while a request is
+       out are kept, and once it's back the cart is brought round to the last
+       one, so quick on-off-on taps end where the switch shows. */
+    let protectBusy = false;
+    function protectSync() {
+      if (protectBusy || !cart || protectWant == null) return;
+      const line = cart.items.find(isProtection);
+      if (protectWant === !!line) { protectWant = null; return; }
+      const v = protectWant && tierVariant(cart.items_subtotal_price);
+      if (protectWant && !v) { protectWant = null; paintTotals(cart); return; }
+      protectBusy = true;
+      const asked = protectWant;
+      const req = asked
+        ? fetchJSON('/cart/add.js', { method: 'POST', body: JSON.stringify({ id: v.id, quantity: 1, properties: { _protection: 'true' } }) })
+        : fetchJSON('/cart/change.js', { method: 'POST', body: JSON.stringify({ id: line.key, quantity: 0 }) });
+      let failed = false;
+      req.catch(() => { failed = true; })
+        .then(() => fetchJSON('/cart.js')).then((c) => { cart = c; }).catch(() => { failed = true; })
+        // the cart answered but didn't take it (no protection line came, or it stayed): as a refusal,
+        // so it isn't asked again and again
+        .then(() => { if (!failed && asked !== !!cart.items.find(isProtection)) failed = true; })
+        .finally(() => {
+          protectBusy = false;
+          if (failed && protectWant === asked) protectWant = null;   // the cart said no: show what it has
+          render();
+          protectSync();
+        });
+    }
+    if (protectToggle) protectToggle.addEventListener('change', () => {
+      protectWant = protectToggle.checked;
+      try { if (protectWant) localStorage.removeItem('volt-protect-off'); else localStorage.setItem('volt-protect-off', '1'); } catch (e) {}
+      if (cart) paintTotals(cart);                   // the total moves with the switch, before the cart answers
+      protectSync();
+    });
+
+    /* The card, styled after the iPhone's AirPods pop-up (theme-r2.css).
+       Its swipe comes from the phone itself: the drawer is placed inside a
+       full-screen scroll container (.drawer-scroller) whose two snap
+       points are "closed" (the empty space above the card) and "open" (the
+       card). Dragging, flicking or pulling the card is ordinary scrolling,
+       so iOS/Android supply the finger tracking, momentum, rubber-band and
+       where it comes to rest. Script adds the spring that pops it up, the
+       slide away when it's closed by tapping, and the backdrop fade. */
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    /* A spring described the way SwiftUI and UIKit describe theirs:
+       response (seconds) and damping ratio (below 1 overshoots). Its curve
+       is sampled into plain keyframes, which every browser can hand to the
+       compositor (Core Animation on iPhone), so it runs off the main
+       thread. */
+    const spring = (response, damping, v0) => {  // v0: starting speed, in distances per second
+      const w = (2 * Math.PI) / response;
+      const k = damping * w;
+      const wd = w * Math.sqrt(Math.max(0, 1 - damping * damping));
+      const v = v0 || 0;
+      const at = (t) => (wd
+        ? 1 - Math.exp(-k * t) * (Math.cos(wd * t) + ((k - v) / wd) * Math.sin(wd * t))
+        : 1 - Math.exp(-w * t) * (1 + (w - v) * t));
+      const secs = Math.log(1000) / k;
+      const pts = [];
+      for (let i = 0; i < 64; i++) pts.push(at((secs * i) / 64));
+      pts.push(1);
+      return { pts, duration: Math.round(secs * 1000) };
+    };
+    const POP = spring(0.46, 0.78);                 // pops up with a little overshoot, like the AirPods card
+    const AWAY = spring(0.36, 1);                   // leaves without bouncing
+    const SPAWN = spring(0.36, 0.6);                // a line coming into a growing row: in with a bounce
+    // and out: the pop run backwards, from its first reach to full size (where it settles in no
+    // time, backwards, would only hold it there)
+    const UNSPAWN = (() => {
+      const k = SPAWN.pts.findIndex((x) => x >= 1), n = SPAWN.pts.length - 1;
+      return { pts: SPAWN.pts.slice(0, k + 1).reverse(), duration: Math.round((SPAWN.duration * k) / n) };
+    })();
+    const slide = (s, from, to, fill) => el.animate(
+      s.pts.map((x, i) => ({ transform: 'translateY(' + (from + (to - from) * x).toFixed(2) + 'px)', offset: i / (s.pts.length - 1) })),
+      { duration: s.duration, easing: 'linear', fill: fill || 'none' });
+    const scroller = document.createElement('div');
+    scroller.className = 'drawer-scroller';
+    scroller.hidden = true;
+    const space = document.createElement('div');
+    space.className = 'drawer-scroller__space';
+    space.setAttribute('aria-hidden', 'true');
+    const end = document.createElement('div');
+    end.className = 'drawer-scroller__end';
+    end.setAttribute('aria-hidden', 'true');
+    el.parentNode.insertBefore(scroller, el);
+    scroller.appendChild(space);
+    scroller.appendChild(el);
+    scroller.appendChild(end);
+    scrim.classList.add('is-sheet');
+    el.tabIndex = -1;
+    // the card's glass: its frost, the lens along its edge and its bright rim, in one layer under
+    // its contents, so a growing card can slide it without redrawing it (theme-r2.css)
+    const skin = document.createElement('div');
+    skin.className = 'drawer__skin';
+    skin.setAttribute('aria-hidden', 'true');
+    el.insertBefore(skin, el.firstChild);
+    // Liquid Glass edge, like the iOS Notification Centre sheet: whatever
+    // passes under the card's top edge is magnified across a band along it.
+    // Safari can't bend what's behind a page element, so the band holds a
+    // live copy of the page (main + footer), lined up with the real page
+    // every frame and stretched the way the glass bends it; theme-r2.css
+    // masks it to the rim. Each copy lives in its own shadow root with the
+    // page's stylesheet tags, so the card's styles can't reach it and the
+    // theme's scripts can't see it. The stylesheet tags go in once, soon
+    // after the page loads; the copies are made the moment the card opens
+    // (so the band is in place while the card is still rising) and dropped
+    // when it closes.
+    const lensHalt = (() => {
+      if (window.matchMedia('(prefers-reduced-transparency: reduce)').matches) return null;
+      const main = document.getElementById('main');
+      if (!main) return null;
+      // Lens profile, measured off a screen recording of the iOS Notification
+      // Centre sheet (121 frames, its edge passing over text): the band pixel
+      // d px below the rim shows the page at depth at(d), always from further
+      // in. Green follows d + 26.14(1 - d/31.41)^2.25 (rms error 0.07px):
+      // 1:1 at 31.4px, stretching more and more towards the fold at 12.4px
+      // (where one line of the page is drawn out into streaks), then the
+      // same strip again, mirrored, down to the rim. In the last 6px the
+      // colours part: red comes from up to 12.6px further in, blue from up
+      // to 11.3px less far, so the edges of whatever passes under the rim
+      // turn to fringes of colour.
+      // Drawn as slices, each a copy of the page stretched (or flipped)
+      // linearly between its two ends; the rim's slices are split into red,
+      // green and blue copies, each stretched to its own curve, and
+      // multiplied back together. Ten copies in all, so a phone keeps up:
+      // green stays within 0.35px of its curve, red and blue (only the
+      // fringes' colours) within 1.4px.
+      // Then the bent band is frosted like the rest of the card (the card's
+      // own blur and saturation, theme-r2.css), all slices as one pane so no
+      // seams show. Each slice reaches a blur's width (P) past the band on
+      // every outer side, so the blur at the band's edges has page to draw
+      // on rather than fading out; the band clips that overhang.
+      const FROST = 6, P = 3 * FROST;        // the card's blur (theme-r2.css) and how far it reaches
+      const B = 31.41;
+      const at = (d, c) => {
+        let s = d + 26.14 * Math.max(0, 1 - d / B) ** 2.251;
+        if (c === 'r') s += 12.65 * Math.max(0, 1 - d / 6.1) ** 2.29;
+        else if (c === 'b') s -= 11.28 * Math.max(0, 1 - d / 9.07) ** 3.98;
+        return s;
+      };
+      const CUTS = [0, 2.25, 6, 12.39, 19, 24.5, B];
+      const SPLIT = 6;                         // above this depth the three colours have parted
+      const band = document.createElement('div');
+      band.className = 'drawer-lens';
+      band.setAttribute('aria-hidden', 'true');
+      band.inert = true;
+      // the slices sit in one frosted pane: the bent page gets the card's own frost (theme-r2.css)
+      const glass = document.createElement('div');
+      glass.className = 'drawer-lens__glass';
+      band.appendChild(glass);
+      const layers = [];
+      // oy: how far below the slice's top its first row (d0) is
+      const layer = (parent, from, s, oy) => {
+        const view = document.createElement('div');
+        view.className = 'drawer-lens__view';
+        parent.appendChild(view);
+        layers.push({ view, root: view.attachShadow({ mode: 'open' }), from, s, oy });
+      };
+      for (let i = 0; i < CUTS.length - 1; i++) {
+        const d0 = CUTS[i], d1 = CUTS[i + 1];
+        // the rim's slice goes on up past the top edge and the last one on down, each
+        // stretched as it is in the band, for the blur to draw on
+        const up = i ? 0 : P, down = i < CUTS.length - 2 ? 0 : P;
+        const slice = document.createElement('div');
+        slice.className = 'drawer-lens__slice';
+        // 1px longer, under the next slice: the browser rounds fractional clips, which can leave a gap
+        slice.style.cssText = 'left:' + -P + 'px;right:' + -P + 'px;top:' + (d0 - up) + 'px;height:' + (d1 - d0 + up + down + 1) + 'px';
+        glass.appendChild(slice);
+        // page px per band px is 1/s; s is negative between the rim and the fold (mirrored)
+        if (d1 > SPLIT) { layer(slice, at(d0), (d1 - d0) / (at(d1) - at(d0)), up); continue; }
+        slice.classList.add('is-split');
+        ['r', 'g', 'b'].forEach((c) => {
+          const ch = document.createElement('div');
+          ch.className = 'drawer-lens__ch drawer-lens__ch--' + c;
+          slice.appendChild(ch);
+          layer(ch, at(d0, c), (d1 - d0) / (at(d1, c) - at(d0, c)), up);
+          ch.appendChild(document.createElement('i'));
+        });
+      }
+      const haze = document.createElement('i');               // the rim's last 5px fade towards the glass
+      haze.className = 'drawer-lens__haze';
+      band.appendChild(haze);
+      skin.appendChild(band);
+      let raf = 0, gen = 0, live = false, lastX = NaN, lastY = NaN, off = false;
+      // the page's own stylesheet tags, in order (the copied sections bring their own inline ones);
+      // the links load from cache, and the band shows once they have
+      const styleTags = () => Array.from(document.querySelectorAll('link[rel~="stylesheet"], style'))
+        .filter((n) => !el.contains(n) && !main.contains(n) && !band.contains(n));
+      // Each copy's root gets the page's stylesheet tags once, ahead of time (soon after the page
+      // loads, or at the first open if that's sooner) and keeps them, so opening the card never
+      // waits on stylesheets; any the page has added since are put in at the next open.
+      const given = new Set();
+      let ready = Promise.resolve();
+      const prepare = () => {
+        const fresh = styleTags().filter((n) => !given.has(n));
+        if (!fresh.length) return ready;
+        const loads = [];
+        for (const { root } of layers) {
+          for (const tag of fresh) {
+            const t = tag.cloneNode(true);
+            if (t.tagName === 'LINK') loads.push(new Promise((ok) => { t.onload = t.onerror = ok; }));
+            root.appendChild(t);
+          }
+        }
+        fresh.forEach((n) => given.add(n));
+        ready = Promise.race([Promise.all(loads), new Promise((ok) => setTimeout(ok, 1500))]);
+        return ready;
+      };
+      const early = () => setTimeout(() => { if (!raf) prepare(); }, 600);
+      if (document.readyState === 'complete') early(); else addEventListener('load', early, { once: true });
+      // the host sits in the card and inherits its type: give it the page's
+      const INHERIT = ['font-family', 'font-size', 'font-weight', 'font-style', 'font-stretch', 'letter-spacing',
+        'word-spacing', 'color', 'text-align', 'text-transform', 'text-indent', 'white-space', 'font-feature-settings',
+        'font-variation-settings', 'font-kerning', 'font-variant', 'text-rendering', '-webkit-font-smoothing',
+        '-webkit-text-size-adjust', 'text-size-adjust', 'direction', 'color-scheme', 'visibility'];
+      const copy = (p) => {
+        const c = p.src.cloneNode(true);
+        const to = c.querySelectorAll('*');
+        for (let i = 0; i < to.length; i++) {
+          if (p.skip[i]) continue;                          // inside an emptied box
+          const o = p.from[i], n = to[i], set = p.css.get(i);
+          if (set) {
+            n.style.cssText += ';' + set;
+            if (p.empty.has(i)) { n.replaceChildren(); continue; }
+          }
+          if (p.fixed.has(i)) n.style.visibility = 'hidden';   // pinned to the screen, not the page
+          if (o.scrollLeft || o.scrollTop) n._lensScroll = [o.scrollLeft, o.scrollTop];
+          switch (o.tagName) {
+            case 'IMG':
+              if (o.currentSrc) { n.removeAttribute('srcset'); n.removeAttribute('sizes'); n.src = o.currentSrc; n.loading = 'eager'; }
+              break;
+            case 'SOURCE': if (o.parentNode && o.parentNode.tagName === 'PICTURE') n.remove(); break;
+            case 'IFRAME': n.removeAttribute('src'); n.removeAttribute('srcdoc'); break;
+            case 'VIDEO': n.removeAttribute('autoplay'); n.preload = 'none'; break;
+            case 'INPUT': n.checked = o.checked; n.value = o.value; break;
+            case 'CANVAS':
+              try { n.getContext('2d').drawImage(o, 0, 0); } catch (e) { /* not a 2d canvas */ }
+              break;
+          }
+        }
+        return c;
+      };
+      const footer = document.getElementById('shopify-section-footer');
+      // Only the page within a quarter screen of the view can pass under the band (it shows the
+      // page just below the rim, which never rises past the top bar, and the page only scrolls
+      // while the card is leaving), so in the copies
+      // whatever lies wholly outside that is an empty box of the same size: the phone styles and
+      // lays out a fraction of the page per copy. Boxes stacked in the normal flow get their
+      // margins pinned to the gaps they really have, so emptying one moves nothing; grid and
+      // flex items and positioned boxes get their width too. Where floats, inline or moved
+      // (transformed, offset, sticky) boxes or loose text sit among them, nothing is touched.
+      const ROI = 0.25;
+      const px = (v) => v.toFixed(6) + 'px!important;';   // finer than layout's own steps, never in e-notation
+      const plan = (src, index, css, empty, skip) => {
+        const lo = -ROI * innerHeight, hi = (1 + ROI) * innerHeight;
+        const visit = (box, depth) => {
+          const kids = box.children, bs = getComputedStyle(box);
+          if (!kids.length || depth > 12) return;
+          const items = /flex|grid/.test(bs.display);
+          let flow = !items && /^(block|flow-root|list-item)$/.test(bs.display);
+          for (const t of box.childNodes) if (t.nodeType === 3 && t.data.trim()) flow = false;
+          const info = Array.from(kids, (c) => {
+            const cs = getComputedStyle(c), shown = cs.display !== 'none';
+            const placed = cs.position === 'absolute' || cs.position === 'fixed', inflow = shown && !placed;
+            const still = cs.position === 'static' || (cs.position === 'relative' && /^(auto|0px)$/.test(cs.top) && /^(auto|0px)$/.test(cs.bottom));
+            if (cs.display === 'contents' || (inflow && (/^inline/.test(cs.display) || cs.float !== 'none' || !still || cs.transform !== 'none'))) flow = false;
+            return { c, cs, r: c.getBoundingClientRect(), shown, placed, inflow };
+          });
+          if (!flow && !items) return;
+          const stack = flow ? info.filter((k) => k.inflow) : [];
+          const br = box.getBoundingClientRect();
+          const top = br.top + parseFloat(bs.borderTopWidth) + parseFloat(bs.paddingTop);
+          const bottom = br.bottom - parseFloat(bs.borderBottomWidth) - parseFloat(bs.paddingBottom);
+          for (const k of info) {
+            if (!k.shown || k.cs.position === 'fixed') continue;
+            const { c, cs, r } = k, i = index.get(c), j = stack.indexOf(k);
+            let set = '';
+            if (j >= 0) {
+              const above = j ? stack[j - 1].r.bottom : top, below = j < stack.length - 1 ? stack[j + 1].r.top : bottom;
+              set = 'margin-top:' + px(r.top - above) + 'margin-bottom:' + px(below - r.bottom);
+            }
+            const out = r.bottom < lo || r.top > hi;
+            if (out && c.children.length && r.height > 0 && cs.transform === 'none' && (j >= 0 || items || k.placed)) {
+              set += 'box-sizing:border-box!important;height:' + px(r.height) + 'min-height:0!important;max-height:none!important;';
+              if (j < 0) set += 'width:' + px(r.width) + 'min-width:0!important;max-width:none!important;flex:none!important;';
+              empty.add(i);
+              for (let n = i + 1, e = i + c.getElementsByTagName('*').length; n <= e; n++) skip[n] = 1;
+            } else if (!out) visit(c, depth + 1);
+            if (set) css.set(i, set);
+          }
+        };
+        visit(src, 0);
+      };
+      // where each copied part goes, which of its elements are pinned to the screen and which are
+      // emptied, read off the page once per batch of copies (a copy's elements line up by index)
+      const pageNow = () => {
+        const r0 = main.getBoundingClientRect(), body = document.body;
+        let bg = getComputedStyle(body).backgroundColor;
+        if (/^rgba\(.*,\s*0\)$|transparent/.test(bg)) bg = getComputedStyle(document.documentElement).backgroundColor;
+        const parts = [];
+        for (const src of [main, footer]) {
+          if (!src) continue;
+          const r = src.getBoundingClientRect();
+          if (src !== main && (r.bottom < -ROI * innerHeight || r.top > (1 + ROI) * innerHeight)) continue;   // nowhere near
+          const from = src.querySelectorAll('*'), fixed = new Set(), index = new Map();
+          for (let i = 0; i < from.length; i++) {
+            index.set(from[i], i);
+            if (getComputedStyle(from[i]).position === 'fixed') fixed.add(i);
+          }
+          const css = new Map(), empty = new Set(), skip = new Uint8Array(from.length);
+          plan(src, index, css, empty, skip);
+          parts.push({ src, from, fixed, css, empty, skip, at: 'position:absolute;margin:0;left:' + (r.left - r0.left) + 'px;top:' + (r.top - r0.top) + 'px;width:' + r.width + 'px' });
+        }
+        return { cls: body.className, box: 'position:absolute;left:0;top:0;width:100%;height:' + document.documentElement.scrollHeight + 'px;background:' + bg, parts, y: scrollY };
+      };
+      const paintInto = (t, now) => {          // (re)draws one slice's copy, swapping it in whole
+        // stands in for <body>: its classes (.template-product …) and background
+        const page = document.createElement('div');
+        page.className = now.cls + ' drawer-lens__page';
+        page.style.cssText = now.box;
+        for (const p of now.parts) {
+          const c = copy(p);
+          c.style.cssText = p.at;
+          page.appendChild(c);
+        }
+        t.root.appendChild(page);
+        page.querySelectorAll('*').forEach((n) => { if (n._lensScroll) { n.scrollLeft = n._lensScroll[0]; n.scrollTop = n._lensScroll[1]; } });
+        if (t.page) t.page.remove();
+        t.page = page;
+      };
+      let shownY = 0;                          // the page's scroll when the copies were read off it
+      const paint = () => {
+        const t0 = performance.now(), now = pageNow();
+        for (const t of layers) paintInto(t, now);
+        shownY = now.y;
+        if (performance.now() - t0 > 250) giveUp();
+      };
+      // the page changes shape while the card is up (the Add to bag bar pins, sections reveal…):
+      // repaint the copy then, at most every 400ms
+      let due = 0, last = 0, building = false, stale = true;
+      const changed = () => {
+        stale = true;
+        if (due) return;
+        due = setTimeout(() => {
+          due = 0;
+          if (!raf) return;
+          // never during a drag (the card follows the finger on this thread), while the copies go
+          // in, or while the quantity slider is up (its ticks need every touch on time)
+          if (building || el.classList.contains('is-dragging') || qm) { changed(); return; }
+          last = Date.now(); paint();
+        }, Math.max(0, 400 - (Date.now() - last)));
+      };
+      const watch = new MutationObserver(changed);
+      const build = () => {
+        const body = document.body, cs = getComputedStyle(body);
+        // line-height reads back in px; the page sets it as a ratio, which children rescale by their own size
+        const lh = parseFloat(cs.lineHeight), fs = parseFloat(cs.fontSize);
+        const type = INHERIT.map((k) => k + ':' + cs.getPropertyValue(k)).join(';') +
+          ';line-height:' + (lh && fs ? (lh / fs).toFixed(4) : 'normal');
+        const run = gen;
+        for (const { view } of layers) view.style.cssText = type;
+        building = true;                       // changes from now on repaint once the copies are in
+        stale = true;
+        for (const src of [main, footer]) {
+          if (src) watch.observe(src, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'hidden', 'open'] });
+        }
+        // One or two copies a frame, so no frame lays out more than a couple of pages. The page
+        // is read once (again only if it changes meanwhile). The band shows when all are in.
+        let i = 0, now = null, fresh = false, prev = 0;
+        const step = () => {
+          if (run !== gen || !raf) return;
+          // the quantity slider is up: its ticks need every touch on time, so the copies wait
+          if (qm) { prev = 0; requestAnimationFrame(step); return; }
+          // A phone that can't keep up (a frame of 400ms, or a step of 150ms) gets no lens this
+          // visit, rather than a card that sticks and won't take a tap.
+          const t0 = performance.now();
+          if (prev && t0 - prev > 400 && document.visibilityState === 'visible') { giveUp(); return; }
+          prev = t0;
+          if (stale && !fresh) {               // reading the page gets a frame to itself; a copy always follows
+            now = pageNow(); stale = false; fresh = true;
+            if (performance.now() - t0 > 150) { giveUp(); return; }
+            requestAnimationFrame(step); return;
+          }
+          if (stale) { now = pageNow(); stale = false; }   // it changed again meanwhile: the copy must match what's read
+          fresh = false;
+          const until = t0 + 4;
+          do paintInto(layers[i++], now); while (i < layers.length && performance.now() < until);
+          if (performance.now() - t0 > 150) { giveUp(); return; }
+          if (i < layers.length) { requestAnimationFrame(step); return; }
+          building = false; last = Date.now(); shownY = now.y;
+          live = true; align(true);
+          band.classList.add('is-live');
+        };
+        requestAnimationFrame(step);
+      };
+      // lines the copies up with the page, only when the card or the page has moved since the
+      // last frame: rewriting ten transforms every frame would keep the phone repainting the band
+      const align = (force) => {
+        const r = main.getBoundingClientRect(), b = band.getBoundingClientRect();
+        const x = r.left - b.left, y = r.top - b.top;
+        if (!force && Math.abs(x - lastX) < 0.01 && Math.abs(y - lastY) < 0.01) return;
+        lastX = x; lastY = y;
+        for (const t of layers) t.view.style.transform = 'translate(' + (x + P).toFixed(2) + 'px,' + (t.oy + t.s * (y - t.from)).toFixed(2) + 'px) scaleY(' + t.s.toFixed(4) + ')';
+      };
+      const track = () => { raf = requestAnimationFrame(track); if (live) align(false); };
+      // the page scrolled well past what the copies hold: read it again
+      const scrolled = () => { if (live && Math.abs(scrollY - shownY) > 0.8 * ROI * innerHeight) changed(); };
+      // the copies start going in from the next frame, a frame or two each, while the card
+      // rises (its rise is an animation the page's own work doesn't hold up), so the band is in
+      // place before the card has settled
+      const start = () => {
+        if (raf || off) return;
+        raf = requestAnimationFrame(track);
+        const run = gen;
+        prepare().then(() => { if (run === gen && raf) build(); });
+        addEventListener('scroll', scrolled, { passive: true });
+      };
+      const stop = () => {
+        gen++; cancelAnimationFrame(raf); raf = 0;
+        removeEventListener('scroll', scrolled);
+        building = false; live = false; lastX = lastY = NaN; band.classList.remove('is-live');
+        watch.disconnect(); clearTimeout(due); due = 0;
+        layers.forEach((t) => { if (t.page) t.page.remove(); t.page = null; });   // the stylesheet tags stay
+      };
+      function giveUp() { off = true; stop(); }
+      new MutationObserver(() => { el.classList.contains('is-open') ? start() : stop(); })
+        .observe(el, { attributes: true, attributeFilter: ['class'] });
+      // the card is leaving: no more copies or repaints from here, so nothing can slow its exit;
+      // what's already shown keeps lining up as it slides away
+      const halt = () => {
+        gen++; clearTimeout(due); due = 0;
+        building = false; watch.disconnect(); removeEventListener('scroll', scrolled);
+      };
+      // lines the copies up now, for a move made in a frame after this frame's own lining up
+      halt.align = () => { if (live) align(false); };
+      return halt;
+    })();
+    const lensAlign = lensHalt ? lensHalt.align : () => {};
+    let isOpen = false;
+    let closing = false;
+    let restTimer = 0;
+    let painting = false;
+    let anims = [];
+    const stopAnims = () => { anims.forEach((a) => a.cancel()); anims = []; };
+    // Measured from the layout, not scrollHeight: while the card is
+    // springing, its transform adds to the scrollable area.
+    const maxTop = () => Math.max(0, end.offsetTop + end.offsetHeight - scroller.clientHeight);
+    const paint = () => {
+      painting = false;
+      const m = maxTop();
+      scrim.style.opacity = String(m ? Math.min(1, Math.max(0, scroller.scrollTop / m)) : 0);
+    };
+    /* A bag with the shipping and protection lines under its products
+       opens smaller, with no scroll bar and nothing faded (theme-r2.css):
+       with two products or more, the list shows the first two whole and the
+       rows under them aren't there yet; with one, the product shows whole and
+       the shipping and protection rows wait as one-line strips. Pushed up
+       anywhere, the card grows under the finger, the way an iOS sheet does: its top
+       edge and the lines under it go up with the finger while its bottom
+       stays put, and room opens above the total for the rows under them:
+       the missing rows' room one row at a time, each sliding out from under
+       the row above it and popping in once most of its room is there, and the strips
+       grow into their rows (everything in them moves and grows into place,
+       and the line the whole row adds pops in). Let go part way and it
+       carries on at the finger's speed to the whole bag, or back to small,
+       whichever the flick would have reached; pushed on past the whole bag,
+       the list scrolls if there's more of it, then the card rubber-bands. Once
+       grown it stays that size until Show less or it's closed (a swipe down
+       takes it down whole); the next opening starts small.
+       While it's small the rest of the bag is laid out above it, out of
+       sight, so growing only moves things (the heading, the lines and the
+       glass go up, the rows pop in; nothing is laid out again or redrawn),
+       as a swipe of the card does, and the phone keeps up with the finger. Come to rest at the
+       whole bag, the card takes the bag's own height in the same frame. */
+    const bagList = $('.drawer__body', el);
+    const head = $('.drawer__head', el);
+    let small = false;                               // this opening started small
+    let fold = null;                                 // small, and not grown yet: its sizes ({ lo, hi, room })
+    let lift = 0, spill = 0;                         // how far it has grown from small, and the list's scroll past the whole bag
+    let springing = 0;                               // the lift on its spring (a frame request)
+    let pulling = false;                             // a finger is growing the card
+    let follow = false;                              // the lift is a finger's (or carries on from one): rows come in with it, not on springs of their own
+    let coast = 0;                                   // the list carrying on after a flick (a frame request)
+    const bigBag = () => $$('.cart-line', linesEl).length > 0 && [shipEl, protectBox].filter((b) => b && !b.hidden).length > 1;
+    const STRIP = 44;                                // a strip's height
+    // a tap on a strip, anywhere but its switch, grows the bag
+    bagList.addEventListener('click', (e) => {
+      const row = fold && e.target.closest('.ship-bubble, .protect-bubble');
+      if (row && row.classList.contains('is-mini') && !e.target.closest('.cart-switch')) grow(0);
+    });
+    // "Show more" while it's small, "Show less" once a small bag has grown, in the same spot. It
+    // says where the bag is going: from the tap that starts it growing or shrinking, or, under a
+    // finger, from halfway.
+    const more = $('[data-drawer-more]', el);
+    let aimBig = false;                              // where the button says the bag is going
+    const moreLabel = (less = !fold) => {
+      aimBig = less;
+      if (!more) return;
+      more.hidden = !small;
+      const t = less ? more.dataset.less : more.dataset.more;
+      if (more.textContent !== t) more.textContent = t;
+    };
+    // A shipping or protection row as a strip: the row itself, a strip high (its box, drawn under
+    // it, is cut to that height), its tile shrunk to the strip's height at its left, its label beside
+    // that, the price or the switch (smaller) where they are on the right, each in the middle of
+    // the strip, and the line under the label not there yet. Each part, from where it is in the
+    // row: where it goes in the strip (x, y) and its size there (s).
+    const stripParts = (row) => {
+      const t = row.getBoundingClientRect();
+      const at = (sel) => { const e = $(sel, row), b = e.getBoundingClientRect(); return { el: e, x: b.left - t.left, y: b.top - t.top, w: b.width, h: b.height }; };
+      const ship = row === shipEl, k = ship ? 'ship-bubble' : 'protect-bubble';
+      const icon = at('.' + k + '__icon'), label = at('.' + k + '__label');
+      const extra = at(ship ? '.ship-bubble__method' : '.protect-bubble__title');
+      const end = at(ship ? '.ship-bubble__price' : '.protect-bubble__side');
+      icon.s = (STRIP - 12) / icon.h;
+      icon.to = { x: 10, y: 6 };
+      label.s = 1;
+      label.to = { x: 10 + icon.w * icon.s + 12, y: (STRIP - label.h) / 2 };
+      end.s = ship ? 1 : 0.65;
+      end.to = { x: end.x + end.w * (1 - end.s), y: (STRIP - end.h * end.s) / 2 };
+      extra.with = label;                            // it goes with the label, and comes in late
+      return [icon, label, end, extra];
+    };
+    // A missing row, or the line under a strip's label, popping in on its own spring, not with the
+    // lift, from `from` of its size, `wait` ms late; out, the pop backwards.
+    // on: where it's going; when it isn't anywhere yet (just made small) it's put there. Out, it
+    // takes no taps.
+    // A row's or line's pop is kept on it (e._pop), the only animation they run, so stopping it
+    // never asks the browser for its animations (that would work out the page's styles mid-frame).
+    const unpop = (e) => { if (e._pop) { e._pop.cancel(); e._pop = null; } };
+    const spawn = (p, on, from = 0.6, wait = 0) => {
+      const e = p.el, first = p.on === undefined;
+      p.on = on;
+      unpop(e);
+      e.style.opacity = on ? '' : '0';
+      e.style.pointerEvents = on ? '' : 'none';
+      e.style.scale = '';
+      if (first || reduceMotion.matches || !e.animate) return;
+      const sp = on ? SPAWN : UNSPAWN, n = sp.pts.length - 1;
+      e._pop = e.animate(sp.pts.map((x, i) => ({ opacity: Math.min(1, x * 2), scale: String(from + (1 - from) * x), offset: i / n })),
+        { duration: sp.duration, delay: wait, easing: 'linear', fill: 'backwards' });
+    };
+    // Under a finger, a row (or line) comes in with the lift itself, not on a spring of its own,
+    // so nothing pops while the finger moves: k, from 0 (not there) to 1 (there), its size from
+    // `from`. It's left as it is, so a tap later pops it from there.
+    const scrub = (p, k, from) => {
+      const x = Math.min(1, Math.max(0, k));
+      unpop(p.el);
+      p.el.style.opacity = x >= 1 ? '' : x.toFixed(3);
+      p.el.style.scale = x >= 1 ? '' : (from + (1 - from) * x).toFixed(4);
+      p.el.style.pointerEvents = x > 0.5 ? '' : 'none';
+      p.on = x > 0.5;
+    };
+    // where each row is, and how much of it shows, at f (0 small, 1 the whole bag): whole rows as they
+    // are, missing rows' room from nothing (the gap above them too), strips from a strip to the whole row.
+    // Returns the last row's bottom, from the first row's top.
+    const lay = (rows, f) => {
+      let y = 0;
+      // the room the missing rows have so far, given to them in turn, each its whole room (the gap
+      // above it too) before the next has any; each comes out from under the row above it, its
+      // bottom at the bottom of its room so far (r.f: how much of its room it has)
+      let room = f * rows.reduce((t, r) => t + (r.kind === 'hide' ? r.gap + r.h : 0), 0);
+      for (const r of rows) {
+        if (r.kind === 'hide') {
+          r.f = Math.min(1, room / (r.gap + r.h));
+          room -= r.f * (r.gap + r.h);
+          y += r.f * (r.gap + r.h);
+          r.top = y - r.h;
+          continue;
+        }
+        r.top = y + r.gap;
+        r.vis = r.kind === 'full' ? r.h : STRIP + (r.h - STRIP) * f;
+        y = r.top + r.vis;
+      }
+      return y;
+    };
+    const listLeft = () => (fold
+      ? Math.max(0, fold.hi - fold.lo - lift + fold.room - spill)
+      : Math.max(0, bagList.scrollHeight - bagList.clientHeight - bagList.scrollTop));
+    const height = () => el.getBoundingClientRect().height;
+    const settle = () => { scroller.scrollTop = maxTop(); };    // the card's bottom on the screen's, at rest
+    // everything where a lift (and a spill) puts it: the heading and the glass up by the lift, the
+    // rows by the lift and the spill, in the room the lift has made, the missing ones popping in
+    // (one after another) once most of theirs is there; the list clips them at the total (theme-r2.css)
+    const draw = (g, s) => {
+      lift = g; spill = s || 0;
+      head.style.transform = 'translateY(' + (-g).toFixed(2) + 'px)';
+      const most = fold.hi - fold.lo;
+      const f = most > 0 ? Math.min(1, Math.max(0, g / most)) : 1;
+      const live = pulling || follow;
+      lay(fold.rows, f);
+      for (const r of fold.rows) {
+        const y = -g - spill + r.top;
+        r.el.style.transform = 'translateY(' + (y - r.y).toFixed(2) + 'px)';
+        if (r.kind === 'hide') {
+          if (live) scrub(r, (r.f - 0.35) / 0.5, 0.85);
+          else if (r.on !== r.f >= 0.6) spawn(r, r.f >= 0.6, 0.85);
+        }
+        if (r.kind !== 'mini') continue;
+        // a strip growing into its row: its box to the row's height so far, each part from its
+        // place in the strip to its own, growing as it goes
+        r.box.style.height = r.vis.toFixed(2) + 'px';
+        for (const p of r.parts) {
+          const q = p.with || p, sc = q.s + (1 - q.s) * f;
+          const dx = (q.to.x - q.x) * (1 - f), dy = (q.to.y - q.y) * (1 - f);
+          p.el.style.transform = 'translate(' + dx.toFixed(2) + 'px,' + dy.toFixed(2) + 'px)' + (sc === 1 ? '' : ' scale(' + sc.toFixed(4) + ')');
+          if (p.with && live) scrub(p, (f - 0.55) / 0.4, 0.6);
+          else if (p.with && p.on !== f >= 0.6) spawn(p, f >= 0.6);   // in once there's room for it
+        }
+      }
+      skin.style.transform = 'translateY(' + (fold.hi - fold.lo - g).toFixed(2) + 'px)';
+      if (pulling) moreLabel(f > 0.5);
+      lensAlign();                                   // the copies follow the edge in this same frame
+    };
+    // Small, at rest. The card is its small height; the list reaches up out of it by what the whole
+    // bag adds (padding keeps its lines where they were), the glass reaches up as far and is slid
+    // back down into place. lo: the small height to keep, every row whole (else the small bag's).
+    const shape = (lo) => {
+      // Measured from the plain card. Snapping is off meanwhile: laid out at the whole bag's
+      // height for a moment, the card would otherwise be snapped to that later on.
+      scroller.style.scrollSnapType = 'none';
+      flat();
+      bagList.scrollTop = 0;
+      const full = height(), room = Math.max(0, bagList.scrollHeight - bagList.clientHeight);
+      const cs = getComputedStyle(bagList), pad = cs.paddingTop;
+      const lines = $$('.cart-line', linesEl);
+      const rows = [...lines, shipEl, protectBox].filter((r) => r && !r.hidden).map((r) => ({ el: r, kind: 'full' }));
+      // two products or more: the first two whole, the rest folded away; one: the rest as strips
+      if (lo === undefined) rows.forEach((r, i) => { if (i >= Math.min(2, lines.length)) r.kind = lines.length > 1 ? 'hide' : 'mini'; });
+      rows.forEach((r, i) => { r.el.style.zIndex = String(rows.length - i); });   // each row over the ones under it
+      const top0 = rows.length ? rows[0].el.getBoundingClientRect().top : 0;
+      rows.forEach((r, i) => {
+        const b = r.el.getBoundingClientRect();
+        r.y = b.top - top0; r.h = b.height;
+        r.gap = i ? r.y - rows[i - 1].y - rows[i - 1].h : 0;
+      });
+      for (const r of rows) {
+        if (r.kind !== 'mini') continue;
+        r.parts = stripParts(r.el);
+        r.parts[3].el.style.transformOrigin = '0 50%';
+        r.box = $(':scope > .drawer__box', r.el) || r.el.insertBefore(document.createElement('i'), r.el.firstChild);
+        r.box.className = 'drawer__box';
+        r.el.classList.add('is-mini');
+      }
+      if (lo === undefined) {                        // down to the last row, in whole pixels, like the list's scroll
+        const list = bagList.getBoundingClientRect(), last = rows[rows.length - 1].el;
+        lo = Math.round(height() - list.height + (top0 - list.top) + lay(rows, 0)
+          + parseFloat(getComputedStyle(last).marginBottom) + parseFloat(cs.paddingBottom));
+      }
+      fold = { lo, hi: Math.max(lo, full), room, rows };
+      const up = fold.hi - lo;
+      el.classList.add('is-folded');
+      el.style.height = lo + 'px';
+      bagList.style.marginTop = -up + 'px';
+      bagList.style.paddingTop = 'calc(' + pad + ' + ' + up + 'px)';
+      skin.style.top = -up + 'px';
+      settle();
+      scroller.style.scrollSnapType = '';
+      draw(0, 0);
+      moreLabel();
+    };
+    // the plain card again, at whatever height its bag gives it
+    const flat = () => {
+      for (const r of fold ? fold.rows : []) {
+        r.el.style.zIndex = '';
+        if (r.kind === 'hide') r.el.style.opacity = r.el.style.pointerEvents = r.el.style.scale = '';
+        if (r.kind !== 'mini') continue;
+        r.el.classList.remove('is-mini');
+        for (const p of r.parts) p.el.style.transform = p.el.style.opacity = p.el.style.pointerEvents = p.el.style.scale = p.el.style.transformOrigin = '';
+        r.box.style.height = '';
+      }
+      fold = null; lift = spill = 0;
+      el.classList.remove('is-folded');
+      head.style.transform = skin.style.transform = skin.style.top = '';
+      for (const r of [...$$('.cart-line', linesEl), shipEl, protectBox]) if (r) r.style.transform = '';
+      bagList.style.marginTop = bagList.style.paddingTop = '';
+      el.style.height = '';
+    };
+    // grown to the whole bag: the card takes its height, in the same frame, so nothing moves
+    const unfold = () => {
+      const s = spill;
+      flat();
+      settle();
+      bagList.scrollTop = Math.round(s);
+      moreLabel();
+    };
+    // The lift from where it is to g on a spring (v: px/s it starts with), then done(). Frame by
+    // frame from script, not an animation the compositor runs, so the glass edge's copies are
+    // lined up with it in every frame they're drawn in.
+    const swing = (g, v, done, response = 0.44, damping = 0.9) => {
+      cancelAnimationFrame(springing);
+      springing = 0;
+      const from = lift, d = g - from;
+      moreLabel(g > 0);                              // where it's going, from now
+      if (Math.abs(d) < 0.5 || reduceMotion.matches) { draw(g, 0); done(); return; }
+      const s = spring(response, damping, Math.min(8, Math.max(0, v / Math.abs(d))));
+      const n = s.pts.length - 1, t0 = performance.now();
+      const step = (t) => {
+        const k = Math.min(1, Math.max(0, t - t0) / s.duration) * n, i = Math.min(n - 1, Math.floor(k));
+        if (k >= n) { springing = 0; draw(g, 0); done(); return; }
+        draw(from + d * (s.pts[i] + (s.pts[i + 1] - s.pts[i]) * (k - i)), 0);
+        springing = requestAnimationFrame(step);
+      };
+      springing = requestAnimationFrame(step);
+    };
+    // grown at once: for a tap, a wheel or keys, which have no finger to follow, on a spring that
+    // settles without bouncing (SwiftUI's default)
+    const grow = (v) => {
+      if (!fold || !isOpen || closing || springing || pulling || qm) return;
+      follow = false;                                // no finger: the rows pop in
+      swing(fold.hi - fold.lo, v, unfold, 0.5, 1);
+    };
+    // the list carrying on after a flick (v: px/s), slowing as iOS scrolling does (0.998 a ms)
+    const carry = (v) => {
+      cancelAnimationFrame(coast);
+      coast = 0;
+      if (!(v > 0)) return;
+      const y0 = bagList.scrollTop, t0 = performance.now(), k = Math.log(0.998);
+      const step = (t) => {
+        const ms = Math.max(0, t - t0);
+        bagList.scrollTop = Math.round(y0 + ((v / 1000) * (Math.exp(k * ms) - 1)) / k);
+        coast = v * Math.exp(k * ms) > 20 && listLeft() >= 1 ? requestAnimationFrame(step) : 0;
+      };
+      coast = requestAnimationFrame(step);
+    };
+    // on opening, and when the bag changes while open
+    // A screen too short for the small bag (a keyboard up, an in-app browser's own panel over the
+    // page, a phone on its side) squeezes it under its max-height (theme-r2.css), cutting its rows
+    // off at the total: it's the whole bag instead, its list scrolling, until the screen has room.
+    let cramped = false;
+    const smallFits = () => {
+      if (height() >= fold.lo - 0.5) return true;
+      small = false;
+      cramped = true;
+      flat();
+      el.classList.remove('is-small');
+      bagList.scrollTop = 0;
+      settle();
+      moreLabel();
+      return false;
+    };
+    const fit = (opening) => {
+      if (!isOpen || closing || springing || pulling) return;
+      if (opening) {
+        cramped = false;
+        small = bigBag();
+        el.classList.toggle('is-small', small);
+        bagList.scrollTop = 0;
+        if (small) { shape(); smallFits(); }
+        else moreLabel();
+      } else if (fold) {
+        if (bigBag()) { shape(); smallFits(); }
+        else {                                       // no shipping or protection rows: the card grows to fit
+          small = false;
+          el.classList.remove('is-small');
+          shape(fold.lo);
+          grow(0);
+        }
+      }
+    };
+    // a grown small bag folded again where the whole bag shows, so nothing moves: ready to shrink
+    const refold = () => {
+      cancelAnimationFrame(coast);
+      coast = 0;
+      shape();
+      for (const r of fold.rows) {                   // the rows and lines that pop in are there already
+        r.on = undefined;
+        if (r.parts) r.parts[3].on = undefined;
+      }
+      draw(fold.hi - fold.lo, 0);
+      moreLabel(true);
+    };
+    // back to small from the whole bag, on the same spring as growing
+    const shrink = () => {
+      if (fold || !small || !isOpen || closing || springing || pulling || qm) return;
+      refold();
+      follow = false;
+      swing(0, 0, () => {}, 0.5, 1);
+    };
+    // The button acts the moment it's touched (not on the tap's click, which comes only once the
+    // finger lifts, and not at all if it moved a little), and a touch while the bag is on its way
+    // turns it round from where it is.
+    const press = () => {
+      if (!small || !isOpen || closing || pulling || qm) return;
+      follow = false;
+      if (fold && springing) swing(aimBig ? 0 : fold.hi - fold.lo, 0, aimBig ? () => {} : unfold, 0.5, 1);
+      else if (fold) grow(0);
+      else shrink();
+    };
+    if (more) {
+      more.addEventListener('touchstart', (e) => {
+        e.stopPropagation();                         // not the start of a swipe of the card
+        if (e.cancelable) e.preventDefault();        // and no click after it
+        press();
+      }, { passive: false });
+      more.addEventListener('click', press);         // a mouse, or keys
+    }
+    // the list scrolled some other way (keys, a screen reader) while small: the card grows instead
+    bagList.addEventListener('scroll', () => {
+      if (fold && bagList.scrollTop > 0) { bagList.scrollTop = 0; grow(0); }
+    }, { passive: true });
+    // a mouse wheel or trackpad: there's no finger to follow, so it grows at the first turn down
+    el.addEventListener('wheel', (e) => {
+      if (!fold || !isOpen || closing || e.deltaY <= 0) return;
+      e.preventDefault();
+      grow(0);
+    }, { passive: false });
+    // Some in-app browsers on iPhone can leave the screen's full-screen layers shorter than the page
+    // they show (after their own panel, or a keyboard, goes away): the card would rest high up, page
+    // showing under it. The card's layer and its dim reach down to what is shown, never less.
+    const stretch = () => {
+      scroller.style.bottom = scrim.style.bottom = '';
+      const vv = window.visualViewport;
+      const gap = Math.max(innerHeight, vv ? vv.offsetTop + vv.height : 0) - scroller.getBoundingClientRect().bottom;
+      if (gap > 1) scroller.style.bottom = scrim.style.bottom = (parseFloat(getComputedStyle(scroller).bottom) || 0) - gap + 'px';
+    };
+    // the screen changed height while the card is up: its layer is fitted to it again and the card
+    // set back at the bottom; a small bag it now squeezes goes whole, and a bag made whole for want of
+    // room goes small once there's room
+    const resized = () => {
+      if (!isOpen || closing || springing || pulling || qm || drag) return;
+      stretch();
+      settle();
+      if (fold) { if (height() < fold.lo - 0.5) smallFits(); return; }
+      if (!cramped || !bigBag()) return;
+      small = true;
+      el.classList.add('is-small');
+      bagList.scrollTop = 0;
+      shape();
+      if (smallFits()) cramped = false;
+    };
+    addEventListener('resize', resized);
+    if (window.visualViewport) visualViewport.addEventListener('resize', resized);
+    // closed: nothing of it is kept, and the next opening fits the bag afresh
+    const unfit = () => {
+      cancelAnimationFrame(springing);
+      cancelAnimationFrame(coast);
+      springing = coast = 0;
+      small = pulling = cramped = false;
+      flat();
+      el.classList.remove('is-small');
+      moreLabel();
+      el.style.marginTop = '';
+    };
+    const finishClose = () => {
+      isOpen = false;
+      closing = false;
+      unfit();
+      el.classList.remove('is-open');
+      scroller.hidden = true;
+      scrim.hidden = true;
+      scrim.style.opacity = '';
+      scroller.style.bottom = scrim.style.bottom = '';
+      el.style.transform = '';
+      el.style.removeProperty('--rb');
+      el.classList.remove('is-dragging');
+      stopAnims();
+      hapClearPrime();
+      hapQueueSeeds();
+    };
+    const atRest = () => { if (isOpen && !closing && scroller.scrollTop <= 1) finishClose(); };
+    scroller.addEventListener('scroll', () => {
+      if (!painting) { painting = true; requestAnimationFrame(paint); }
+      clearTimeout(restTimer);
+      restTimer = setTimeout(atRest, 120);
+    }, { passive: true });
+    const open = () => {
+      if (closing) finishClose();                   // reopened while sliding away
+      if (!isOpen) {
+        isOpen = true;
+        el.classList.add('is-open');
+        scrim.hidden = false;
+        scroller.hidden = false;                    // the page behind stays scrollable: only the card takes touches
+        stretch();
+        fit(true);                                  // several products: it opens smaller
+        scroller.scrollTop = maxTop();              // at rest, fully open…
+        paint();
+        if (el.animate) {                           // …and popped up from just below the screen
+          const below = scroller.clientHeight - el.getBoundingClientRect().top;
+          anims = reduceMotion.matches
+            ? [el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 }),
+              scrim.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 })]
+            : [slide(POP, below, 0),
+              scrim.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: 'ease-out' })];
+        }
+      } else if (scroller.scrollTop < maxTop() - 1) {
+        scroller.scrollTo({ top: maxTop(), behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+      }
+      el.focus({ preventScroll: true });            // the card itself, so the X doesn't show a focus ring
+      hapQueueSeeds();
+    };
+    const cardY = () => {
+      const tf = getComputedStyle(el).transform;
+      return tf && tf !== 'none' ? new DOMMatrix(tf).m42 : 0;
+    };
+    const close = (speed) => {                       // speed: px/ms the finger was moving down, after a swipe
+      if (!isOpen || closing) return;
+      if (lensHalt) lensHalt();                      // the edge's lens stops all work as the card goes
+      if (!el.animate) { finishClose(); return; }
+      closing = true;
+      cancelAnimationFrame(springing);               // it leaves at the size it has reached
+      springing = 0;
+      // Leave from exactly where the card is, even mid-pop or mid-swipe.
+      const from = cardY();
+      const to = scroller.clientHeight - el.getBoundingClientRect().top + from + 48;
+      const fade = scrim.animate([{ opacity: getComputedStyle(scrim).opacity }, { opacity: 0 }],
+        { duration: reduceMotion.matches ? 200 : 260, easing: 'ease-out', fill: 'forwards' });
+      stopAnims();
+      const v0 = typeof speed === 'number' && to > from ? Math.min(20, Math.max(0, (speed * 1000) / (to - from))) : 0;
+      const away = reduceMotion.matches
+        ? el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: 'forwards' })
+        : slide(v0 ? spring(0.36, 1, v0) : AWAY, from, to, 'forwards');
+      anims = [away, fade];
+      away.onfinish = () => { if (closing) finishClose(); };
+    };
+    /* Outside the card: a swipe there scrolls the page (the full-screen
+       layer passes touches through, theme-r2.css) and sends the card away,
+       in any direction; a tap there only sends the card away and never
+       reaches the page underneath. The page doesn't hear the touch at all
+       while the card is out (propagation is stopped here, at the document,
+       before it gets to any of its own handlers); scrolling is the
+       browser's and isn't affected. The quantity picker is its own
+       full-screen layer on <body>, so it doesn't count as outside. A
+       vibration seed over the bag button forwards its tap as
+       button.click(), which lands in the click guard below. */
+    const outside = (t) => t && t.nodeType === 1 && !el.contains(t) && !t.closest('.qty-menu');
+    const blocking = (e) => isOpen && outside(e.target);
+    let away = null;
+    document.addEventListener('touchstart', (e) => {
+      away = null;
+      if (!blocking(e)) return;
+      e.stopPropagation();
+      away = { x: e.touches[0].clientX, y: e.touches[0].clientY, moved: false };
+    }, { capture: true, passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (!away) return;
+      e.stopPropagation();
+      if (away.moved) return;
+      const t = e.touches[0];
+      if (Math.hypot(t.clientX - away.x, t.clientY - away.y) < 8) return;
+      away.moved = true;
+      close();
+    }, { capture: true, passive: true });
+    document.addEventListener('touchend', (e) => {
+      if (!away) return;
+      const tapped = !away.moved;
+      away = null;
+      e.stopPropagation();
+      if (!tapped) return;
+      if (e.cancelable) e.preventDefault();          // no click, focus or link follows the tap
+      close();
+    }, { capture: true, passive: false });
+    ['pointerdown', 'pointerup', 'mousedown', 'mouseup'].forEach((type) => document.addEventListener(type, (e) => {
+      if (!blocking(e)) return;
+      e.stopPropagation();
+      if (type === 'mousedown') e.preventDefault();  // no focus on a field underneath
+    }, true));
+    document.addEventListener('click', (e) => {
+      if (!blocking(e)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      close();
+    }, true);
+
+    /* Swiping the card down on a phone is tracked here, from the first
+       touch. The card follows the finger both ways for as long as it's
+       down, however low it has been dragged, and only goes when let go:
+       low down, or flicked down. Let go on its way back up, or above
+       halfway, and it comes back. (Taking over the phone's own scrolling
+       part way through a swipe makes Safari jump, so the swipe is never
+       handed to it.) Lists inside the card that scroll still scroll
+       natively, except in a small bag (above) before it has grown.
+       The owner's rule, "up shows more, down puts it away", the same
+       anywhere on the card: up grows a small bag (then scrolls its list,
+       then the card rubber-bands); down takes the card down, whatever size
+       the bag is, and never shrinks it. Coming back down in the same swipe
+       undoes the growing, then takes the card down. */
+    const SNAP = spring(0.38, 0.86);                 // springs back when it isn't closing
+    const FLICK = 0.4;                               // px/ms up: quicker than this is a flick, not a drag
+    // The lift under a swipe runs after where the finger (or a flick, or a let-go) aims it, on a
+    // critically damped spring (its response, in seconds), carrying whatever speed it has, so it is
+    // smooth whatever the finger does and can be turned round at any moment. Under the finger it is
+    // quick (HOLD), so the card's edge stays with it; carried on by a flick or a let-go it is softer (CHASE).
+    const HOLD = 0.09;
+    const CHASE = 0.28;
+    let chaseTo = 0, chaseV = 0, chaseSpill = 0, chaseT = 0, chaseDone = null, chaseResp = CHASE;
+    const chaseStep = (t) => {
+      const dt = Math.min(0.032, Math.max(0.001, (t - chaseT) / 1000)), w = (2 * Math.PI) / chaseResp;
+      chaseT = t;
+      const most = fold.hi - fold.lo;
+      let x = lift;
+      for (let i = 0; i < 2; i++) {                  // two half steps a frame
+        chaseV += (w * w * (chaseTo - x) - 2 * w * chaseV) * (dt / 2);
+        x += chaseV * (dt / 2);
+      }
+      x = Math.min(most, Math.max(0, x));
+      if (Math.abs(chaseTo - x) < 0.4 && Math.abs(chaseV) < 8) {
+        springing = 0;
+        chaseV = 0;
+        draw(chaseTo, chaseSpill);
+        const done = chaseDone;
+        chaseDone = null;
+        if (done) done();
+        return;
+      }
+      draw(x, chaseSpill);
+      springing = requestAnimationFrame(chaseStep);
+    };
+    // aim the lift (and the list's spill) at g, from where it is and at the speed it has
+    const chaseAim = (g, s, resp = CHASE) => {
+      chaseTo = g;
+      chaseSpill = s || 0;
+      chaseResp = resp;
+      if (!springing) { chaseT = performance.now(); springing = requestAnimationFrame(chaseStep); }
+    };
+    // aim it at g and run done() when it gets there (a let-go)
+    const chaseGo = (g, done) => {
+      chaseDone = done;
+      chaseAim(g, 0);
+    };
+    let drag = null;
+    // h: the card's height, read once a swipe (it keeps it while swiped), not on every move
+    const place = (y, h) => {
+      el.style.transform = 'translateY(' + y.toFixed(2) + 'px)';
+      el.style.setProperty('--rb', Math.min(40, Math.max(0, -y * 2)).toFixed(1) + 'px');   // lifted: round at the bottom too
+      scrim.style.opacity = String(Math.min(1, Math.max(0, 1 - y / h)));
+    };
+    scroller.addEventListener('touchstart', (e) => {
+      drag = null;
+      carry(0);                                      // a finger stops the list carrying on, as on iOS
+      if (!isOpen || closing || e.touches.length > 1) return;
+      const t = e.touches[0];
+      const list = e.target.closest && e.target.closest('.drawer__body');
+      drag = {
+        x: t.clientX, y: t.clientY, t0: e.timeStamp, mode: 0, base: 0, cur: 0, low: 0, rise: 0, pts: [],
+        list: list && list.scrollHeight > list.clientHeight + 1 ? list : null
+      };
+    }, { passive: true });
+    scroller.addEventListener('touchmove', (e) => {
+      if (!drag) { if (isOpen && e.cancelable) e.preventDefault(); return; }
+      if (drag.mode < 0) return;                     // scrolling the list inside the card
+      const t = e.touches[0];
+      const dy = t.clientY - drag.y;
+      if (drag.mode === 0) {
+        if (dy === 0 && t.clientX === drag.x) return;
+        // a small bag not grown yet (or on its way): the swipe runs along one track, the finger's
+        // way up growing it and its way down shrinking it back, then taking the card down. Grown,
+        // the bag only shrinks with Show less: a swipe down takes the card down at its size.
+        const pull = !!fold && !qm;
+        if (!pull && drag.list && (drag.list.scrollTop > 0 || dy < 0)) { drag.mode = -1; return; }
+        drag.mode = pull ? 2 : 1;
+        drag.base = cardY();                         // catch it where it is, even mid-pop
+        drag.h = el.offsetHeight;
+        stopAnims();
+        el.classList.add('is-dragging');
+        if (pull) {
+          pulling = true;
+          follow = true;
+          cancelAnimationFrame(springing);           // caught on its spring: held where it has got to
+          springing = 0;
+          chaseV = 0;
+          chaseDone = null;
+          chaseTo = drag.g0 = lift;
+          chaseSpill = spill;
+        }
+      }
+      if (e.cancelable) e.preventDefault();
+      if (drag.mode === 2) {
+        // How far the finger asks the card to grow, from where it was caught. Up to the whole bag
+        // the card grows; past it the list scrolls on, then the card is pulled up off its place,
+        // rubber-banded; below small it's pulled down, to go.
+        const most = fold.hi - fold.lo;
+        const raw = drag.g0 - drag.base - dy;
+        // The card never jumps to the finger: it runs after it on a quick spring (chaseStep), so a
+        // flick opens smoothly instead of in a frame, and a slow drag is followed closely. A quick
+        // flick up carries the card on to the whole bag by itself (drag.latch); the finger coming
+        // back down, even a little, takes it back (the card follows the finger again).
+        // A flick is judged over the last 100ms and 12px, not one jittery step.
+        const prev = drag.pts[drag.pts.length - 1] || { t: drag.t0, y: drag.y };
+        const from = drag.pts[0] || prev, span = e.timeStamp - from.t;
+        if (raw > 12 && span >= 8 && (from.y - t.clientY) / span > FLICK) drag.latch = true;
+        else if (t.clientY - prev.y > 3) drag.latch = false;
+        // A swipe that starts by growing the bag only grows (or shrinks) it: the card itself stays put,
+        // however far up it goes and however it comes back down, without the finger lifting.
+        if (raw > 0 && drag.low === 0) drag.grew = true;
+        let g = raw, s = 0, y = 0;
+        if (raw < 0) { g = 0; y = drag.grew ? 0 : -raw; }
+        else if (raw > most) {
+          g = most;
+          s = Math.min(fold.room, raw - most);
+          const over = raw - most - s;
+          if (over > 0 && !drag.grew) y = -(1 - 1 / ((over * 0.55) / fold.hi + 1)) * fold.hi;
+        }
+        if (drag.latch && y === 0 && g < most) chaseAim(most, s); else chaseAim(g, s, HOLD);
+        drag.g = g; drag.s = s; drag.cur = y;
+        if (y >= drag.low) drag.low = drag.rise = y; else drag.rise = Math.min(drag.rise, y);
+        place(y, drag.h);
+        drag.pts.push({ t: e.timeStamp, y: t.clientY });
+        while (drag.pts.length > 2 && e.timeStamp - drag.pts[0].t > 100) drag.pts.shift();
+        return;
+      }
+      const h = drag.h;
+      let y = drag.base + dy;
+      if (y < 0) y = -(1 - 1 / ((-y * 0.55) / h + 1)) * h;   // rubber-band above the resting place, like iOS
+      drag.cur = y;
+      // the lowest it has been on this swipe, and the highest it has been pulled back up to since
+      if (y >= drag.low) drag.low = drag.rise = y; else drag.rise = Math.min(drag.rise, y);
+      place(y, h);
+      drag.pts.push({ t: e.timeStamp, y: t.clientY });
+      while (drag.pts.length > 2 && e.timeStamp - drag.pts[0].t > 100) drag.pts.shift();
+    }, { passive: false });
+    const release = (e) => {
+      const d = drag;
+      drag = null;
+      el.classList.remove('is-dragging');
+      el.style.removeProperty('--rb');               // back to square, eased (theme-r2.css), as it settles
+      if (d && d.mode === 2) pulling = false;
+      if (!d || (d.mode !== 1 && d.mode !== 2) || !isOpen || closing) return;
+      const b = d.pts[d.pts.length - 1];
+      const a = d.pts.length > 1 || !b ? d.pts[0] : { t: d.t0, y: d.y };   // one move only: from where the finger came down
+      const speed = a && b && b.t > a.t ? (b.y - a.y) / (b.t - a.t) : 0;   // px/ms, down is positive
+      if (d.mode === 2) {
+        if (d.cur <= 0) {
+          // above small: on to the whole bag, or back to small, whichever is nearer where the flick
+          // would have carried it, slowing as iOS scrolling does (0.998 a ms), and carrying on the
+          // finger's speed px/s; held still before letting go (no move for 60ms), it isn't heading
+          // anywhere
+          const up = e && b && e.timeStamp - b.t > 60 ? 0 : -speed * 1000;
+          const most = fold.hi - fold.lo;
+          follow = true;                             // the rows carry on as they were under the finger
+          if (d.latch || d.s > 0 || d.cur < 0 || d.g + (up / 1000) * (0.998 / 0.002) > most * 0.4) {
+            moreLabel(true);
+            chaseGo(most, () => {
+              unfold();
+              if (d.s > 0 && !d.cur) carry(up);      // the list was scrolling: it carries on
+            });
+          } else { moreLabel(false); chaseGo(0, () => fit(false)); }   // (the bag may have changed meanwhile)
+          if (!d.cur) { el.style.transform = ''; scrim.style.opacity = '1'; return; }
+        }
+        // pulled off its place (up past the whole bag, or down below small): as any swipe of the card
+      }
+      // pulled back up from the lowest it went (40px, more than a finger's jitter) and not heading
+      // down again (20px from there, or 6px in its last moves), or let go on the way up: it comes
+      // back, however low it had been
+      const moved = a && b ? b.y - a.y : 0;         // over the last moves, down is positive
+      const back = (d.low - d.rise > 40 && d.cur - d.rise < 20 && moved <= 6) || (speed < -0.1 && moved < -6);
+      if (!back && (d.cur > el.offsetHeight / 2 || (speed > 0.5 && d.cur > 0))) { close(speed); return; }
+      el.style.transform = '';
+      scrim.style.opacity = '1';
+      if (Math.abs(d.cur) < 0.5 || !el.animate) return;
+      const v0 = Math.min(20, Math.max(-20, (speed * 1000) / -d.cur));
+      anims = [slide(v0 ? spring(0.38, 0.86, v0) : SNAP, d.cur, 0),
+        scrim.animate([{ opacity: Math.min(1, Math.max(0, 1 - d.cur / el.offsetHeight)) }, { opacity: 1 }],
+          { duration: 300, easing: 'ease-out' })];
+    };
+    scroller.addEventListener('touchend', release);
+    scroller.addEventListener('touchcancel', release);
+    const refresh = (openAfter) => fetchJSON('/cart.js').then((c) => { cart = c; render(); if (openAfter) open(); });
+
+    $$('[data-cart-open]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); refresh(true); }));
+    $('[data-drawer-close]', el).addEventListener('click', close);
+    scrim.addEventListener('click', close);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen) close(); });
+
+    hapMountSeeds();
+    refresh(false);
+    return { refresh, open, close };
+  })();
+
+})();
