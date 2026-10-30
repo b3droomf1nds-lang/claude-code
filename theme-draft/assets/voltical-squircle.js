@@ -17,7 +17,7 @@
 (function () {
   'use strict';
   var N = 3, REACH = 1, STEPS = 24;
-  var BOXES = '.pdp-cmp__grid > .pdp-cmp__card, .gallery__main, .sugg__face, .pdp--bold .atc__btn';
+  var BOXES = '.pdp-cmp__grid > .pdp-cmp__card, .gallery__main, .sugg__face, .pdp--bold .atc__btn, .xsell__face';
   var boxes = [].slice.call(document.querySelectorAll(BOXES));
   if (!boxes.length || !window.ResizeObserver || !(window.CSS && CSS.supports && CSS.supports('clip-path', 'path("M0 0")'))) return;
 

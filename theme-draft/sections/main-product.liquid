@@ -470,7 +470,7 @@
          positions so it still lines up if content
          wraps to another line or a block is missing. */
       var optBoxes = section.querySelectorAll('.opt--boxed');
-      var addons = section.querySelectorAll('.addon');
+      var addons = section.querySelectorAll('[data-xsell]');   // the "You might also like" block
       var atc = section.querySelector('.atc');
       var shipNote = section.querySelector('.ship-note');
 
@@ -1516,7 +1516,7 @@
     function positionAtcBelowSuggestions(){
       if (!window.matchMedia('(min-width:900px)').matches) return;
       var atc = document.querySelector('.pinfo .atc');
-      var addons = document.querySelectorAll('.pinfo .addon');
+      var addons = document.querySelectorAll('.pinfo [data-xsell]');   // the "You might also like" block
       if (!atc || !addons.length) return;
       var lastAddon = addons[addons.length - 1];
       atc.style.marginTop = '0px';
