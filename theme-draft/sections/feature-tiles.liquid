@@ -22,14 +22,19 @@
   }
   .ftiles__tile{
     position:relative;
-    display:flex; flex-direction:column;
-    background:#FFFFFF;
-    border-radius:clamp(22px,2.4vw,32px);
-    overflow:hidden;
+    display:flex;
+    border-radius:var(--r-l);
     box-shadow:0 1px 2px rgba(19,19,22,.04),0 18px 44px -22px rgba(19,19,22,.14);
     min-height:380px;
     text-decoration:none;
     color:inherit;
+  }
+  /* the tile itself, inside its shadow: cut to the squircle (voltical-squircle.js),
+     which would cut the shadow off if it were the tile's own */
+  .ftiles__face{
+    position:relative; flex:1 1 auto; min-width:0;
+    display:flex; flex-direction:column;
+    background:#FFFFFF; border-radius:inherit; overflow:hidden;
   }
   .ftiles__tile--wide{ grid-column:span 2; }
   @media (max-width:640px){ .ftiles__tile--wide{ grid-column:span 1; } }
@@ -92,6 +97,7 @@
         {%- else -%}
           <div class="{{ tile_class }}" data-reveal {{ block.shopify_attributes }}>
         {%- endif -%}
+          <div class="ftiles__face">
           {%- if _href != blank -%}<span class="ftiles__tile-cta" aria-hidden="true">&rarr;</span>{%- endif -%}
           <div class="ftiles__tile-text">
             <h3 class="ftiles__tile-heading">{{ block.settings.heading }}</h3>
@@ -104,6 +110,7 @@
                    sizes="(min-width:900px) 30vw, 90vw"
                    alt="{{ _img.alt | default: block.settings.heading | escape }}" loading="lazy">
             {%- endif -%}
+          </div>
           </div>
         {%- if _href != blank -%}</a>{%- else -%}</div>{%- endif -%}
       {%- endfor -%}

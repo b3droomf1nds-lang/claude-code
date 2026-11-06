@@ -568,7 +568,7 @@
   overflow: hidden;
   aspect-ratio: 2 / 3;
   background: var(--gallery-bg-color, #FFFFFF);
-  border-radius: clamp(22px, 2.4vw, 32px);
+  border-radius: 28px;
   box-shadow: 0 1px 2px rgba(19, 19, 22, .04), 0 18px 44px -22px rgba(19, 19, 22, .14);
 }
 .pdp--bold .gallery__main img {
@@ -1646,7 +1646,7 @@
        intentional: the generic compact-stat rule appears later and must not
        replace this feature-card height, spacing, or corner shape. */
     aspect-ratio: 817 / 428;
-    border-radius: 22px;
+    border-radius: 28px;
     justify-self: center;
     justify-content: center !important;
     gap: 16px;
@@ -1776,7 +1776,7 @@
     height: calc((470px - 21.33px) / 2);
     min-width: 0;
     padding: 18px 10px !important;
-    border-radius: 24px;
+    border-radius: 28px;
     background: #FFFFFF;
     display: flex;
     flex-direction: column;
@@ -1797,7 +1797,7 @@
   .template-product .pdp-cmp__card--compact-video {
     height: auto;
     aspect-ratio: 413 / 242;
-    border-radius: 24px;
+    border-radius: 28px;
     justify-content: center !important;
     gap: 12px;
     padding: 20px 10px !important;
@@ -1814,7 +1814,7 @@
     order: 1;
     height: auto;
     aspect-ratio: 413 / 242;
-    border-radius: 24px;
+    border-radius: 28px;
     justify-content: center !important;
     gap: 12px;
     padding: 20px 10px !important;
@@ -2750,7 +2750,7 @@
     gap: 0;
     padding: 30px 28px 34px !important;
     text-align: left !important;
-    border-radius: 24px;
+    border-radius: 28px;
     font-family: var(--sans);
   }
   .pdp-cmp__stats-row + .pdp-cmp__stats-row {

@@ -29,7 +29,7 @@
   --mono:'IBM Plex Mono',ui-monospace,'SF Mono',monospace;
   --s1:8px; --s2:16px; --s3:24px; --s4:32px; --s5:48px; --s6:64px; --s7:96px; --s8:128px;
   --w-content:1200px; --w-wide:1400px; --w-text:660px;
-  --r-s:14px; --r-m:24px; --r-l:clamp(24px,3vw,36px); --r-xl:clamp(28px,3.8vw,48px);
+  --r-s:12px; --r-m:20px; --r-l:28px; --r-xl:28px;   /* the site's three corners (squircles, voltical-squircle.js): large cards and tiles, medium bubbles and bars, small thumbnails; capsules stay fully round */
   --ease:cubic-bezier(.22,.61,.21,1);
   --dur:.8s;
 }
@@ -298,7 +298,7 @@ h1 em,h2 em,.plp__title em{
 .opt--boxed{margin-bottom:var(--s4)}
 .opt__values--boxed{flex-direction:column;gap:12px}
 .opt__pill--box{
-  width:100%;box-sizing:border-box;border-radius:16px;
+  width:100%;box-sizing:border-box;border-radius:var(--r-m);
   padding:16px 18px;background:var(--panel,#fff);
   border:1.5px solid var(--ink-12,rgba(19,19,22,.12));
   justify-content:flex-start;font-weight:600;
@@ -616,7 +616,7 @@ h1 em,h2 em,.plp__title em{
   overflow:hidden;
   isolation:isolate;
   background:var(--tile,#F4F8F8);
-  border-radius:clamp(30px,3vw,54px);
+  border-radius:var(--r-l);
   corner-shape:round;
 }
 .product-card__media,
@@ -718,7 +718,7 @@ h1 em,h2 em,.plp__title em{
 }
 
 @media (max-width:720px){
-  .product-card{aspect-ratio:.74;border-radius:32px}
+  .product-card{aspect-ratio:.74}
   .product-card__media,.product-card__media--framed{padding:78px 16px 122px}
   .product-card__body{padding:24px;column-gap:14px}
   .product-card__title,.product-card__price{font-size:1rem}
@@ -897,7 +897,7 @@ h1.t-hero em,
 
 .drawer-scroller .cart-line{gap:14px;padding:14px 0}
 .drawer-scroller .cart-line+.cart-line{border-top:.5px solid var(--sys-sep)}
-.drawer-scroller .cart-line__img{width:72px;height:72px;border-radius:14px}
+.drawer-scroller .cart-line__img{width:72px;height:72px;border-radius:var(--r-s)}
 .drawer-scroller .cart-line__title{font-size:17px;font-weight:600;line-height:1.29}
 .drawer-scroller .cart-line__variant{font-size:15px;line-height:1.33;color:var(--sys-label-2);margin-top:1px}
 .drawer-scroller .cart-line__row{margin-top:10px}
@@ -1045,7 +1045,7 @@ h1.t-hero em,
 .drawer-scroller .drawer__body{padding:6px 12px 4px}
 .drawer-scroller .cart-line,
 .drawer-scroller .ship-bubble,
-.drawer-scroller .protect-bubble{border-radius:20px;margin:0 0 8px;
+.drawer-scroller .protect-bubble{border-radius:var(--r-m);margin:0 0 8px;
   /* no frost of their own: the sheet's frost is one even layer over all of it (a second
      frost inside the bubbles hid the page behind them while the gaps between them still
      showed it, a visible change at every bubble). Just the sheet's crisp 1px white line;
@@ -1054,7 +1054,7 @@ h1.t-hero em,
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.95)}
 .drawer-scroller .cart-line{align-items:center;gap:14px;padding:14px 16px 14px 14px}
 .drawer-scroller .cart-line+.cart-line{border-top:0}
-.drawer-scroller .cart-line__img{width:72px;height:72px;border-radius:14px;background:var(--sys-bg-2)}
+.drawer-scroller .cart-line__img{width:72px;height:72px;border-radius:var(--r-s);background:var(--sys-bg-2)}
 .drawer-scroller .cart-line__img img{mix-blend-mode:multiply}  /* product shots have white backgrounds: let the grey tile show through */
 /* same type as the shipping bubble: grey label over the semibold lines */
 .drawer-scroller .cart-line__title{font-size:13px;font-weight:400;line-height:1.38;color:var(--sys-label-2)}
@@ -1138,7 +1138,7 @@ h1.t-hero em,
   transform-origin:50% 50%;-webkit-tap-highlight-color:transparent}
 /* while its menu is open, the line's pencil is "inside" the menu */
 .drawer-scroller .cart-line.is-qty-open .cart-line__pencil svg{opacity:0}
-.drawer-scroller .ship-bubble__icon{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:var(--sys-bg-2);color:#8A8A8E;flex:0 0 auto}  /* the solid box in the quantity pencil's grey (as it shows on white): three faces with a gap between, every corner rounded the same, inside and out */
+.drawer-scroller .ship-bubble__icon{display:grid;place-items:center;width:40px;height:40px;border-radius:var(--r-s);background:var(--sys-bg-2);color:#8A8A8E;flex:0 0 auto}  /* the solid box in the quantity pencil's grey (as it shows on white): three faces with a gap between, every corner rounded the same, inside and out */
 .drawer-scroller .ship-bubble{display:flex;align-items:center;gap:14px;padding:12px 16px 12px 14px}
 .drawer-scroller .ship-bubble__icon{width:72px;height:48px}  /* as wide as the product photo's tile (72px), with the same 14px gap, so "Shipping" lines up under the product's text */
 .drawer-scroller .ship-bubble[hidden]{display:none}
@@ -1152,7 +1152,7 @@ h1.t-hero em,
    shipping price sits. */
 .drawer-scroller .protect-bubble{display:flex;align-items:center;gap:14px;padding:12px 16px 12px 14px}
 .drawer-scroller .protect-bubble[hidden]{display:none}
-.drawer-scroller .protect-bubble__icon{display:grid;place-items:center;width:72px;height:48px;border-radius:10px;
+.drawer-scroller .protect-bubble__icon{display:grid;place-items:center;width:72px;height:48px;border-radius:var(--r-s);
   background:var(--sys-bg-2);color:#8A8A8E;flex:0 0 auto}
 .drawer-scroller .protect-bubble__body{flex:1;min-width:0;display:flex;flex-direction:column}
 .drawer-scroller .protect-bubble__label{font-size:13px;line-height:1.38;color:var(--sys-label-2)}
