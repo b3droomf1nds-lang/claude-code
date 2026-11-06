@@ -13,11 +13,18 @@
    Safari has no corner-shape, so each box is cut to the shape with a
    clip-path, redrawn whenever its size changes. While it's cut (.is-sq,
    theme-r2.css) its border-radius is 0, or the circle would trim the
-   corner's middle. Off in Canva edit mode, whose outlines sit outside. */
+   corner's middle. Off in Canva edit mode, whose outlines sit outside.
+
+   A line round a box (a border, or an inset ring) would be cut off at the
+   corners, so a box with one gives it up in the CSS and says what it was
+   instead: --ring-w and --ring-color (and --ring-w-on, --ring-color-on for
+   its selected look). This draws that line along the same curve and hands
+   it back as --sq-ring (and --sq-ring-on), an image the CSS lays over the
+   box's background. */
 (function () {
   'use strict';
   var N = 3, REACH = 1, STEPS = 24;
-  var BOXES = '.pdp-cmp__grid > .pdp-cmp__card, .gallery__main, .sugg__face, .pdp--bold .atc__btn, .xsell__face, .ftiles__face, .product-card, .site-footer';
+  var BOXES = '.pdp-cmp__grid > .pdp-cmp__card, .gallery__main, .sugg__face, .pdp--bold .atc__btn, .xsell__face, .ftiles__face, .product-card, .site-footer, .opt__pill--box, .cart-line__img, .ship-bubble__icon, .protect-bubble__icon';
   var boxes = [].slice.call(document.querySelectorAll(BOXES));
   if (!boxes.length || !window.ResizeObserver || !(window.CSS && CSS.supports && CSS.supports('clip-path', 'path("M0 0")'))) return;
 
@@ -44,6 +51,19 @@
     return 'M' + d.join('L') + 'Z';
   };
 
+  // the line a box gave up, along the curve: a stroke inset by half its width, in the colour it had
+  var ring = function (el, cs, w, h, r) {
+    [['--sq-ring', '--ring-w', '--ring-color'], ['--sq-ring-on', '--ring-w-on', '--ring-color-on']].forEach(function (n) {
+      var rw = parseFloat(cs.getPropertyValue(n[1])), col = cs.getPropertyValue(n[2]).trim();
+      if (!(rw > 0) || !col) { el.style.removeProperty(n[0]); return; }
+      var half = rw / 2;
+      var path = shape(w - rw, h - rw, r.map(function (x) { return Math.max(0, x - half); }));
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + f(w) + "' height='" + f(h) + "' viewBox='0 0 " + f(w) + ' ' + f(h) + "'>" +
+        "<path transform='translate(" + half + ' ' + half + ")' d='" + path + "' fill='none' stroke='" + col + "' stroke-width='" + rw + "'/></svg>";
+      el.style.setProperty(n[0], 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")');
+    });
+  };
+
   var RADII = ['borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius', 'borderTopLeftRadius'];
   var fit = function (el, w, h) {
     el.classList.remove('is-sq');                    // to read the box's own radius
@@ -51,6 +71,7 @@
     var r = RADII.map(function (k) { return parseFloat(cs[k]) || 0; });
     if (!w || !h || !Math.max.apply(null, r)) { el.style.clipPath = ''; return; }
     el.style.clipPath = 'path("' + shape(w, h, r) + '")';
+    ring(el, cs, w, h, r);
     el.classList.add('is-sq');
   };
 
@@ -62,4 +83,12 @@
     });
   });
   boxes.forEach(function (el) { watch.observe(el, { box: 'border-box' }); });
+
+  // boxes drawn later (the bag's product lines are rebuilt each time the bag changes)
+  var lines = document.querySelector('[data-drawer-lines]');
+  if (lines && window.MutationObserver) {
+    new MutationObserver(function () {
+      [].forEach.call(lines.querySelectorAll(BOXES), function (el) { watch.observe(el, { box: 'border-box' }); });
+    }).observe(lines, { childList: true });
+  }
 })();

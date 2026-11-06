@@ -648,32 +648,35 @@
     $$('.opt input', pform).forEach((i) => i.addEventListener('change', update));
     update();
 
-    /* add to cart (AJAX, morphing button) */
+    /* add to cart: the bag comes up at once with the product already in it, as the cart will
+       have it; the request goes on behind it, and the bag is set right when it answers. The
+       button itself never changes. */
     pform.addEventListener('submit', (e) => {
       e.preventDefault();
       if (btn.disabled) return;
-      btn.classList.add('is-adding');
+      const v = findVariant();
       const items = [{ id: Number(idInput.value), quantity: 1 }];
+      const lines = [{ id: Number(idInput.value), quantity: 1, product_id: productJSON.id, title: productJSON.title,
+        variant_title: v ? v.title : '', price: v ? v.price : 0,
+        image: (v && v.featured_image && v.featured_image.src) || productJSON.featured_image || '' }];
       $$('[data-addon]', pform).forEach((addonEl) => {
         if ($('input', addonEl).checked) {
-          items.push({ id: Number(addonEl.dataset.addonVariant), quantity: 1 });
+          const id = Number(addonEl.dataset.addonVariant);
+          const name = addonEl.parentNode.querySelector('.xsell__cap a');
+          const img = $('.xsell__img', addonEl);
+          items.push({ id: id, quantity: 1 });
+          lines.push({ id: id, quantity: 1, title: name ? name.textContent.trim() : '', variant_title: '',
+            price: Number($('[data-xsell-price]', addonEl).dataset.xsellPrice) || 0, image: img ? img.currentSrc.split('?')[0] : '' });
         }
       });
-      fetchJSON('/cart/add.js', { method: 'POST', body: JSON.stringify({ items: items }) })
-        .then(() => {
-          btn.classList.remove('is-adding'); btn.classList.add('is-added');
-          btnLabel.textContent = window.VolticalStrings.added;
-          setTimeout(() => { btn.classList.remove('is-added'); btnLabel.textContent = window.VolicalATCDefault; }, 1800);
-          Drawer.refresh(true);
-        })
-        .catch(() => { btn.classList.remove('is-adding'); btnLabel.textContent = window.VolticalStrings.error; });
+      Drawer.addNow(lines, () => fetchJSON('/cart/add.js', { method: 'POST', body: JSON.stringify({ items: items }) }));
     });
   }
 
   /* ---------- quick add (the suggested products' cards) ---------- */
   // One of the card's product straight into the bag, without opening it, so
-  // the next card's can follow: the bag's count bumps and the button says
-  // "Added ✓" for a moment. Without script the form posts to /cart/add.
+  // the next card's can follow: the button says "Added ✓" for a moment, at
+  // once, and the bag's count follows when the cart has it. Without script the form posts to /cart/add.
   const quickTimers = new WeakMap();
   document.addEventListener('submit', (e) => {
     const form = e.target.closest('[data-quick-add]');
@@ -681,17 +684,17 @@
     e.preventDefault();
     const btn = $('button', form);
     const label = $('[data-quick-add-label]', form);
-    if (btn.disabled || btn.classList.contains('is-adding')) return;
+    if (btn.disabled) return;
     if (!form.dataset.label) form.dataset.label = label.textContent;
     clearTimeout(quickTimers.get(form));
-    btn.classList.remove('is-added'); btn.classList.add('is-adding');
     const after = (text, added) => {
-      btn.classList.remove('is-adding'); btn.classList.toggle('is-added', added);
+      btn.classList.toggle('is-added', added);
       label.textContent = text;
       quickTimers.set(form, setTimeout(() => { btn.classList.remove('is-added'); label.textContent = form.dataset.label; }, 1800));
     };
+    after(window.VolticalStrings.added, true);       // at once; the request goes on behind it
     fetchJSON('/cart/add.js', { method: 'POST', body: JSON.stringify({ id: Number(form.elements.id.value), quantity: 1 }) })
-      .then(() => { after(window.VolticalStrings.added, true); Drawer.refresh(false); })
+      .then(() => Drawer.refresh(false))
       .catch(() => after(form.dataset.error, false));
   });
 
@@ -806,7 +809,7 @@
   /* ---------- cart drawer + shipping protection ---------- */
   const Drawer = (() => {
     const el = $('[data-drawer]');
-    if (!el) return { refresh: () => {} };
+    if (!el) return { refresh: () => {}, addNow: (lines, request) => request() };
     const scrim = $('[data-scrim]');
     const linesEl = $('[data-drawer-lines]', el);
     const emptyEl = $('[data-drawer-empty]', el);
@@ -823,6 +826,7 @@
     const protectOff = () => { try { return localStorage.getItem('volt-protect-off') === '1'; } catch (e) { return false; } };
     let cart = null;
     let busy = false;
+    let holding = false;                             // a product shown in the bag before the cart has it: no protection request meanwhile
     let qtyOpenKey = null;                           // the line whose quantity menu is open (its pencil is hidden)
     /* The pencil, its box cropped to its ink (stroke included) so it can be sized to the name's
        capitals: 9.2px here (13px SF's cap height), 1cap beside the name (theme-r2.css). Its lines,
@@ -1717,7 +1721,7 @@
        one, so quick on-off-on taps end where the switch shows. */
     let protectBusy = false;
     function protectSync() {
-      if (protectBusy || !cart || protectWant == null) return;
+      if (holding || protectBusy || !cart || protectWant == null) return;
       const line = cart.items.find(isProtection);
       if (protectWant === !!line) { protectWant = null; return; }
       const v = protectWant && tierVariant(cart.items_subtotal_price);
@@ -2871,14 +2875,52 @@
     scroller.addEventListener('touchcancel', release);
     const refresh = (openAfter) => fetchJSON('/cart.js').then((c) => { cart = c; render(); if (openAfter) open(); });
 
-    $$('[data-cart-open]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); refresh(true); }));
+    /* Add to bag: the bag up at once with the products in it as the cart will have them, built
+       from what the page knows (their name, options, price, photo); the request goes on behind
+       it. When it answers the bag is drawn again from the real cart (and the protection that
+       goes in with a first product is asked for then); if it's refused the bag goes back to
+       what the cart really has. */
+    const addNow = (lines, request) => {
+      const base = cart || { items: [], item_count: 0, items_subtotal_price: 0, total_price: 0, original_total_price: 0, currency: '' };
+      const items = base.items.map((i) => Object.assign({}, i));
+      let sum = 0, count = 0;
+      lines.forEach((l) => {
+        const cost = l.price * l.quantity;
+        sum += cost; count += l.quantity;
+        const have = items.find((i) => i.variant_id === l.id && !Object.keys(i.properties || {}).length);
+        if (have) { have.quantity += l.quantity; have.final_line_price += cost; have.line_price = have.final_line_price; }
+        else items.push({ key: 'pending:' + l.id, id: l.id, variant_id: l.id, product_id: l.product_id || 0, quantity: l.quantity,
+          product_title: l.title, variant_title: l.variant_title === 'Default Title' ? '' : (l.variant_title || ''), image: l.image || '',
+          final_price: l.price, final_line_price: cost, line_price: cost, properties: {} });
+      });
+      cart = Object.assign({}, base, { items, item_count: base.item_count + count, items_subtotal_price: base.items_subtotal_price + sum,
+        total_price: base.total_price + sum, original_total_price: base.original_total_price + sum });
+      holding = true; busy = true;
+      render();
+      open();
+      const settle = () => { holding = false; busy = false; };
+      return request()
+        .then(() => fetchJSON('/cart.js'))
+        .then((c) => { cart = c; settle(); render(); protectSync(); })
+        .catch(() => {
+          protectWant = null; protectTried = false; settle();
+          return fetchJSON('/cart.js').then((c) => { cart = c; render(); }).catch(() => {});
+        });
+    };
+
+    /* The bag's button opens it at once, as the cart was last seen; the cart is looked at behind
+       it and the bag drawn again only if it changed (another tab, say). */
+    const sig = (c) => JSON.stringify([c.total_price, c.items.map((i) => [i.key, i.quantity])]);
+    const sync = () => holding ? Promise.resolve() : fetchJSON('/cart.js').then((c) => { const same = cart && sig(c) === sig(cart); cart = c; if (!same) render(); });
+
+    $$('[data-cart-open]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); if (cart) { open(); sync(); } else refresh(true); }));
     $('[data-drawer-close]', el).addEventListener('click', close);
     scrim.addEventListener('click', close);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen) close(); });
 
     hapMountSeeds();
     refresh(false);
-    return { refresh, open, close };
+    return { refresh, open, close, addNow };
   })();
 
 })();

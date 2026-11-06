@@ -472,6 +472,27 @@
   box-shadow: 0 0 0 1px var(--lilac-m, #DFD8F8);
 }
 
+/* The colour and capacity boxes, cut to the squircle (voltical-squircle.js):
+   their line is drawn along the curve (--sq-ring) instead of as a border */
+.pdp--bold .opt__pill--box {
+  --ring-w: 1.5px; --ring-color: var(--ink-12, rgba(19,19,22,.1));
+  --ring-w-on: 2.5px; --ring-color-on: var(--lilac-m, #DFD8F8);
+}
+.pdp--bold .opt__pill--box.is-sq {
+  border-color: transparent;
+  box-shadow: none;
+  background-image: var(--sq-ring, none);
+  background-origin: border-box;
+  background-repeat: no-repeat;
+}
+.pdp--bold .opt input:checked + .opt__pill--box.is-sq {
+  border-color: transparent;
+  box-shadow: none;
+  background-image: var(--sq-ring-on, none);
+  background-origin: border-box;
+  background-repeat: no-repeat;
+}
+
 /* Apple's own Add to Bag (apple.com buy page on an iPhone, measured from the
    owner's screenshot): Apple blue, white 14px text in regular weight. Made 20%
    taller than Apple's 44px (52.8px) and given the calculator tiles' corner:
@@ -482,17 +503,13 @@
   background: #0071E3;
   color: #fff;
   border: none;
-  border-radius: 28px;
+  border-radius: var(--r-m);
   padding: 16.4px 20px;
   font-weight: 400;
   font-size: 14px;
   line-height: 20px;
   letter-spacing: -0.01em;
   cursor: pointer;
-  transition: transform 0.25s var(--ease, ease);
-}
-.pdp--bold .atc__btn:hover:not(:disabled) {
-  transform: translateY(-1px);
 }
 .pdp--bold .atc__btn:disabled {
   opacity: 0.45;
@@ -513,9 +530,6 @@
   font: inherit;
   color: inherit;
   opacity: 1;
-}
-.pdp--bold .atc__btn.is-added .atc__price {
-  opacity: 0;
 }
 
 .pdp--bold .pinfo[data-reveal] {
@@ -2434,7 +2448,7 @@
   }
   .pdp--bold.pdp--core .pdp-cmp__intro strong {
     color: var(--ink, #131316);
-    font-weight: 600;
+    font-weight: 400;
   }
 }
 
