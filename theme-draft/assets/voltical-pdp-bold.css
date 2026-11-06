@@ -464,19 +464,26 @@
   border: 1.5px solid var(--ink-12, rgba(19,19,22,.1));
 }
 
-/* Match the selected-variant highlight to the same pale lilac used by
-   the cross-sell add-on cards right above the buy button. */
+/* The selected colour / capacity box: a soft blue (Add to bag's blue, very
+   pale) fill and line. It was a pale violet (#F1EFFB / #DFD8F8, hue ~255
+   degrees, on the edge between blue and violet) that screens draw differently.
+   The change is instant: a fill that faded while the line jumped looked odd. */
+.pdp--bold .opt__pill--box {
+  --sel-fill: #EEF5FE;
+  --sel-line: #BBD7F8;
+  transition: none;
+}
 .pdp--bold .opt input:checked + .opt__pill--box {
-  background: var(--lilac, #F1EFFB);
-  border-color: var(--lilac-m, #DFD8F8);
-  box-shadow: 0 0 0 1px var(--lilac-m, #DFD8F8);
+  background: var(--sel-fill);
+  border-color: var(--sel-line);
+  box-shadow: 0 0 0 1px var(--sel-line);
 }
 
 /* The colour and capacity boxes, cut to the squircle (voltical-squircle.js):
    their line is drawn along the curve (--sq-ring) instead of as a border */
 .pdp--bold .opt__pill--box {
   --ring-w: 1.5px; --ring-color: var(--ink-12, rgba(19,19,22,.1));
-  --ring-w-on: 2.5px; --ring-color-on: var(--lilac-m, #DFD8F8);
+  --ring-w-on: 2.5px; --ring-color-on: var(--sel-line);
 }
 .pdp--bold .opt__pill--box.is-sq {
   border-color: transparent;
@@ -541,12 +548,18 @@
 }
 .pdp--bold .atc.is-pinned {
   position: fixed;
-  bottom: 0;
+  /* the button floats a little above the bottom of the screen (clear of the
+     home bar), with no strip behind it and a soft shadow so it reads over
+     the page; the shadow is on this wrapper because the button's own would be
+     cut off by its squircle */
+  bottom: calc(14px + env(safe-area-inset-bottom));
   left: var(--atc-left, 0);
   width: var(--atc-width, 100%);
   z-index: 40;
-  background: var(--base, #FAFAF8);
-  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  margin: 0;
+  padding: 0;
+  background: none;
+  filter: drop-shadow(0 6px 16px rgba(0, 60, 140, .22)) drop-shadow(0 1px 2px rgba(0, 0, 0, .12));
 }
 /* Keep the button the same full width it had in flow, so the hand-back lines
    up exactly. */
