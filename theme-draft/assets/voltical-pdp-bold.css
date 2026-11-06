@@ -548,11 +548,11 @@
 }
 .pdp--bold .atc.is-pinned {
   position: fixed;
-  /* the button floats a little above the bottom of the screen (clear of the
-     home bar), with no strip behind it and a soft shadow so it reads over
-     the page; the shadow is on this wrapper because the button's own would be
-     cut off by its squircle */
-  bottom: calc(14px + env(safe-area-inset-bottom));
+  /* the button sits low on the screen (the home bar's own safe area is not
+     added: on an iPhone that put it 46px up), with no strip behind it and a
+     soft shadow so it reads over the page; the shadow is on this wrapper
+     because the button's own would be cut off by its squircle */
+  bottom: 10px;
   left: var(--atc-left, 0);
   width: var(--atc-width, 100%);
   z-index: 40;
@@ -563,7 +563,13 @@
 }
 /* Keep the button the same full width it had in flow, so the hand-back lines
    up exactly. */
-.pdp--bold .atc.is-pinned .atc__btn { width: 100%; }
+.pdp--bold .atc.is-pinned .atc__btn {
+  width: 100%;
+  /* taller while pinned (64px, was 52.8); the hand-back (fuse) lines up by
+     the button's top edge, so it still meets the page's button exactly */
+  padding-top: 22px;
+  padding-bottom: 22px;
+}
 
 .pdp--bold .pdp-calc-inline {
   margin: var(--s4, 24px) 0 0;
